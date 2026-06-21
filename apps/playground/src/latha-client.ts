@@ -4,6 +4,6 @@
  */
 
 import { createLathaClient, type LathaServerFn } from '@latha/start'
-import { lathaRpc } from './server'
+import { lathaRpc } from './rpc'
 
 export const latha = createLathaClient(lathaRpc as unknown as LathaServerFn)

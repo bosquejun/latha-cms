@@ -138,8 +138,8 @@ your-app/
 ├── latha.config.ts            # ★ the entrypoint — defineConfig({ ... })
 ├── vite.config.ts             # plugins: [..., lathaStart(), viteReact()]
 └── src/
-    ├── server.ts              # one server fn → handleLathaRequest(config, data)
-    ├── latha.client.ts        # createLathaClient(serverFn)
+    ├── rpc.ts                 # one server fn → handleLathaRequest(config, data)
+    ├── latha-client.ts        # createLathaClient(serverFn)
     └── routes/
         ├── __root.tsx         # <LathaProvider client={latha}>…</LathaProvider>
         └── index.tsx          # the app's own landing page (anything you like)
@@ -167,7 +167,8 @@ export { Route } from '@latha/start/routes/admin'
 ```
 
 ```ts
-// src/server.ts — the app's only server endpoint
+// src/rpc.ts — the app's only server endpoint (not `server.ts`: that name is
+// reserved by TanStack Start for its SSR server entry)
 import { createServerFn } from '@tanstack/react-start'
 import type { LathaRpcInput } from '@latha/start'
 import config from '../latha.config'
