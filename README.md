@@ -63,6 +63,7 @@ Phase 4:
 | `@latha/core` | `packages/core` | Kernel — types, `defineConfig`, registry, hooks, access, Zod builder, operations |
 | `@latha/ui` | `packages/ui` | Design system — shadcn/ui primitives + tokens. No CMS knowledge. |
 | `@latha/admin-sdk` | `packages/admin-sdk` | CMS-aware admin layer — shell, field renderers, auto-generated views |
+| `@latha/start` | `packages/start` | TanStack Start integration — runtime, RPC dispatcher, typed client, and the mountable admin/login UI |
 | `@latha/content` | `packages/modules/content` | `ContentModule`, `Collection`/`Document`/`Taxonomy`, config-driven content API |
 | `@latha/auth` | `packages/modules/auth` | `AuthModule`, session auth, password hashing, login/logout helpers |
 | `@latha/users` | `packages/modules/users` | `UsersModule`, the `users` collection, roles |
@@ -124,6 +125,51 @@ export const lathaConfig = defineConfig({
 Field definitions compile to a Zod schema that drives API validation, form
 validation, and TypeScript inference simultaneously — Zod is the single
 validation layer.
+
+## How a consuming app uses LathaCMS
+
+The config is the single entrypoint. `@latha/start` provides everything else —
+the runtime, the API, auth, and the admin UI — so the app is just the config
+plus a one-line server endpoint and a couple of mount points:
+
+```
+your-app/
+├── latha.config.ts            # ★ the entrypoint — defineConfig({ ... })
+└── src/
+    ├── server.ts              # one server fn → handleLathaRequest(config, data)
+    ├── latha.client.ts        # createLathaClient(serverFn)
+    └── routes/
+        ├── __root.tsx         # <LathaProvider client={latha}>…</LathaProvider>
+        ├── login.tsx          # component: LathaLogin
+        └── admin.$.tsx        # component: LathaAdmin   (catch-all; routes itself)
+```
+
+```ts
+// src/server.ts — the app's only server endpoint
+import { createServerFn } from '@tanstack/react-start'
+import type { LathaRpcInput } from '@latha/start'
+import config from '../latha.config'
+
+export const lathaRpc = createServerFn({ method: 'POST' })
+  .validator((data: LathaRpcInput) => data)
+  .handler(async ({ data }) => {
+    const { handleLathaRequest } = await import('@latha/start/server')
+    return handleLathaRequest(config, data)
+  })
+```
+
+```tsx
+// src/routes/admin.$.tsx — the whole admin behind one route
+import { createFileRoute } from '@tanstack/react-router'
+import { LathaAdmin } from '@latha/start'
+
+export const Route = createFileRoute('/admin/$')({ component: LathaAdmin })
+```
+
+`LathaAdmin` derives the sidebar, list views, and forms from the config, guards
+the session, and routes internally — there is no per-collection app code. (The
+split exists because TanStack Start requires `createServerFn` and the route tree
+to live in app-compiled code; everything else lives in the framework.)
 
 ## Next
 

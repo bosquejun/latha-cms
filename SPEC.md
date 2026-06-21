@@ -30,6 +30,7 @@ lathacms/
 │   ├── core/                          # @latha/core — types, defineConfig, module registry, hook engine, access evaluator
 │   ├── ui/                            # @latha/ui — design system, primitives, tokens (no CMS knowledge)
 │   ├── admin-sdk/                     # @latha/admin-sdk — CMS-aware admin layer, field renderers, shell, registry-driven views
+│   ├── start/                         # @latha/start — TanStack Start integration: runtime, RPC dispatcher, client, mountable admin UI
 │   └── modules/                       # all first-party modules live here
 │       ├── content/                   # @latha/content — ContentModule, Collection, Document, Taxonomy
 │       ├── auth/                      # @latha/auth — AuthModule, session handling

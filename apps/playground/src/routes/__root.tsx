@@ -6,6 +6,8 @@ import {
   createRootRoute,
 } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
+import { LathaProvider } from '@latha/start'
+import { latha } from '../latha.client'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
@@ -23,7 +25,9 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
-      <Outlet />
+      <LathaProvider client={latha} basePath="/admin" loginPath="/login">
+        <Outlet />
+      </LathaProvider>
     </RootDocument>
   )
 }

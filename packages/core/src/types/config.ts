@@ -56,6 +56,11 @@ export interface LathaConfig {
   plugins?: Plugin[]
   /** Base path the admin UI is mounted under. Defaults to `/admin`. */
   adminPath?: string
+  /**
+   * Optional one-time setup run once after the instance is ready (e.g. seeding
+   * a first admin user). Runners decide when to invoke it; the kernel does not.
+   */
+  seed?: (latha: LathaInstance) => void | Promise<void>
 }
 
 /** Config after `defineConfig()` has applied defaults and plugin transforms. */
