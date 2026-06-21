@@ -3,16 +3,16 @@
  *
  * `defineConfig()` is the entry point referenced from `cms.config.ts`. It
  * applies defaults and plugin `extendConfig` transforms and returns a
- * `ResolvedConfig`. `bootstrapCMS()` turns that config into a live
- * `CMSInstance`: it builds the module registry, resolves dependency order,
+ * `ResolvedConfig`. `bootstrapLatha()` turns that config into a live
+ * `LathaInstance`: it builds the module registry, resolves dependency order,
  * runs `onInit` → `migrate` → `onReady`, and exposes entity lookups.
  */
 
 import { ModuleRegistry } from '../registry/index.js'
 import type { Entity } from '../types/collection.js'
 import type {
-  CMSInstance,
-  CMSModule,
+  LathaInstance,
+  Module,
   LathaConfig,
   ResolvedConfig,
 } from '../types/config.js'
@@ -38,10 +38,10 @@ export function defineConfig(config: LathaConfig): ResolvedConfig {
   }
 }
 
-class Cms implements CMSInstance {
+class Latha implements LathaInstance {
   readonly config: ResolvedConfig
   readonly db: ResolvedConfig['db']
-  modules: CMSModule[] = []
+  modules: Module[] = []
   entities: Entity[] = []
   ready = false
 
@@ -86,10 +86,10 @@ class Cms implements CMSInstance {
   }
 }
 
-/** Build and initialize a `CMSInstance` from a resolved config. */
-export async function bootstrapCMS(
+/** Build and initialize a `LathaInstance` from a resolved config. */
+export async function bootstrapLatha(
   config: ResolvedConfig,
-): Promise<CMSInstance> {
-  const cms = new Cms(config)
-  return cms.boot()
+): Promise<LathaInstance> {
+  const latha = new Latha(config)
+  return latha.boot()
 }

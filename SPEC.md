@@ -221,11 +221,11 @@ This schema is used for:
 ### Module Interface
 
 ```ts
-interface CMSModule {
+interface Module {
   name: string
   dependsOn?: string[]
-  onInit?: (cms: CMSInstance) => void | Promise<void>
-  onReady?: (cms: CMSInstance) => void | Promise<void>
+  onInit?: (cms: LathaInstance) => void | Promise<void>
+  onReady?: (cms: LathaInstance) => void | Promise<void>
   routes?: ModuleRoutes
   entities?: EntityDefinition[]
   capabilities?: string[]
@@ -258,12 +258,12 @@ interface AuthAdapter {
 ### Plugin Interface
 
 ```ts
-interface CMSPlugin {
+interface Plugin {
   name: string
   extendCollections?: (cols: Collection[]) => Collection[]
   extendConfig?: (config: LathaConfig) => LathaConfig
   routes?: Record<string, RouteHandler>
-  onInit?: (cms: CMSInstance) => void | Promise<void>
+  onInit?: (cms: LathaInstance) => void | Promise<void>
 }
 ```
 
@@ -437,7 +437,7 @@ Build in phases — do not skip ahead. Each phase must be working end-to-end bef
 packages/core/src/
 ├── index.ts
 ├── types/
-│   ├── config.ts       ← LathaConfig, CMSModule, CMSPlugin
+│   ├── config.ts       ← LathaConfig, Module, Plugin
 │   ├── field.ts        ← Field union type, all field variants
 │   ├── access.ts       ← AccessFn, AccessContext, Operation
 │   ├── hook.ts         ← HookFn, HookArgs, CollectionHooks
@@ -448,7 +448,7 @@ packages/core/src/
 ├── registry/
 │   └── index.ts        ← ModuleRegistry, resolve order
 └── bootstrap/
-    └── index.ts        ← defineConfig(), CMSInstance
+    └── index.ts        ← defineConfig(), LathaInstance
 
 packages/ui/src/
 ├── index.ts

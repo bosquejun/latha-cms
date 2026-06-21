@@ -15,15 +15,15 @@ import { runHookEvent } from '../hooks/engine.js'
 import { buildZodSchema } from '../schema/builder.js'
 import type { Doc, Query } from '../types/adapter.js'
 import type { Collection, Document, Taxonomy } from '../types/collection.js'
-import type { CMSInstance } from '../types/config.js'
+import type { LathaInstance } from '../types/config.js'
 import type { AccessUser } from '../types/access.js'
 
 export interface OperationContext {
-  cms: CMSInstance
+  cms: LathaInstance
   user?: AccessUser | null
 }
 
-function resolveCollection(cms: CMSInstance, slug: string): Collection {
+function resolveCollection(cms: LathaInstance, slug: string): Collection {
   const entity = cms.getEntity(slug)
   if (!entity) throw new Error(`Unknown entity: "${slug}".`)
   if (entity.kind !== 'collection') {
@@ -32,7 +32,7 @@ function resolveCollection(cms: CMSInstance, slug: string): Collection {
   return entity
 }
 
-function resolveDocument(cms: CMSInstance, slug: string): Document {
+function resolveDocument(cms: LathaInstance, slug: string): Document {
   const entity = cms.getEntity(slug)
   if (!entity) throw new Error(`Unknown entity: "${slug}".`)
   if (entity.kind !== 'document') {
@@ -41,7 +41,7 @@ function resolveDocument(cms: CMSInstance, slug: string): Document {
   return entity
 }
 
-function resolveTaxonomy(cms: CMSInstance, slug: string): Taxonomy {
+function resolveTaxonomy(cms: LathaInstance, slug: string): Taxonomy {
   const entity = cms.getEntity(slug)
   if (!entity) throw new Error(`Unknown entity: "${slug}".`)
   if (entity.kind !== 'taxonomy') {

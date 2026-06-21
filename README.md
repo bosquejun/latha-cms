@@ -9,9 +9,10 @@ See [`SPEC.md`](./SPEC.md) for the full architecture and roadmap.
 
 ## Status
 
-**Phase 1 — Foundation ✅** · **Phase 2 — Config-Driven API ✅**
+**Phase 1 — Foundation ✅** · **Phase 2 — Config-Driven API ✅** · **Phase 3 — Admin UI Shell ✅**
 
-The kernel works end-to-end for all three entity kinds: config → schema → API → DB.
+The kernel works end-to-end for all three entity kinds, and a fully
+auto-generated admin UI is layered on top: config → schema → API → DB → admin.
 
 Phase 1:
 - [x] Monorepo scaffold (pnpm workspaces + Turborepo)
@@ -32,15 +33,27 @@ Phase 2:
       delete) plus singleton upsert and taxonomy tree
 - [x] Access evaluator + hook engine wired through every operation
 
-> Note: the current TanStack Start (v1.168+) uses a Vite plugin rather than the
+Phase 3:
+- [x] `@latha/ui` — design system on shadcn/ui (new-york) + Tailwind v4 tokens;
+      pure, CMS-unaware primitives
+- [x] `@latha/admin-sdk` — admin shell, registry-driven sidebar, field renderer
+      registry, and auto-generated list / form / singleton views (TanStack Form
+      + the same Zod schema)
+- [x] TanStack Router admin routes — dashboard, collection list/create/edit,
+      document singleton — all derived from the config
+
+> Notes: the current TanStack Start (v1.168+) uses a Vite plugin rather than the
 > Vinxi `app.config.ts` shown in `SPEC.md`; the playground follows the current
-> approach.
+> approach. The public types dropped the `CMS` prefix (`Module`, `Plugin`,
+> `LathaInstance`).
 
 ## Packages
 
 | Package | Path | Responsibility |
 |---|---|---|
 | `@latha/core` | `packages/core` | Kernel — types, `defineConfig`, registry, hooks, access, Zod builder, operations |
+| `@latha/ui` | `packages/ui` | Design system — shadcn/ui primitives + tokens. No CMS knowledge. |
+| `@latha/admin-sdk` | `packages/admin-sdk` | CMS-aware admin layer — shell, field renderers, auto-generated views |
 | `@latha/content` | `packages/modules/content` | `ContentModule`, `Collection`/`Document`/`Taxonomy`, config-driven content API |
 | `@latha/storage` | `packages/modules/storage` | `DBAdapter` — libsql/Turso (default), dynamic SQLite schema |
 | `@latha/playground` | `apps/playground` | TanStack Start dev/test harness |
@@ -63,7 +76,7 @@ import { defineConfig } from '@latha/core'
 import { tursoAdapter } from '@latha/storage'
 import { Collection, ContentModule, Document, Taxonomy } from '@latha/content'
 
-export const cmsConfig = defineConfig({
+export const lathaConfig = defineConfig({
   db: tursoAdapter({ url: process.env.TURSO_DATABASE_URL ?? 'file:local.db' }),
   modules: [
     ContentModule({
@@ -93,9 +106,9 @@ validation layer.
 
 ## Next
 
-Phase 3 — Admin UI Shell: `@latha/ui` (design system) and `@latha/admin-sdk`
-(CMS-aware shell, field renderers, auto-generated list/form views). See
-`SPEC.md`.
+Phase 4 — Auth + Users: `@latha/auth` (session-based auth, login/logout) and
+`@latha/users` (roles, permissions), with auth middleware on admin routes and
+server functions. See `SPEC.md`.
 
 ## License
 

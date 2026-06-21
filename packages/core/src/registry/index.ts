@@ -6,25 +6,25 @@
  * on. Cycles are detected and reported.
  */
 
-import type { CMSModule } from '../types/config.js'
+import type { Module } from '../types/config.js'
 import type { Entity } from '../types/collection.js'
 
 export class ModuleRegistry {
-  private readonly modules = new Map<string, CMSModule>()
+  private readonly modules = new Map<string, Module>()
 
   /** Register a module. Throws on duplicate names. */
-  register(module: CMSModule): void {
+  register(module: Module): void {
     if (this.modules.has(module.name)) {
       throw new Error(`Duplicate module registered: "${module.name}".`)
     }
     this.modules.set(module.name, module)
   }
 
-  registerAll(modules: CMSModule[]): void {
+  registerAll(modules: Module[]): void {
     for (const m of modules) this.register(m)
   }
 
-  get(name: string): CMSModule | undefined {
+  get(name: string): Module | undefined {
     return this.modules.get(name)
   }
 
@@ -36,12 +36,12 @@ export class ModuleRegistry {
    * Return modules in dependency-resolved order (a module appears after all
    * of its `dependsOn` entries). Uses a depth-first topological sort.
    */
-  resolve(): CMSModule[] {
-    const resolved: CMSModule[] = []
+  resolve(): Module[] {
+    const resolved: Module[] = []
     const visiting = new Set<string>()
     const visited = new Set<string>()
 
-    const visit = (module: CMSModule, trail: string[]): void => {
+    const visit = (module: Module, trail: string[]): void => {
       if (visited.has(module.name)) return
       if (visiting.has(module.name)) {
         throw new Error(

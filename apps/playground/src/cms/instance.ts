@@ -6,12 +6,12 @@
  * be bundled into the client.
  */
 
-import { bootstrapCMS, type CMSInstance } from '@latha/core'
-import { cmsConfig } from './config'
+import { bootstrapLatha, type LathaInstance } from '@latha/core'
+import { lathaConfig } from './config'
 
-let instance: Promise<CMSInstance> | null = null
+let instance: Promise<LathaInstance> | null = null
 
-export function getCMS(): Promise<CMSInstance> {
-  if (!instance) instance = bootstrapCMS(cmsConfig)
+export function getLatha(): Promise<LathaInstance> {
+  if (!instance) instance = bootstrapLatha(lathaConfig)
   return instance
 }

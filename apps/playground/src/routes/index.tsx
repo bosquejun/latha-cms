@@ -1,90 +1,25 @@
-import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
-import { useState } from 'react'
-import { createDoc, deleteDoc, listDocs } from '../server/content'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { Button } from '@latha/ui'
 
 export const Route = createFileRoute('/')({
-  loader: () => listDocs({ data: { collection: 'posts' } }),
-  component: PostsPage,
+  component: LandingPage,
 })
 
-function PostsPage() {
-  const posts = Route.useLoaderData()
-  const router = useRouter()
-  const [title, setTitle] = useState('')
-  const [status, setStatus] = useState('draft')
-  const [busy, setBusy] = useState(false)
-
-  async function onCreate(e: React.FormEvent) {
-    e.preventDefault()
-    if (!title.trim()) return
-    setBusy(true)
-    try {
-      await createDoc({ data: { collection: 'posts', data: { title, status } } })
-      setTitle('')
-      setStatus('draft')
-      await router.invalidate()
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function onDelete(id: string) {
-    setBusy(true)
-    try {
-      await deleteDoc({ data: { collection: 'posts', id } })
-      await router.invalidate()
-    } finally {
-      setBusy(false)
-    }
-  }
-
+function LandingPage() {
   return (
-    <>
-      <div className="pagehead">
-        <h1>Posts</h1>
-        <Link to="/settings" className="link">
-          Site settings →
-        </Link>
+    <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-start justify-center gap-6 px-6">
+      <div className="flex items-baseline gap-3">
+        <h1 className="text-3xl font-semibold tracking-tight">LathaCMS</h1>
+        <span className="text-sm text-muted-foreground">playground · phase 3</span>
       </div>
-
-      <form onSubmit={onCreate}>
-        <input
-          type="text"
-          placeholder="New post title…"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <select value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="draft">draft</option>
-          <option value="published">published</option>
-        </select>
-        <button type="submit" disabled={busy || !title.trim()}>
-          Create
-        </button>
-      </form>
-
-      {posts.length === 0 ? (
-        <p className="empty">No posts yet — create the first one above.</p>
-      ) : (
-        <ul className="posts">
-          {posts.map((post) => (
-            <li key={String(post.id)}>
-              <span className="grow">
-                <strong>{String(post.title ?? '')}</strong>{' '}
-                <span className="muted">/{String(post.slug ?? '')}</span>
-              </span>
-              <span className="pill">{String(post.status ?? 'draft')}</span>
-              <button
-                className="ghost"
-                onClick={() => onDelete(String(post.id))}
-                disabled={busy}
-              >
-                Delete
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </>
+      <p className="text-muted-foreground">
+        A config-driven, modular headless CMS on TanStack Start. The admin UI
+        below is fully auto-generated from <code className="rounded bg-muted px-1.5 py-0.5 text-sm">cms.config.ts</code>{' '}
+        — sidebar, list views, and forms all derive from the module registry.
+      </p>
+      <Button asChild>
+        <Link to="/admin">Open the admin →</Link>
+      </Button>
+    </main>
   )
 }

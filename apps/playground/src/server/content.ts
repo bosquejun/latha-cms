@@ -10,10 +10,10 @@
 
 import { createServerFn } from '@tanstack/react-start'
 import { createContentApi, type JsonDoc } from '@latha/content'
-import { getCMS } from '../cms/instance'
+import { getLatha } from '../cms/instance'
 
 // Phase 4 will resolve the real user from the request via the AuthAdapter.
-const api = createContentApi({ getCMS })
+const api = createContentApi({ getLatha })
 
 // --- Collections -----------------------------------------------------------
 

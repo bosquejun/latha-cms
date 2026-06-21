@@ -16,7 +16,7 @@ import {
   Taxonomy,
 } from '@latha/content'
 
-export const cmsConfig = defineConfig({
+export const lathaConfig = defineConfig({
   // Local SQLite file by default; point at Turso via env in production.
   db: tursoAdapter({
     url: process.env.TURSO_DATABASE_URL ?? 'file:local.db',

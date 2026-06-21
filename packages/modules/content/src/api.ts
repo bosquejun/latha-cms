@@ -15,7 +15,7 @@
 
 import { operations } from '@latha/core'
 import type {
-  CMSInstance,
+  LathaInstance,
   Doc,
   JsonValue,
   Query,
@@ -37,7 +37,7 @@ function serialize<T>(value: T): T {
 
 export interface ContentApiOptions {
   /** Resolve (and memoize) the live CMS instance. */
-  getCMS: () => Promise<CMSInstance>
+  getLatha: () => Promise<LathaInstance>
   /** Resolve the current user for access checks. Defaults to anonymous. */
   getUser?: () => Promise<import('@latha/core').AuthUser | null>
 }
@@ -60,7 +60,7 @@ export interface ContentApi {
 
 export function createContentApi(options: ContentApiOptions): ContentApi {
   const ctx = async () => ({
-    cms: await options.getCMS(),
+    cms: await options.getLatha(),
     user: (await options.getUser?.()) ?? null,
   })
 

@@ -26,7 +26,7 @@ export { runHooks, runHookEvent } from './hooks/engine.js'
 export { ModuleRegistry } from './registry/index.js'
 
 // Bootstrap
-export { defineConfig, bootstrapCMS } from './bootstrap/index.js'
+export { defineConfig, bootstrapLatha } from './bootstrap/index.js'
 
 // Operations (local API)
 export * as operations from './operations/index.js'

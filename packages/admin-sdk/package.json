@@ -1,0 +1,36 @@
+{
+  "name": "@latha/admin-sdk",
+  "version": "0.0.0",
+  "description": "LathaCMS admin SDK — CMS-aware shell, field renderers, and auto-generated views.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@tanstack/react-form": "^1.0.0"
+  },
+  "peerDependencies": {
+    "@latha/core": "workspace:*",
+    "@latha/ui": "workspace:*",
+    "react": "^18 || ^19"
+  },
+  "devDependencies": {
+    "@latha/core": "workspace:*",
+    "@latha/ui": "workspace:*",
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
+    "typescript": "^5.7.2"
+  }
+}
