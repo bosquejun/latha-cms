@@ -9,7 +9,7 @@ See [`SPEC.md`](./SPEC.md) for the full architecture and roadmap.
 
 ## Status
 
-**Phase 1 — Foundation ✅** · **Phase 2 — Config-Driven API ✅** · **Phase 3 — Admin UI Shell ✅**
+**Phase 1 — Foundation ✅** · **Phase 2 — Config-Driven API ✅** · **Phase 3 — Admin UI Shell ✅** · **Phase 4 — Auth + Users ✅**
 
 The kernel works end-to-end for all three entity kinds, and a fully
 auto-generated admin UI is layered on top: config → schema → API → DB → admin.
@@ -42,6 +42,15 @@ Phase 3:
 - [x] TanStack Router admin routes — dashboard, collection list/create/edit,
       document singleton — all derived from the config
 
+Phase 4:
+- [x] `@latha/users` — `UsersModule`, the `users` collection, and a role system
+- [x] `@latha/auth` — `AuthModule`, session-based auth with edge-friendly
+      password hashing (PBKDF2) and signed session tokens (HMAC), all on Web
+      Crypto — no native deps
+- [x] Auth wired through the stack: login/logout, a first-run admin seed,
+      `/admin` guarded behind a session, and per-collection access rules
+      (`read`/`create`/`update`/`delete`) enforced against the real user
+
 > Notes: the current TanStack Start (v1.168+) uses a Vite plugin rather than the
 > Vinxi `app.config.ts` shown in `SPEC.md`; the playground follows the current
 > approach. The public types dropped the `CMS` prefix (`Module`, `Plugin`,
@@ -55,6 +64,8 @@ Phase 3:
 | `@latha/ui` | `packages/ui` | Design system — shadcn/ui primitives + tokens. No CMS knowledge. |
 | `@latha/admin-sdk` | `packages/admin-sdk` | CMS-aware admin layer — shell, field renderers, auto-generated views |
 | `@latha/content` | `packages/modules/content` | `ContentModule`, `Collection`/`Document`/`Taxonomy`, config-driven content API |
+| `@latha/auth` | `packages/modules/auth` | `AuthModule`, session auth, password hashing, login/logout helpers |
+| `@latha/users` | `packages/modules/users` | `UsersModule`, the `users` collection, roles |
 | `@latha/storage` | `packages/modules/storage` | `DBAdapter` — libsql/Turso (default), dynamic SQLite schema |
 | `@latha/playground` | `apps/playground` | TanStack Start dev/test harness |
 
@@ -68,6 +79,16 @@ pnpm dev            # run the playground at http://localhost:3000
 
 The playground defaults to a local SQLite file (`file:local.db`). Point it at
 Turso in production via `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN`.
+
+On first run it seeds an admin user so you can sign in at `/admin`:
+
+```
+email:    admin@latha.dev   (override with ADMIN_EMAIL)
+password: password          (override with ADMIN_PASSWORD)
+```
+
+Set `AUTH_SECRET` in production to sign session tokens (a dev fallback is used
+otherwise).
 
 ## The config
 
@@ -106,9 +127,8 @@ validation layer.
 
 ## Next
 
-Phase 4 — Auth + Users: `@latha/auth` (session-based auth, login/logout) and
-`@latha/users` (roles, permissions), with auth middleware on admin routes and
-server functions. See `SPEC.md`.
+Phase 5 — Media: `@latha/media` (MediaModule), an R2 storage adapter, the media
+library UI, and a media field renderer. See `SPEC.md`.
 
 ## License
 

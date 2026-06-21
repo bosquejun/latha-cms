@@ -12,8 +12,14 @@ import { createServerFn } from '@tanstack/react-start'
 import { createContentApi, type JsonDoc } from '@latha/content'
 import { getLatha } from '../cms/instance'
 
-// Phase 4 will resolve the real user from the request via the AuthAdapter.
-const api = createContentApi({ getLatha })
+// The content API runs as the authenticated user, so per-collection access
+// rules (read/create/update/delete) are enforced against the real session.
+// `getUser` dynamically imports the server-only session module so the cookie
+// helpers never reach the client bundle.
+const api = createContentApi({
+  getLatha,
+  getUser: async () => (await import('../cms/session')).currentAuthUser(),
+})
 
 // --- Collections -----------------------------------------------------------
 

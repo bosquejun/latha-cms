@@ -41,6 +41,7 @@ export function defineConfig(config: LathaConfig): ResolvedConfig {
 class Latha implements LathaInstance {
   readonly config: ResolvedConfig
   readonly db: ResolvedConfig['db']
+  auth: LathaInstance['auth'] = null
   modules: Module[] = []
   entities: Entity[] = []
   ready = false

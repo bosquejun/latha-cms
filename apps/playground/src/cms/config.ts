@@ -15,6 +15,11 @@ import {
   Document,
   Taxonomy,
 } from '@latha/content'
+import { UsersModule } from '@latha/users'
+import { AuthModule } from '@latha/auth'
+
+/** Dev fallback — set AUTH_SECRET in production. */
+export const AUTH_SECRET = process.env.AUTH_SECRET ?? 'dev-secret-change-me'
 
 export const lathaConfig = defineConfig({
   // Local SQLite file by default; point at Turso via env in production.
@@ -23,6 +28,10 @@ export const lathaConfig = defineConfig({
     authToken: process.env.TURSO_AUTH_TOKEN,
   }),
   modules: [
+    UsersModule({ roles: ['admin', 'editor', 'viewer'] }),
+
+    AuthModule({ secret: AUTH_SECRET }),
+
     ContentModule({
       entities: [
         // Singleton — structural config, no list view.
@@ -38,6 +47,12 @@ export const lathaConfig = defineConfig({
         Collection({
           slug: 'posts',
           admin: { useAsTitle: 'title', defaultColumns: ['title', 'status'] },
+          access: {
+            read: () => true,
+            create: ({ user }) => !!user,
+            update: ({ user }) => !!user,
+            delete: ({ user }) => user?.role === 'admin',
+          },
           hooks: {
             beforeCreate: [
               ({ data }) => {

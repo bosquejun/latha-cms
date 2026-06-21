@@ -2,13 +2,18 @@
  * Top-level configuration and module/plugin contracts.
  */
 
-import type { DBAdapter } from './adapter.js'
+import type { AuthAdapter, DBAdapter } from './adapter.js'
 import type { Entity } from './collection.js'
 
 /** Forward reference to the live instance; defined in `bootstrap`. */
 export interface LathaInstance {
   config: ResolvedConfig
   db: DBAdapter
+  /**
+   * The active auth adapter, or `null` when no AuthModule is installed.
+   * AuthModule sets this during `onInit`.
+   */
+  auth: AuthAdapter | null
   /** Flat list of every entity contributed by every module. */
   entities: Entity[]
   /** Resolve a single entity by slug. */
