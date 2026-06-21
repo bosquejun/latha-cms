@@ -3,7 +3,16 @@
  * kernel is tied to a specific vendor.
  */
 
-import type { Collection } from './collection.js'
+import type { Entity } from './collection.js'
+
+/** A JSON-serializable value — the wire shape of any persisted field. */
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue }
 
 export interface QuerySort {
   field: string
@@ -38,8 +47,11 @@ export interface DBAdapter {
   ): Promise<Doc>
   delete(collection: string, id: string): Promise<void>
 
-  /** Reconcile the database schema with the given collection definitions. */
-  migrate(collections: Collection[]): Promise<void>
+  /**
+   * Reconcile the database schema with the given entity definitions
+   * (collections, document singletons, and taxonomies).
+   */
+  migrate(entities: Entity[]): Promise<void>
 }
 
 export interface StorageAdapter {

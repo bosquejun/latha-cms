@@ -17,6 +17,9 @@ importers:
 
   apps/playground:
     dependencies:
+      '@latha/content':
+        specifier: workspace:*
+        version: link:../../packages/modules/content
       '@latha/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -67,6 +70,15 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/modules/content:
+    devDependencies:
+      '@latha/core':
+        specifier: workspace:*
+        version: link:../../core
       typescript:
         specifier: ^5.7.2
         version: 5.9.3

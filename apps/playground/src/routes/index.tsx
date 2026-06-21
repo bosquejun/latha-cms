@@ -1,13 +1,9 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
-import {
-  createPost,
-  deletePost,
-  listPosts,
-} from '../server/posts'
+import { createDoc, deleteDoc, listDocs } from '../server/content'
 
 export const Route = createFileRoute('/')({
-  loader: () => listPosts(),
+  loader: () => listDocs({ data: { collection: 'posts' } }),
   component: PostsPage,
 })
 
@@ -23,7 +19,7 @@ function PostsPage() {
     if (!title.trim()) return
     setBusy(true)
     try {
-      await createPost({ data: { title, status } })
+      await createDoc({ data: { collection: 'posts', data: { title, status } } })
       setTitle('')
       setStatus('draft')
       await router.invalidate()
@@ -35,7 +31,7 @@ function PostsPage() {
   async function onDelete(id: string) {
     setBusy(true)
     try {
-      await deletePost({ data: id })
+      await deleteDoc({ data: { collection: 'posts', id } })
       await router.invalidate()
     } finally {
       setBusy(false)
@@ -44,7 +40,12 @@ function PostsPage() {
 
   return (
     <>
-      <h1>Posts</h1>
+      <div className="pagehead">
+        <h1>Posts</h1>
+        <Link to="/settings" className="link">
+          Site settings →
+        </Link>
+      </div>
 
       <form onSubmit={onCreate}>
         <input
@@ -69,7 +70,7 @@ function PostsPage() {
           {posts.map((post) => (
             <li key={String(post.id)}>
               <span className="grow">
-                <strong>{String(post.title)}</strong>{' '}
+                <strong>{String(post.title ?? '')}</strong>{' '}
                 <span className="muted">/{String(post.slug ?? '')}</span>
               </span>
               <span className="pill">{String(post.status ?? 'draft')}</span>

@@ -9,7 +9,6 @@
  */
 
 import { ModuleRegistry } from '../registry/index.js'
-import { isCollection } from '../types/collection.js'
 import type { Entity } from '../types/collection.js'
 import type {
   CMSInstance,
@@ -76,9 +75,8 @@ class Cms implements CMSInstance {
     // 5. Plugin onInit.
     for (const plugin of this.config.plugins) await plugin.onInit?.(this)
 
-    // 6. Migrate schema for all collection entities.
-    const collections = this.entities.filter(isCollection)
-    await this.db.migrate(collections)
+    // 6. Migrate schema for every entity (collections, documents, taxonomies).
+    await this.db.migrate(this.entities)
 
     // 7. onReady (resolved order).
     for (const module of this.modules) await module.onReady?.(this)

@@ -54,8 +54,16 @@ const baseStyles = `
   .shell { max-width: 760px; margin: 0 auto; padding: 0 20px 64px; }
   .topbar { display: flex; align-items: baseline; gap: 10px; padding: 20px 0; border-bottom: 1px solid var(--line); margin-bottom: 28px; }
   .muted { color: var(--muted); font-size: 13px; }
-  h1 { font-size: 22px; margin: 0 0 18px; }
-  form { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  h1 { font-size: 22px; margin: 0; }
+  .pagehead { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px; }
+  .link { color: var(--accent); text-decoration: none; font-size: 14px; }
+  .link:hover { text-decoration: underline; }
+  code { background: #f2f2f2; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+  form { display: flex; gap: 8px; margin: 16px 0 24px; flex-wrap: wrap; }
+  form.stack { flex-direction: column; align-items: stretch; max-width: 360px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field span { font-size: 13px; color: var(--muted); }
+  .ok { color: #16a34a; font-size: 13px; margin-left: 8px; }
   input, select { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
   input[type=text] { flex: 1; min-width: 200px; }
   button { padding: 8px 14px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; font: inherit; cursor: pointer; }

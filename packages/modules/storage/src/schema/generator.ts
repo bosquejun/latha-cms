@@ -13,7 +13,7 @@
  *   group | array | *(many)                                                  → TEXT (JSON)
  */
 
-import type { Collection, Field } from '@latha/core'
+import type { Entity, Field } from '@latha/core'
 
 export type ColumnKind = 'text' | 'integer' | 'real' | 'boolean' | 'json'
 
@@ -68,9 +68,17 @@ function sqlTypeForKind(kind: ColumnKind): ColumnPlan['sqlType'] {
   }
 }
 
-export function buildTablePlan(collection: Collection): TablePlan {
-  const timestamps = collection.timestamps !== false
-  const columns: ColumnPlan[] = collection.fields.map((field) => {
+/**
+ * Build a table plan from any entity. Collections, document singletons, and
+ * taxonomies are all stored as tables; the only difference is the field set
+ * (taxonomies carry their implicit `name`/`slug`/`parent` fields, populated by
+ * the `Taxonomy()` factory) and the default timestamp behavior.
+ */
+export function buildTablePlan(entity: Entity): TablePlan {
+  const fields: Field[] = entity.kind === 'taxonomy' ? entity.fields ?? [] : entity.fields
+  const timestamps = entity.kind === 'taxonomy' ? true : entity.timestamps !== false
+
+  const columns: ColumnPlan[] = fields.map((field) => {
     const kind = columnKindForField(field)
     return {
       name: field.name,
@@ -81,7 +89,7 @@ export function buildTablePlan(collection: Collection): TablePlan {
     }
   })
 
-  return { table: collection.slug, columns, timestamps }
+  return { table: entity.slug, columns, timestamps }
 }
 
 /** Produce a `CREATE TABLE IF NOT EXISTS` statement from a plan. */

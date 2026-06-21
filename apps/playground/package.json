@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@latha/content": "workspace:*",
     "@latha/core": "workspace:*",
     "@latha/storage": "workspace:*",
     "@tanstack/react-router": "^1.168.0",

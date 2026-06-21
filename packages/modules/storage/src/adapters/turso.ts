@@ -10,7 +10,7 @@
  */
 
 import { createClient, type Client } from '@libsql/client'
-import type { Collection, DBAdapter, Doc, Query } from '@latha/core'
+import type { DBAdapter, Doc, Entity, Query } from '@latha/core'
 import {
   buildTablePlan,
   createTableSQL,
@@ -49,9 +49,9 @@ class TursoAdapter implements DBAdapter {
     this.client.close()
   }
 
-  async migrate(collections: Collection[]): Promise<void> {
-    for (const collection of collections) {
-      const plan = buildTablePlan(collection)
+  async migrate(entities: Entity[]): Promise<void> {
+    for (const entity of entities) {
+      const plan = buildTablePlan(entity)
       this.plans.set(plan.table, plan)
       await this.client.execute(createTableSQL(plan))
     }
