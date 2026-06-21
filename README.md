@@ -129,19 +129,41 @@ validation layer.
 ## How a consuming app uses LathaCMS
 
 The config is the single entrypoint. `@latha/start` provides everything else —
-the runtime, the API, auth, and the admin UI — so the app is just the config
-plus a one-line server endpoint and a couple of mount points:
+the runtime, the API, auth, and the admin UI. The `lathaStart()` Vite plugin
+injects the framework's `/login` and `/admin/$` routes, so the app ships no
+boilerplate route files for them — `src/routes/` holds only the app's own pages:
 
 ```
 your-app/
 ├── latha.config.ts            # ★ the entrypoint — defineConfig({ ... })
+├── vite.config.ts             # plugins: [..., lathaStart(), viteReact()]
 └── src/
     ├── server.ts              # one server fn → handleLathaRequest(config, data)
     ├── latha.client.ts        # createLathaClient(serverFn)
     └── routes/
         ├── __root.tsx         # <LathaProvider client={latha}>…</LathaProvider>
-        ├── login.tsx          # component: LathaLogin
-        └── admin.$.tsx        # component: LathaAdmin   (catch-all; routes itself)
+        └── index.tsx          # the app's own landing page (anything you like)
+```
+
+```ts
+// vite.config.ts — lathaStart() wraps tanstackStart() and adds /login + /admin/$
+import { defineConfig } from 'vite'
+import { lathaStart } from '@latha/start/vite'
+import viteReact from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [lathaStart(), viteReact()],
+})
+```
+
+Prefer to keep the routes explicit? Skip the plugin and mount them with a
+one-line re-export instead — the route definitions still live in the framework:
+
+```tsx
+// src/routes/login.tsx
+export { Route } from '@latha/start/routes/login'
+// src/routes/admin.$.tsx
+export { Route } from '@latha/start/routes/admin'
 ```
 
 ```ts
@@ -158,18 +180,16 @@ export const lathaRpc = createServerFn({ method: 'POST' })
   })
 ```
 
-```tsx
-// src/routes/admin.$.tsx — the whole admin behind one route
-import { createFileRoute } from '@tanstack/react-router'
-import { LathaAdmin } from '@latha/start'
+`LathaAdmin` (mounted at `/admin/$`) derives the sidebar, list views, and forms
+from the config, guards the session, and routes internally — there is no
+per-collection app code. The server endpoint stays in the app because TanStack
+Start requires `createServerFn` to live in app-compiled code; the route tree,
+admin, and login all come from the framework via `lathaStart()`.
 
-export const Route = createFileRoute('/admin/$')({ component: LathaAdmin })
-```
-
-`LathaAdmin` derives the sidebar, list views, and forms from the config, guards
-the session, and routes internally — there is no per-collection app code. (The
-split exists because TanStack Start requires `createServerFn` and the route tree
-to live in app-compiled code; everything else lives in the framework.)
+> **On the package name:** `@latha/start` mirrors the framework it integrates
+> (TanStack Start) and stays short. Adapter-style alternatives like
+> `@latha/react-start` or `@latha/tanstack-start` were considered; the name was
+> kept since LathaCMS is defined as "built on TanStack Start."
 
 ## Next
 

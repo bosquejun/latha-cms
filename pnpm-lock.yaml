@@ -161,6 +161,10 @@ importers:
         version: 5.9.3
 
   packages/start:
+    dependencies:
+      '@tanstack/virtual-file-routes':
+        specifier: ^1.162.0
+        version: 1.162.0
     devDependencies:
       '@latha/admin-sdk':
         specifier: workspace:*
