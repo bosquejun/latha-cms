@@ -25,6 +25,8 @@ export { Sidebar, type SidebarProps, type SidebarLinkProps } from './shell/Sideb
 export { Topbar, type TopbarProps } from './shell/Topbar.js'
 export { useTheme, type Theme } from './shell/useTheme.js'
 export { UserMenu, type UserMenuProps } from './shell/UserMenu.js'
+export { PageHeader, type PageHeaderProps } from './shell/PageHeader.js'
+export { EmptyState, type EmptyStateProps } from './shell/EmptyState.js'
 
 // Field renderers
 export {
