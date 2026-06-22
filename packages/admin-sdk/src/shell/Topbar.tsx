@@ -14,9 +14,9 @@ export interface TopbarProps {
 
 export function Topbar({ title, actions }: TopbarProps) {
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-background/80 px-6 backdrop-blur-md">
-      <div className="text-sm font-semibold text-foreground">{title}</div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+    <header className="sticky top-0 z-20 flex h-(--header-height) items-center justify-between border-b border-border bg-background/80 px-page backdrop-blur-md">
+      <div className="text-h3 font-semibold text-foreground">{title}</div>
+      {actions && <div className="flex items-center gap-inline">{actions}</div>}
     </header>
   )
 }

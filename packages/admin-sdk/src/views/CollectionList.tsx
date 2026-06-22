@@ -78,7 +78,7 @@ export function CollectionList({
 
   if (rows.length === 0) {
     return (
-      <p className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">
+      <p className="rounded-md border border-dashed p-card text-center text-small text-muted-foreground">
         No {entity.label.toLowerCase()} yet.
       </p>
     )

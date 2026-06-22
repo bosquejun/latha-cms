@@ -137,19 +137,19 @@ export function EntityForm({
         e.stopPropagation()
         void form.handleSubmit()
       }}
-      className="grid grid-cols-1 gap-6 lg:grid-cols-3"
+      className="grid grid-cols-1 gap-section lg:grid-cols-3"
     >
-      <div className="flex flex-col gap-5 lg:col-span-2">
+      <div className="flex flex-col gap-form lg:col-span-2">
         {mainFields.map(renderField)}
       </div>
 
       {sidebarFields.length > 0 && (
-        <aside className="flex flex-col gap-5">
+        <aside className="flex flex-col gap-form">
           {sidebarFields.map(renderField)}
         </aside>
       )}
 
-      <div className="flex items-center gap-3 lg:col-span-3">
+      <div className="flex items-center gap-inline lg:col-span-3">
         <form.Subscribe selector={(s) => s.isSubmitting}>
           {(isSubmitting) => (
             <Button type="submit" disabled={isSubmitting}>

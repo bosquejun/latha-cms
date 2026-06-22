@@ -23,7 +23,7 @@ export function Field({
   children,
 }: FieldProps) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-field">
       {label && (
         <Label htmlFor={htmlFor}>
           {label}
@@ -32,9 +32,9 @@ export function Field({
       )}
       {children}
       {description && !error && (
-        <p className="text-muted-foreground text-xs">{description}</p>
+        <p className="text-muted-foreground text-caption">{description}</p>
       )}
-      {error && <p className="text-destructive text-xs">{error}</p>}
+      {error && <p className="text-destructive text-caption">{error}</p>}
     </div>
   )
 }

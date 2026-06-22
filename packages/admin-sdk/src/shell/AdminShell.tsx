@@ -33,8 +33,10 @@ export function AdminShell({
       <Sidebar items={nav} currentPath={currentPath} LinkComponent={LinkComponent} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar title={title} actions={actions} />
-        <main className="flex-1 overflow-auto p-6">
-          <div className="mx-auto max-w-6xl">{children}</div>
+        <main className="flex-1 overflow-auto p-page">
+          <div className="mx-auto flex max-w-content-max flex-col gap-section">
+            {children}
+          </div>
         </main>
       </div>
     </div>

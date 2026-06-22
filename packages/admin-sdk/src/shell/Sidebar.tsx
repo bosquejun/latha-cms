@@ -93,7 +93,7 @@ export function Sidebar({
   }
 
   const sectionLabel = (label: string) => (
-    <p className="px-3 pb-1 text-[0.7rem] font-medium uppercase tracking-wider text-muted-foreground">
+    <p className="px-3 pb-1 text-label font-medium uppercase tracking-wider text-muted-foreground">
       {label}
     </p>
   )
@@ -101,7 +101,7 @@ export function Sidebar({
   const dashboardActive = currentPath === homeHref
 
   return (
-    <nav className="flex h-full w-64 shrink-0 flex-col gap-6 border-r border-sidebar-border bg-sidebar p-4">
+    <nav className="flex h-full w-(--sidebar-width) shrink-0 flex-col gap-6 border-r border-sidebar-border bg-sidebar p-sidebar">
       <a href={homeHref} className="flex items-center gap-2.5 px-1 py-1">
         <span className="grid size-8 place-items-center rounded-[14px] bg-primary text-sm font-semibold text-primary-foreground">
           {title.charAt(0).toUpperCase()}
@@ -111,7 +111,7 @@ export function Sidebar({
         </span>
       </a>
 
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-stack">
         {sectionLabel('Overview')}
         {renderLink(
           '__dashboard',
@@ -127,7 +127,7 @@ export function Sidebar({
       {groups.map((group) => {
         const Icon = KIND_ICON[group.kind]
         return (
-          <div key={group.kind} className="flex flex-col gap-1">
+          <div key={group.kind} className="flex flex-col gap-stack">
             {sectionLabel(group.label)}
             {group.items.map((item) =>
               renderLink(
