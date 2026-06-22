@@ -25,6 +25,7 @@ import {
   DEFAULT_COOKIE_NAME,
   DEFAULT_SESSION_TTL_SECONDS,
 } from '@latha/auth'
+import type { JsonValue } from '@latha/core'
 import { getRuntime } from './runtime.js'
 import type {
   EntityDescriptor,
@@ -109,6 +110,20 @@ async function currentAuthUser(latha: LathaInstance) {
   const payload = await verifySessionToken(token, opts.secret)
   if (!payload) return null
   return getUserById(latha, payload.sub)
+}
+
+/**
+ * Dispatch one RPC request and coerce the result to a JSON-serializable value.
+ *
+ * This is the default handler body for the app's single server function. Import
+ * it lazily inside the handler (`await import('@latha/start/server')`) so this
+ * module's server-only imports never reach the client bundle.
+ */
+export async function dispatchLathaRpc(
+  config: ResolvedConfig,
+  input: LathaRpcInput,
+): Promise<JsonValue> {
+  return (await handleLathaRequest(config, input)) as JsonValue
 }
 
 /** Dispatch a single RPC request against the running instance. */

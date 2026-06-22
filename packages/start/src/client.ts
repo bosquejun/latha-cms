@@ -36,6 +36,12 @@ export interface LathaClient {
   logout(): Promise<{ ok: true }>
 }
 
+/**
+ * Build the typed client over the app's single Latha server function.
+ *
+ * Use `dispatchLathaRpc` + `lathaRpcValidator` to stand up the default endpoint,
+ * or pass any `LathaServerFn` you like here to wrap or customize dispatch.
+ */
 export function createLathaClient(serverFn: LathaServerFn): LathaClient {
   const call = <T>(data: Parameters<LathaServerFn>[0]['data']) =>
     serverFn({ data }) as Promise<T>

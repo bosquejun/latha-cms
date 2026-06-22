@@ -8,6 +8,7 @@
  */
 
 export { createLathaClient, type LathaClient } from './client.js'
+export { lathaRpcValidator } from './default-rpc.js'
 export {
   LathaProvider,
   useLatha,
