@@ -13,11 +13,12 @@ import {
   CollectionForm,
   CollectionList,
   DocumentForm,
+  UserMenu,
+  useTheme,
   type AdminEntity,
   type SidebarLinkProps,
 } from '@latha/admin-sdk'
-import { Avatar, Button, Card } from '@latha/ui'
-import { LogOut } from 'lucide-react'
+import { Button, Card } from '@latha/ui'
 import { useLatha } from './context.js'
 import { useAsync } from './hooks.js'
 import type { EntityDescriptor, NavItem } from './rpc.js'
@@ -32,16 +33,6 @@ function RouterLink({ href, className, children }: SidebarLinkProps) {
 
 const asEntity = (d: EntityDescriptor) => d as unknown as AdminEntity
 
-/** Two-letter initials from an email/name for the avatar fallback. */
-function initials(email: string | null | undefined): string {
-  const source = email?.trim()
-  if (!source) return '?'
-  const name = source.split('@')[0] || source
-  const [first, second] = name.split(/[._-]+/).filter(Boolean)
-  const chars =
-    first && second ? `${first.charAt(0)}${second.charAt(0)}` : name.slice(0, 2)
-  return chars.toUpperCase()
-}
 
 type Route =
   | { view: 'dashboard' }
@@ -78,6 +69,7 @@ export function LathaAdmin() {
   const { client, basePath, loginPath } = useLatha()
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const { theme, setTheme } = useTheme()
 
   const session = useAsync(() => client.currentUser(), [])
   const nav = useAsync(() => client.nav(), [])
@@ -96,33 +88,20 @@ export function LathaAdmin() {
   return (
     <AdminShell
       nav={nav.data ?? []}
-      title="LathaCMS"
       currentPath={pathname}
       LinkComponent={RouterLink}
-      actions={
-        <div className="flex items-center gap-inline">
-          <div className="flex items-center gap-inline">
-            <Avatar
-              size="sm"
-              fallback={initials(session.data.email)}
-              alt={session.data.email ?? undefined}
-            />
-            <span className="hidden text-small text-muted-foreground sm:inline">
-              {session.data.email}
-            </span>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Sign out"
-            onClick={async () => {
-              await client.logout()
-              await navigate({ to: loginPath })
-            }}
-          >
-            <LogOut />
-          </Button>
-        </div>
+      brand="LathaCMS"
+      userMenu={
+        <UserMenu
+          email={session.data.email}
+          role={session.data.role}
+          theme={theme}
+          onThemeChange={setTheme}
+          onSignOut={async () => {
+            await client.logout()
+            await navigate({ to: loginPath })
+          }}
+        />
       }
     >
       <AdminView route={route} nav={nav.data ?? []} />
