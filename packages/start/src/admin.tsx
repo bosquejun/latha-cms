@@ -68,7 +68,7 @@ function parseRoute(pathname: string, basePath: string): Route {
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">
+    <div className="grid min-h-screen place-items-center text-small text-muted-foreground">
       {children}
     </div>
   )
@@ -100,14 +100,14 @@ export function LathaAdmin() {
       currentPath={pathname}
       LinkComponent={RouterLink}
       actions={
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-inline">
+          <div className="flex items-center gap-inline">
             <Avatar
               size="sm"
               fallback={initials(session.data.email)}
               alt={session.data.email ?? undefined}
             />
-            <span className="hidden text-sm text-muted-foreground sm:inline">
+            <span className="hidden text-small text-muted-foreground sm:inline">
               {session.data.email}
             </span>
           </div>
@@ -143,7 +143,7 @@ function AdminView({ route, nav }: { route: Route; nav: NavItem[] }) {
     case 'document':
       return <DocumentView slug={route.slug} />
     default:
-      return <p className="text-sm text-muted-foreground">Not found.</p>
+      return <p className="text-small text-muted-foreground">Not found.</p>
   }
 }
 
@@ -155,21 +155,21 @@ const KIND_LABEL: Record<string, string> = {
 
 function Dashboard({ nav }: { nav: NavItem[] }) {
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-xl font-semibold">Dashboard</h2>
-        <p className="text-sm text-muted-foreground">
+    <div className="flex flex-col gap-section">
+      <div className="flex flex-col gap-field">
+        <h2 className="text-h1 font-semibold">Dashboard</h2>
+        <p className="text-caption text-muted-foreground">
           Everything below is derived from your config.
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-card-gap sm:grid-cols-2">
         {nav.map((item) => (
           <Link key={item.slug} to={item.href}>
-            <Card className="gap-1 py-4 transition-colors hover:border-primary/40">
-              <span className="text-xs uppercase tracking-wide text-muted-foreground">
+            <Card className="gap-field px-card transition-colors hover:border-primary/40">
+              <span className="text-label uppercase tracking-wide text-muted-foreground">
                 {KIND_LABEL[item.kind] ?? item.kind}
               </span>
-              <span className="text-base font-medium">{item.label}</span>
+              <span className="text-h3 font-medium">{item.label}</span>
             </Card>
           </Link>
         ))}
@@ -183,13 +183,13 @@ function ListView({ slug }: { slug: string }) {
   const entity = useAsync(() => client.entity(slug), [slug])
   const rows = useAsync(() => client.list(slug), [slug])
 
-  if (entity.loading || rows.loading) return <p className="text-sm text-muted-foreground">Loading…</p>
-  if (!entity.data) return <p className="text-sm text-muted-foreground">Unknown collection.</p>
+  if (entity.loading || rows.loading) return <p className="text-small text-muted-foreground">Loading…</p>
+  if (!entity.data) return <p className="text-small text-muted-foreground">Unknown collection.</p>
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-section">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">{entity.data.label}</h2>
+        <h2 className="text-h1 font-semibold">{entity.data.label}</h2>
         <Button asChild size="sm">
           <Link to={`${basePath}/content/${slug}/new`}>New</Link>
         </Button>
@@ -212,14 +212,14 @@ function CreateView({ slug }: { slug: string }) {
   const navigate = useNavigate()
   const entity = useAsync(() => client.entity(slug), [slug])
 
-  if (entity.loading) return <p className="text-sm text-muted-foreground">Loading…</p>
-  if (!entity.data) return <p className="text-sm text-muted-foreground">Unknown collection.</p>
+  if (entity.loading) return <p className="text-small text-muted-foreground">Loading…</p>
+  if (!entity.data) return <p className="text-small text-muted-foreground">Unknown collection.</p>
 
   const toList = () => navigate({ to: `${basePath}/content/${slug}` })
 
   return (
-    <div className="flex flex-col gap-5">
-      <h2 className="text-xl font-semibold">New {entity.data.label}</h2>
+    <div className="flex flex-col gap-section">
+      <h2 className="text-h1 font-semibold">New {entity.data.label}</h2>
       <CollectionForm
         entity={asEntity(entity.data)}
         onSubmit={async (values) => {
@@ -238,16 +238,16 @@ function EditView({ slug, id }: { slug: string; id: string }) {
   const entity = useAsync(() => client.entity(slug), [slug])
   const doc = useAsync(() => client.get(slug, id), [slug, id])
 
-  if (entity.loading || doc.loading) return <p className="text-sm text-muted-foreground">Loading…</p>
-  if (!entity.data) return <p className="text-sm text-muted-foreground">Unknown collection.</p>
-  if (!doc.data) return <p className="text-sm text-muted-foreground">Record not found.</p>
+  if (entity.loading || doc.loading) return <p className="text-small text-muted-foreground">Loading…</p>
+  if (!entity.data) return <p className="text-small text-muted-foreground">Unknown collection.</p>
+  if (!doc.data) return <p className="text-small text-muted-foreground">Record not found.</p>
 
   const toList = () => navigate({ to: `${basePath}/content/${slug}` })
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-section">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Edit {entity.data.label}</h2>
+        <h2 className="text-h1 font-semibold">Edit {entity.data.label}</h2>
         <Button
           variant="destructive"
           size="sm"
@@ -277,14 +277,14 @@ function DocumentView({ slug }: { slug: string }) {
   const entity = useAsync(() => client.entity(slug), [slug])
   const value = useAsync(() => client.getGlobal(slug), [slug])
 
-  if (entity.loading || value.loading) return <p className="text-sm text-muted-foreground">Loading…</p>
-  if (!entity.data) return <p className="text-sm text-muted-foreground">Unknown document.</p>
+  if (entity.loading || value.loading) return <p className="text-small text-muted-foreground">Loading…</p>
+  if (!entity.data) return <p className="text-small text-muted-foreground">Unknown document.</p>
 
   return (
-    <div className="flex flex-col gap-5">
-      <div>
-        <h2 className="text-xl font-semibold">{entity.data.label}</h2>
-        <p className="text-sm text-muted-foreground">
+    <div className="flex flex-col gap-section">
+      <div className="flex flex-col gap-field">
+        <h2 className="text-h1 font-semibold">{entity.data.label}</h2>
+        <p className="text-caption text-muted-foreground">
           A document singleton — exactly one record.
         </p>
       </div>
