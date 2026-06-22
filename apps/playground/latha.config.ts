@@ -8,7 +8,16 @@
 
 import { defineConfig } from '@latha/core'
 import { tursoAdapter } from '@latha/storage'
-import { Collection, ContentModule, Document, Taxonomy } from '@latha/content'
+import {
+  Collection,
+  ContentModule,
+  Document,
+  Taxonomy,
+  number,
+  richtext,
+  select,
+  text,
+} from '@latha/content'
 import { UsersModule } from '@latha/users'
 import { AuthModule } from '@latha/auth'
 import { countUsers, createUser } from '@latha/users'
@@ -29,10 +38,10 @@ export default defineConfig({
       entities: [
         Document({
           slug: 'site-settings',
-          fields: [
-            { name: 'site_name', type: 'text', required: true },
-            { name: 'tagline', type: 'text' },
-          ],
+          fields: {
+            site_name: text({ required: true }),
+            tagline: text(),
+          },
         }),
 
         Collection({
@@ -59,19 +68,17 @@ export default defineConfig({
               },
             ],
           },
-          fields: [
-            { name: 'title', type: 'text', required: true },
-            { name: 'slug', type: 'text', unique: true },
-            { name: 'content', type: 'richtext' },
-            {
-              name: 'status',
-              type: 'select',
+          fields: {
+            title: text({ required: true }),
+            slug: text({ unique: true }),
+            content: richtext(),
+            status: select({
               options: ['draft', 'published'],
               defaultValue: 'draft',
               admin: { sidebar: true },
-            },
-            { name: 'views', type: 'number', integer: true, defaultValue: 0 },
-          ],
+            }),
+            views: number({ integer: true, defaultValue: 0 }),
+          },
         }),
 
         Taxonomy({ slug: 'categories', hierarchical: true }),

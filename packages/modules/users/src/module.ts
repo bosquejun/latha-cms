@@ -8,7 +8,8 @@
  * only persists whatever hash it is given, keeping storage and crypto separate.
  */
 
-import type { Field, Module } from '@latha/core'
+import { select, stampFields, text } from '@latha/core'
+import type { FieldsRecord, Module } from '@latha/core'
 
 export const USERS_SLUG = 'users'
 
@@ -16,27 +17,25 @@ export interface UsersModuleConfig {
   /** Allowed roles, most-privileged first. Defaults to admin/editor/viewer. */
   roles?: string[]
   /** Extra user fields beyond email / name / role. */
-  fields?: Field[]
+  fields?: FieldsRecord
 }
 
 export function UsersModule(config: UsersModuleConfig = {}): Module {
   const roles = config.roles ?? ['admin', 'editor', 'viewer']
-  const defaultRole = roles[roles.length - 1]
+  const defaultRole = roles[roles.length - 1] ?? 'viewer'
 
-  const fields: Field[] = [
-    { name: 'email', type: 'text', required: true, unique: true },
-    { name: 'name', type: 'text' },
-    {
-      name: 'role',
-      type: 'select',
+  const fields = stampFields({
+    email: text({ required: true, unique: true }),
+    name: text(),
+    role: select({
       options: roles,
       defaultValue: defaultRole,
       admin: { sidebar: true },
-    },
+    }),
     // Write-only credential material — never shown in the admin UI.
-    { name: 'passwordHash', type: 'text', admin: { hidden: true } },
-    ...(config.fields ?? []),
-  ]
+    passwordHash: text({ admin: { hidden: true } }),
+    ...(config.fields ?? {}),
+  })
 
   return {
     name: 'users',

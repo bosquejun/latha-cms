@@ -12,6 +12,25 @@ export * from './types/index.js'
 // Schema bridge
 export { buildZodSchema, type InferFields } from './schema/builder.js'
 
+// Field builders + document type inference
+export {
+  text,
+  number,
+  boolean,
+  date,
+  select,
+  richtext,
+  media,
+  relationship,
+  taxonomy,
+  group,
+  array,
+  stampFields,
+  type AnyFieldDef,
+  type FieldsRecord,
+  type InferDoc,
+} from './schema/fields.js'
+
 // Access control
 export {
   evaluateAccess,

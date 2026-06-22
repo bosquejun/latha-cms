@@ -3,23 +3,34 @@
  *
  * These are thin, typed constructors that stamp the discriminant `kind` onto a
  * config object so the kernel registry and storage layer can treat entities
- * uniformly. Defaults (e.g. timestamps, taxonomy implicit fields) are applied
- * here so the rest of the system sees a fully-formed entity.
+ * uniformly. Fields are declared as a record of builder calls (`text()`,
+ * `select()`, …); the factory infers the document type from them — which then
+ * types the `access` and `hooks` callbacks — and stamps each record key as the
+ * field's `name`, producing the `Field[]` the rest of the system consumes.
+ *
+ * Defaults (e.g. timestamps, taxonomy implicit fields) are applied here so the
+ * rest of the system sees a fully-formed entity.
  */
 
-import type {
-  Collection,
-  CollectionAccess,
-  CollectionAdminConfig,
-  CollectionHooks,
-  Document,
-  Field,
-  Taxonomy,
+import {
+  stampFields,
+  text,
+  type Collection,
+  type CollectionAccess,
+  type CollectionAdminConfig,
+  type CollectionHooks,
+  type Document,
+  type FieldsRecord,
+  type InferDoc,
+  type Taxonomy,
 } from '@latha/core'
 
-export interface CollectionInput<TDoc = Record<string, unknown>> {
+export interface CollectionInput<
+  TFields extends FieldsRecord,
+  TDoc = InferDoc<TFields>,
+> {
   slug: string
-  fields: Field[]
+  fields: TFields
   admin?: CollectionAdminConfig
   access?: CollectionAccess<TDoc>
   hooks?: CollectionHooks<TDoc>
@@ -27,15 +38,24 @@ export interface CollectionInput<TDoc = Record<string, unknown>> {
 }
 
 /** Define a Collection — many records, standard CRUD. */
-export function Collection<TDoc = Record<string, unknown>>(
-  input: CollectionInput<TDoc>,
-): Collection<TDoc> {
-  return { kind: 'collection', timestamps: true, ...input }
+export function Collection<TFields extends FieldsRecord>(
+  input: CollectionInput<TFields>,
+): Collection<InferDoc<TFields>> {
+  const { fields, ...rest } = input
+  return {
+    kind: 'collection',
+    timestamps: true,
+    ...rest,
+    fields: stampFields(fields),
+  }
 }
 
-export interface DocumentInput<TDoc = Record<string, unknown>> {
+export interface DocumentInput<
+  TFields extends FieldsRecord,
+  TDoc = InferDoc<TFields>,
+> {
   slug: string
-  fields: Field[]
+  fields: TFields
   admin?: Document<TDoc>['admin']
   access?: CollectionAccess<TDoc>
   hooks?: CollectionHooks<TDoc>
@@ -43,10 +63,16 @@ export interface DocumentInput<TDoc = Record<string, unknown>> {
 }
 
 /** Define a Document — a single-instance singleton (no list view). */
-export function Document<TDoc = Record<string, unknown>>(
-  input: DocumentInput<TDoc>,
-): Document<TDoc> {
-  return { kind: 'document', timestamps: true, ...input }
+export function Document<TFields extends FieldsRecord>(
+  input: DocumentInput<TFields>,
+): Document<InferDoc<TFields>> {
+  const { fields, ...rest } = input
+  return {
+    kind: 'document',
+    timestamps: true,
+    ...rest,
+    fields: stampFields(fields),
+  }
 }
 
 export interface TaxonomyInput {
@@ -54,7 +80,7 @@ export interface TaxonomyInput {
   /** Allow parent/child nesting. Adds a `parent` field. */
   hierarchical?: boolean
   /** Extra fields beyond the implicit `name` / `slug` (and `parent`). */
-  fields?: Field[]
+  fields?: FieldsRecord
   admin?: CollectionAdminConfig
 }
 
@@ -64,12 +90,12 @@ export interface TaxonomyInput {
  * taxonomy stores and validates like any other entity.
  */
 export function Taxonomy(input: TaxonomyInput): Taxonomy {
-  const implicit: Field[] = [
-    { name: 'name', type: 'text', required: true },
-    { name: 'slug', type: 'text', unique: true, required: true },
-  ]
+  const implicit: FieldsRecord = {
+    name: text({ required: true }),
+    slug: text({ unique: true, required: true }),
+  }
   if (input.hierarchical) {
-    implicit.push({ name: 'parent', type: 'text' })
+    implicit.parent = text()
   }
 
   return {
@@ -77,6 +103,6 @@ export function Taxonomy(input: TaxonomyInput): Taxonomy {
     slug: input.slug,
     hierarchical: input.hierarchical,
     admin: input.admin,
-    fields: [...implicit, ...(input.fields ?? [])],
+    fields: stampFields({ ...implicit, ...(input.fields ?? {}) }),
   }
 }
