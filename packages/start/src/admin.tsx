@@ -13,12 +13,15 @@ import {
   CollectionForm,
   CollectionList,
   DocumentForm,
+  EmptyState,
+  PageHeader,
   UserMenu,
   useTheme,
   type AdminEntity,
   type SidebarLinkProps,
 } from '@latha/admin-sdk'
 import { Button, Card } from '@latha/ui'
+import { Plus, FileText, Files, FolderTree } from 'lucide-react'
 import { useLatha } from './context.js'
 import { useAsync } from './hooks.js'
 import type { EntityDescriptor, NavItem } from './rpc.js'
@@ -126,33 +129,51 @@ function AdminView({ route, nav }: { route: Route; nav: NavItem[] }) {
   }
 }
 
-const KIND_LABEL: Record<string, string> = {
-  collection: 'Collection',
-  document: 'Document',
-  taxonomy: 'Taxonomy',
+const KIND_ICON: Record<string, typeof FileText> = {
+  collection: FileText,
+  document: Files,
+  taxonomy: FolderTree,
 }
 
 function Dashboard({ nav }: { nav: NavItem[] }) {
+  const { client } = useLatha()
   return (
-    <div className="flex flex-col gap-section">
-      <div className="flex flex-col gap-field">
-        <h2 className="text-h1 font-semibold">Dashboard</h2>
-        <p className="text-caption text-muted-foreground">
-          Everything below is derived from your config.
-        </p>
+    <>
+      <PageHeader
+        title="Dashboard"
+        description="Everything below is derived from your config."
+      />
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {nav.map((item) => {
+          const Icon = KIND_ICON[item.kind] ?? FileText
+          return (
+            <Link key={item.slug} to={item.href}>
+              <Card className="gap-0 p-0 transition-colors hover:border-foreground/20">
+                <div className="flex items-center justify-between px-4 pt-4">
+                  <span className="text-small font-medium text-muted-foreground">
+                    {item.label}
+                  </span>
+                  <Icon className="size-4 text-muted-foreground" />
+                </div>
+                <StatCount client={client} item={item} />
+              </Card>
+            </Link>
+          )
+        })}
       </div>
-      <div className="grid grid-cols-1 gap-card-gap sm:grid-cols-2">
-        {nav.map((item) => (
-          <Link key={item.slug} to={item.href}>
-            <Card className="gap-field px-card transition-colors hover:border-primary/40">
-              <span className="text-label uppercase tracking-wide text-muted-foreground">
-                {KIND_LABEL[item.kind] ?? item.kind}
-              </span>
-              <span className="text-h3 font-medium">{item.label}</span>
-            </Card>
-          </Link>
-        ))}
-      </div>
+    </>
+  )
+}
+
+function StatCount({ client, item }: { client: ReturnType<typeof useLatha>['client']; item: NavItem }) {
+  const count = useAsync(
+    () => (item.kind === 'collection' ? client.list(item.slug) : Promise.resolve([])),
+    [item.slug, item.kind],
+  )
+  const value = item.kind === 'collection' ? (count.data?.length ?? '—') : '—'
+  return (
+    <div className="px-4 pb-4 pt-1.5 text-3xl font-semibold tracking-[-0.02em]">
+      {count.loading ? '·' : value}
     </div>
   )
 }
@@ -162,27 +183,51 @@ function ListView({ slug }: { slug: string }) {
   const entity = useAsync(() => client.entity(slug), [slug])
   const rows = useAsync(() => client.list(slug), [slug])
 
-  if (entity.loading || rows.loading) return <p className="text-small text-muted-foreground">Loading…</p>
-  if (!entity.data) return <p className="text-small text-muted-foreground">Unknown collection.</p>
+  if (entity.loading || rows.loading)
+    return <p className="text-small text-muted-foreground">Loading…</p>
+  if (!entity.data)
+    return <p className="text-small text-muted-foreground">Unknown collection.</p>
 
+  const list = rows.data ?? []
   return (
-    <div className="flex flex-col gap-section">
-      <div className="flex items-center justify-between">
-        <h2 className="text-h1 font-semibold">{entity.data.label}</h2>
-        <Button asChild size="sm">
-          <Link to={`${basePath}/content/${slug}/new`}>New</Link>
-        </Button>
-      </div>
-      <CollectionList
-        entity={asEntity(entity.data)}
-        rows={rows.data ?? []}
-        getEditHref={(id) => `${basePath}/content/${slug}/${id}`}
-        onDelete={async (id) => {
-          await client.remove(slug, id)
-          rows.reload()
-        }}
+    <>
+      <PageHeader
+        title={entity.data.label}
+        actions={
+          <Button asChild size="sm">
+            <Link to={`${basePath}/content/${slug}/new`}>
+              <Plus /> New
+            </Link>
+          </Button>
+        }
       />
-    </div>
+      {list.length === 0 ? (
+        <EmptyState
+          icon={FileText}
+          title={`No ${entity.data.label.toLowerCase()} yet`}
+          description={`Create your first to start managing ${entity.data.label.toLowerCase()}.`}
+          action={
+            <Button asChild size="sm" className="mt-1">
+              <Link to={`${basePath}/content/${slug}/new`}>
+                <Plus /> New
+              </Link>
+            </Button>
+          }
+        />
+      ) : (
+        <Card className="overflow-hidden p-0">
+          <CollectionList
+            entity={asEntity(entity.data)}
+            rows={list}
+            getEditHref={(id) => `${basePath}/content/${slug}/${id}`}
+            onDelete={async (id) => {
+              await client.remove(slug, id)
+              rows.reload()
+            }}
+          />
+        </Card>
+      )}
+    </>
   )
 }
 
@@ -197,8 +242,11 @@ function CreateView({ slug }: { slug: string }) {
   const toList = () => navigate({ to: `${basePath}/content/${slug}` })
 
   return (
-    <div className="flex flex-col gap-section">
-      <h2 className="text-h1 font-semibold">New {entity.data.label}</h2>
+    <>
+      <PageHeader
+        title={`New ${entity.data.label.toLowerCase()}`}
+        description="Draft a new record for this collection."
+      />
       <CollectionForm
         entity={asEntity(entity.data)}
         onSubmit={async (values) => {
@@ -207,7 +255,7 @@ function CreateView({ slug }: { slug: string }) {
         }}
         onCancel={toList}
       />
-    </div>
+    </>
   )
 }
 
@@ -224,20 +272,22 @@ function EditView({ slug, id }: { slug: string; id: string }) {
   const toList = () => navigate({ to: `${basePath}/content/${slug}` })
 
   return (
-    <div className="flex flex-col gap-section">
-      <div className="flex items-center justify-between">
-        <h2 className="text-h1 font-semibold">Edit {entity.data.label}</h2>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={async () => {
-            await client.remove(slug, id)
-            await toList()
-          }}
-        >
-          Delete
-        </Button>
-      </div>
+    <>
+      <PageHeader
+        title={`Edit ${entity.data.label.toLowerCase()}`}
+        actions={
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={async () => {
+              await client.remove(slug, id)
+              await toList()
+            }}
+          >
+            Delete
+          </Button>
+        }
+      />
       <CollectionForm
         entity={asEntity(entity.data)}
         initialValues={doc.data}
@@ -247,7 +297,7 @@ function EditView({ slug, id }: { slug: string; id: string }) {
         }}
         onCancel={toList}
       />
-    </div>
+    </>
   )
 }
 
