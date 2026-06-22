@@ -32,9 +32,21 @@ export function LathaLogin() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-6">
-      <Card className="w-full max-w-sm gap-5">
-        <h1 className="text-lg font-semibold">Sign in to LathaCMS</h1>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-muted/40 px-6">
+      <div className="flex items-center gap-2.5">
+        <span className="grid size-9 place-items-center rounded-[14px] bg-primary text-base font-semibold text-primary-foreground">
+          L
+        </span>
+        <span className="text-lg font-semibold tracking-tight">LathaCMS</span>
+      </div>
+
+      <Card className="w-full max-w-sm gap-6 p-6">
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-xl font-semibold tracking-tight">Welcome back</h1>
+          <p className="text-sm text-muted-foreground">
+            Enter your credentials to continue.
+          </p>
+        </div>
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <Field htmlFor="email" label="Email">
             <Input

@@ -15,6 +15,15 @@ export { Textarea } from './components/ui/textarea.js'
 export { Label } from './components/ui/label.js'
 export { Badge, badgeVariants } from './components/ui/badge.js'
 export {
+  StatusBadge,
+  type StatusBadgeProps,
+} from './components/ui/status-badge.js'
+export { Avatar, type AvatarProps } from './components/ui/avatar.js'
+export { Separator, type SeparatorProps } from './components/ui/separator.js'
+export { Switch, type SwitchProps } from './components/ui/switch.js'
+export { Checkbox, type CheckboxProps } from './components/ui/checkbox.js'
+export { Tabs, type TabsProps, type TabItem } from './components/ui/tabs.js'
+export {
   Card,
   CardHeader,
   CardTitle,

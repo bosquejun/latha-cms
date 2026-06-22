@@ -1,3 +1,4 @@
+import { Switch } from '@latha/ui'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 
@@ -13,12 +14,10 @@ export function BooleanField({
     <div className="flex flex-col gap-1.5">
       <label
         htmlFor={id}
-        className="flex items-center gap-2 text-sm font-medium text-foreground"
+        className="flex items-center gap-2.5 text-sm font-medium text-foreground"
       >
-        <input
+        <Switch
           id={id}
-          type="checkbox"
-          className="size-4 accent-primary"
           checked={Boolean(value)}
           onChange={(e) => onChange(e.target.checked)}
           onBlur={onBlur}

@@ -9,6 +9,7 @@
 import {
   Badge,
   Button,
+  StatusBadge,
   Table,
   TBody,
   TD,
@@ -45,15 +46,20 @@ function resolveColumns(entity: AdminEntity): string[] {
   return head
 }
 
-function renderCell(value: unknown): ReactNode {
+function renderCell(value: unknown, isSelect: boolean): ReactNode {
   if (value == null || value === '')
     return <span className="text-muted-foreground">—</span>
   if (typeof value === 'boolean')
     return (
       <Badge variant={value ? 'default' : 'secondary'}>{String(value)}</Badge>
     )
+  // Select / status values render as a color-coded status pill.
+  if (isSelect && typeof value === 'string')
+    return <StatusBadge status={value} />
   if (typeof value === 'object')
-    return <code className="text-xs">{JSON.stringify(value)}</code>
+    return (
+      <code className="font-mono text-xs">{JSON.stringify(value)}</code>
+    )
   return String(value)
 }
 
@@ -66,6 +72,9 @@ export function CollectionList({
 }: CollectionListProps) {
   const columns = resolveColumns(entity)
   const titleCol = entity.useAsTitle ?? columns[0]
+  const selectCols = new Set(
+    entity.fields.filter((f) => f.type === 'select').map((f) => f.name),
+  )
 
   if (rows.length === 0) {
     return (
@@ -76,6 +85,7 @@ export function CollectionList({
   }
 
   return (
+    <div className="overflow-hidden rounded-xl border shadow-sm">
     <Table>
       <THead>
         <TR>
@@ -93,12 +103,12 @@ export function CollectionList({
                 {col === titleCol ? (
                   <a
                     href={getEditHref(row.id)}
-                    className="font-medium text-primary hover:underline"
+                    className="font-medium text-foreground hover:underline"
                   >
-                    {renderCell(row[col])}
+                    {renderCell(row[col], selectCols.has(col))}
                   </a>
                 ) : (
-                  renderCell(row[col])
+                  renderCell(row[col], selectCols.has(col))
                 )}
               </TD>
             ))}
@@ -118,5 +128,6 @@ export function CollectionList({
         ))}
       </TBody>
     </Table>
+    </div>
   )
 }

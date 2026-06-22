@@ -16,7 +16,8 @@ import {
   type AdminEntity,
   type SidebarLinkProps,
 } from '@latha/admin-sdk'
-import { Button, Card } from '@latha/ui'
+import { Avatar, Button, Card } from '@latha/ui'
+import { LogOut } from 'lucide-react'
 import { useLatha } from './context.js'
 import { useAsync } from './hooks.js'
 import type { EntityDescriptor, NavItem } from './rpc.js'
@@ -30,6 +31,17 @@ function RouterLink({ href, className, children }: SidebarLinkProps) {
 }
 
 const asEntity = (d: EntityDescriptor) => d as unknown as AdminEntity
+
+/** Two-letter initials from an email/name for the avatar fallback. */
+function initials(email: string | null | undefined): string {
+  const source = email?.trim()
+  if (!source) return '?'
+  const name = source.split('@')[0] || source
+  const [first, second] = name.split(/[._-]+/).filter(Boolean)
+  const chars =
+    first && second ? `${first.charAt(0)}${second.charAt(0)}` : name.slice(0, 2)
+  return chars.toUpperCase()
+}
 
 type Route =
   | { view: 'dashboard' }
@@ -89,18 +101,26 @@ export function LathaAdmin() {
       LinkComponent={RouterLink}
       actions={
         <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">
-            {session.data.email}
-          </span>
+          <div className="flex items-center gap-2">
+            <Avatar
+              size="sm"
+              fallback={initials(session.data.email)}
+              alt={session.data.email ?? undefined}
+            />
+            <span className="hidden text-sm text-muted-foreground sm:inline">
+              {session.data.email}
+            </span>
+          </div>
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
+            aria-label="Sign out"
             onClick={async () => {
               await client.logout()
               await navigate({ to: loginPath })
             }}
           >
-            Sign out
+            <LogOut />
           </Button>
         </div>
       }

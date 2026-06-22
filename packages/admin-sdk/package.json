@@ -19,7 +19,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@tanstack/react-form": "^1.0.0"
+    "@tanstack/react-form": "^1.0.0",
+    "lucide-react": "^0.469.0"
   },
   "peerDependencies": {
     "@latha/core": "workspace:*",
