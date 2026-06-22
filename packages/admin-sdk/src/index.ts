@@ -23,6 +23,8 @@ export {
 export { AdminShell, type AdminShellProps } from './shell/AdminShell.js'
 export { Sidebar, type SidebarProps, type SidebarLinkProps } from './shell/Sidebar.js'
 export { Topbar, type TopbarProps } from './shell/Topbar.js'
+export { useTheme, type Theme } from './shell/useTheme.js'
+export { UserMenu, type UserMenuProps } from './shell/UserMenu.js'
 
 // Field renderers
 export {
