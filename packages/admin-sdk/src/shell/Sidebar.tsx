@@ -23,6 +23,7 @@ export interface SidebarLinkProps {
   href: string
   className?: string
   children: ReactNode
+  onClick?: () => void
 }
 
 export interface SidebarProps {
@@ -31,9 +32,11 @@ export interface SidebarProps {
   currentPath?: string
   /** Optional router Link component. */
   LinkComponent?: ComponentType<SidebarLinkProps>
-  /** Brand / wordmark shown at the top. */
+  /** Brand / wordmark (no longer rendered; kept to avoid breaking callers). */
   title?: string
   homeHref?: string
+  /** Called whenever the user clicks any nav link. */
+  onNavigate?: () => void
 }
 
 const GROUP_LABEL: Record<EntityKind, string> = {
@@ -63,8 +66,9 @@ export function Sidebar({
   items,
   currentPath,
   LinkComponent,
-  title = 'LathaCMS',
+  // title kept in SidebarProps for backwards-compat but no longer rendered
   homeHref = '/admin',
+  onNavigate,
 }: SidebarProps) {
   const groups = GROUP_ORDER.map((kind) => ({
     kind,
@@ -80,13 +84,13 @@ export function Sidebar({
   ) => {
     if (LinkComponent) {
       return (
-        <LinkComponent key={key} href={href} className={linkClass(active)}>
+        <LinkComponent key={key} href={href} className={linkClass(active)} onClick={() => onNavigate?.()}>
           {children}
         </LinkComponent>
       )
     }
     return (
-      <a key={key} href={href} className={linkClass(active)}>
+      <a key={key} href={href} className={linkClass(active)} onClick={() => onNavigate?.()}>
         {children}
       </a>
     )
@@ -101,16 +105,7 @@ export function Sidebar({
   const dashboardActive = currentPath === homeHref
 
   return (
-    <nav className="flex h-full w-(--sidebar-width) shrink-0 flex-col gap-6 border-r border-sidebar-border bg-sidebar p-sidebar">
-      <a href={homeHref} className="flex items-center gap-2.5 px-1 py-1">
-        <span className="grid size-8 place-items-center rounded-[14px] bg-primary text-sm font-semibold text-primary-foreground">
-          {title.charAt(0).toUpperCase()}
-        </span>
-        <span className="text-base font-semibold tracking-tight text-sidebar-foreground">
-          {title}
-        </span>
-      </a>
-
+    <nav className="flex h-full w-(--sidebar-width) shrink-0 flex-col gap-6 overflow-y-auto border-r border-sidebar-border bg-sidebar p-sidebar">
       <div className="flex flex-col gap-stack">
         {sectionLabel('Overview')}
         {renderLink(
