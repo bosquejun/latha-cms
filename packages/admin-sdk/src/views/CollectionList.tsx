@@ -85,7 +85,6 @@ export function CollectionList({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border shadow-sm">
     <Table>
       <THead>
         <TR>
@@ -128,6 +127,5 @@ export function CollectionList({
         ))}
       </TBody>
     </Table>
-    </div>
   )
 }
