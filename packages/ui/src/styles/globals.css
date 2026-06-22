@@ -90,6 +90,49 @@
   --sidebar-width: 16rem;
   --header-height: 3.5rem;
   --content-max: 72rem;
+
+  /* Spacing — primitive 4px rhythm (Layer A) */
+  --space-0: 0;
+  --space-px: 1px;
+  --space-1: 0.25rem;   /* 4px  */
+  --space-2: 0.5rem;    /* 8px  */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+
+  /* Spacing — semantic aliases (Layer B), intent-named */
+  --space-page: var(--space-6);        /* page / content padding       */
+  --space-section: var(--space-8);     /* gap between page sections    */
+  --space-card: var(--space-6);        /* card inner padding           */
+  --space-card-gap: var(--space-4);    /* gap inside a card            */
+  --space-field-gap: var(--space-2);   /* label <-> control <-> help   */
+  --space-form-gap: var(--space-5);    /* gap between form fields      */
+  --space-inline: var(--space-2);      /* icon <-> text, button rows   */
+  --space-stack: var(--space-1);       /* nav item lists               */
+  --space-sidebar: var(--space-4);     /* sidebar inner padding        */
+
+  /* Typography scale — size / line-height pairs */
+  --text-display: 1.875rem;
+  --text-display--line-height: 2.25rem;
+  --text-h1: 1.5rem;
+  --text-h1--line-height: 2rem;
+  --text-h2: 1.25rem;
+  --text-h2--line-height: 1.75rem;
+  --text-h3: 1rem;
+  --text-h3--line-height: 1.5rem;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.25rem;
+  --text-small: 0.8125rem;
+  --text-small--line-height: 1.25rem;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
+  --text-label: 0.7rem;
+  --text-label--line-height: 1rem;
 }
 
 .dark {
@@ -177,6 +220,40 @@
   --shadow-md: var(--shadow-md);
   --shadow-lg: var(--shadow-lg);
   --shadow-overlay: var(--shadow-overlay);
+
+  /* Spacing scale -> Tailwind spacing utilities (p-*, px-*, gap-*, m-*) */
+  --spacing-page: var(--space-page);
+  --spacing-section: var(--space-section);
+  --spacing-card: var(--space-card);
+  --spacing-card-gap: var(--space-card-gap);
+  --spacing-field: var(--space-field-gap);
+  --spacing-form: var(--space-form-gap);
+  --spacing-inline: var(--space-inline);
+  --spacing-stack: var(--space-stack);
+  --spacing-sidebar: var(--space-sidebar);
+
+  /* Layout constants -> width/height/max-width utilities */
+  --spacing-sidebar-width: var(--sidebar-width);
+  --spacing-header-height: var(--header-height);
+  --spacing-content-max: var(--content-max);
+
+  /* Typography scale -> text-* utilities (size + line-height) */
+  --text-display: var(--text-display);
+  --text-display--line-height: var(--text-display--line-height);
+  --text-h1: var(--text-h1);
+  --text-h1--line-height: var(--text-h1--line-height);
+  --text-h2: var(--text-h2);
+  --text-h2--line-height: var(--text-h2--line-height);
+  --text-h3: var(--text-h3);
+  --text-h3--line-height: var(--text-h3--line-height);
+  --text-body: var(--text-body);
+  --text-body--line-height: var(--text-body--line-height);
+  --text-small: var(--text-small);
+  --text-small--line-height: var(--text-small--line-height);
+  --text-caption: var(--text-caption);
+  --text-caption--line-height: var(--text-caption--line-height);
+  --text-label: var(--text-label);
+  --text-label--line-height: var(--text-label--line-height);
 }
 
 @layer base {
