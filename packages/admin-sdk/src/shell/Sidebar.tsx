@@ -18,12 +18,29 @@ import {
 } from 'lucide-react'
 import { cn } from '@latha/ui'
 import type { AdminNavItem, EntityKind } from '../schema.js'
+import { Slot } from '../extensions/Slot.js'
 
 export interface SidebarLinkProps {
   href: string
   className?: string
   children: ReactNode
   onClick?: () => void
+}
+
+/** A single link inside an extension-contributed sidebar group. */
+export interface SidebarExtraItem {
+  key: string
+  href: string
+  label: string
+  icon?: LucideIcon
+  /** Render as a plain `<a>` (new tab) rather than the router Link. */
+  external?: boolean
+}
+
+/** A heading + links contributed by extensions (custom pages, nav links). */
+export interface SidebarGroup {
+  label: string
+  items: SidebarExtraItem[]
 }
 
 export interface SidebarProps {
@@ -35,6 +52,8 @@ export interface SidebarProps {
   /** Brand / wordmark (no longer rendered; kept to avoid breaking callers). */
   title?: string
   homeHref?: string
+  /** Extension-contributed groups, rendered below the entity groups. */
+  extraGroups?: SidebarGroup[]
   /** Called whenever the user clicks any nav link. */
   onNavigate?: () => void
 }
@@ -68,6 +87,7 @@ export function Sidebar({
   LinkComponent,
   // title kept in SidebarProps for backwards-compat but no longer rendered
   homeHref = '/admin',
+  extraGroups,
   onNavigate,
 }: SidebarProps) {
   const groups = GROUP_ORDER.map((kind) => ({
@@ -81,8 +101,9 @@ export function Sidebar({
     href: string,
     active: boolean,
     children: ReactNode,
+    external = false,
   ) => {
-    if (LinkComponent) {
+    if (LinkComponent && !external) {
       return (
         <LinkComponent key={key} href={href} className={linkClass(active)} onClick={() => onNavigate?.()}>
           {children}
@@ -90,7 +111,13 @@ export function Sidebar({
       )
     }
     return (
-      <a key={key} href={href} className={linkClass(active)} onClick={() => onNavigate?.()}>
+      <a
+        key={key}
+        href={href}
+        className={linkClass(active)}
+        onClick={() => onNavigate?.()}
+        {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
+      >
         {children}
       </a>
     )
@@ -106,6 +133,8 @@ export function Sidebar({
 
   return (
     <nav className="flex h-full w-(--sidebar-width) shrink-0 flex-col gap-6 overflow-y-auto border-r border-sidebar-border bg-sidebar p-sidebar">
+      <Slot zone="shell.sidebar.top" />
+
       <div className="flex flex-col gap-stack">
         {sectionLabel('Overview')}
         {renderLink(
@@ -138,6 +167,27 @@ export function Sidebar({
           </div>
         )
       })}
+
+      {extraGroups?.map((group) => (
+        <div key={`x:${group.label}`} className="flex flex-col gap-stack">
+          {sectionLabel(group.label)}
+          {group.items.map((item) => {
+            const Icon = item.icon
+            return renderLink(
+              item.key,
+              item.href,
+              !item.external && (currentPath?.startsWith(item.href) ?? false),
+              <>
+                {Icon ? <Icon /> : null}
+                {item.label}
+              </>,
+              item.external,
+            )
+          })}
+        </div>
+      ))}
+
+      <Slot zone="shell.sidebar.bottom" />
     </nav>
   )
 }

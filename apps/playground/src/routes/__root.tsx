@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference types="@latha/start/virtual" />
 import {
   HeadContent,
   Outlet,
@@ -7,6 +8,7 @@ import {
 } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { LathaProvider } from '@latha/start'
+import { adminExtensions } from 'virtual:latha/admin-extensions'
 import { latha } from '../latha-client'
 import appCss from '../styles.css?url'
 
@@ -25,7 +27,12 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
-      <LathaProvider client={latha} basePath="/admin" loginPath="/login">
+      <LathaProvider
+        client={latha}
+        basePath="/admin"
+        loginPath="/login"
+        extensions={adminExtensions}
+      >
         <Outlet />
       </LathaProvider>
     </RootDocument>

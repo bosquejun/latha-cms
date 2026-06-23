@@ -50,6 +50,9 @@ importers:
       '@tanstack/react-start':
         specifier: ^1.168.0
         version: 1.168.26(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@7.3.5(@types/node@26.0.0)(jiti@2.7.0)(lightningcss@1.32.0))
+      lucide-react:
+        specifier: ^0.469.0
+        version: 0.469.0(react@19.2.7)
       react:
         specifier: ^19.0.0
         version: 19.2.7

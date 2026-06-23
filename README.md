@@ -192,6 +192,35 @@ admin, and login all come from the framework via `lathaStart()`.
 > `@latha/react-start` or `@latha/tanstack-start` were considered; the name was
 > kept since LathaCMS is defined as "built on TanStack Start."
 
+## Customizing the admin
+
+The auto-generated admin is extensible through a structured set of **injection
+zones** and **custom pages** — the LathaCMS take on Medusa's admin extensions.
+Drop files under `src/admin/` and the `lathaStart()` Vite plugin auto-collects
+them into `virtual:latha/admin-extensions`, which you hand to the provider:
+
+```tsx
+import { LathaProvider } from '@latha/start'
+import { adminExtensions } from 'virtual:latha/admin-extensions'
+
+<LathaProvider client={latha} extensions={adminExtensions}>…</LathaProvider>
+```
+
+```tsx
+// src/admin/widgets/post-tips.tsx — a widget in the form sidebar
+import { defineWidgetConfig, type WidgetContext } from '@latha/start'
+
+export const config = defineWidgetConfig({ zone: 'form.sidebar.before' })
+export default function PostTips({ entity }: WidgetContext) { … }
+```
+
+Six surfaces are supported: **widgets** (injected into named zones like
+`shell.topbar.start`, `list.after`, `form.sidebar.before`), **custom pages**,
+**dashboard widgets**, **settings pages**, **field-renderer overrides**, and
+**nav links**. The engine is a plain registry, so you can also pass an
+`extensions` object built by hand with `defineAdminExtensions` — no Vite plugin
+required. Full guide: [`docs/admin-extensions.md`](./docs/admin-extensions.md).
+
 ## Next
 
 Phase 5 — Media: `@latha/media` (MediaModule), an R2 storage adapter, the media

@@ -21,7 +21,13 @@ export {
 
 // Shell
 export { AdminShell, type AdminShellProps } from './shell/AdminShell.js'
-export { Sidebar, type SidebarProps, type SidebarLinkProps } from './shell/Sidebar.js'
+export {
+  Sidebar,
+  type SidebarProps,
+  type SidebarLinkProps,
+  type SidebarGroup,
+  type SidebarExtraItem,
+} from './shell/Sidebar.js'
 export { MobileDrawer, type MobileDrawerProps } from './shell/MobileDrawer.js'
 export { Topbar, type TopbarProps } from './shell/Topbar.js'
 export { useTheme, type Theme } from './shell/useTheme.js'
@@ -36,6 +42,43 @@ export {
   type FieldRenderer,
   type FieldControlProps,
 } from './fields/registry.js'
+
+// Extension system — injection zones, registry, <Slot>, define* helpers
+export {
+  ADMIN_ZONES,
+  isAdminZone,
+  type AdminZone,
+  type WidgetContext,
+  defineAdminExtensions,
+  defineWidgetConfig,
+  definePageConfig,
+  defineDashboardWidgetConfig,
+  defineSettingsConfig,
+  defineFieldConfig,
+  type AdminExtensions,
+  type WidgetComponent,
+  type WidgetConfig,
+  type WidgetExtension,
+  type PageComponentProps,
+  type PageConfig,
+  type PageExtension,
+  type DashboardWidgetConfig,
+  type DashboardWidgetExtension,
+  type SettingsPageConfig,
+  type SettingsPageExtension,
+  type FieldRendererConfig,
+  type FieldRendererExtension,
+  type NavItemExtension,
+  createExtensionRegistry,
+  EMPTY_REGISTRY,
+  type ExtensionRegistry,
+  ExtensionsProvider,
+  useExtensions,
+  useZoneWidgets,
+  type ExtensionsProviderProps,
+  Slot,
+  type SlotProps,
+} from './extensions/index.js'
 
 // Views
 export {

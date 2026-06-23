@@ -37,6 +37,12 @@ export interface LathaStartOptions {
   loginPath?: string
   /** Admin base path; the admin mounts as a catch-all under it. Default `/admin`. */
   adminBasePath?: string
+  /**
+   * Admin extension auto-discovery. When enabled (the default), files under the
+   * convention directory are collected into the `virtual:latha/admin-extensions`
+   * module. Pass `false` to disable, or an object to point at a custom folder.
+   */
+  admin?: false | { dir?: string }
   /** Extra options forwarded to `tanstackStart()`. */
   start?: TanStackStartOptions
 }
@@ -57,7 +63,7 @@ export function lathaStart(
   ])
 
   const start = options.start ?? {}
-  return tanstackStart({
+  const tanstack: TanStackStartPlugins = tanstackStart({
     ...start,
     router: {
       ...start.router,
@@ -65,4 +71,77 @@ export function lathaStart(
       importRoutesUsingAbsolutePaths: true,
     },
   })
+
+  if (options.admin === false) return tanstack
+
+  const dir = options.admin?.dir ?? 'src/admin'
+  // Vite flattens nested plugin arrays, so appending our virtual-module plugin
+  // to TanStack's array keeps the single `plugins: [lathaStart()]` ergonomics.
+  // The cast bridges our minimal plugin shape to TanStack's Vite plugin type.
+  return [
+    ...tanstack,
+    adminExtensionsPlugin(dir) as unknown as TanStackStartPlugins[number],
+  ]
+}
+
+/** A minimal Vite plugin shape — avoids a hard `vite` type dependency here. */
+interface VitePluginLike {
+  name: string
+  enforce?: 'pre' | 'post'
+  resolveId(id: string): string | undefined
+  load(id: string): string | undefined
+}
+
+const VIRTUAL_ID = 'virtual:latha/admin-extensions'
+const RESOLVED_ID = '\0' + VIRTUAL_ID
+
+/**
+ * Resolves `virtual:latha/admin-extensions` to a module that collects the
+ * convention folder via Vite's `import.meta.glob` (so HMR works for free) and
+ * assembles a single `AdminExtensions` object from each file's default export
+ * and `config`.
+ */
+function adminExtensionsPlugin(dir: string): VitePluginLike {
+  const base = '/' + dir.replace(/^\.?\/*/, '').replace(/\/*$/, '')
+  return {
+    name: 'latha:admin-extensions',
+    resolveId(id) {
+      return id === VIRTUAL_ID ? RESOLVED_ID : undefined
+    },
+    load(id) {
+      return id === RESOLVED_ID ? buildModuleSource(base) : undefined
+    },
+  }
+}
+
+function buildModuleSource(base: string): string {
+  const glob = (kind: string) =>
+    `import.meta.glob('${base}/${kind}/**/*.{tsx,jsx,ts,js}', { eager: true })`
+  return `
+const widgetMods = ${glob('widgets')}
+const pageMods = ${glob('pages')}
+const dashboardMods = ${glob('dashboard')}
+const settingsMods = ${glob('settings')}
+const fieldMods = ${glob('fields')}
+
+const list = (mods) => Object.keys(mods).sort().map((id) => ({ id, mod: mods[id] }))
+
+export const adminExtensions = {
+  widgets: list(widgetMods)
+    .filter(({ mod }) => mod.default && mod.config && mod.config.zone)
+    .map(({ id, mod }) => ({ id, Component: mod.default, zone: mod.config.zone, order: mod.config.order })),
+  pages: list(pageMods)
+    .filter(({ mod }) => mod.default && mod.config && mod.config.path)
+    .map(({ id, mod }) => ({ id, Component: mod.default, ...mod.config })),
+  dashboardWidgets: list(dashboardMods)
+    .filter(({ mod }) => mod.default)
+    .map(({ id, mod }) => ({ id, Component: mod.default, ...(mod.config || {}) })),
+  settings: list(settingsMods)
+    .filter(({ mod }) => mod.default && mod.config && mod.config.path)
+    .map(({ id, mod }) => ({ id, Component: mod.default, ...mod.config })),
+  fields: list(fieldMods)
+    .filter(({ mod }) => mod.default && mod.config && mod.config.type)
+    .map(({ mod }) => ({ type: mod.config.type, renderer: mod.default })),
+}
+`
 }

@@ -20,6 +20,7 @@ export function DocumentForm({ entity, value, onSubmit }: DocumentFormProps) {
       initialValues={value ?? undefined}
       submitLabel="Save"
       onSubmit={onSubmit}
+      entity={entity}
     />
   )
 }

@@ -10,6 +10,8 @@ export interface CollectionFormProps {
   entity: AdminEntity
   /** Existing record for edit; omit for create. */
   initialValues?: Record<string, unknown>
+  /** Record id on edit; forwarded to `form.*` zone widgets. */
+  recordId?: string
   onSubmit: (values: Record<string, unknown>) => Promise<void> | void
   onCancel?: () => void
 }
@@ -17,6 +19,7 @@ export interface CollectionFormProps {
 export function CollectionForm({
   entity,
   initialValues,
+  recordId,
   onSubmit,
   onCancel,
 }: CollectionFormProps) {
@@ -27,6 +30,8 @@ export function CollectionForm({
       submitLabel={initialValues ? 'Save changes' : `Create ${entity.label}`}
       onSubmit={onSubmit}
       onCancel={onCancel}
+      entity={entity}
+      recordId={recordId}
     />
   )
 }

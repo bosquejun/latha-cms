@@ -13,6 +13,8 @@ import { buildZodSchema, type Field } from '@latha/core'
 import { Button } from '@latha/ui'
 import { useId, useMemo, useState } from 'react'
 import { getFieldRenderer } from '../fields/registry.js'
+import { Slot } from '../extensions/Slot.js'
+import { useExtensions } from '../extensions/context.js'
 
 export interface EntityFormProps {
   fields: Field[]
@@ -20,6 +22,10 @@ export interface EntityFormProps {
   submitLabel?: string
   onSubmit: (values: Record<string, unknown>) => Promise<void> | void
   onCancel?: () => void
+  /** Entity descriptor, forwarded to `form.*` zone widgets as context. */
+  entity?: unknown
+  /** Record id on edit, forwarded to `form.*` zone widgets as context. */
+  recordId?: string
 }
 
 function defaultForField(field: Field): unknown {
@@ -72,6 +78,8 @@ export function EntityForm({
   submitLabel = 'Save',
   onSubmit,
   onCancel,
+  entity,
+  recordId,
 }: EntityFormProps) {
   const idPrefix = useId()
   const schema = useMemo(() => buildZodSchema(fields), [fields])
@@ -111,6 +119,11 @@ export function EntityForm({
   const mainFields = fields.filter((f) => !f.admin?.sidebar && !f.admin?.hidden)
   const sidebarFields = fields.filter((f) => f.admin?.sidebar && !f.admin?.hidden)
 
+  const extensions = useExtensions()
+  const hasSidebarSlots =
+    extensions.widgetsForZone('form.sidebar.before').length > 0 ||
+    extensions.widgetsForZone('form.sidebar.after').length > 0
+
   const renderField = (field: Field) => {
     const renderer = getFieldRenderer(field.type)
     const id = `${idPrefix}-${field.name}`
@@ -140,12 +153,16 @@ export function EntityForm({
       className="grid grid-cols-1 gap-section lg:grid-cols-3"
     >
       <div className="flex flex-col gap-form lg:col-span-2">
+        <Slot zone="form.before" entity={entity} recordId={recordId} className="flex flex-col gap-form" />
         {mainFields.map(renderField)}
+        <Slot zone="form.after" entity={entity} recordId={recordId} className="flex flex-col gap-form" />
       </div>
 
-      {sidebarFields.length > 0 && (
+      {(sidebarFields.length > 0 || hasSidebarSlots) && (
         <aside className="flex flex-col gap-form">
+          <Slot zone="form.sidebar.before" entity={entity} recordId={recordId} className="flex flex-col gap-form" />
           {sidebarFields.map(renderField)}
+          <Slot zone="form.sidebar.after" entity={entity} recordId={recordId} className="flex flex-col gap-form" />
         </aside>
       )}
 
