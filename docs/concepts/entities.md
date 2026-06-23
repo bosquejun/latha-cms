@@ -5,12 +5,12 @@ module (almost always `ContentModule`). Every entity is one of three **kinds**.
 The kind decides its API surface, its admin view, and how it is routed.
 
 ```ts
-import { ContentModule, Collection, Document, Taxonomy } from '@latha/content'
+import { ContentModule, Collection, Document, Taxonomy, text } from '@latha/content'
 
 ContentModule({
   entities: [
-    Document({ slug: 'site-settings', fields: [ … ] }),
-    Collection({ slug: 'posts', fields: [ … ] }),
+    Document({ slug: 'site-settings', fields: { site_name: text({ required: true }) } }),
+    Collection({ slug: 'posts', fields: { title: text({ required: true }) } }),
     Taxonomy({ slug: 'categories', hierarchical: true }),
   ],
 })
@@ -35,6 +35,8 @@ config. If an editor thinks of it as "a list of things" — even 2–3 things �
 ## Anatomy of an entity
 
 ```ts
+import { Collection, text, select } from '@latha/content'
+
 Collection({
   slug: 'posts',                       // unique id; drives URLs and tables
   admin: {                             // admin-only hints
@@ -50,10 +52,10 @@ Collection({
   hooks: {                             // lifecycle callbacks
     beforeCreate: [ ({ data }) => ({ ...data, slug: slugify(data.title) }) ],
   },
-  fields: [                            // the data shape
-    { name: 'title',  type: 'text', required: true },
-    { name: 'status', type: 'select', options: ['draft', 'published'] },
-  ],
+  fields: {                            // a record of field builders
+    title:  text({ required: true }),
+    status: select({ options: ['draft', 'published'] }),
+  },
 })
 ```
 
