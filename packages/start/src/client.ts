@@ -1,14 +1,21 @@
 /**
- * Typed client over the single Latha server function.
+ * Typed client over the single Latha RPC endpoint.
  *
  * Each method packs an RPC action and unpacks the (already JSON-serializable)
  * result. This is what the admin components talk to; it never touches the
  * server directly.
+ *
+ * By default it POSTs to the framework's server route (`DEFAULT_RPC_PATH`), so
+ * `createLathaClient()` works with zero app wiring. Pass a `LathaServerFn` (or
+ * `{ serverFn }`) to route through your own `createServerFn` endpoint instead,
+ * or `{ endpoint }` to point at a different path.
  */
 
+import { DEFAULT_RPC_PATH } from './default-rpc.js'
 import type {
   EntityDescriptor,
   JsonDoc,
+  LathaRpcInput,
   LathaServerFn,
   NavItem,
   SessionUser,
@@ -36,15 +43,46 @@ export interface LathaClient {
   logout(): Promise<{ ok: true }>
 }
 
+/** Options for the default (fetch-based) client transport. */
+export interface LathaClientOptions {
+  /** RPC endpoint to POST to. Defaults to `DEFAULT_RPC_PATH`. */
+  endpoint?: string
+  /** Use a custom server function instead of the built-in fetch transport. */
+  serverFn?: LathaServerFn
+}
+
+/** POST one RPC action to the endpoint and return its JSON result. */
+async function fetchRpc<T>(endpoint: string, data: LathaRpcInput): Promise<T> {
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) {
+    throw new Error(`Latha RPC request failed (${res.status} ${res.statusText})`)
+  }
+  return res.json() as Promise<T>
+}
+
 /**
- * Build the typed client over the app's single Latha server function.
+ * Build the typed client.
  *
- * Use `dispatchLathaRpc` + `lathaRpcValidator` to stand up the default endpoint,
- * or pass any `LathaServerFn` you like here to wrap or customize dispatch.
+ * - `createLathaClient()` — talks to the framework's RPC server route. No app
+ *   wiring needed; this is the default.
+ * - `createLathaClient({ endpoint })` — same, against a custom path.
+ * - `createLathaClient(serverFn)` / `createLathaClient({ serverFn })` — route
+ *   through your own `createServerFn` endpoint when you need to customize dispatch.
  */
-export function createLathaClient(serverFn: LathaServerFn): LathaClient {
-  const call = <T>(data: Parameters<LathaServerFn>[0]['data']) =>
-    serverFn({ data }) as Promise<T>
+export function createLathaClient(
+  source: LathaServerFn | LathaClientOptions = {},
+): LathaClient {
+  const serverFn = typeof source === 'function' ? source : source.serverFn
+  const endpoint =
+    typeof source === 'function' ? DEFAULT_RPC_PATH : source.endpoint ?? DEFAULT_RPC_PATH
+
+  const call = <T>(data: LathaRpcInput): Promise<T> =>
+    serverFn ? (serverFn({ data }) as Promise<T>) : fetchRpc<T>(endpoint, data)
 
   return {
     nav: () => call<NavItem[]>({ action: 'nav' }),

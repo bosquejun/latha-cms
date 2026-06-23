@@ -1,21 +1,19 @@
 /**
- * Client-safe helper for the app's single RPC endpoint.
+ * Client-safe pieces of the Latha RPC endpoint.
  *
- * TanStack Start compiles the `createServerFn` boundary out of *app* code (it
- * splits the handler off the client bundle by file), so the `createServerFn`
- * call itself has to live in the consuming app — a pre-built server function
- * shipped from this package would never get that split and would drag the
- * server-only dispatcher into the browser bundle.
- *
- * What the app can offload is the boilerplate: this validator (client-safe) and
- * `dispatchLathaRpc` from `@latha/start/server` (pulled in lazily inside the
- * handler so its cookie/db imports never reach the client). The endpoint then
- * shrinks to a few lines — see `apps/playground/src/latha-client.ts`.
+ * The endpoint itself is a package-owned server route (see `routes/rpc.ts`),
+ * injected by `lathaStart()`. The default client (in `client.ts`) just POSTs to
+ * `DEFAULT_RPC_PATH`, so a consuming app needs no hand-written server function —
+ * `createLathaClient()` works out of the box. `lathaRpcValidator` remains for
+ * apps that still want to wire their own `createServerFn` endpoint.
  */
 
 import type { LathaRpcInput } from './rpc.js'
 
-/** Identity validator that pins the server function's input to `LathaRpcInput`. */
+/** Where the framework's RPC server route is mounted. */
+export const DEFAULT_RPC_PATH = '/__latha/rpc'
+
+/** Identity validator that pins a custom server function's input to `LathaRpcInput`. */
 export function lathaRpcValidator(data: LathaRpcInput): LathaRpcInput {
   return data
 }

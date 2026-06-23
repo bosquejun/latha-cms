@@ -3,8 +3,8 @@
  * admin components without prop-drilling.
  */
 
-import { createContext, useContext, type ReactNode } from 'react'
-import type { LathaClient } from './client.js'
+import { createContext, useContext, useMemo, type ReactNode } from 'react'
+import { createLathaClient, type LathaClient } from './client.js'
 
 export interface LathaContextValue {
   client: LathaClient
@@ -17,7 +17,11 @@ export interface LathaContextValue {
 const LathaContext = createContext<LathaContextValue | null>(null)
 
 export interface LathaProviderProps {
-  client: LathaClient
+  /**
+   * The RPC client. Optional — defaults to `createLathaClient()`, which talks to
+   * the framework's RPC route. Pass one only to customize the transport.
+   */
+  client?: LathaClient
   basePath?: string
   loginPath?: string
   children: ReactNode
@@ -29,8 +33,9 @@ export function LathaProvider({
   loginPath = '/login',
   children,
 }: LathaProviderProps) {
+  const resolved = useMemo(() => client ?? createLathaClient(), [client])
   return (
-    <LathaContext.Provider value={{ client, basePath, loginPath }}>
+    <LathaContext.Provider value={{ client: resolved, basePath, loginPath }}>
       {children}
     </LathaContext.Provider>
   )
