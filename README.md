@@ -225,10 +225,11 @@ Six surfaces are supported: **widgets** (injected into named zones like
 `extensions` object built by hand with `defineAdminExtensions` — no Vite plugin
 required.
 
-The sidebar groups entities into **sections by their contributing module**
-(ContentModule → "Content", UsersModule → "Users", …); modules set their heading
-via `admin.nav`, and any entity can override its section with `admin.group`.
-Full guide: [`docs/admin-extensions.md`](./docs/admin-extensions.md).
+The sidebar keeps itself tidy: items are **ungrouped** (a flat, label-less list)
+by default, modules opt into a **named heading** via `admin.nav` (ContentModule →
+"Content"), and a conventional **Settings** area is pinned to the bottom (where
+Users and settings pages collect). Full guide:
+[`docs/admin-extensions.md`](./docs/admin-extensions.md).
 
 ## Next
 

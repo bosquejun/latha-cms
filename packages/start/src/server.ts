@@ -73,14 +73,11 @@ const SEGMENT = {
 
 /** Build the sidebar sections: entities grouped by their module's nav section. */
 function navOf(latha: LathaInstance, basePath: string): NavSection[] {
-  // Map each entity slug to its contributing module and that module's index in
-  // resolution order (the default section ordering).
+  // Map each entity slug to its contributing module (for default nav grouping).
   const moduleOf = new Map<string, Module>()
-  const moduleIndex = new Map<string, number>()
-  latha.modules.forEach((module, index) => {
-    moduleIndex.set(module.name, index)
+  for (const module of latha.modules) {
     for (const entity of module.entities ?? []) moduleOf.set(entity.slug, module)
-  })
+  }
 
   interface SectionAcc extends NavSection {}
   const sections = new Map<string, SectionAcc>()
@@ -89,12 +86,10 @@ function navOf(latha: LathaInstance, basePath: string): NavSection[] {
     if (entity.admin?.hidden) continue
     const module = moduleOf.get(entity.slug)
     const navMeta = module?.admin?.nav
-    const label =
-      entity.admin?.group ??
-      navMeta?.label ??
-      (module ? humanize(module.name) : 'Content')
-    const order =
-      navMeta?.order ?? (module ? (moduleIndex.get(module.name) ?? 0) : 0)
+    // No declared group → ungrouped (empty label): the client renders it as a
+    // flat, label-less list at the top rather than a one-item heading.
+    const label = entity.admin?.group ?? navMeta?.label ?? ''
+    const order = navMeta?.order ?? (label === '' ? -100 : 0)
 
     const item: NavItem = {
       slug: entity.slug,

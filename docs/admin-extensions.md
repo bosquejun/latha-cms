@@ -154,35 +154,42 @@ read from, so an override applies everywhere that type appears.
 
 ## Sidebar sections
 
-The sidebar groups entities into **sections** — and entity sections, custom
-pages, nav links, and settings all render through the same `SidebarSection`
-shape, so everything lines up visually.
+Entity groups, custom pages, nav links, and settings all render through the same
+`SidebarSection` shape, so the sidebar reads as one coherent list. Three tiers,
+top to bottom:
 
-By default an entity's section is its **contributing module**: `ContentModule`'s
-entities sit under "Content", `UsersModule`'s under "Users", and so on. A module
-sets its section heading and placement:
+1. **Ungrouped** (no heading) — the default. Anything without an explicit group
+   floats to the top as a flat list, next to Dashboard. This keeps the sidebar
+   from sprouting a heading for every single item.
+2. **Named groups** (with a heading) — opt in per module via `admin.nav.label`
+   (e.g. `ContentModule` → "Content"), or per entity via `admin.group`. Best for
+   a module that contributes several entities.
+3. **Settings** — a conventional area pinned to the bottom. Settings pages land
+   here automatically; a module can join it by naming its group `Settings`
+   (that's how `UsersModule` places the `users` entity there).
 
 ```ts
-// inside a Module definition
-admin: { nav: { label: 'Content', order: 10, collapsible: false } }
+// A module that wants a heading for its entities:
+admin: { nav: { label: 'Content', order: 10 } }
+
+// A module that belongs in the bottom Settings area:
+admin: { nav: { label: 'Settings', order: 1000 } }
 ```
 
-Individual entities can override where they land and their order within a
-section:
-
 ```ts
+// Pull a single entity into a named group / order it within one:
 Collection({
   slug: 'posts',
-  admin: { group: 'Blog', order: 1 },  // pull `posts` into a "Blog" section
+  admin: { group: 'Blog', order: 1 },
   fields: { /* … */ },
 })
 ```
 
 Resolution per entity: `admin.group` → the module's `admin.nav.label` →
-humanized module name. Sections sort by `admin.nav.order` (default: module
-resolution order); items sort by `admin.order`. Set `collapsible: true` on a
-module's nav to render its section as a collapse toggle (handy for large or
-settings-like modules); `defaultCollapsed` starts it closed.
+**ungrouped**. Sections sort by `admin.nav.order`; items by `admin.order`. Set
+`collapsible: true` (with optional `defaultCollapsed`) on a module's nav to make
+its section a collapse toggle. Custom pages are ungrouped unless they declare a
+`group`; settings pages always collect under "Settings".
 
 ## Architecture notes
 

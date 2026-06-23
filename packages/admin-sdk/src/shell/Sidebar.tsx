@@ -34,10 +34,11 @@ export interface SidebarItem {
   external?: boolean
 }
 
-/** A heading and its links. */
+/** A heading and its links. An omitted/empty `label` renders headless. */
 export interface SidebarSection {
   key: string
-  label: string
+  /** Section heading. Omit (or empty) to render the items with no heading. */
+  label?: string
   items: SidebarItem[]
   /** Render the heading as a collapse toggle. Default false (static heading). */
   collapsible?: boolean
@@ -116,7 +117,6 @@ export function Sidebar({
       <Slot zone="shell.sidebar.top" />
 
       <div className="flex flex-col gap-stack">
-        <p className={sectionLabelClass}>Overview</p>
         {renderLink(
           { key: '__dashboard', href: homeHref, label: 'Dashboard', icon: LayoutDashboard },
           currentPath === homeHref,
@@ -156,7 +156,7 @@ function SidebarSectionView({
 
   return (
     <div className="flex flex-col gap-stack">
-      {section.collapsible ? (
+      {!section.label ? null : section.collapsible ? (
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}

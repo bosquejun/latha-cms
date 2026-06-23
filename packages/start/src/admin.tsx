@@ -47,8 +47,6 @@ function RouterLink({ href, className, children, onClick }: SidebarLinkProps) {
 
 const asEntity = (d: EntityDescriptor) => d as unknown as AdminEntity
 
-const DEFAULT_GROUP = 'Extensions'
-
 type Route =
   | { view: 'dashboard' }
   | { view: 'list'; slug: string }
@@ -98,46 +96,75 @@ const KIND_ICON: Record<NavItem['kind'], LucideIcon> = {
   taxonomy: FolderTree,
 }
 
-/** Map the server's entity nav sections to renderable sidebar sections. */
-function entitySections(nav: NavSection[]): SidebarSection[] {
-  return nav.map((section) => ({
-    key: `entity:${section.key}`,
-    label: section.label,
-    collapsible: section.collapsible,
-    defaultCollapsed: section.defaultCollapsed,
-    items: section.items.map((item) => ({
-      key: item.slug,
-      href: item.href,
-      label: item.label,
-      icon: KIND_ICON[item.kind] ?? FileText,
-    })),
-  }))
+// Section ordering: ungrouped items float to the top (no heading), named
+// extension groups sit in the middle, and the conventional "Settings" area is
+// pinned to the bottom.
+const SETTINGS_LABEL = 'Settings'
+const ORDER_UNGROUPED = -100
+const ORDER_EXT_GROUP = 100
+const ORDER_SETTINGS = 1000
+
+interface RawSection {
+  label: string
+  order: number
+  collapsible?: boolean
+  defaultCollapsed?: boolean
+  items: SidebarItem[]
 }
 
-/** Group custom pages + nav links + settings into sidebar sections. */
-function extensionSections(
+/**
+ * Merge entity nav sections (from the server) with extension-contributed pages,
+ * nav links, and settings into one ordered set of sidebar sections. Items
+ * sharing a label collapse into a single section, so e.g. the `users` entity
+ * and custom settings pages render together under one "Settings" heading.
+ */
+function buildSidebar(
+  nav: NavSection[],
   ext: ExtensionRegistry,
   basePath: string,
 ): SidebarSection[] {
-  const groups = new Map<string, SidebarItem[]>()
-  const push = (label: string, item: SidebarItem) => {
-    const list = groups.get(label)
-    if (list) list.push(item)
-    else groups.set(label, [item])
+  const byLabel = new Map<string, RawSection>()
+  const sectionFor = (label: string, order: number, extra?: Partial<RawSection>) => {
+    let section = byLabel.get(label)
+    if (!section) {
+      section = { label, order, items: [], ...extra }
+      byLabel.set(label, section)
+    } else {
+      section.order = Math.min(section.order, order)
+      if (extra?.collapsible) section.collapsible = true
+    }
+    return section
   }
 
+  // Entities, already grouped + ordered by the server.
+  for (const section of nav) {
+    sectionFor(section.label, section.order, {
+      collapsible: section.collapsible,
+      defaultCollapsed: section.defaultCollapsed,
+    }).items.push(
+      ...section.items.map((item) => ({
+        key: item.slug,
+        href: item.href,
+        label: item.label,
+        icon: KIND_ICON[item.kind] ?? FileText,
+      })),
+    )
+  }
+
+  // Custom pages and nav links: their `group`, or ungrouped (top, no heading).
   for (const page of ext.pages) {
     if (page.hidden) continue
-    push(page.group ?? DEFAULT_GROUP, {
+    const label = page.group ?? ''
+    sectionFor(label, label ? ORDER_EXT_GROUP : ORDER_UNGROUPED).items.push({
       key: `page:${page.path}`,
       href: `${basePath}/${page.path}`,
       label: page.label,
       icon: page.icon,
     })
   }
-
   for (const link of ext.nav) {
-    push(link.group ?? DEFAULT_GROUP, {
+    const label = link.group ?? ''
+    sectionFor(label, label ? ORDER_EXT_GROUP : ORDER_UNGROUPED).items.push({
       key: `nav:${link.href}`,
       href: link.href,
       label: link.label,
@@ -146,8 +173,9 @@ function extensionSections(
     })
   }
 
+  // Settings pages always collect into the bottom "Settings" area.
   for (const page of ext.settings) {
-    push('Settings', {
+    sectionFor(SETTINGS_LABEL, ORDER_SETTINGS).items.push({
       key: `settings:${page.path}`,
       href: `${basePath}/settings/${page.path}`,
       label: page.label,
@@ -155,11 +183,15 @@ function extensionSections(
     })
   }
 
-  return [...groups].map(([label, items]) => ({
-    key: `ext:${label}`,
-    label,
-    items,
-  }))
+  return [...byLabel.values()]
+    .sort((a, b) => a.order - b.order || a.label.localeCompare(b.label))
+    .map((section) => ({
+      key: `sec:${section.label || 'ungrouped'}`,
+      label: section.label || undefined,
+      collapsible: section.collapsible,
+      defaultCollapsed: section.defaultCollapsed,
+      items: section.items,
+    }))
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
@@ -190,10 +222,7 @@ export function LathaAdmin() {
 
   const route = parseRoute(pathname, basePath, extensions)
   const navSections = nav.data ?? []
-  const sections = [
-    ...entitySections(navSections),
-    ...extensionSections(extensions, basePath),
-  ]
+  const sections = buildSidebar(navSections, extensions, basePath)
 
   return (
     <AdminShell

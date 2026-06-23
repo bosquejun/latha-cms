@@ -15,7 +15,7 @@ export const config = definePageConfig({
   path: 'analytics',
   label: 'Analytics',
   icon: BarChart3,
-  group: 'Insights',
+  // No `group` → renders ungrouped at the top of the sidebar (no heading).
 })
 
 export default function Analytics({ params }: PageComponentProps) {
