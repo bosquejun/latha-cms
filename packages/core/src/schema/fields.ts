@@ -52,10 +52,10 @@ import type {
  * Neither key exists at runtime.
  */
 interface FieldMeta<TOut, TPresent extends boolean> {
-  /** @internal phantom — never present at runtime */
-  readonly __out: TOut
-  /** @internal phantom — never present at runtime */
-  readonly __present: TPresent
+  /** @internal phantom — never present at runtime, hence optional */
+  readonly __out?: TOut
+  /** @internal phantom — never present at runtime, hence optional */
+  readonly __present?: TPresent
 }
 
 /** A builder result: the runtime field config (sans `name`) + phantom meta. */
@@ -179,103 +179,97 @@ type RefOut<O extends StringRefOpts> = O extends { many: true }
 /*  Builders                                                                    */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Attach the (compile-time only) `__out` / `__present` carriers to a runtime
+ * field config. The config is checked against the real `Field` shape, and the
+ * phantom keys are optional, so a plain config is assignable as-is — no `any`
+ * or `unknown` assertion needed.
+ */
+function withMeta<TField extends Field, TOut, TPresent extends boolean>(
+  config: Omit<TField, 'name'>,
+): Built<TField, TOut, TPresent> {
+  return config
+}
+
 /** Plain text — a single-line string field. */
 export function text<const O extends TextOpts = {}>(
   opts?: O,
 ): Built<TextField, string, IsPresent<O>> {
-  return { type: 'text', ...opts } as unknown as Built<
-    TextField,
-    string,
-    IsPresent<O>
-  >
+  return withMeta<TextField, string, IsPresent<O>>({ type: 'text', ...opts })
 }
 
 /** Numeric field — optionally integer-constrained and bounded. */
 export function number<const O extends NumberOpts = {}>(
   opts?: O,
 ): Built<NumberField, number, IsPresent<O>> {
-  return { type: 'number', ...opts } as unknown as Built<
-    NumberField,
-    number,
-    IsPresent<O>
-  >
+  return withMeta<NumberField, number, IsPresent<O>>({ type: 'number', ...opts })
 }
 
 /** Boolean toggle. */
 export function boolean<const O extends BooleanOpts = {}>(
   opts?: O,
 ): Built<BooleanField, boolean, IsPresent<O>> {
-  return { type: 'boolean', ...opts } as unknown as Built<
-    BooleanField,
-    boolean,
-    IsPresent<O>
-  >
+  return withMeta<BooleanField, boolean, IsPresent<O>>({
+    type: 'boolean',
+    ...opts,
+  })
 }
 
 /** Date field — accepts `Date` or ISO string, parses to `Date`. */
 export function date<const O extends DateOpts = {}>(
   opts?: O,
 ): Built<DateField, Date, IsPresent<O>> {
-  return { type: 'date', ...opts } as unknown as Built<
-    DateField,
-    Date,
-    IsPresent<O>
-  >
+  return withMeta<DateField, Date, IsPresent<O>>({ type: 'date', ...opts })
 }
 
 /** Enumerated choice. `many: true` stores an array of the chosen options. */
 export function select<const O extends SelectOpts>(
   opts: O,
 ): Built<SelectField, SelectOut<O>, IsPresent<O>> {
-  return { type: 'select', ...opts } as unknown as Built<
-    SelectField,
-    SelectOut<O>,
-    IsPresent<O>
-  >
+  return withMeta<SelectField, SelectOut<O>, IsPresent<O>>({
+    ...opts,
+    type: 'select',
+    // Builder opts keep `options` readonly to preserve the literal union for
+    // inference; the runtime field stores a mutable copy.
+    options: [...opts.options],
+  })
 }
 
 /** Rich text (HTML/markdown) — stored as a string. */
-export function richtext<const O extends CommonOpts & { defaultValue?: string } = {}>(
-  opts?: O,
-): Built<RichTextField, string, IsPresent<O>> {
-  return { type: 'richtext', ...opts } as unknown as Built<
-    RichTextField,
-    string,
-    IsPresent<O>
-  >
+export function richtext<
+  const O extends CommonOpts & { defaultValue?: string } = {},
+>(opts?: O): Built<RichTextField, string, IsPresent<O>> {
+  return withMeta<RichTextField, string, IsPresent<O>>({
+    type: 'richtext',
+    ...opts,
+  })
 }
 
 /** Media reference — stored as a media id / url string. */
-export function media<const O extends CommonOpts & { defaultValue?: string } = {}>(
-  opts?: O,
-): Built<MediaField, string, IsPresent<O>> {
-  return { type: 'media', ...opts } as unknown as Built<
-    MediaField,
-    string,
-    IsPresent<O>
-  >
+export function media<
+  const O extends CommonOpts & { defaultValue?: string } = {},
+>(opts?: O): Built<MediaField, string, IsPresent<O>> {
+  return withMeta<MediaField, string, IsPresent<O>>({ type: 'media', ...opts })
 }
 
 /** Relationship to another collection. `many: true` stores an array of ids. */
 export function relationship<const O extends StringRefOpts>(
   opts: O,
 ): Built<RelationshipField, RefOut<O>, IsPresent<O>> {
-  return { type: 'relationship', ...opts } as unknown as Built<
-    RelationshipField,
-    RefOut<O>,
-    IsPresent<O>
-  >
+  return withMeta<RelationshipField, RefOut<O>, IsPresent<O>>({
+    ...opts,
+    type: 'relationship',
+  })
 }
 
 /** Relationship to a taxonomy. `many: true` stores an array of term ids. */
 export function taxonomy<const O extends StringRefOpts>(
   opts: O,
 ): Built<TaxonomyField, RefOut<O>, IsPresent<O>> {
-  return { type: 'taxonomy', ...opts } as unknown as Built<
-    TaxonomyField,
-    RefOut<O>,
-    IsPresent<O>
-  >
+  return withMeta<TaxonomyField, RefOut<O>, IsPresent<O>>({
+    ...opts,
+    type: 'taxonomy',
+  })
 }
 
 /** A nested object of fields, stored inline as JSON. */
@@ -283,11 +277,11 @@ export function group<const O extends GroupOpts>(
   opts: O,
 ): Built<GroupField, InferDoc<O['fields']>, IsPresent<O>> {
   const { fields, ...rest } = opts
-  return {
+  return withMeta<GroupField, InferDoc<O['fields']>, IsPresent<O>>({
+    ...rest,
     type: 'group',
     fields: stampFields(fields),
-    ...rest,
-  } as unknown as Built<GroupField, InferDoc<O['fields']>, IsPresent<O>>
+  })
 }
 
 /** A repeatable list of a nested field set, stored as a JSON array. */
@@ -295,9 +289,9 @@ export function array<const O extends ArrayOpts>(
   opts: O,
 ): Built<ArrayField, InferDoc<O['fields']>[], IsPresent<O>> {
   const { fields, ...rest } = opts
-  return {
+  return withMeta<ArrayField, InferDoc<O['fields']>[], IsPresent<O>>({
+    ...rest,
     type: 'array',
     fields: stampFields(fields),
-    ...rest,
-  } as unknown as Built<ArrayField, InferDoc<O['fields']>[], IsPresent<O>>
+  })
 }

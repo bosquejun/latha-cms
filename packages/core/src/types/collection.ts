@@ -60,9 +60,11 @@ export interface Taxonomy {
 
 /**
  * Any entity, doc-type-erased. Concrete collections returned by the factories
- * carry an inferred `TDoc`; this union uses `any` so a specifically-typed
- * `Collection<{ title: string }>` still fits an `Entity[]` (the variance in
- * `access`/`hooks` callbacks would otherwise reject the assignment).
+ * carry an inferred `TDoc`; this union uses `any` because `TDoc` is invariant
+ * in `Collection` — `HookFn<TDoc>` both receives and returns `TDoc`, so no
+ * single concrete supertype (`unknown`, `never`, …) lets a specifically-typed
+ * `Collection<{ title: string }>` fit `Entity[]`. `any` is the only widening
+ * that keeps the assignment.
  */
 export type Entity = Collection<any> | Document<any> | Taxonomy
 
