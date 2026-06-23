@@ -1,0 +1,97 @@
+# Entities — the content model
+
+An **entity** is a content type you declare in `latha.config.ts`, inside a
+module (almost always `ContentModule`). Every entity is one of three **kinds**.
+The kind decides its API surface, its admin view, and how it is routed.
+
+```ts
+import { ContentModule, Collection, Document, Taxonomy } from '@latha/content'
+
+ContentModule({
+  entities: [
+    Document({ slug: 'site-settings', fields: [ … ] }),
+    Collection({ slug: 'posts', fields: [ … ] }),
+    Taxonomy({ slug: 'categories', hierarchical: true }),
+  ],
+})
+```
+
+---
+
+## The three kinds
+
+| Kind | Shape | Admin view | Use it for |
+|---|---|---|---|
+| **`Collection`** | Many records, full CRUD | List → create → edit | Anything an editor manages as a list: posts, pages, products |
+| **`Document`** | A single instance (singleton) | Edit form only | Structural config: site-settings, nav, theme |
+| **`Taxonomy`** | Hierarchical or flat grouping | Tree manager | Classification: categories, tags |
+
+**Rule of thumb.** Reach for `Document` *only* for structural, one-of-a-kind
+config. If an editor thinks of it as "a list of things" — even 2–3 things — use
+`Collection`.
+
+---
+
+## Anatomy of an entity
+
+```ts
+Collection({
+  slug: 'posts',                       // unique id; drives URLs and tables
+  admin: {                             // admin-only hints
+    useAsTitle: 'title',
+    defaultColumns: ['title', 'status'],
+  },
+  access: {                            // per-operation permission fns
+    read:   () => true,
+    create: ({ user }) => !!user,
+    update: ({ user }) => !!user,
+    delete: ({ user }) => user?.role === 'admin',
+  },
+  hooks: {                             // lifecycle callbacks
+    beforeCreate: [ ({ data }) => ({ ...data, slug: slugify(data.title) }) ],
+  },
+  fields: [                            // the data shape
+    { name: 'title',  type: 'text', required: true },
+    { name: 'status', type: 'select', options: ['draft', 'published'] },
+  ],
+})
+```
+
+- **`slug`** — the entity's identity. It appears in admin URLs and (for
+  collections/documents) backs the generated table.
+- **`fields`** — compiled to a Zod schema at init (`buildZodSchema`), which is
+  the single validation layer for the API, the admin form, and TypeScript
+  inference. See [Field Types](../../SPEC.md#field-types).
+- **`access`** — pure functions evaluated on every operation. Deny by throwing;
+  the RPC dispatcher surfaces the failure to the client.
+- **`hooks`** — `beforeCreate` / `afterUpdate` / … run inside each operation.
+- **`admin`** — presentation hints only (title field, columns, sidebar
+  placement). Never affects data or access.
+
+---
+
+## How a kind becomes a route and a descriptor
+
+Every entity is exposed to the admin through the RPC layer as a serializable
+**`EntityDescriptor`** (`slug`, `kind`, `label`, `fields`, …). The admin derives
+the sidebar and the correct view purely from the descriptor's `kind`:
+
+```
+collection → /admin/content/<slug>      (list, create, edit)
+document   → /admin/documents/<slug>     (singleton edit form)
+taxonomy   → /admin/taxonomy/<slug>      (tree manager)
+```
+
+Four route templates — **list, create, edit, singleton** — plus the taxonomy
+manager cover every entity. Nothing per-entity is hand-written; the descriptor
+drives it all. (See [Admin UI Routes](../../SPEC.md#admin-ui-routes-tanstack-router).)
+
+---
+
+## Where entities come from
+
+Entities are contributed by **modules**, not just `ContentModule`. For example,
+`UsersModule` contributes a `users` collection. The running instance exposes the
+merged set via `latha.entities` / `latha.getEntity(slug)`, and the RPC `nav` and
+`entity` actions read from there. This is why adding a module can add admin
+screens with no extra wiring.

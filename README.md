@@ -5,7 +5,11 @@
 
 LathaCMS is an open-source headless CMS framework built on TanStack Start.
 Everything is a module, and modules are composed via a single config file.
-See [`SPEC.md`](./SPEC.md) for the full architecture and roadmap.
+
+- **Concepts** — [taxonomy](./docs/concepts/taxonomy.md) (vocabulary),
+  [entities](./docs/concepts/entities.md) (content model),
+  [frameworks](./docs/concepts/frameworks.md) (the `@latha/start` integration).
+- **Architecture & roadmap** — [`SPEC.md`](./SPEC.md).
 
 ## Status
 
