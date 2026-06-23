@@ -27,6 +27,10 @@
     "./routes/admin": {
       "types": "./dist/routes/admin.d.ts",
       "import": "./dist/routes/admin.js"
+    },
+    "./routes/rpc": {
+      "types": "./dist/routes/rpc.d.ts",
+      "import": "./dist/routes/rpc.js"
     }
   },
   "main": "./dist/index.js",

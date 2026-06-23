@@ -1,0 +1,18 @@
+# LathaCMS Concepts
+
+Reference documentation for the vocabulary and architecture of LathaCMS.
+For the project-wide spec and roadmap, see [`../../SPEC.md`](../../SPEC.md).
+
+| Doc | What it covers |
+|---|---|
+| [**Taxonomy**](./taxonomy.md) | The controlled vocabulary — every named concept in the system and what it means. Start here. |
+| [**Entities**](./entities.md) | The content model: `Collection`, `Document`, `Taxonomy` — when to use which, fields, and admin views. |
+| [**Frameworks**](./frameworks.md) | The framework-integration layer (`@latha/start`): how an app wires LathaCMS into TanStack Start, the RPC endpoint, and the typed client. |
+
+> **Three things to know up front**
+>
+> 1. Everything derives from one `latha.config.ts`. Schema, API, admin UI, and
+>    auth are all generated from it.
+> 2. Everything is a **module**, composed through that config.
+> 3. The whole admin surface is driven by a single **RPC endpoint** — one route,
+>    many actions — not a REST API. See [Taxonomy → RPC vs API](./taxonomy.md#rpc-vs-api).

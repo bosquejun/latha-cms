@@ -1,9 +1,10 @@
 /**
  * `lathaStart()` — a thin wrapper around TanStack Start's Vite plugin that
- * injects LathaCMS's framework-owned routes (`/login` and the `/admin/$`
- * catch-all) through TanStack's virtual file routes. A consuming app keeps only
- * its own pages and `__root.tsx` under its routes directory — no boilerplate
- * route files for login or admin.
+ * injects LathaCMS's framework-owned routes (`/login`, the `/admin/$` catch-all,
+ * and the `/__latha/rpc` endpoint) through TanStack's virtual file routes, and
+ * wires the app's `latha.config` into the framework's server route. A consuming
+ * app keeps only its own pages and `__root.tsx` under its routes directory — no
+ * boilerplate route files, and no hand-written RPC endpoint.
  *
  *   // vite.config.ts
  *   import { lathaStart } from '@latha/start/vite'
@@ -13,9 +14,50 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import { physical, rootRoute, route } from '@tanstack/virtual-file-routes'
+import { DEFAULT_RPC_PATH } from './default-rpc.js'
 
 type TanStackStartOptions = NonNullable<Parameters<typeof tanstackStart>[0]>
 type TanStackStartPlugins = ReturnType<typeof tanstackStart>
+
+/** Minimal structural shape of a Vite plugin — avoids a hard `vite` type dep. */
+interface VitePluginLike {
+  name: string
+  enforce?: 'pre' | 'post'
+  configResolved?: (config: { root: string }) => void
+  resolveId?: (id: string) => string | undefined
+  load?: (id: string) => string | undefined
+}
+
+const CONFIG_MODULE_ID = 'virtual:latha/config'
+const RESOLVED_CONFIG_MODULE_ID = '\0' + CONFIG_MODULE_ID
+
+/**
+ * Resolves `virtual:latha/config` to a re-export of the app's `latha.config`
+ * module, so the framework's server route can reach it without the app wiring
+ * anything. Imported only from server-only code, so it never hits the client.
+ */
+function lathaConfigPlugin(configPath: string): VitePluginLike {
+  let resolved = configPath
+  return {
+    name: 'latha:config',
+    enforce: 'pre',
+    configResolved(config) {
+      resolved = path.isAbsolute(configPath)
+        ? configPath
+        : path.resolve(config.root, configPath)
+    },
+    resolveId(id) {
+      if (id === CONFIG_MODULE_ID) return RESOLVED_CONFIG_MODULE_ID
+      return undefined
+    },
+    load(id) {
+      if (id === RESOLVED_CONFIG_MODULE_ID) {
+        return `export { default } from ${JSON.stringify(resolved)}`
+      }
+      return undefined
+    },
+  }
+}
 
 // TanStack Start's default routes directory (`<srcDirectory>/routes`).
 const ROUTES_DIR = './src/routes'
@@ -43,6 +85,11 @@ export interface LathaStartOptions {
    * module. Pass `false` to disable, or an object to point at a custom folder.
    */
   admin?: false | { dir?: string }
+  /**
+   * Path to the app's `latha.config` module, relative to the project root.
+   * Default `./latha.config.ts`.
+   */
+  configPath?: string
   /** Extra options forwarded to `tanstackStart()`. */
   start?: TanStackStartOptions
 }
@@ -52,18 +99,20 @@ export function lathaStart(
 ): TanStackStartPlugins {
   const loginPath = options.loginPath ?? '/login'
   const adminBasePath = options.adminBasePath ?? '/admin'
+  const configPath = options.configPath ?? './latha.config.ts'
 
   // Paths inside `virtualRouteConfig` are resolved relative to `routesDirectory`,
   // so the app's own pages are scanned in-place via `physical('', '.')` and the
-  // two framework routes are layered on as siblings.
+  // framework routes are layered on as siblings.
   const virtualRouteConfig = rootRoute('__root.tsx', [
     physical('', '.'),
     route(loginPath, routeFile('@latha/start/routes/login')),
     route(`${adminBasePath}/$`, routeFile('@latha/start/routes/admin')),
+    route(DEFAULT_RPC_PATH, routeFile('@latha/start/routes/rpc')),
   ])
 
   const start = options.start ?? {}
-  const tanstack: TanStackStartPlugins = tanstackStart({
+  const plugins = tanstackStart({
     ...start,
     router: {
       ...start.router,
@@ -72,24 +121,18 @@ export function lathaStart(
     },
   })
 
-  if (options.admin === false) return tanstack
+  // Framework virtual-module plugins, appended to TanStack's array (Vite
+  // flattens nested plugin arrays, keeping the single `plugins: [lathaStart()]`
+  // ergonomics): the config bridge plus, unless disabled, admin auto-discovery.
+  const extra: VitePluginLike[] = [lathaConfigPlugin(configPath)]
+  if (options.admin !== false) {
+    extra.push(adminExtensionsPlugin(options.admin?.dir ?? 'src/admin'))
+  }
 
-  const dir = options.admin?.dir ?? 'src/admin'
-  // Vite flattens nested plugin arrays, so appending our virtual-module plugin
-  // to TanStack's array keeps the single `plugins: [lathaStart()]` ergonomics.
-  // The cast bridges our minimal plugin shape to TanStack's Vite plugin type.
   return [
-    ...tanstack,
-    adminExtensionsPlugin(dir) as unknown as TanStackStartPlugins[number],
-  ]
-}
-
-/** A minimal Vite plugin shape — avoids a hard `vite` type dependency here. */
-interface VitePluginLike {
-  name: string
-  enforce?: 'pre' | 'post'
-  resolveId(id: string): string | undefined
-  load(id: string): string | undefined
+    ...(plugins as unknown[]),
+    ...extra,
+  ] as unknown as TanStackStartPlugins
 }
 
 const VIRTUAL_ID = 'virtual:latha/admin-extensions'

@@ -11,6 +11,11 @@ LathaCMS is an open-source, headless CMS framework built on TanStack Start. It i
 
 This is a learning-driven OSS project. Architecture correctness and developer experience come before feature completeness.
 
+> **New here?** The [concept docs](./docs/concepts/) explain the vocabulary
+> ([taxonomy](./docs/concepts/taxonomy.md)), the content model
+> ([entities](./docs/concepts/entities.md)), and the framework integration
+> ([frameworks](./docs/concepts/frameworks.md)).
+
 ---
 
 ## Repository
@@ -277,6 +282,7 @@ interface Plugin {
 | `packages/core` | `@latha/core` | `defineConfig()`, types, module registry, hook engine, access evaluator, Zod schema builder |
 | `packages/ui` | `@latha/ui` | Design system — buttons, inputs, tables, modals, typography, tokens. No CMS knowledge. Usable standalone. |
 | `packages/admin-sdk` | `@latha/admin-sdk` | CMS-aware admin layer — field renderers, shell layout, sidebar (registry-driven), collection list/form views. Builds on `@latha/ui`. |
+| `packages/start` | `@latha/start` | TanStack Start integration — runtime, RPC dispatcher + server route, typed client, provider, mountable admin UI. The framework-integration layer. See [docs/concepts/frameworks](./docs/concepts/frameworks.md). |
 | `packages/modules/content` | `@latha/content` | `ContentModule`, `Collection()`, `Document()`, `Taxonomy()` |
 | `packages/modules/auth` | `@latha/auth` | `AuthModule`, session handling, login/logout |
 | `packages/modules/users` | `@latha/users` | `UsersModule`, roles, permissions |
@@ -506,7 +512,7 @@ packages/modules/storage/src/
 - The entry point is `defineConfig()` from `@latha/core` — not `defineCMS`.
 - Zod is the single validation layer. Do not add separate validation logic anywhere.
 - All DB access goes through `DBAdapter` from `@latha/storage` — never call Drizzle directly from app code.
-- Server functions (not API routes) are the API layer. Keep them in `packages/` where possible so they're reusable.
+- The admin surface is one **RPC** layer — a single action-dispatched endpoint, not a REST API. In `@latha/start` it is served by a framework-owned **server route** (`/__latha/rpc`); apps can also route it through their own `createServerFn`. See [docs/concepts/taxonomy → RPC vs API](./docs/concepts/taxonomy.md#rpc-vs-api) and [frameworks](./docs/concepts/frameworks.md). Keep the dispatcher in `packages/` so it stays reusable.
 - All modules live under `packages/modules/*` — never at the root of `packages/`.
 - Admin UI is split into two packages: `@latha/ui` (dumb design system, no CMS knowledge) and `@latha/admin-sdk` (CMS-aware, builds on top of `@latha/ui`). Never put CMS logic in `@latha/ui`.
 - Keep `apps/playground` thin — it should only wire together packages, not contain business logic.

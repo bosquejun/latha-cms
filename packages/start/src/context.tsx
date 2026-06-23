@@ -16,7 +16,7 @@ import {
   type AdminExtensions,
   type ExtensionRegistry,
 } from '@latha/admin-sdk'
-import type { LathaClient } from './client.js'
+import { createLathaClient, type LathaClient } from './client.js'
 
 export interface LathaContextValue {
   client: LathaClient
@@ -31,7 +31,11 @@ export interface LathaContextValue {
 const LathaContext = createContext<LathaContextValue | null>(null)
 
 export interface LathaProviderProps {
-  client: LathaClient
+  /**
+   * The RPC client. Optional — defaults to `createLathaClient()`, which talks to
+   * the framework's RPC route. Pass one only to customize the transport.
+   */
+  client?: LathaClient
   basePath?: string
   loginPath?: string
   /**
@@ -51,6 +55,9 @@ export function LathaProvider({
   extensions,
   children,
 }: LathaProviderProps) {
+  // Default to the framework's RPC client; pass one only to customize transport.
+  const resolved = useMemo(() => client ?? createLathaClient(), [client])
+
   // Build the registry once per extensions object, and apply field-renderer
   // overrides as a side effect of that same memo (idempotent: registering the
   // same type twice just replaces it).
@@ -63,8 +70,8 @@ export function LathaProvider({
   }, [extensions])
 
   const value = useMemo<LathaContextValue>(
-    () => ({ client, basePath, loginPath, extensions: registry }),
-    [client, basePath, loginPath, registry],
+    () => ({ client: resolved, basePath, loginPath, extensions: registry }),
+    [resolved, basePath, loginPath, registry],
   )
 
   return (
