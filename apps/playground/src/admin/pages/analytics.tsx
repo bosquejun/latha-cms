@@ -15,7 +15,10 @@ export const config = definePageConfig({
   path: 'analytics',
   label: 'Analytics',
   icon: BarChart3,
-  // No `group` → renders ungrouped at the top of the sidebar (no heading).
+  // No `group` → a free-floating sidebar entry. `order` places it: the Content
+  // group sits at 10, so 100 drops Analytics below it. (Drop `order` and an
+  // ungrouped item defaults to the top.)
+  order: 100,
 })
 
 export default function Analytics({ params }: PageComponentProps) {
