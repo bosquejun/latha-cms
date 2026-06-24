@@ -26,7 +26,7 @@ import {
   cn,
 } from '@latha/ui'
 import { PageHeader } from '@latha/admin-sdk'
-import { Plus, ShieldCheck, Trash2 } from 'lucide-react'
+import { ChevronDown, Plus, ShieldCheck, Trash2 } from 'lucide-react'
 import { useLatha } from '../context.js'
 import { useAsync } from '../hooks.js'
 import type { JsonDoc } from '../rpc.js'
@@ -63,6 +63,15 @@ export function RolesPermissions() {
   const [saving, setSaving] = useState(false)
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+
+  const toggleModule = (mod: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev)
+      if (next.has(mod)) next.delete(mod)
+      else next.add(mod)
+      return next
+    })
 
   const roleList = roles.data ?? []
   const selected = roleList.find((r) => r.id === selectedId) ?? roleList[0] ?? null
@@ -93,6 +102,17 @@ export function RolesPermissions() {
     rows.sort((a, b) => a.module.localeCompare(b.module) || a.key.localeCompare(b.key))
     return rows
   }, [scopes.data])
+
+  // Group the scope rows into [module, rows] sections for the accordion.
+  const moduleGroups = useMemo<Array<[string, ScopeLite[]]>>(() => {
+    const groups = new Map<string, ScopeLite[]>()
+    for (const row of scopeRows) {
+      const list = groups.get(row.module) ?? []
+      list.push(row)
+      groups.set(row.module, list)
+    }
+    return [...groups.entries()]
+  }, [scopeRows])
 
   const superId = permByKey.get(SUPERADMIN_KEY)?.id
   const adminAccessId = permByKey.get(ADMIN_ACCESS_KEY)?.id
@@ -269,51 +289,72 @@ export function RolesPermissions() {
                 />
               </Card>
 
-              {/* Scope × action matrix */}
-              <Card className={cn('overflow-hidden p-0', isSuper && 'opacity-50')}>
-                <Table>
-                  <THead>
-                    <TR>
-                      <TH>Resource</TH>
-                      {ACTION_COLUMNS.map((a) => (
-                        <TH key={a} className="text-center capitalize">
-                          {a}
-                        </TH>
-                      ))}
-                    </TR>
-                  </THead>
-                  <TBody>
-                    {scopeRows.map((scope) => (
-                      <TR key={scope.key}>
-                        <TD>
-                          <span className="font-medium">{scope.label || scope.key}</span>
-                          {scope.module ? (
-                            <span className="ml-2 text-caption text-muted-foreground">
-                              {scope.module}
-                            </span>
-                          ) : null}
-                        </TD>
-                        {ACTION_COLUMNS.map((action) => {
-                          const perm = permByKey.get(`${scope.key}:${action}`)
-                          return (
-                            <TD key={action} className="text-center">
-                              {perm ? (
-                                <Checkbox
-                                  checked={isSuper || checked.has(perm.id)}
-                                  disabled={isSuper}
-                                  onChange={() => toggle(perm.id)}
-                                />
-                              ) : (
-                                <span className="text-muted-foreground">—</span>
-                              )}
-                            </TD>
-                          )
-                        })}
-                      </TR>
-                    ))}
-                  </TBody>
-                </Table>
-              </Card>
+              {/* Scope × action matrix, grouped by module (accordion). */}
+              <div className={cn('flex flex-col gap-3', isSuper && 'opacity-50')}>
+                {moduleGroups.map(([mod, rows]) => {
+                  const open = !collapsed.has(mod)
+                  return (
+                    <Card key={mod} className="overflow-hidden p-0">
+                      <button
+                        type="button"
+                        onClick={() => toggleModule(mod)}
+                        aria-expanded={open}
+                        className="flex w-full items-center gap-2 px-4 py-2.5 text-small font-medium capitalize hover:bg-accent/50"
+                      >
+                        <ChevronDown
+                          className={cn(
+                            'size-4 text-muted-foreground transition-transform',
+                            !open && '-rotate-90',
+                          )}
+                        />
+                        {mod || 'Other'}
+                        <span className="text-caption font-normal text-muted-foreground">
+                          {rows.length}
+                        </span>
+                      </button>
+                      {open ? (
+                        <Table>
+                          <THead>
+                            <TR>
+                              <TH>Resource</TH>
+                              {ACTION_COLUMNS.map((a) => (
+                                <TH key={a} className="text-center capitalize">
+                                  {a}
+                                </TH>
+                              ))}
+                            </TR>
+                          </THead>
+                          <TBody>
+                            {rows.map((scope) => (
+                              <TR key={scope.key}>
+                                <TD className="font-medium">
+                                  {scope.label || scope.key}
+                                </TD>
+                                {ACTION_COLUMNS.map((action) => {
+                                  const perm = permByKey.get(`${scope.key}:${action}`)
+                                  return (
+                                    <TD key={action} className="text-center">
+                                      {perm ? (
+                                        <Checkbox
+                                          checked={isSuper || checked.has(perm.id)}
+                                          disabled={isSuper}
+                                          onChange={() => toggle(perm.id)}
+                                        />
+                                      ) : (
+                                        <span className="text-muted-foreground">—</span>
+                                      )}
+                                    </TD>
+                                  )
+                                })}
+                              </TR>
+                            ))}
+                          </TBody>
+                        </Table>
+                      ) : null}
+                    </Card>
+                  )
+                })}
+              </div>
             </div>
           ) : (
             <p className="text-small text-muted-foreground">No roles yet.</p>
