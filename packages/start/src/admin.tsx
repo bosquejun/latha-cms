@@ -32,7 +32,17 @@ import {
   type SidebarLinkProps,
 } from '@latha/admin-sdk'
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@latha/ui'
-import { Plus, FileText, Files, Folder, FolderTree, Settings, type LucideIcon } from 'lucide-react'
+import {
+  Plus,
+  FileText,
+  Files,
+  Folder,
+  FolderTree,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  type LucideIcon,
+} from 'lucide-react'
 import { useLatha } from './context.js'
 import { useAsync } from './hooks.js'
 import type { EntityDescriptor, NavItem, NavSection } from './rpc.js'
@@ -57,6 +67,17 @@ type Route =
   | { view: 'settings'; page?: SettingsPageExtension; params: string[] }
   | { view: 'notfound' }
 
+/** Parse an entity route (`content/<slug>[/new|/<id>]` or `documents/<slug>`). */
+function parseEntitySegs(seg: string[]): Route | null {
+  if (seg[0] === 'content' && seg[1]) {
+    if (seg[2] === 'new') return { view: 'create', slug: seg[1] }
+    if (seg[2]) return { view: 'edit', slug: seg[1], id: seg[2] }
+    return { view: 'list', slug: seg[1] }
+  }
+  if (seg[0] === 'documents' && seg[1]) return { view: 'document', slug: seg[1] }
+  return null
+}
+
 function parseRoute(
   pathname: string,
   basePath: string,
@@ -68,18 +89,18 @@ function parseRoute(
   const seg = rest.split('/').filter(Boolean)
   if (seg.length === 0) return { view: 'dashboard' }
 
-  if (seg[0] === 'content' && seg[1]) {
-    if (seg[2] === 'new') return { view: 'create', slug: seg[1] }
-    if (seg[2]) return { view: 'edit', slug: seg[1], id: seg[2] }
-    return { view: 'list', slug: seg[1] }
-  }
-  if (seg[0] === 'documents' && seg[1]) return { view: 'document', slug: seg[1] }
+  const entity = parseEntitySegs(seg)
+  if (entity) return entity
 
   if (seg[0] === 'settings') {
-    const settingsSlug = seg[1]
+    const sub = seg.slice(1)
+    // Entities living in the settings area (`/admin/settings/content/users`).
+    const settingsEntity = parseEntitySegs(sub)
+    if (settingsEntity) return settingsEntity
+    const settingsSlug = sub[0]
     if (!settingsSlug) return { view: 'settings', params: [] }
     const page = ext.settingsFor(settingsSlug)
-    if (page) return { view: 'settings', page, params: seg.slice(2) }
+    if (page) return { view: 'settings', page, params: sub.slice(1) }
     return { view: 'notfound' }
   }
 
@@ -96,13 +117,10 @@ const KIND_ICON: Record<NavItem['kind'], LucideIcon> = {
   taxonomy: FolderTree,
 }
 
-// Section ordering: ungrouped items default to the top (no heading), named
-// extension groups sit in the middle, and the conventional "Settings" area is
-// pinned to the bottom. Any entry can override these via its own `order`.
-const SETTINGS_LABEL = 'Settings'
+// Default ordering: ungrouped items sit at the top (no heading), named groups
+// sit below. Any entry overrides these via its own `order`.
 const ORDER_UNGROUPED = -100
 const ORDER_EXT_GROUP = 100
-const ORDER_SETTINGS = 1000
 
 interface RawItem extends SidebarItem {
   order: number
@@ -117,20 +135,29 @@ interface RawSection {
   items: RawItem[]
 }
 
+/** A non-entity sidebar entry (custom page, nav link, or settings page). */
+interface ExtraEntry {
+  key: string
+  href: string
+  label: string
+  icon?: LucideIcon
+  external?: boolean
+  /** Group heading; omit for a free-floating ungrouped entry. */
+  group?: string
+  order?: number
+}
+
 /**
- * Merge entity nav sections (from the server) with extension-contributed pages,
- * nav links, and settings into one ordered set of sidebar sections.
+ * Assemble one sidebar from server entity sections plus extension-contributed
+ * `extras`. Used identically for the main and the settings sidebars — only the
+ * inputs differ — so both share the same grouping and ordering behaviour.
  *
  * Ordering is uniform: every top-level entry (a group, or a single ungrouped
  * item) carries an `order`, and items within a group carry their own `order`.
  * Lower sorts first. Groups merge by label; ungrouped items each become their
  * own headless entry so they can be positioned freely among the groups.
  */
-function buildSidebar(
-  nav: NavSection[],
-  ext: ExtensionRegistry,
-  basePath: string,
-): SidebarSection[] {
+function buildSidebar(nav: NavSection[], extras: ExtraEntry[]): SidebarSection[] {
   const groups = new Map<string, RawSection>()
   const singles: RawSection[] = []
 
@@ -168,41 +195,18 @@ function buildSidebar(
     }
   }
 
-  // Custom pages and nav links: their `group`, or a free-floating ungrouped entry.
-  for (const page of ext.pages) {
-    if (page.hidden) continue
+  // Extension entries: grouped by `group`, or a free-floating ungrouped entry.
+  for (const extra of extras) {
     const item: RawItem = {
-      key: `page:${page.path}`,
-      href: `${basePath}/${page.path}`,
-      label: page.label,
-      icon: page.icon,
-      order: page.order ?? 0,
+      key: extra.key,
+      href: extra.href,
+      label: extra.label,
+      icon: extra.icon,
+      external: extra.external,
+      order: extra.order ?? 0,
     }
-    if (page.group) groupFor(page.group, page.order ?? ORDER_EXT_GROUP).items.push(item)
-    else single(item.key, { ...item, order: page.order ?? ORDER_UNGROUPED })
-  }
-  for (const link of ext.nav) {
-    const item: RawItem = {
-      key: `nav:${link.href}`,
-      href: link.href,
-      label: link.label,
-      icon: link.icon,
-      external: link.external,
-      order: link.order ?? 0,
-    }
-    if (link.group) groupFor(link.group, link.order ?? ORDER_EXT_GROUP).items.push(item)
-    else single(item.key, { ...item, order: link.order ?? ORDER_UNGROUPED })
-  }
-
-  // Settings pages always collect into the bottom "Settings" area.
-  for (const page of ext.settings) {
-    groupFor(SETTINGS_LABEL, ORDER_SETTINGS).items.push({
-      key: `settings:${page.path}`,
-      href: `${basePath}/settings/${page.path}`,
-      label: page.label,
-      icon: page.icon ?? Settings,
-      order: page.order ?? 0,
-    })
+    if (extra.group) groupFor(extra.group, extra.order ?? ORDER_EXT_GROUP).items.push(item)
+    else single(item.key, { ...item, order: extra.order ?? ORDER_UNGROUPED })
   }
 
   const sections = [...groups.values(), ...singles]
@@ -214,14 +218,45 @@ function buildSidebar(
     label: section.label || undefined,
     collapsible: section.collapsible,
     defaultCollapsed: section.defaultCollapsed,
-    // A collapsible group renders as a menu row, so give it a leading icon:
-    // the gear for Settings, a folder for everything else.
-    icon: section.collapsible
-      ? section.label === SETTINGS_LABEL
-        ? Settings
-        : Folder
-      : undefined,
+    // A collapsible group renders as a menu row, so give it a leading folder icon.
+    icon: section.collapsible ? Folder : undefined,
     items: section.items,
+  }))
+}
+
+/** Flatten the extension registry into the extras for the main sidebar. */
+function mainExtras(ext: ExtensionRegistry, basePath: string): ExtraEntry[] {
+  return [
+    ...ext.pages
+      .filter((page) => !page.hidden)
+      .map((page) => ({
+        key: `page:${page.path}`,
+        href: `${basePath}/${page.path}`,
+        label: page.label,
+        icon: page.icon,
+        group: page.group,
+        order: page.order,
+      })),
+    ...ext.nav.map((link) => ({
+      key: `nav:${link.href}`,
+      href: link.href,
+      label: link.label,
+      icon: link.icon,
+      external: link.external,
+      group: link.group,
+      order: link.order,
+    })),
+  ]
+}
+
+/** Settings pages become the extras for the settings sidebar. */
+function settingsExtras(ext: ExtensionRegistry, basePath: string): ExtraEntry[] {
+  return ext.settings.map((page) => ({
+    key: `settings:${page.path}`,
+    href: `${basePath}/settings/${page.path}`,
+    label: page.label,
+    icon: page.icon ?? Settings,
+    order: page.order,
   }))
 }
 
@@ -253,14 +288,31 @@ export function LathaAdmin() {
 
   const route = parseRoute(pathname, basePath, extensions)
   const navSections = nav.data ?? []
-  const sections = buildSidebar(navSections, extensions, basePath)
+  const mainNav = navSections.filter((section) => section.area !== 'settings')
+  const settingsNav = navSections.filter((section) => section.area === 'settings')
+
+  const mainSections = buildSidebar(mainNav, mainExtras(extensions, basePath))
+  const settingsSections = buildSidebar(settingsNav, settingsExtras(extensions, basePath))
+
+  // The settings area swaps the whole sidebar; the path under `/admin/settings`
+  // decides which sidebar shows. The footer button lands on the first settings
+  // entry so clicking it opens straight into a usable page.
+  const settingsRoot = `${basePath}/settings`
+  const inSettings = pathname === settingsRoot || pathname.startsWith(`${settingsRoot}/`)
+  const firstSettingsHref = settingsSections[0]?.items[0]?.href ?? settingsRoot
+  const hasSettings = settingsSections.length > 0
 
   return (
     <AdminShell
-      sections={sections}
+      sections={inSettings ? settingsSections : mainSections}
       currentPath={pathname}
       LinkComponent={RouterLink}
       brand="LathaCMS"
+      showDashboard={!inSettings}
+      sidebarHeader={inSettings ? <SettingsBackHeader basePath={basePath} /> : undefined}
+      sidebarFooter={
+        !inSettings && hasSettings ? <SettingsNavButton href={firstSettingsHref} /> : undefined
+      }
       userMenu={
         <UserMenu
           email={session.data.email}
@@ -274,21 +326,61 @@ export function LathaAdmin() {
         />
       }
     >
-      <AdminView route={route} nav={navSections} />
+      <AdminView route={route} nav={mainNav} routeBase={inSettings ? settingsRoot : basePath} />
     </AdminShell>
   )
 }
 
-function AdminView({ route, nav }: { route: Route; nav: NavSection[] }) {
+/** Footer entry in the main sidebar that opens the settings area. */
+function SettingsNavButton({ href }: { href: string }) {
+  return (
+    <div className="border-t border-sidebar-border pt-3">
+      <Link
+        to={href}
+        className="flex items-center justify-between gap-2.5 rounded-md border border-transparent px-3 py-1.5 text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent/60 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground"
+      >
+        <span className="flex items-center gap-2.5">
+          <Settings />
+          Settings
+        </span>
+        <ChevronRight />
+      </Link>
+    </div>
+  )
+}
+
+/** Header of the settings sidebar: a back chevron + the "Settings" title. */
+function SettingsBackHeader({ basePath }: { basePath: string }) {
+  return (
+    <Link
+      to={basePath}
+      className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-semibold text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground"
+    >
+      <ChevronLeft />
+      Settings
+    </Link>
+  )
+}
+
+function AdminView({
+  route,
+  nav,
+  routeBase,
+}: {
+  route: Route
+  nav: NavSection[]
+  /** Base for entity sub-routes — `/admin` or `/admin/settings`. */
+  routeBase: string
+}) {
   switch (route.view) {
     case 'dashboard':
       return <Dashboard nav={nav} />
     case 'list':
-      return <ListView slug={route.slug} />
+      return <ListView slug={route.slug} base={routeBase} />
     case 'create':
-      return <CreateView slug={route.slug} />
+      return <CreateView slug={route.slug} base={routeBase} />
     case 'edit':
-      return <EditView slug={route.slug} id={route.id} />
+      return <EditView slug={route.slug} id={route.id} base={routeBase} />
     case 'document':
       return <DocumentView slug={route.slug} />
     case 'page':
@@ -365,8 +457,8 @@ function StatCount({ client, item }: { client: ReturnType<typeof useLatha>['clie
   )
 }
 
-function ListView({ slug }: { slug: string }) {
-  const { client, basePath } = useLatha()
+function ListView({ slug, base }: { slug: string; base: string }) {
+  const { client } = useLatha()
   const entity = useAsync(() => client.entity(slug), [slug])
   const rows = useAsync(() => client.list(slug), [slug])
 
@@ -383,7 +475,7 @@ function ListView({ slug }: { slug: string }) {
         title={entity.data.label}
         actions={
           <Button asChild size="sm">
-            <Link to={`${basePath}/content/${slug}/new`}>
+            <Link to={`${base}/content/${slug}/new`}>
               <Plus /> New
             </Link>
           </Button>
@@ -396,7 +488,7 @@ function ListView({ slug }: { slug: string }) {
           description={`Create your first to start managing ${entity.data.label.toLowerCase()}.`}
           action={
             <Button asChild size="sm" className="mt-1">
-              <Link to={`${basePath}/content/${slug}/new`}>
+              <Link to={`${base}/content/${slug}/new`}>
                 <Plus /> New
               </Link>
             </Button>
@@ -407,7 +499,7 @@ function ListView({ slug }: { slug: string }) {
           <CollectionList
             entity={asEntity(entity.data)}
             rows={list}
-            getEditHref={(id) => `${basePath}/content/${slug}/${id}`}
+            getEditHref={(id) => `${base}/content/${slug}/${id}`}
             onDelete={async (id) => {
               await client.remove(slug, id)
               rows.reload()
@@ -420,15 +512,15 @@ function ListView({ slug }: { slug: string }) {
   )
 }
 
-function CreateView({ slug }: { slug: string }) {
-  const { client, basePath } = useLatha()
+function CreateView({ slug, base }: { slug: string; base: string }) {
+  const { client } = useLatha()
   const navigate = useNavigate()
   const entity = useAsync(() => client.entity(slug), [slug])
 
   if (entity.loading) return <p className="text-small text-muted-foreground">Loading…</p>
   if (!entity.data) return <p className="text-small text-muted-foreground">Unknown collection.</p>
 
-  const toList = () => navigate({ to: `${basePath}/content/${slug}` })
+  const toList = () => navigate({ to: `${base}/content/${slug}` })
 
   return (
     <>
@@ -448,8 +540,8 @@ function CreateView({ slug }: { slug: string }) {
   )
 }
 
-function EditView({ slug, id }: { slug: string; id: string }) {
-  const { client, basePath } = useLatha()
+function EditView({ slug, id, base }: { slug: string; id: string; base: string }) {
+  const { client } = useLatha()
   const navigate = useNavigate()
   const entity = useAsync(() => client.entity(slug), [slug])
   const doc = useAsync(() => client.get(slug, id), [slug, id])
@@ -458,7 +550,7 @@ function EditView({ slug, id }: { slug: string; id: string }) {
   if (!entity.data) return <p className="text-small text-muted-foreground">Unknown collection.</p>
   if (!doc.data) return <p className="text-small text-muted-foreground">Record not found.</p>
 
-  const toList = () => navigate({ to: `${basePath}/content/${slug}` })
+  const toList = () => navigate({ to: `${base}/content/${slug}` })
 
   return (
     <>

@@ -62,6 +62,12 @@ export interface SidebarProps {
   homeHref?: string
   /** Called whenever the user clicks any nav link. */
   onNavigate?: () => void
+  /** Render the fixed Dashboard entry above the sections. Default true. */
+  showDashboard?: boolean
+  /** Pinned to the top, above the nav (e.g. a back button in a sub-sidebar). */
+  header?: ReactNode
+  /** Pinned to the bottom of the sidebar (e.g. a Settings button). */
+  footer?: ReactNode
 }
 
 const linkClass = (active: boolean) =>
@@ -93,6 +99,9 @@ export function Sidebar({
   LinkComponent,
   homeHref = '/admin',
   onNavigate,
+  showDashboard = true,
+  header,
+  footer,
 }: SidebarProps) {
   const renderLink = (item: SidebarItem, active: boolean) => {
     const body = (
@@ -131,15 +140,19 @@ export function Sidebar({
 
   return (
     <nav className="flex h-full w-(--sidebar-width) shrink-0 flex-col gap-4 overflow-y-auto border-r border-sidebar-border bg-sidebar p-sidebar">
+      {header}
       <Slot zone="shell.sidebar.top" />
 
       {/* Every top-level entry — Dashboard, ungrouped items, and group rows —
-          shares one rhythm so the main menu reads as a single, even list. */}
-      <div className="flex flex-col gap-stack">
-        {renderLink(
-          { key: '__dashboard', href: homeHref, label: 'Dashboard', icon: LayoutDashboard },
-          currentPath === homeHref,
-        )}
+          shares one rhythm so the menu reads as a single, even list. `flex-1`
+          lets the footer settle at the bottom. */}
+      <div className="flex flex-1 flex-col gap-stack">
+        {showDashboard
+          ? renderLink(
+              { key: '__dashboard', href: homeHref, label: 'Dashboard', icon: LayoutDashboard },
+              currentPath === homeHref,
+            )
+          : null}
 
         {sections.map((section) => (
           <SidebarSectionView
@@ -152,6 +165,7 @@ export function Sidebar({
       </div>
 
       <Slot zone="shell.sidebar.bottom" />
+      {footer}
     </nav>
   )
 }

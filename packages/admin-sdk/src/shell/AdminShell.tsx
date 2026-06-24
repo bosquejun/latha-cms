@@ -18,6 +18,12 @@ export interface AdminShellProps {
   brand?: string
   userMenu?: ReactNode
   children: ReactNode
+  /** Render the fixed Dashboard entry in the sidebar. Default true. */
+  showDashboard?: boolean
+  /** Pinned to the top of the sidebar (e.g. a back button). */
+  sidebarHeader?: ReactNode
+  /** Pinned to the bottom of the sidebar (e.g. a Settings button). */
+  sidebarFooter?: ReactNode
 }
 
 export function AdminShell({
@@ -27,6 +33,9 @@ export function AdminShell({
   brand = 'LathaCMS',
   userMenu,
   children,
+  showDashboard = true,
+  sidebarHeader,
+  sidebarFooter,
 }: AdminShellProps) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   return (
@@ -44,6 +53,9 @@ export function AdminShell({
             sections={sections}
             currentPath={currentPath}
             LinkComponent={LinkComponent}
+            showDashboard={showDashboard}
+            header={sidebarHeader}
+            footer={sidebarFooter}
           />
         </aside>
         <MobileDrawer
@@ -52,6 +64,9 @@ export function AdminShell({
           sections={sections}
           currentPath={currentPath}
           LinkComponent={LinkComponent}
+          showDashboard={showDashboard}
+          header={sidebarHeader}
+          footer={sidebarFooter}
         />
         <main className="min-w-0 flex-1 p-page">
           <div className="mx-auto w-full max-w-content-max">

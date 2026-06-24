@@ -35,6 +35,11 @@ export interface AdminPage {
 
 /** How a module's entities are grouped into a sidebar section by default. */
 export interface ModuleNavConfig {
+  /**
+   * Sidebar this module's entities belong to: the main nav (default) or the
+   * `settings` area. An entity's own `admin.area` overrides this.
+   */
+  area?: 'main' | 'settings'
   /** Section heading. Defaults to a humanized module name (`content` → Content). */
   label?: string
   /** Section sort order (lower first). Defaults to the module's resolution order. */
