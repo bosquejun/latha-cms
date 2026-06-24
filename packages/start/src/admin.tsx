@@ -32,7 +32,7 @@ import {
   type SidebarLinkProps,
 } from '@latha/admin-sdk'
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@latha/ui'
-import { Plus, FileText, Files, FolderTree, Settings, type LucideIcon } from 'lucide-react'
+import { Plus, FileText, Files, Folder, FolderTree, Settings, type LucideIcon } from 'lucide-react'
 import { useLatha } from './context.js'
 import { useAsync } from './hooks.js'
 import type { EntityDescriptor, NavItem, NavSection } from './rpc.js'
@@ -190,6 +190,13 @@ function buildSidebar(
       label: section.label || undefined,
       collapsible: section.collapsible,
       defaultCollapsed: section.defaultCollapsed,
+      // A collapsible group renders as a menu row, so give it a leading icon:
+      // the gear for Settings, a folder for everything else.
+      icon: section.collapsible
+        ? section.label === SETTINGS_LABEL
+          ? Settings
+          : Folder
+        : undefined,
       items: section.items,
     }))
 }
