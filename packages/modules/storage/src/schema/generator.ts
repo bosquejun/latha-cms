@@ -17,6 +17,9 @@ import type { Entity, Field } from '@latha/core'
 
 export type ColumnKind = 'text' | 'integer' | 'real' | 'boolean' | 'json'
 
+/** SQL dialect a table plan is rendered for. */
+export type Dialect = 'sqlite' | 'postgres'
+
 export interface ColumnPlan {
   name: string
   kind: ColumnKind
@@ -92,20 +95,54 @@ export function buildTablePlan(entity: Entity): TablePlan {
   return { table: entity.slug, columns, timestamps }
 }
 
-/** Produce a `CREATE TABLE IF NOT EXISTS` statement from a plan. */
-export function createTableSQL(plan: TablePlan): string {
+/**
+ * Postgres SQL type for a column kind. SQLite stores everything as
+ * TEXT/INTEGER/REAL (see {@link sqlTypeForKind}); Postgres has richer native
+ * types, so booleans, JSON, and numbers map to their proper column types.
+ */
+function pgTypeForKind(kind: ColumnKind): string {
+  switch (kind) {
+    case 'text':
+      return 'TEXT'
+    case 'integer':
+      return 'BIGINT'
+    case 'real':
+      return 'DOUBLE PRECISION'
+    case 'boolean':
+      return 'BOOLEAN'
+    case 'json':
+      return 'JSONB'
+  }
+}
+
+/** Render the DDL column type for a kind in the given dialect. */
+function ddlTypeForColumn(col: ColumnPlan, dialect: Dialect): string {
+  return dialect === 'postgres' ? pgTypeForKind(col.kind) : col.sqlType
+}
+
+/** Render the DDL type used for the implicit `createdAt`/`updatedAt` columns. */
+function timestampType(dialect: Dialect): string {
+  return dialect === 'postgres' ? 'TIMESTAMPTZ' : 'TEXT'
+}
+
+/**
+ * Produce a `CREATE TABLE IF NOT EXISTS` statement from a plan. Defaults to the
+ * SQLite dialect (the original behaviour); pass `'postgres'` for Postgres DDL.
+ */
+export function createTableSQL(plan: TablePlan, dialect: Dialect = 'sqlite'): string {
   const lines: string[] = ['"id" TEXT PRIMARY KEY NOT NULL']
 
   for (const col of plan.columns) {
-    const parts = [`"${col.name}"`, col.sqlType]
+    const parts = [`"${col.name}"`, ddlTypeForColumn(col, dialect)]
     if (col.notNull) parts.push('NOT NULL')
     if (col.unique) parts.push('UNIQUE')
     lines.push(parts.join(' '))
   }
 
   if (plan.timestamps) {
-    lines.push('"createdAt" TEXT NOT NULL')
-    lines.push('"updatedAt" TEXT NOT NULL')
+    const ts = timestampType(dialect)
+    lines.push(`"createdAt" ${ts} NOT NULL`)
+    lines.push(`"updatedAt" ${ts} NOT NULL`)
   }
 
   return `CREATE TABLE IF NOT EXISTS "${plan.table}" (\n  ${lines.join(',\n  ')}\n);`
