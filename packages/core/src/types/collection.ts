@@ -23,6 +23,11 @@ export interface CollectionAdminConfig {
   /** Hide this entity from the admin sidebar. */
   hidden?: boolean
   /**
+   * Sidebar this entity belongs to: the main nav (default) or the `settings`
+   * area, which renders its own sidebar behind the Settings button.
+   */
+  area?: 'main' | 'settings'
+  /**
    * Sidebar section this entity appears under. Overrides the default, which is
    * the contributing module's nav label. Entities sharing a `group` merge into
    * one section.

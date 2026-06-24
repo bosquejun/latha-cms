@@ -50,6 +50,8 @@ export interface NavItem {
 export interface NavSection {
   /** Stable key (the group label). */
   key: string
+  /** Which sidebar this section belongs to. Defaults to `main`. */
+  area?: 'main' | 'settings'
   label: string
   /** Section sort order (lower first). */
   order: number
