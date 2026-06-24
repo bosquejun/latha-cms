@@ -32,7 +32,7 @@ import {
   type SidebarLinkProps,
 } from '@latha/admin-sdk'
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@latha/ui'
-import { Plus, FileText, Files, FolderTree, Settings, type LucideIcon } from 'lucide-react'
+import { Plus, FileText, Files, FolderTree, Layers, Settings, type LucideIcon } from 'lucide-react'
 import { useLatha } from './context.js'
 import { useAsync } from './hooks.js'
 import type { EntityDescriptor, NavItem, NavSection } from './rpc.js'
@@ -96,17 +96,31 @@ const KIND_ICON: Record<NavItem['kind'], LucideIcon> = {
   taxonomy: FolderTree,
 }
 
-// Section ordering: ungrouped items float to the top (no heading), named
-// extension groups sit in the middle, and the conventional "Settings" area is
-// pinned to the bottom.
+// Named icons a module/section can request (kept small + explicit so icon names
+// stay serializable across RPC). Unknown names fall back in the Sidebar.
+const SECTION_ICON: Record<string, LucideIcon> = {
+  layers: Layers,
+  settings: Settings,
+  folder: FolderTree,
+  files: Files,
+  file: FileText,
+}
+
+const resolveSectionIcon = (name?: string): LucideIcon | undefined =>
+  name ? SECTION_ICON[name] : undefined
+
+// Section ordering: named groups sort by their own order (Content = 10),
+// ungrouped items sit below them, and the conventional "Settings" area is pinned
+// to the bottom. Dashboard is always rendered first, outside this list.
 const SETTINGS_LABEL = 'Settings'
-const ORDER_UNGROUPED = -100
+const ORDER_UNGROUPED = 500
 const ORDER_EXT_GROUP = 100
 const ORDER_SETTINGS = 1000
 
 interface RawSection {
   label: string
   order: number
+  icon?: LucideIcon
   collapsible?: boolean
   defaultCollapsed?: boolean
   items: SidebarItem[]
@@ -132,6 +146,7 @@ function buildSidebar(
     } else {
       section.order = Math.min(section.order, order)
       if (extra?.collapsible) section.collapsible = true
+      if (extra?.icon) section.icon = section.icon ?? extra.icon
     }
     return section
   }
@@ -139,6 +154,7 @@ function buildSidebar(
   // Entities, already grouped + ordered by the server.
   for (const section of nav) {
     sectionFor(section.label, section.order, {
+      icon: resolveSectionIcon(section.icon),
       collapsible: section.collapsible,
       defaultCollapsed: section.defaultCollapsed,
     }).items.push(
@@ -175,7 +191,7 @@ function buildSidebar(
 
   // Settings pages always collect into the bottom "Settings" area.
   for (const page of ext.settings) {
-    sectionFor(SETTINGS_LABEL, ORDER_SETTINGS).items.push({
+    sectionFor(SETTINGS_LABEL, ORDER_SETTINGS, { icon: Settings }).items.push({
       key: `settings:${page.path}`,
       href: `${basePath}/settings/${page.path}`,
       label: page.label,
@@ -188,6 +204,7 @@ function buildSidebar(
     .map((section) => ({
       key: `sec:${section.label || 'ungrouped'}`,
       label: section.label || undefined,
+      icon: section.icon,
       collapsible: section.collapsible,
       defaultCollapsed: section.defaultCollapsed,
       items: section.items,

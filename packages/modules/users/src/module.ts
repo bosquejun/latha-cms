@@ -42,7 +42,7 @@ export function UsersModule(config: UsersModuleConfig = {}): Module {
     capabilities: ['users'],
     // Users management belongs with admin configuration — group it into the
     // bottom "Settings" area alongside any settings pages.
-    admin: { nav: { label: 'Settings', order: 1000 } },
+    admin: { nav: { label: 'Settings', order: 1000, icon: 'settings' } },
     entities: [
       {
         kind: 'collection',

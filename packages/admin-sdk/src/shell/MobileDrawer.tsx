@@ -26,6 +26,7 @@ export function MobileDrawer({ open, onClose, sections, currentPath, LinkCompone
           sections={sections}
           currentPath={currentPath}
           LinkComponent={LinkComponent}
+          collapsible={false}
           onNavigate={onClose}
         />
       </div>

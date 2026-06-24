@@ -105,6 +105,7 @@ function navOf(latha: LathaInstance, basePath: string): NavSection[] {
         key: label,
         label,
         order,
+        icon: navMeta?.icon,
         collapsible: navMeta?.collapsible,
         defaultCollapsed: navMeta?.defaultCollapsed,
         items: [],
@@ -114,6 +115,7 @@ function navOf(latha: LathaInstance, basePath: string): NavSection[] {
       // A group spanning modules takes the earliest order and any collapsible.
       section.order = Math.min(section.order, order)
       section.collapsible = section.collapsible || navMeta?.collapsible
+      section.icon = section.icon ?? navMeta?.icon
     }
     section.items.push(item)
   }

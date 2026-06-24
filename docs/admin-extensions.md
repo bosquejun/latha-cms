@@ -168,12 +168,16 @@ top to bottom:
    here automatically; a module can join it by naming its group `Settings`
    (that's how `UsersModule` places the `users` entity there).
 
-```ts
-// A module that wants a heading for its entities:
-admin: { nav: { label: 'Content', order: 10 } }
+A named group renders as a static **heading**, or — with `collapsible: true` —
+as an **accordion**: an expandable parent row (icon + chevron) over indented
+children.
 
-// A module that belongs in the bottom Settings area:
-admin: { nav: { label: 'Settings', order: 1000 } }
+```ts
+// Accordion group with an icon (ContentModule):
+admin: { nav: { label: 'Content', order: 10, icon: 'layers', collapsible: true } }
+
+// Heading group pinned to the bottom Settings area (UsersModule):
+admin: { nav: { label: 'Settings', order: 1000, icon: 'settings' } }
 ```
 
 ```ts
@@ -186,10 +190,17 @@ Collection({
 ```
 
 Resolution per entity: `admin.group` → the module's `admin.nav.label` →
-**ungrouped**. Sections sort by `admin.nav.order`; items by `admin.order`. Set
-`collapsible: true` (with optional `defaultCollapsed`) on a module's nav to make
-its section a collapse toggle. Custom pages are ungrouped unless they declare a
-`group`; settings pages always collect under "Settings".
+**ungrouped**. Sections sort by `admin.nav.order`; items by `admin.order`. Custom
+pages are ungrouped unless they declare a `group`; settings pages always collect
+under "Settings".
+
+`icon` is a name (`'layers'`, `'settings'`, `'folder'`, …) resolved to a
+component client-side, so it stays serializable across RPC.
+
+**Collapsible rail.** The sidebar can collapse to an icon strip (toggle at the
+bottom, persisted in `localStorage`). Collapsed, leaf items show a hover tooltip
+and grouped sections (accordion or heading) open as a hover/focus **flyout** of
+their children.
 
 ## Architecture notes
 

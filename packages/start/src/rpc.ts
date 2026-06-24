@@ -53,7 +53,9 @@ export interface NavSection {
   label: string
   /** Section sort order (lower first). */
   order: number
-  /** Render as a collapsible group. */
+  /** Icon name (accordion parent / collapsed flyout), resolved client-side. */
+  icon?: string
+  /** Render as a collapsible accordion group. */
   collapsible?: boolean
   /** Start collapsed (only meaningful when `collapsible`). */
   defaultCollapsed?: boolean

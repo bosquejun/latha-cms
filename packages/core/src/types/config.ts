@@ -35,11 +35,16 @@ export interface AdminPage {
 
 /** How a module's entities are grouped into a sidebar section by default. */
 export interface ModuleNavConfig {
-  /** Section heading. Defaults to a humanized module name (`content` → Content). */
+  /** Section heading. Omit to leave the entities ungrouped (no heading). */
   label?: string
   /** Section sort order (lower first). Defaults to the module's resolution order. */
   order?: number
-  /** Render the section as a collapsible group. Default false (flat heading). */
+  /**
+   * Icon name for the section (accordion parent row / collapsed flyout). Resolved
+   * to a component by the admin UI, e.g. `'layers'`, `'settings'`, `'folder'`.
+   */
+  icon?: string
+  /** Render the section as a collapsible accordion group. Default false (heading). */
   collapsible?: boolean
   /** Start a collapsible section collapsed. Default false (open). */
   defaultCollapsed?: boolean
