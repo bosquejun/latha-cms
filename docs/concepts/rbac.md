@@ -124,3 +124,27 @@ immediately.
   permission keys (wildcards allowed).
 - **A non-RBAC rule for one collection:** write an explicit `access` predicate; it
   overrides the RBAC default for that operation.
+
+## Running auth without the users module
+
+Auth does not hard-depend on `@latha/users`. It resolves identities through a
+pluggable **subject store**:
+
+- **Default:** reads the `users` collection (what `@latha/users` provides).
+- **Different collection:** `AuthModule({ usersSlug: 'accounts' })`.
+- **Custom source (no users module):** supply a `subjectStore` returning
+  `findByEmail` / `findById`, e.g. an external identity provider:
+
+  ```ts
+  AuthModule({
+    secret: process.env.AUTH_SECRET!,
+    subjectStore: () => ({
+      findByEmail: (email) => myIdp.lookup(email),   // → { id, passwordHash, roles }
+      findById: (id) => myIdp.get(id),
+    }),
+  })
+  ```
+
+The subject just needs an `id`, a `passwordHash` (for password login), and
+`roles` (role ids) for RBAC resolution. Roles/scopes/permissions are owned by
+auth itself, so RBAC works the same either way.

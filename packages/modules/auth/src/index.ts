@@ -11,6 +11,16 @@ export { AuthModule, getCatalog, type AuthModuleConfig } from './module.js'
 
 export type { AuthUser, AuthAdapter } from './types.js'
 
+// Pluggable identity source — lets auth run without @latha/users.
+export {
+  collectionSubjectStore,
+  getSubjectStore,
+  setSubjectStore,
+  DEFAULT_USERS_SLUG,
+  type Subject,
+  type SubjectStore,
+} from './subject-store.js'
+
 export { hashPassword, verifyPassword } from './crypto.js'
 
 export {

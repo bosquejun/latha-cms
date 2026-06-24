@@ -1,19 +1,21 @@
 /**
  * Auth service — credential verification and session → user resolution.
  *
- * Users are stored in the `users` collection (contributed by `@latha/users`),
- * so auth reaches them through the kernel's local operations: it needs only
- * `@latha/core`, not a direct dependency on the users package.
+ * Auth reaches identities through a pluggable `SubjectStore` (see
+ * `subject-store.ts`), not a hard dependency on the users module: the default
+ * store reads the `users` collection, but an app can point it elsewhere or
+ * supply a custom store.
  */
 
-import { operations } from '@latha/core'
 import type { LathaInstance } from '@latha/core'
 import type { AuthUser } from './types.js'
 import { verifyPassword } from './crypto.js'
 import { verifySessionToken } from './session.js'
 import { resolveUserPermissions } from './rbac/resolve.js'
+import { getSubjectStore, DEFAULT_USERS_SLUG } from './subject-store.js'
 
-export const USERS_SLUG = 'users'
+/** @deprecated The subject collection is configurable; this is only the default. */
+export const USERS_SLUG = DEFAULT_USERS_SLUG
 export const DEFAULT_COOKIE_NAME = 'latha_session'
 
 export interface AuthOptions {
@@ -28,23 +30,13 @@ export function toAuthUser(doc: Record<string, unknown>): AuthUser {
   return rest as AuthUser
 }
 
-const systemCtx = (latha: LathaInstance) => ({
-  cms: latha,
-  // Run lookups as the system principal (superadmin) so auth's own user lookups
-  // are never blocked by the RBAC guard or per-collection access.
-  principal: { id: '__system__', permissions: ['*'] },
-})
-
 /** Look up a user by email, including the stored password hash. */
 export async function findUserByEmail(
   latha: LathaInstance,
   email: string,
 ): Promise<(Record<string, unknown> & { id: string }) | null> {
-  const matches = await operations.find(systemCtx(latha), USERS_SLUG, {
-    where: { email },
-    limit: 1,
-  })
-  return matches[0] ?? null
+  const subject = await getSubjectStore(latha).findByEmail(email)
+  return subject ? (subject as Record<string, unknown> & { id: string }) : null
 }
 
 /** Enrich a stripped user with its resolved roles + effective permissions. */
@@ -76,7 +68,7 @@ export async function getUserById(
   latha: LathaInstance,
   id: string,
 ): Promise<AuthUser | null> {
-  const doc = await operations.findOne(systemCtx(latha), USERS_SLUG, id)
+  const doc = await getSubjectStore(latha).findById(id)
   return doc ? withGrants(latha, doc) : null
 }
 
