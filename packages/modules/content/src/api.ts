@@ -38,8 +38,14 @@ function serialize<T>(value: T): T {
 export interface ContentApiOptions {
   /** Resolve (and memoize) the live CMS instance. */
   getLatha: () => Promise<LathaInstance>
-  /** Resolve the current user for access checks. Defaults to anonymous. */
-  getUser?: () => Promise<import('@latha/core').AuthUser | null>
+  /** Resolve the current principal for access checks. Defaults to anonymous. */
+  getPrincipal?: () => Promise<unknown>
+  /**
+   * Opt into guard enforcement (e.g. RBAC) by threading `{ enforce: true }` to
+   * every operation. The admin RPC layer sets this; the public/headless path
+   * leaves it off so reads stay allow-by-default.
+   */
+  enforce?: boolean
 }
 
 export interface ContentApi {
@@ -59,9 +65,11 @@ export interface ContentApi {
 }
 
 export function createContentApi(options: ContentApiOptions): ContentApi {
+  const context = options.enforce ? { enforce: true } : undefined
   const ctx = async () => ({
     cms: await options.getLatha(),
-    user: (await options.getUser?.()) ?? null,
+    principal: (await options.getPrincipal?.()) ?? null,
+    context,
   })
 
   const asDoc = (doc: Doc) => serialize(doc) as JsonDoc

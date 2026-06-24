@@ -3,24 +3,56 @@
  *
  * Each operation threads a request through the full kernel pipeline:
  *
- *   access check → Zod validation → before* hooks → DB → after* hooks
+ *   access predicate → guard chain → Zod validation → before* hooks → DB → after* hooks
  *
- * Server functions (in the modules / playground) are thin wrappers over
- * these. The admin UI and the public API both go through here, so there is no
- * special-cased path for either.
+ * The kernel is auth-agnostic: it carries an opaque `principal` (whatever the
+ * caller supplied) and an opaque `context` bag, and runs any registered guards
+ * (see `registerGuard`) for cross-cutting authorization such as RBAC. It never
+ * interprets either. Server functions (in the modules / playground) are thin
+ * wrappers over these. The admin UI and the public API both go through here, so
+ * there is no special-cased path for either.
  */
 
 import { assertAccess } from '../access/evaluator.js'
 import { runHookEvent } from '../hooks/engine.js'
 import { buildZodSchema } from '../schema/builder.js'
 import type { Doc, Query } from '../types/adapter.js'
-import type { Collection, Document, Taxonomy } from '../types/collection.js'
+import type { Collection, Document, Entity, Taxonomy } from '../types/collection.js'
 import type { LathaInstance } from '../types/config.js'
-import type { AccessUser } from '../types/access.js'
+import type { Operation } from '../types/access.js'
+import type { GuardContext } from '../types/guard.js'
 
 export interface OperationContext {
   cms: LathaInstance
-  user?: AccessUser | null
+  /** The caller principal, opaque to the kernel. Defaults to anonymous (`null`). */
+  principal?: unknown
+  /**
+   * Opaque context bag threaded to guards (e.g. `{ enforce: true }` from the
+   * admin RPC layer). The kernel does not read it.
+   */
+  context?: Record<string, unknown>
+}
+
+/** Run every registered guard for an operation; any throw denies it. */
+async function runGuards(
+  ctx: OperationContext,
+  entity: Entity,
+  operation: Operation,
+  extras: { data?: unknown; doc?: unknown } = {},
+): Promise<void> {
+  const guards = ctx.cms.guards
+  if (guards.length === 0) return
+  const guardCtx: GuardContext = {
+    cms: ctx.cms,
+    operation,
+    slug: entity.slug,
+    kind: entity.kind,
+    principal: ctx.principal ?? null,
+    data: extras.data,
+    doc: extras.doc,
+    context: ctx.context ?? {},
+  }
+  for (const guard of guards) await guard(guardCtx)
 }
 
 function resolveCollection(cms: LathaInstance, slug: string): Collection {
@@ -56,8 +88,9 @@ export async function find(
   query?: Query,
 ): Promise<Doc[]> {
   const collection = resolveCollection(ctx.cms, slug)
-  const user = ctx.user ?? null
-  await assertAccess(collection.access, { user, operation: 'read' }, slug)
+  const principal = ctx.principal ?? null
+  await assertAccess(collection.access, { principal, operation: 'read' }, slug)
+  await runGuards(ctx, collection, 'read')
   return ctx.cms.db.find(slug, query)
 }
 
@@ -67,10 +100,11 @@ export async function findOne(
   id: string,
 ): Promise<Doc | null> {
   const collection = resolveCollection(ctx.cms, slug)
-  const user = ctx.user ?? null
+  const principal = ctx.principal ?? null
   const doc = await ctx.cms.db.findOne(slug, id)
   if (!doc) return null
-  await assertAccess(collection.access, { user, operation: 'read', doc }, slug)
+  await assertAccess(collection.access, { principal, operation: 'read', doc }, slug)
+  await runGuards(ctx, collection, 'read', { doc })
   return doc
 }
 
@@ -80,20 +114,21 @@ export async function create(
   data: unknown,
 ): Promise<Doc> {
   const collection = resolveCollection(ctx.cms, slug)
-  const user = ctx.user ?? null
+  const principal = ctx.principal ?? null
 
   await assertAccess(
     collection.access,
-    { user, operation: 'create', data },
+    { principal, operation: 'create', data },
     slug,
   )
+  await runGuards(ctx, collection, 'create', { data })
 
   const schema = buildZodSchema(collection.fields)
   const validated = schema.parse(data) as Record<string, unknown>
 
   const afterHooks = await runHookEvent(collection.hooks, 'beforeCreate', {
     data: validated,
-    user,
+    principal,
     operation: 'create',
     collection: slug,
   })
@@ -102,7 +137,7 @@ export async function create(
 
   return runHookEvent(collection.hooks, 'afterCreate', {
     data: created,
-    user,
+    principal,
     operation: 'create',
     collection: slug,
   }) as Promise<Doc>
@@ -115,16 +150,17 @@ export async function update(
   data: unknown,
 ): Promise<Doc> {
   const collection = resolveCollection(ctx.cms, slug)
-  const user = ctx.user ?? null
+  const principal = ctx.principal ?? null
 
   const previousDoc = await ctx.cms.db.findOne(slug, id)
   if (!previousDoc) throw new Error(`Document "${slug}/${id}" not found.`)
 
   await assertAccess(
     collection.access,
-    { user, operation: 'update', doc: previousDoc, data },
+    { principal, operation: 'update', doc: previousDoc, data },
     slug,
   )
+  await runGuards(ctx, collection, 'update', { doc: previousDoc, data })
 
   // Partial update: only validate the provided keys.
   const schema = buildZodSchema(collection.fields).partial()
@@ -132,7 +168,7 @@ export async function update(
 
   const beforeData = await runHookEvent(collection.hooks, 'beforeUpdate', {
     data: validated,
-    user,
+    principal,
     operation: 'update',
     collection: slug,
     previousDoc,
@@ -142,7 +178,7 @@ export async function update(
 
   return runHookEvent(collection.hooks, 'afterUpdate', {
     data: updated,
-    user,
+    principal,
     operation: 'update',
     collection: slug,
     previousDoc,
@@ -155,16 +191,17 @@ export async function destroy(
   id: string,
 ): Promise<void> {
   const collection = resolveCollection(ctx.cms, slug)
-  const user = ctx.user ?? null
+  const principal = ctx.principal ?? null
 
   const doc = await ctx.cms.db.findOne(slug, id)
   if (!doc) throw new Error(`Document "${slug}/${id}" not found.`)
 
-  await assertAccess(collection.access, { user, operation: 'delete', doc }, slug)
+  await assertAccess(collection.access, { principal, operation: 'delete', doc }, slug)
+  await runGuards(ctx, collection, 'delete', { doc })
 
   await runHookEvent(collection.hooks, 'beforeDelete', {
     data: doc,
-    user,
+    principal,
     operation: 'delete',
     collection: slug,
   })
@@ -173,7 +210,7 @@ export async function destroy(
 
   await runHookEvent(collection.hooks, 'afterDelete', {
     data: doc,
-    user,
+    principal,
     operation: 'delete',
     collection: slug,
   })
@@ -189,10 +226,15 @@ export async function findGlobal(
   slug: string,
 ): Promise<Doc | null> {
   const document = resolveDocument(ctx.cms, slug)
-  const user = ctx.user ?? null
+  const principal = ctx.principal ?? null
   const rows = await ctx.cms.db.find(slug, { limit: 1 })
   const doc = rows[0] ?? null
-  await assertAccess(document.access, { user, operation: 'read', doc: doc ?? undefined }, slug)
+  await assertAccess(
+    document.access,
+    { principal, operation: 'read', doc: doc ?? undefined },
+    slug,
+  )
+  await runGuards(ctx, document, 'read', { doc: doc ?? undefined })
   return doc
 }
 
@@ -206,16 +248,17 @@ export async function saveGlobal(
   data: unknown,
 ): Promise<Doc> {
   const document = resolveDocument(ctx.cms, slug)
-  const user = ctx.user ?? null
+  const principal = ctx.principal ?? null
 
   const existing = (await ctx.cms.db.find(slug, { limit: 1 }))[0] ?? null
   const operation = existing ? 'update' : 'create'
 
   await assertAccess(
     document.access,
-    { user, operation, doc: existing ?? undefined, data },
+    { principal, operation, doc: existing ?? undefined, data },
     slug,
   )
+  await runGuards(ctx, document, operation, { doc: existing ?? undefined, data })
 
   const base = buildZodSchema(document.fields)
   const schema = existing ? base.partial() : base
@@ -226,7 +269,7 @@ export async function saveGlobal(
 
   const before = await runHookEvent(document.hooks, beforeEvent, {
     data: validated,
-    user,
+    principal,
     operation,
     collection: slug,
     previousDoc: existing ?? undefined,
@@ -238,7 +281,7 @@ export async function saveGlobal(
 
   return runHookEvent(document.hooks, afterEvent, {
     data: saved,
-    user,
+    principal,
     operation,
     collection: slug,
     previousDoc: existing ?? undefined,
@@ -258,7 +301,8 @@ export async function listTerms(
   ctx: OperationContext,
   slug: string,
 ): Promise<Doc[]> {
-  resolveTaxonomy(ctx.cms, slug)
+  const taxonomy = resolveTaxonomy(ctx.cms, slug)
+  await runGuards(ctx, taxonomy, 'read')
   return ctx.cms.db.find(slug, { sort: [{ field: 'name', direction: 'asc' }] })
 }
 
@@ -269,6 +313,7 @@ export async function createTerm(
   data: unknown,
 ): Promise<Doc> {
   const taxonomy = resolveTaxonomy(ctx.cms, slug)
+  await runGuards(ctx, taxonomy, 'create', { data })
   const schema = buildZodSchema(taxonomy.fields ?? [])
   const validated = schema.parse(data) as Record<string, unknown>
   return ctx.cms.db.create(slug, validated)
@@ -280,7 +325,8 @@ export async function removeTerm(
   slug: string,
   id: string,
 ): Promise<void> {
-  resolveTaxonomy(ctx.cms, slug)
+  const taxonomy = resolveTaxonomy(ctx.cms, slug)
+  await runGuards(ctx, taxonomy, 'delete', { doc: { id } })
   await ctx.cms.db.delete(slug, id)
 }
 

@@ -7,6 +7,7 @@ For the project-wide spec and roadmap, see [`../../SPEC.md`](../../SPEC.md).
 |---|---|
 | [**Taxonomy**](./taxonomy.md) | The controlled vocabulary — every named concept in the system and what it means. Start here. |
 | [**Entities**](./entities.md) | The content model: `Collection`, `Document`, `Taxonomy` — when to use which, fields, and admin views. |
+| [**RBAC**](./rbac.md) | Authorization: roles, scopes & permissions, the generic guard seam, deny-by-default admin vs allow-by-default headless. |
 | [**Frameworks**](./frameworks.md) | The framework-integration layer (`@latha/start`): how an app wires LathaCMS into TanStack Start, the RPC endpoint, and the typed client. |
 
 > **Three things to know up front**

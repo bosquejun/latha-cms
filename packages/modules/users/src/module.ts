@@ -8,29 +8,26 @@
  * only persists whatever hash it is given, keeping storage and crypto separate.
  */
 
-import { select, stampFields, text } from '@latha/core'
+import { relationship, stampFields, text } from '@latha/core'
 import type { FieldsRecord, Module } from '@latha/core'
 
 export const USERS_SLUG = 'users'
 
 export interface UsersModuleConfig {
-  /** Allowed roles, most-privileged first. Defaults to admin/editor/viewer. */
-  roles?: string[]
-  /** Extra user fields beyond email / name / role. */
+  /** Extra user fields beyond email / name / roles. */
   fields?: FieldsRecord
 }
 
 export function UsersModule(config: UsersModuleConfig = {}): Module {
-  const roles = config.roles ?? ['admin', 'editor', 'viewer']
-  const defaultRole = roles[roles.length - 1] ?? 'viewer'
-
   const fields = stampFields({
     email: text({ required: true, unique: true }),
     name: text(),
-    role: select({
-      options: roles,
-      defaultValue: defaultRole,
-      admin: { sidebar: true },
+    // RBAC roles (defined by @latha/auth). A user holds many; effective
+    // permissions are the union across them.
+    roles: relationship({
+      to: 'roles',
+      many: true,
+      admin: { sidebar: true, description: 'Roles assigned to this user.' },
     }),
     // Write-only credential material — never shown in the admin UI.
     passwordHash: text({ admin: { hidden: true } }),
@@ -49,7 +46,7 @@ export function UsersModule(config: UsersModuleConfig = {}): Module {
           // than the main nav.
           area: 'settings',
           useAsTitle: 'email',
-          defaultColumns: ['email', 'name', 'role'],
+          defaultColumns: ['email', 'name', 'roles'],
           labels: { singular: 'User', plural: 'Users' },
         },
         fields,

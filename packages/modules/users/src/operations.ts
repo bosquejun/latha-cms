@@ -10,14 +10,15 @@ import { USERS_SLUG } from './module.js'
 
 const systemCtx = (latha: LathaInstance) => ({
   cms: latha,
-  user: { id: '__system__', role: 'admin' },
+  principal: { id: '__system__', permissions: ['*'] },
 })
 
 export interface CreateUserInput {
   email: string
   passwordHash: string
   name?: string
-  role?: string
+  /** Role ids assigned to the user. */
+  roles?: string[]
   [key: string]: unknown
 }
 

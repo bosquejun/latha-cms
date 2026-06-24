@@ -2,22 +2,25 @@
  * Access control primitives.
  *
  * Access functions are pure predicates evaluated by the access evaluator
- * before an operation runs. They receive the current user (if any) and,
- * for record-level operations, the document being acted upon.
+ * before an operation runs. They receive the current **principal** and, for
+ * record-level operations, the document being acted upon.
+ *
+ * The kernel is deliberately auth-agnostic: it never inspects the principal.
+ * `principal` is whatever the caller threaded into the operation (an
+ * authenticated user, a service identity, `null` for anonymous, …). Modules
+ * such as `@latha/auth` define the concrete principal shape and cast to it
+ * inside their access functions and guards.
  */
 
 export type Operation = 'create' | 'read' | 'update' | 'delete'
 
-/** Minimal shape of an authenticated user as seen by access functions. */
-export interface AccessUser {
-  id: string
-  role?: string
-  [key: string]: unknown
-}
-
 export interface AccessContext<TDoc = Record<string, unknown>> {
-  /** The authenticated user, or `null` for anonymous requests. */
-  user: AccessUser | null
+  /**
+   * The caller principal, opaque to the kernel. `null` for anonymous callers;
+   * otherwise whatever the caller supplied (e.g. an auth user). Cast it to your
+   * own principal type inside the predicate.
+   */
+  principal: unknown
   /** The operation being authorized. */
   operation: Operation
   /** The target document, when the operation is record-level (update/delete/read-one). */

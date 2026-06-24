@@ -7,9 +7,11 @@
  */
 
 import { operations } from '@latha/core'
-import type { AuthUser, LathaInstance } from '@latha/core'
+import type { LathaInstance } from '@latha/core'
+import type { AuthUser } from './types.js'
 import { verifyPassword } from './crypto.js'
 import { verifySessionToken } from './session.js'
+import { resolveUserPermissions } from './rbac/resolve.js'
 
 export const USERS_SLUG = 'users'
 export const DEFAULT_COOKIE_NAME = 'latha_session'
@@ -28,8 +30,9 @@ export function toAuthUser(doc: Record<string, unknown>): AuthUser {
 
 const systemCtx = (latha: LathaInstance) => ({
   cms: latha,
-  // Run lookups as the system (bypass per-collection access for auth itself).
-  user: { id: '__system__', role: 'admin' },
+  // Run lookups as the system principal (superadmin) so auth's own user lookups
+  // are never blocked by the RBAC guard or per-collection access.
+  principal: { id: '__system__', permissions: ['*'] },
 })
 
 /** Look up a user by email, including the stored password hash. */
@@ -44,6 +47,16 @@ export async function findUserByEmail(
   return matches[0] ?? null
 }
 
+/** Enrich a stripped user with its resolved roles + effective permissions. */
+async function withGrants(
+  latha: LathaInstance,
+  doc: Record<string, unknown>,
+): Promise<AuthUser> {
+  const base = toAuthUser(doc)
+  const { roles, permissions } = await resolveUserPermissions(latha, doc)
+  return { ...base, roles, permissions }
+}
+
 /** Verify an email + password pair. Returns the auth user, or `null`. */
 export async function authenticate(
   latha: LathaInstance,
@@ -55,16 +68,16 @@ export async function authenticate(
   const hash = user.passwordHash
   if (typeof hash !== 'string') return null
   const ok = await verifyPassword(password, hash)
-  return ok ? toAuthUser(user) : null
+  return ok ? withGrants(latha, user) : null
 }
 
-/** Load a user by id (e.g. from a verified session). */
+/** Load a user by id (e.g. from a verified session), with roles + permissions. */
 export async function getUserById(
   latha: LathaInstance,
   id: string,
 ): Promise<AuthUser | null> {
   const doc = await operations.findOne(systemCtx(latha), USERS_SLUG, id)
-  return doc ? toAuthUser(doc) : null
+  return doc ? withGrants(latha, doc) : null
 }
 
 /** Parse a `Cookie` header into a name → value map. */

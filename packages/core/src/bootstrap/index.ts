@@ -10,6 +10,7 @@
 
 import { ModuleRegistry } from '../registry/index.js'
 import type { Entity } from '../types/collection.js'
+import type { Guard } from '../types/guard.js'
 import type {
   LathaInstance,
   Module,
@@ -41,9 +42,9 @@ export function defineConfig(config: LathaConfig): ResolvedConfig {
 class Latha implements LathaInstance {
   readonly config: ResolvedConfig
   readonly db: ResolvedConfig['db']
-  auth: LathaInstance['auth'] = null
   modules: Module[] = []
   entities: Entity[] = []
+  guards: Guard[] = []
   ready = false
 
   private readonly registry = new ModuleRegistry()
@@ -56,6 +57,10 @@ class Latha implements LathaInstance {
 
   getEntity(slug: string): Entity | undefined {
     return this.entityIndex.get(slug)
+  }
+
+  registerGuard(guard: Guard): void {
+    this.guards.push(guard)
   }
 
   async boot(): Promise<this> {

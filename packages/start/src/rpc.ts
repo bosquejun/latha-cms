@@ -34,7 +34,10 @@ export interface SessionUser {
   id: string
   email: string | null
   name: string | null
-  role: string | null
+  /** Role names the user holds. */
+  roles: string[]
+  /** Effective permission keys (union across roles), for client-side gating. */
+  permissions: string[]
 }
 
 export interface NavItem {

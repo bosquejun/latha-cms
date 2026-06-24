@@ -88,3 +88,49 @@ export function useLatha(): LathaContextValue {
   }
   return ctx
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Permissions — client-side gating                                           */
+/* -------------------------------------------------------------------------- */
+
+const PermissionsContext = createContext<string[]>([])
+
+/**
+ * Make the current user's effective permission keys available to `useCan()`.
+ * The admin shell wraps its content in this once the session resolves.
+ */
+export function PermissionsProvider({
+  permissions,
+  children,
+}: {
+  permissions: string[]
+  children: ReactNode
+}) {
+  return (
+    <PermissionsContext.Provider value={permissions}>
+      {children}
+    </PermissionsContext.Provider>
+  )
+}
+
+/** Client-safe permission match (mirrors `@latha/auth`'s `matchesPermission`). */
+function permissionMatches(granted: string, required: string): boolean {
+  if (granted === '*') return true
+  if (granted === required) return true
+  const [gScope, gAction] = granted.split(':')
+  const [rScope, rAction] = required.split(':')
+  if (gAction === undefined || rAction === undefined) return false
+  return (
+    (gScope === '*' || gScope === rScope) &&
+    (gAction === '*' || gAction === rAction)
+  )
+}
+
+/**
+ * Returns a `can(permission)` predicate for gating UI off the current user's
+ * permissions. This is presentation only — the server re-checks every write.
+ */
+export function useCan(): (required: string) => boolean {
+  const permissions = useContext(PermissionsContext)
+  return (required: string) => permissions.some((g) => permissionMatches(g, required))
+}

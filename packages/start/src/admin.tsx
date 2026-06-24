@@ -27,6 +27,7 @@ import {
   type ExtensionRegistry,
   type PageExtension,
   type SettingsPageExtension,
+  registerFieldRenderer,
   type SidebarItem,
   type SidebarSection,
   type SidebarLinkProps,
@@ -43,9 +44,14 @@ import {
   ChevronRight,
   type LucideIcon,
 } from 'lucide-react'
-import { useLatha } from './context.js'
+import { PermissionsProvider, useCan, useLatha } from './context.js'
 import { useAsync } from './hooks.js'
+import { RelationshipField } from './fields/RelationshipField.js'
 import type { EntityDescriptor, NavItem, NavSection } from './rpc.js'
+
+// Register the client-aware relationship renderer into the SDK registry so
+// relationship fields (e.g. roles.permissions, users.roles) get a real picker.
+registerFieldRenderer('relationship', RelationshipField)
 
 function RouterLink({ href, className, children, onClick }: SidebarLinkProps) {
   return (
@@ -303,31 +309,33 @@ export function LathaAdmin() {
   const hasSettings = settingsSections.length > 0
 
   return (
-    <AdminShell
-      sections={inSettings ? settingsSections : mainSections}
-      currentPath={pathname}
-      LinkComponent={RouterLink}
-      brand="LathaCMS"
-      showDashboard={!inSettings}
-      sidebarHeader={inSettings ? <SettingsBackHeader basePath={basePath} /> : undefined}
-      sidebarFooter={
-        !inSettings && hasSettings ? <SettingsNavButton href={firstSettingsHref} /> : undefined
-      }
-      userMenu={
-        <UserMenu
-          email={session.data.email}
-          role={session.data.role}
-          theme={theme}
-          onThemeChange={setTheme}
-          onSignOut={async () => {
-            await client.logout()
-            await navigate({ to: loginPath })
-          }}
-        />
-      }
-    >
-      <AdminView route={route} nav={mainNav} routeBase={inSettings ? settingsRoot : basePath} />
-    </AdminShell>
+    <PermissionsProvider permissions={session.data.permissions}>
+      <AdminShell
+        sections={inSettings ? settingsSections : mainSections}
+        currentPath={pathname}
+        LinkComponent={RouterLink}
+        brand="LathaCMS"
+        showDashboard={!inSettings}
+        sidebarHeader={inSettings ? <SettingsBackHeader basePath={basePath} /> : undefined}
+        sidebarFooter={
+          !inSettings && hasSettings ? <SettingsNavButton href={firstSettingsHref} /> : undefined
+        }
+        userMenu={
+          <UserMenu
+            email={session.data.email}
+            role={session.data.roles.join(', ') || null}
+            theme={theme}
+            onThemeChange={setTheme}
+            onSignOut={async () => {
+              await client.logout()
+              await navigate({ to: loginPath })
+            }}
+          />
+        }
+      >
+        <AdminView route={route} nav={mainNav} routeBase={inSettings ? settingsRoot : basePath} />
+      </AdminShell>
+    </PermissionsProvider>
   )
 }
 
@@ -459,6 +467,7 @@ function StatCount({ client, item }: { client: ReturnType<typeof useLatha>['clie
 
 function ListView({ slug, base }: { slug: string; base: string }) {
   const { client } = useLatha()
+  const can = useCan()
   const entity = useAsync(() => client.entity(slug), [slug])
   const rows = useAsync(() => client.list(slug), [slug])
 
@@ -467,6 +476,8 @@ function ListView({ slug, base }: { slug: string; base: string }) {
   if (!entity.data)
     return <p className="text-small text-muted-foreground">Unknown collection.</p>
 
+  const canCreate = can(`${slug}:create`)
+  const canDelete = can(`${slug}:delete`)
   const list = rows.data ?? []
   return (
     <>
@@ -474,11 +485,13 @@ function ListView({ slug, base }: { slug: string; base: string }) {
       <PageHeader
         title={entity.data.label}
         actions={
-          <Button asChild size="sm">
-            <Link to={`${base}/content/${slug}/new`}>
-              <Plus /> New
-            </Link>
-          </Button>
+          canCreate ? (
+            <Button asChild size="sm">
+              <Link to={`${base}/content/${slug}/new`}>
+                <Plus /> New
+              </Link>
+            </Button>
+          ) : undefined
         }
       />
       {list.length === 0 ? (
@@ -487,11 +500,13 @@ function ListView({ slug, base }: { slug: string; base: string }) {
           title={`No ${entity.data.label.toLowerCase()} yet`}
           description={`Create your first to start managing ${entity.data.label.toLowerCase()}.`}
           action={
-            <Button asChild size="sm" className="mt-1">
-              <Link to={`${base}/content/${slug}/new`}>
-                <Plus /> New
-              </Link>
-            </Button>
+            canCreate ? (
+              <Button asChild size="sm" className="mt-1">
+                <Link to={`${base}/content/${slug}/new`}>
+                  <Plus /> New
+                </Link>
+              </Button>
+            ) : undefined
           }
         />
       ) : (
@@ -500,10 +515,14 @@ function ListView({ slug, base }: { slug: string; base: string }) {
             entity={asEntity(entity.data)}
             rows={list}
             getEditHref={(id) => `${base}/content/${slug}/${id}`}
-            onDelete={async (id) => {
-              await client.remove(slug, id)
-              rows.reload()
-            }}
+            onDelete={
+              canDelete
+                ? async (id) => {
+                    await client.remove(slug, id)
+                    rows.reload()
+                  }
+                : undefined
+            }
           />
         </Card>
       )}
@@ -542,6 +561,7 @@ function CreateView({ slug, base }: { slug: string; base: string }) {
 
 function EditView({ slug, id, base }: { slug: string; id: string; base: string }) {
   const { client } = useLatha()
+  const can = useCan()
   const navigate = useNavigate()
   const entity = useAsync(() => client.entity(slug), [slug])
   const doc = useAsync(() => client.get(slug, id), [slug, id])
@@ -557,16 +577,18 @@ function EditView({ slug, id, base }: { slug: string; id: string; base: string }
       <PageHeader
         title={`Edit ${entity.data.label.toLowerCase()}`}
         actions={
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={async () => {
-              await client.remove(slug, id)
-              await toList()
-            }}
-          >
-            Delete
-          </Button>
+          can(`${slug}:delete`) ? (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={async () => {
+                await client.remove(slug, id)
+                await toList()
+              }}
+            >
+              Delete
+            </Button>
+          ) : undefined
         }
       />
       <CollectionForm

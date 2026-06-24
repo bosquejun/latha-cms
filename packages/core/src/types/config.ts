@@ -2,24 +2,27 @@
  * Top-level configuration and module/plugin contracts.
  */
 
-import type { AuthAdapter, DBAdapter } from './adapter.js'
+import type { DBAdapter } from './adapter.js'
 import type { Entity } from './collection.js'
+import type { Guard } from './guard.js'
 
 /** Forward reference to the live instance; defined in `bootstrap`. */
 export interface LathaInstance {
   config: ResolvedConfig
   db: DBAdapter
-  /**
-   * The active auth adapter, or `null` when no AuthModule is installed.
-   * AuthModule sets this during `onInit`.
-   */
-  auth: AuthAdapter | null
   /** Flat list of every entity contributed by every module. */
   entities: Entity[]
   /** Resolve a single entity by slug. */
   getEntity(slug: string): Entity | undefined
   /** Modules in resolved (topologically sorted) order. */
   modules: Module[]
+  /**
+   * Registered authorization guards, run for every operation after a
+   * collection's own `access` predicate. The kernel never interprets them.
+   */
+  guards: Guard[]
+  /** Register an authorization guard (typically from a module's `onInit`). */
+  registerGuard(guard: Guard): void
   ready: boolean
 }
 

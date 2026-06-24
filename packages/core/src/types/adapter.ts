@@ -58,13 +58,3 @@ export interface StorageAdapter {
   upload(file: File): Promise<{ url: string; key: string }>
   delete(key: string): Promise<void>
 }
-
-export interface AuthAdapter {
-  getUser(request: Request): Promise<AuthUser | null>
-}
-
-export interface AuthUser {
-  id: string
-  role?: string
-  [key: string]: unknown
-}
