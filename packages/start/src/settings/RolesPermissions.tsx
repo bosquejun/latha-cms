@@ -36,6 +36,11 @@ const ACTION_COLUMNS = ['read', 'create', 'update', 'delete'] as const
 const SUPERADMIN_KEY = '*'
 const ADMIN_ACCESS_KEY = 'admin:access'
 
+// Scopes that aren't grantable resources in the matrix: the superadmin/admin
+// gates (surfaced as the toggles above), and `scopes`, which is pure catalog
+// plumbing (synced from config, not user-managed).
+const NON_MATRIX_SCOPES = new Set([SUPERADMIN_KEY, 'admin', 'scopes'])
+
 interface PermLite {
   id: string
   key: string
@@ -98,7 +103,7 @@ export function RolesPermissions() {
   const scopeRows = useMemo<ScopeLite[]>(() => {
     const rows = (scopes.data ?? [])
       .map((s) => ({ key: asStr(s.key), label: asStr(s.label), module: asStr(s.module) }))
-      .filter((s) => s.key !== SUPERADMIN_KEY && s.key !== 'admin')
+      .filter((s) => !NON_MATRIX_SCOPES.has(s.key))
     rows.sort((a, b) => a.module.localeCompare(b.module) || a.key.localeCompare(b.key))
     return rows
   }, [scopes.data])
