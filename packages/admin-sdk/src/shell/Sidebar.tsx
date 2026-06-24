@@ -130,24 +130,26 @@ export function Sidebar({
     !item.external && (currentPath?.startsWith(item.href) ?? false)
 
   return (
-    <nav className="flex h-full w-(--sidebar-width) shrink-0 flex-col gap-6 overflow-y-auto border-r border-sidebar-border bg-sidebar p-sidebar">
+    <nav className="flex h-full w-(--sidebar-width) shrink-0 flex-col gap-4 overflow-y-auto border-r border-sidebar-border bg-sidebar p-sidebar">
       <Slot zone="shell.sidebar.top" />
 
+      {/* Every top-level entry — Dashboard, ungrouped items, and group rows —
+          shares one rhythm so the main menu reads as a single, even list. */}
       <div className="flex flex-col gap-stack">
         {renderLink(
           { key: '__dashboard', href: homeHref, label: 'Dashboard', icon: LayoutDashboard },
           currentPath === homeHref,
         )}
-      </div>
 
-      {sections.map((section) => (
-        <SidebarSectionView
-          key={section.key}
-          section={section}
-          renderLink={renderLink}
-          isActive={isActive}
-        />
-      ))}
+        {sections.map((section) => (
+          <SidebarSectionView
+            key={section.key}
+            section={section}
+            renderLink={renderLink}
+            isActive={isActive}
+          />
+        ))}
+      </div>
 
       <Slot zone="shell.sidebar.bottom" />
     </nav>
