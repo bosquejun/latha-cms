@@ -40,14 +40,15 @@ export function UsersModule(config: UsersModuleConfig = {}): Module {
   return {
     name: 'users',
     capabilities: ['users'],
-    // Users management belongs with admin configuration — group it into the
-    // bottom "Settings" area alongside any settings pages.
-    admin: { nav: { label: 'Settings', order: 1000 } },
+    // Users is hidden from the admin sidebar for now while the settings area is
+    // being reworked. The collection still exists for auth and CRUD; re-expose
+    // it by dropping `admin.hidden` below (and add an `admin.nav` group).
     entities: [
       {
         kind: 'collection',
         slug: USERS_SLUG,
         admin: {
+          hidden: true,
           useAsTitle: 'email',
           defaultColumns: ['email', 'name', 'role'],
           labels: { singular: 'User', plural: 'Users' },

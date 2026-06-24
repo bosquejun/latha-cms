@@ -38,6 +38,9 @@ export default defineConfig({
       entities: [
         Document({
           slug: 'site-settings',
+          // `admin.order` positions an entity within its menu group (lower =
+          // higher). Site settings sits last, after Posts and Categories.
+          admin: { order: 30 },
           fields: {
             site_name: text({ required: true }),
             tagline: text(),
@@ -46,7 +49,7 @@ export default defineConfig({
 
         Collection({
           slug: 'posts',
-          admin: { useAsTitle: 'title', defaultColumns: ['title', 'status'] },
+          admin: { order: 10, useAsTitle: 'title', defaultColumns: ['title', 'status'] },
           access: {
             read: () => true,
             create: ({ user }) => !!user,
@@ -81,7 +84,7 @@ export default defineConfig({
           },
         }),
 
-        Taxonomy({ slug: 'categories', hierarchical: true }),
+        Taxonomy({ slug: 'categories', hierarchical: true, admin: { order: 20 } }),
       ],
     }),
   ],

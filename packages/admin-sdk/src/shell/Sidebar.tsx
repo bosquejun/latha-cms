@@ -40,10 +40,16 @@ export interface SidebarSection {
   /** Section heading. Omit (or empty) to render the items with no heading. */
   label?: string
   items: SidebarItem[]
-  /** Render the heading as a collapse toggle. Default false (static heading). */
+  /**
+   * Render the group as an expandable menu row (icon + label + chevron) with
+   * its items nested beneath, instead of a static uppercase heading. Default
+   * false.
+   */
   collapsible?: boolean
   /** Start collapsed (only when `collapsible`). Default false. */
   defaultCollapsed?: boolean
+  /** Leading icon for a collapsible group's menu row. */
+  icon?: LucideIcon
 }
 
 export interface SidebarProps {
@@ -69,6 +75,17 @@ const linkClass = (active: boolean) =>
 
 const sectionLabelClass =
   'px-3 pb-1 text-label font-medium uppercase tracking-wider text-muted-foreground'
+
+// A collapsible group's heading: same shape and weight as a nav link, so the
+// group reads as a top-level menu item rather than a section label.
+const groupHeaderClass = (active: boolean) =>
+  cn(
+    'flex w-full items-center justify-between rounded-md border border-transparent px-3 py-1.5 text-sm transition-colors',
+    '[&_svg]:size-4 [&_svg]:shrink-0',
+    active
+      ? 'font-medium text-sidebar-accent-foreground [&_svg]:text-foreground'
+      : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/60 [&_svg]:text-muted-foreground',
+  )
 
 export function Sidebar({
   sections,
@@ -113,24 +130,26 @@ export function Sidebar({
     !item.external && (currentPath?.startsWith(item.href) ?? false)
 
   return (
-    <nav className="flex h-full w-(--sidebar-width) shrink-0 flex-col gap-6 overflow-y-auto border-r border-sidebar-border bg-sidebar p-sidebar">
+    <nav className="flex h-full w-(--sidebar-width) shrink-0 flex-col gap-4 overflow-y-auto border-r border-sidebar-border bg-sidebar p-sidebar">
       <Slot zone="shell.sidebar.top" />
 
+      {/* Every top-level entry — Dashboard, ungrouped items, and group rows —
+          shares one rhythm so the main menu reads as a single, even list. */}
       <div className="flex flex-col gap-stack">
         {renderLink(
           { key: '__dashboard', href: homeHref, label: 'Dashboard', icon: LayoutDashboard },
           currentPath === homeHref,
         )}
-      </div>
 
-      {sections.map((section) => (
-        <SidebarSectionView
-          key={section.key}
-          section={section}
-          renderLink={renderLink}
-          isActive={isActive}
-        />
-      ))}
+        {sections.map((section) => (
+          <SidebarSectionView
+            key={section.key}
+            section={section}
+            renderLink={renderLink}
+            isActive={isActive}
+          />
+        ))}
+      </div>
 
       <Slot zone="shell.sidebar.bottom" />
     </nav>
@@ -146,32 +165,60 @@ function SidebarSectionView({
   renderLink: (item: SidebarItem, active: boolean) => ReactNode
   isActive: (item: SidebarItem) => boolean
 }) {
-  const hasActive = section.items.some(isActive)
-  // Collapsible sections start per their config, but always open to reveal an
-  // active child.
-  const [open, setOpen] = useState(
-    !section.collapsible || !section.defaultCollapsed || hasActive,
+  // A collapsible group reads as a menu row of its own; everything else is a
+  // plain list under an optional static heading.
+  if (section.collapsible && section.label) {
+    return (
+      <CollapsibleGroup
+        section={section}
+        renderLink={renderLink}
+        isActive={isActive}
+      />
+    )
+  }
+  return (
+    <div className="flex flex-col gap-stack">
+      {section.label ? <p className={sectionLabelClass}>{section.label}</p> : null}
+      {section.items.map((item) => renderLink(item, isActive(item)))}
+    </div>
   )
-  const expanded = section.collapsible ? open || hasActive : true
+}
+
+/** A group rendered as an expandable menu row with its items nested beneath. */
+function CollapsibleGroup({
+  section,
+  renderLink,
+  isActive,
+}: {
+  section: SidebarSection
+  renderLink: (item: SidebarItem, active: boolean) => ReactNode
+  isActive: (item: SidebarItem) => boolean
+}) {
+  const hasActive = section.items.some(isActive)
+  const [open, setOpen] = useState(!section.defaultCollapsed || hasActive)
+  const Icon = section.icon
 
   return (
     <div className="flex flex-col gap-stack">
-      {!section.label ? null : section.collapsible ? (
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className={cn(sectionLabelClass, 'flex items-center justify-between')}
-        >
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className={groupHeaderClass(!open && hasActive)}
+      >
+        <span className="flex items-center gap-2.5">
+          {Icon ? <Icon /> : null}
           {section.label}
-          <ChevronDown
-            className={cn('size-3.5 transition-transform', !expanded && '-rotate-90')}
-          />
-        </button>
-      ) : (
-        <p className={sectionLabelClass}>{section.label}</p>
-      )}
-      {expanded &&
-        section.items.map((item) => renderLink(item, isActive(item)))}
+        </span>
+        <ChevronDown
+          className={cn('transition-transform', !open && '-rotate-90')}
+        />
+      </button>
+      {open ? (
+        <div className="ml-[1.4rem] flex flex-col gap-stack border-l border-sidebar-border pl-2">
+          {section.items.map((item) => renderLink(item, isActive(item)))}
+        </div>
+      ) : null}
     </div>
   )
 }
