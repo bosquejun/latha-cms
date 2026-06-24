@@ -21,7 +21,7 @@ import {
 import { UsersModule } from '@latha/users'
 import { AuthModule } from '@latha/auth'
 import { countUsers, createUser } from '@latha/users'
-import { hashPassword } from '@latha/auth'
+import { hashPassword, getRoleByName } from '@latha/auth'
 
 export default defineConfig({
   db: tursoAdapter({
@@ -30,8 +30,10 @@ export default defineConfig({
   }),
 
   modules: [
-    UsersModule({ roles: ['admin', 'editor', 'viewer'] }),
+    UsersModule(),
 
+    // AuthModule owns RBAC: it seeds the admin/editor/viewer roles on first run
+    // and syncs the scope/permission catalog from the entities below.
     AuthModule({ secret: process.env.AUTH_SECRET ?? 'latha-dev-secret-change-me' }),
 
     ContentModule({
@@ -50,12 +52,10 @@ export default defineConfig({
         Collection({
           slug: 'posts',
           admin: { order: 10, useAsTitle: 'title', defaultColumns: ['title', 'status'] },
-          access: {
-            read: () => true,
-            create: ({ user }) => !!user,
-            update: ({ user }) => !!user,
-            delete: ({ user }) => user?.role === 'admin',
-          },
+          // No explicit `access` block: the admin surface is governed by RBAC
+          // (deny-by-default + the posts:* permissions). To expose public,
+          // headless reads, add e.g. `access: { read: () => true }` — explicit
+          // predicates always override the RBAC default for that operation.
           hooks: {
             beforeCreate: [
               ({ data }) => {
@@ -89,13 +89,15 @@ export default defineConfig({
     }),
   ],
 
-  // First-run seed so login works out of the box.
+  // First-run seed so login works out of the box. AuthModule has already seeded
+  // the default roles by this point, so we can assign the admin role by id.
   seed: async (latha) => {
     if ((await countUsers(latha)) === 0) {
+      const adminRole = await getRoleByName(latha, 'admin')
       await createUser(latha, {
         email: process.env.ADMIN_EMAIL ?? 'admin@latha.dev',
         name: 'Admin',
-        role: 'admin',
+        roles: adminRole ? [adminRole.id] : [],
         passwordHash: await hashPassword(process.env.ADMIN_PASSWORD ?? 'password'),
       })
       console.log('[latha] seeded admin: admin@latha.dev / password')

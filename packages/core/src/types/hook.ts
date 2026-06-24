@@ -6,13 +6,13 @@
  * hook may transform the persisted document before it is returned.
  */
 
-import type { AccessUser, Operation } from './access.js'
+import type { Operation } from './access.js'
 
 export interface HookArgs<T = Record<string, unknown>> {
   /** The mutable payload — input data for `before*`, the saved doc for `after*`. */
   data: T
-  /** The authenticated user, or `null`. */
-  user: AccessUser | null
+  /** The caller principal, opaque to the kernel, or `null` for anonymous. */
+  principal: unknown
   /** The operation this hook is participating in. */
   operation: Operation
   /** Slug of the collection/document the hook is bound to. */
