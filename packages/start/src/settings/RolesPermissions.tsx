@@ -9,7 +9,7 @@
  * `roles` mutations, so there's no special endpoint.
  */
 
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import {
   Badge,
   Button,
@@ -289,72 +289,74 @@ export function RolesPermissions() {
                 />
               </Card>
 
-              {/* Scope × action matrix, grouped by module (accordion). */}
-              <div className={cn('flex flex-col gap-3', isSuper && 'opacity-50')}>
-                {moduleGroups.map(([mod, rows]) => {
-                  const open = !collapsed.has(mod)
-                  return (
-                    <Card key={mod} className="overflow-hidden p-0">
-                      <button
-                        type="button"
-                        onClick={() => toggleModule(mod)}
-                        aria-expanded={open}
-                        className="flex w-full items-center gap-2 px-4 py-2.5 text-small font-medium capitalize hover:bg-accent/50"
-                      >
-                        <ChevronDown
-                          className={cn(
-                            'size-4 text-muted-foreground transition-transform',
-                            !open && '-rotate-90',
-                          )}
-                        />
-                        {mod || 'Other'}
-                        <span className="text-caption font-normal text-muted-foreground">
-                          {rows.length}
-                        </span>
-                      </button>
-                      {open ? (
-                        <Table>
-                          <THead>
-                            <TR>
-                              <TH>Resource</TH>
-                              {ACTION_COLUMNS.map((a) => (
-                                <TH key={a} className="text-center capitalize">
-                                  {a}
-                                </TH>
-                              ))}
-                            </TR>
-                          </THead>
-                          <TBody>
-                            {rows.map((scope) => (
-                              <TR key={scope.key}>
-                                <TD className="font-medium">
-                                  {scope.label || scope.key}
-                                </TD>
-                                {ACTION_COLUMNS.map((action) => {
-                                  const perm = permByKey.get(`${scope.key}:${action}`)
-                                  return (
-                                    <TD key={action} className="text-center">
-                                      {perm ? (
-                                        <Checkbox
-                                          checked={isSuper || checked.has(perm.id)}
-                                          disabled={isSuper}
-                                          onChange={() => toggle(perm.id)}
-                                        />
-                                      ) : (
-                                        <span className="text-muted-foreground">—</span>
-                                      )}
-                                    </TD>
-                                  )
-                                })}
-                              </TR>
-                            ))}
-                          </TBody>
-                        </Table>
-                      ) : null}
-                    </Card>
-                  )
-                })}
-              </div>
+              {/* One matrix card; modules are collapsible group-header rows. */}
+              <Card className={cn('overflow-hidden p-0', isSuper && 'opacity-50')}>
+                <Table>
+                  <THead>
+                    <TR>
+                      <TH>Resource</TH>
+                      {ACTION_COLUMNS.map((a) => (
+                        <TH key={a} className="text-center capitalize">
+                          {a}
+                        </TH>
+                      ))}
+                    </TR>
+                  </THead>
+                  <TBody>
+                    {moduleGroups.map(([mod, rows]) => {
+                      const open = !collapsed.has(mod)
+                      return (
+                        <Fragment key={mod}>
+                          <TR
+                            className="cursor-pointer bg-muted/40 hover:bg-muted/60"
+                            onClick={() => toggleModule(mod)}
+                          >
+                            <TD colSpan={1 + ACTION_COLUMNS.length} className="py-2">
+                              <span className="flex items-center gap-2 text-small font-medium capitalize">
+                                <ChevronDown
+                                  className={cn(
+                                    'size-4 text-muted-foreground transition-transform',
+                                    !open && '-rotate-90',
+                                  )}
+                                />
+                                {mod || 'Other'}
+                                <span className="text-caption font-normal text-muted-foreground">
+                                  {rows.length}
+                                </span>
+                              </span>
+                            </TD>
+                          </TR>
+                          {open
+                            ? rows.map((scope) => (
+                                <TR key={scope.key}>
+                                  <TD className="font-medium">
+                                    {scope.label || scope.key}
+                                  </TD>
+                                  {ACTION_COLUMNS.map((action) => {
+                                    const perm = permByKey.get(`${scope.key}:${action}`)
+                                    return (
+                                      <TD key={action} className="text-center">
+                                        {perm ? (
+                                          <Checkbox
+                                            checked={isSuper || checked.has(perm.id)}
+                                            disabled={isSuper}
+                                            onChange={() => toggle(perm.id)}
+                                          />
+                                        ) : (
+                                          <span className="text-muted-foreground">—</span>
+                                        )}
+                                      </TD>
+                                    )
+                                  })}
+                                </TR>
+                              ))
+                            : null}
+                        </Fragment>
+                      )
+                    })}
+                  </TBody>
+                </Table>
+              </Card>
             </div>
           ) : (
             <p className="text-small text-muted-foreground">No roles yet.</p>
