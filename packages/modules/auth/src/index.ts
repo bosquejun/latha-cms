@@ -51,6 +51,8 @@ export {
   actionsForKind,
   ADMIN_ACCESS,
   SUPERADMIN,
+  PUBLIC_ROLE,
+  AUTHENTICATED_ROLE,
 } from './rbac/permissions.js'
 
 export {
@@ -60,7 +62,13 @@ export {
   type PermissionRecord,
 } from './rbac/catalog.js'
 
-export { resolveUserPermissions, type ResolvedGrants } from './rbac/resolve.js'
+export {
+  resolveUserPermissions,
+  getPublicPrincipal,
+  getRolePermissions,
+  type ResolvedGrants,
+  type PublicPrincipal,
+} from './rbac/resolve.js'
 
 export {
   defaultRoles,

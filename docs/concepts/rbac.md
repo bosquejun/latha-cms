@@ -45,17 +45,42 @@ matches your config: add a `pages` collection and `pages:read` etc. appear
 automatically, ready to assign to roles in the UI. You never hand-create scopes
 or permissions.
 
-Roles are the only hand-authored grants. On first run, three starter roles are
-seeded (override via `AuthModule({ roles })`):
+Roles are the only hand-authored grants. On first run, a Strapi-style starter
+set is seeded (override via `AuthModule({ roles })`):
 
-| Role | Permissions |
-|---|---|
-| `admin` | `*` (superadmin) |
-| `editor` | `admin:access` + read/create/update on non-sensitive scopes |
-| `viewer` | `admin:access` + read on non-sensitive scopes |
+| Role | System | Permissions |
+|---|---|---|
+| `admin` | ✓ | `*` (superadmin) |
+| `editor` | | `admin:access` + read/create/update on non-sensitive scopes |
+| `viewer` | | `admin:access` + read on non-sensitive scopes |
+| `public` | ✓ | empty — grant public reads in the matrix |
+| `authenticated` | ✓ | empty — baseline for every logged-in user |
 
-Sensitive scopes (`users`, `roles`, `scopes`, `permissions`, `admin`) are
-reserved for the superadmin. Refine roles freely in the admin UI.
+**System roles** (`admin`, `public`, `authenticated`) can't be deleted (a
+`beforeDelete` hook enforces it), but their permissions are editable. Sensitive
+scopes (`users`, `roles`, `scopes`, `permissions`, `admin`) are reserved for the
+superadmin. Refine roles freely in the admin UI.
+
+### Public & Authenticated
+
+- **`public`** governs **unauthenticated** requests. An anonymous caller
+  resolves to a synthetic principal carrying the Public role's permissions, so
+  you grant public access by toggling permissions on Public — instead of
+  hardcoding `access: read: () => true`. Public never holds `admin:access`, so it
+  can't enter the admin. Build a public/headless API with it:
+
+  ```ts
+  import { getPublicPrincipal } from '@latha/auth'
+  createContentApi({
+    getLatha,
+    enforce: true,
+    getPrincipal: () => sessionUser ?? getPublicPrincipal(latha),
+  })
+  ```
+
+- **`authenticated`** is the baseline every logged-in user inherits: their
+  effective permissions are the union of their explicit roles **plus** the
+  Authenticated role. Grant app-wide defaults here.
 
 ---
 
@@ -101,8 +126,12 @@ requires an authenticated principal holding `admin:access`.
 - New / Edit-delete / row-delete buttons are gated by `can('<slug>:create')`
   etc. via the `useCan()` hook (presentation only — the server re-checks every
   write).
-- Assigning permissions to a role (and roles to a user) uses the relationship
-  field picker.
+- **Settings → Access** is a dedicated **Roles & Permissions matrix** (rows =
+  scopes, columns = read/create/update/delete, grouped by module, plus the
+  `admin:access` and superadmin toggles). Create/delete roles there; system
+  roles show a badge and can't be deleted. The `scopes`/`permissions` catalog is
+  surfaced through this page rather than its own nav entries.
+- Assigning roles to a user uses the relationship field picker on the user form.
 
 ---
 

@@ -20,6 +20,12 @@ export const ADMIN_ACCESS = 'admin:access'
 /** The superadmin permission key — matches everything. */
 export const SUPERADMIN = '*'
 
+/** System role: the permissions applied to unauthenticated (anonymous) requests. */
+export const PUBLIC_ROLE = 'public'
+
+/** System role: the baseline applied to every authenticated user. */
+export const AUTHENTICATED_ROLE = 'authenticated'
+
 /** Compose a `<scope>:<action>` permission key. */
 export function permissionKey(scope: string, action: string): string {
   return `${scope}:${action}`

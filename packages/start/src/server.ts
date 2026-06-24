@@ -21,6 +21,7 @@ import {
   authenticate,
   createSessionToken,
   getUserById,
+  getPublicPrincipal,
   verifySessionToken,
   hasPermission,
   ADMIN_ACCESS,
@@ -82,7 +83,7 @@ const SEGMENT = {
  */
 async function canReadEntity(
   entity: Entity,
-  principal: AuthUser | null,
+  principal: unknown,
 ): Promise<boolean> {
   const access =
     'access' in entity
@@ -102,7 +103,7 @@ async function canReadEntity(
 async function navOf(
   latha: LathaInstance,
   basePath: string,
-  principal: AuthUser | null,
+  principal: unknown,
 ): Promise<NavSection[]> {
   // Map each entity slug to its contributing module (for default nav grouping).
   const moduleOf = new Map<string, Module>()
@@ -227,11 +228,16 @@ export async function handleLathaRequest(
   const latha = await getRuntime(config)
   const basePath = config.adminPath || '/admin'
 
-  // Resolve the caller once; reuse it for the gate, nav filtering, and ops.
-  const principal = await currentAuthUser(latha)
+  // The actual logged-in user (drives `currentUser` + login redirect), and the
+  // effective principal for enforcement: the user, or the synthetic Public
+  // principal for anonymous requests. Public never holds `admin:access`, so the
+  // admin gate below still blocks anonymous callers.
+  const sessionUser = await currentAuthUser(latha)
+  const principal: AuthUser | Awaited<ReturnType<typeof getPublicPrincipal>> =
+    sessionUser ?? (await getPublicPrincipal(latha))
 
-  // Top-level gate: every action except login/logout/currentUser requires an
-  // authenticated principal that can access the admin surface.
+  // Top-level gate: every action except login/logout/currentUser requires a
+  // principal that can access the admin surface.
   if (!PUBLIC_ACTIONS.has(input.action) && !hasPermission(principal, ADMIN_ACCESS)) {
     throw new AccessDeniedError('read', 'admin')
   }
@@ -266,7 +272,7 @@ export async function handleLathaRequest(
       return api.saveGlobal(input.slug, input.data)
 
     case 'currentUser':
-      return principal ? toSessionUser(principal) : null
+      return sessionUser ? toSessionUser(sessionUser) : null
     case 'login': {
       const opts = authOptions()
       const user = await authenticate(latha, input.email, input.password)

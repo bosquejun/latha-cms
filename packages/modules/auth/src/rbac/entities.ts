@@ -8,7 +8,13 @@
  * form picks from.
  */
 
-import { relationship, stampFields, text, type Entity } from '@latha/core'
+import {
+  boolean,
+  relationship,
+  stampFields,
+  text,
+  type Entity,
+} from '@latha/core'
 
 export const ROLES_SLUG = 'roles'
 export const SCOPES_SLUG = 'scopes'
@@ -32,12 +38,25 @@ export const rolesEntity: Entity = {
     name: text({ required: true, unique: true }),
     label: text(),
     description: text(),
+    // System roles (public/authenticated/admin) are seeded and non-deletable.
+    system: boolean({ defaultValue: false, admin: { hidden: true } }),
     permissions: relationship({
       to: PERMISSIONS_SLUG,
       many: true,
       admin: { description: 'Permissions granted to this role.' },
     }),
   }),
+  hooks: {
+    // System roles (public/authenticated/admin) are seeded and cannot be deleted.
+    beforeDelete: [
+      ({ data }) => {
+        if (data?.system) {
+          throw new Error(`The "${data.name}" role is a system role and cannot be deleted.`)
+        }
+        return data
+      },
+    ],
+  },
 }
 
 /** Catalog: a resource that can be acted upon (one per entity). */
@@ -48,6 +67,8 @@ export const scopesEntity: Entity = {
     area: 'settings',
     group: ACCESS_GROUP,
     order: 20,
+    // Surfaced through the Roles & Permissions matrix, not its own nav entry.
+    hidden: true,
     useAsTitle: 'key',
     defaultColumns: ['key', 'label', 'module'],
     labels: { singular: 'Scope', plural: 'Scopes' },
@@ -67,6 +88,8 @@ export const permissionsEntity: Entity = {
     area: 'settings',
     group: ACCESS_GROUP,
     order: 30,
+    // Surfaced through the Roles & Permissions matrix, not its own nav entry.
+    hidden: true,
     useAsTitle: 'key',
     defaultColumns: ['key', 'action', 'module'],
     labels: { singular: 'Permission', plural: 'Permissions' },

@@ -1,11 +1,15 @@
 /**
  * Default role seeding.
  *
- * On first run (empty `roles` table) we seed a sensible starter set, computed
- * against the live catalog so the grants reference real permissions:
- *   - `admin`  — superadmin (`*`).
- *   - `editor` — admin access + read/create/update on non-sensitive scopes.
- *   - `viewer` — admin access + read on non-sensitive scopes.
+ * On first run (empty `roles` table) we seed a Strapi-style starter set,
+ * computed against the live catalog so the grants reference real permissions:
+ *   - `admin`         — superadmin (`*`). System, non-deletable.
+ *   - `editor`        — admin access + read/create/update on non-sensitive scopes.
+ *   - `viewer`        — admin access + read on non-sensitive scopes.
+ *   - `public`        — permissions for anonymous requests. System, empty by
+ *                       default; admins grant public reads in the matrix UI.
+ *   - `authenticated` — baseline for every logged-in user. System, empty by
+ *                       default.
  *
  * "Sensitive" scopes (users, roles, scopes, permissions, admin) are reserved
  * for the superadmin. These are only starting points — admins refine roles in
@@ -15,7 +19,12 @@
 import type { LathaInstance } from '@latha/core'
 import { getCatalog, type RbacCatalog } from './catalog.js'
 import { ROLES_SLUG } from './entities.js'
-import { ADMIN_ACCESS, SUPERADMIN } from './permissions.js'
+import {
+  ADMIN_ACCESS,
+  AUTHENTICATED_ROLE,
+  PUBLIC_ROLE,
+  SUPERADMIN,
+} from './permissions.js'
 
 export interface RoleSeed {
   name: string
@@ -23,6 +32,8 @@ export interface RoleSeed {
   description?: string
   /** Permission keys to grant (may include wildcards / `*`). */
   permissions: string[]
+  /** Mark as a system role — seeded and non-deletable. */
+  system?: boolean
 }
 
 const SENSITIVE = new Set([
@@ -46,6 +57,7 @@ export function defaultRoles(catalog: RbacCatalog): RoleSeed[] {
       label: 'Administrator',
       description: 'Full access to everything.',
       permissions: [SUPERADMIN],
+      system: true,
     },
     {
       name: 'editor',
@@ -61,6 +73,20 @@ export function defaultRoles(catalog: RbacCatalog): RoleSeed[] {
       label: 'Viewer',
       description: 'Read-only access to content.',
       permissions: [ADMIN_ACCESS, ...editable.map((s) => `${s}:read`)],
+    },
+    {
+      name: PUBLIC_ROLE,
+      label: 'Public',
+      description: 'Applied to unauthenticated requests. Grant public reads here.',
+      permissions: [],
+      system: true,
+    },
+    {
+      name: AUTHENTICATED_ROLE,
+      label: 'Authenticated',
+      description: 'Baseline granted to every logged-in user.',
+      permissions: [],
+      system: true,
     },
   ]
 }
@@ -83,6 +109,7 @@ export async function seedRoles(
       label: role.label ?? role.name,
       description: role.description ?? '',
       permissions: permissionIds,
+      system: role.system ?? false,
     })
   }
 }
