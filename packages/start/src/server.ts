@@ -39,7 +39,7 @@ import type {
   NavItem,
   NavSection,
   SessionUser,
-} from './rpc.js'
+} from '@latha/admin-sdk'
 
 // Avoid a hard @types/node dependency for one env var.
 declare const process: { env: Record<string, string | undefined> }

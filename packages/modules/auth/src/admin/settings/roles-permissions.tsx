@@ -28,9 +28,14 @@ import {
   TR,
   cn,
 } from '@latha/ui'
-import { PageHeader, defineSettingsConfig } from '@latha/admin-sdk'
+import {
+  PageHeader,
+  defineSettingsConfig,
+  useLatha,
+  useAsync,
+  type JsonDoc,
+} from '@latha/admin-sdk'
 import { ChevronDown, Plus, ShieldCheck, Trash2 } from 'lucide-react'
-import { useLatha, useAsync, type JsonDoc } from '@latha/start'
 
 const ACTION_COLUMNS = ['read', 'create', 'update', 'delete'] as const
 

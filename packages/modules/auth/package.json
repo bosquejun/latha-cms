@@ -28,14 +28,12 @@
   "peerDependencies": {
     "@latha/core": "workspace:*",
     "@latha/admin-sdk": "workspace:*",
-    "@latha/start": "workspace:*",
     "@latha/ui": "workspace:*",
     "react": "^18 || ^19",
     "lucide-react": "^0.469.0"
   },
   "peerDependenciesMeta": {
     "@latha/admin-sdk": { "optional": true },
-    "@latha/start": { "optional": true },
     "@latha/ui": { "optional": true },
     "react": { "optional": true },
     "lucide-react": { "optional": true }
@@ -43,7 +41,6 @@
   "devDependencies": {
     "@latha/core": "workspace:*",
     "@latha/admin-sdk": "workspace:*",
-    "@latha/start": "workspace:*",
     "@latha/ui": "workspace:*",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",

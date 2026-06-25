@@ -12,7 +12,7 @@
  * `latha.config` module.
  */
 import { createFileRoute } from '@tanstack/react-router'
-import type { LathaRpcInput } from '../rpc.js'
+import type { LathaRpcInput } from '@latha/admin-sdk'
 
 // The route id must be a string literal — TanStack's router generator parses it
 // statically. Keep it in sync with `DEFAULT_RPC_PATH` in `default-rpc.ts`.

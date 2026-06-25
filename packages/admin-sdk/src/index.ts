@@ -84,6 +84,9 @@ export {
   type AdminGlobs,
 } from './extensions/index.js'
 
+// Client surface — typed RPC client, React provider/hooks, RPC contract types
+export * from './client/index.js'
+
 // Views
 export {
   CollectionList,

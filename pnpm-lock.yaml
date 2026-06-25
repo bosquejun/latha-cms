@@ -137,9 +137,6 @@ importers:
       '@latha/core':
         specifier: workspace:*
         version: link:../../core
-      '@latha/start':
-        specifier: workspace:*
-        version: link:../../start
       '@latha/ui':
         specifier: workspace:*
         version: link:../../ui

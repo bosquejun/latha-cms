@@ -13,9 +13,7 @@
  */
 
 import { Checkbox, Field as FieldWrap, Select } from '@latha/ui'
-import { humanize, type FieldControlProps } from '@latha/admin-sdk'
-import { useLatha } from '../context.js'
-import { useAsync } from '../hooks.js'
+import { humanize, type FieldControlProps, useLatha, useAsync } from '@latha/admin-sdk'
 
 export function RelationshipField({
   field,

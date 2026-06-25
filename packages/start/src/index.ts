@@ -14,17 +14,17 @@ export {
   createLathaClient,
   type LathaClient,
   type LathaClientOptions,
-} from './client.js'
-export { lathaRpcValidator, DEFAULT_RPC_PATH } from './default-rpc.js'
+} from '@latha/admin-sdk'
+export { lathaRpcValidator, DEFAULT_RPC_PATH } from '@latha/admin-sdk'
 export {
   LathaProvider,
   useLatha,
   type LathaProviderProps,
   type LathaContextValue,
-} from './context.js'
+} from '@latha/admin-sdk'
 export { LathaAdmin } from './admin.js'
 export { LathaLogin } from './login.js'
-export { useAsync, type AsyncState } from './hooks.js'
+export { useAsync, type AsyncState } from '@latha/admin-sdk'
 
 // Admin extension authoring surface — re-exported so apps import from one place.
 export {
@@ -67,4 +67,4 @@ export type {
   SessionUser,
   NavItem,
   EntityDescriptor,
-} from './rpc.js'
+} from '@latha/admin-sdk'

@@ -12,10 +12,10 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react'
 import {
   ExtensionsProvider,
   createExtensionRegistry,
-  registerFieldRenderer,
   type AdminExtensions,
   type ExtensionRegistry,
-} from '@latha/admin-sdk'
+} from '../extensions/index.js'
+import { registerFieldRenderer } from '../fields/registry.js'
 import { createLathaClient, type LathaClient } from './client.js'
 
 export interface LathaContextValue {

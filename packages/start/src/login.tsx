@@ -5,7 +5,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Button, Card, Field, Input } from '@latha/ui'
-import { useLatha } from './context.js'
+import { useLatha } from '@latha/admin-sdk'
 
 export function LathaLogin() {
   const { client, basePath } = useLatha()
