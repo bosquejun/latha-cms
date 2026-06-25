@@ -1,7 +1,7 @@
 {
   "name": "@latha/auth",
   "version": "0.0.0",
-  "description": "LathaCMS auth — session-based authentication, password hashing, AuthModule.",
+  "description": "LathaCMS auth — session-based authentication, password hashing, AuthModule, and admin UI.",
   "type": "module",
   "license": "MIT",
   "exports": {
@@ -9,23 +9,47 @@
       "types": "./dist/index.d.ts",
       "development": "./src/index.ts",
       "import": "./dist/index.js"
+    },
+    "./admin": {
+      "types": "./dist/admin/index.d.ts",
+      "development": "./src/admin/index.ts",
+      "import": "./dist/admin/index.js"
     }
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": ["dist"],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.admin.json",
     "dev": "tsc -p tsconfig.json --watch",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.admin.json --noEmit",
     "test": "tsc -p tsconfig.json && node --test dist/"
   },
   "peerDependencies": {
-    "@latha/core": "workspace:*"
+    "@latha/core": "workspace:*",
+    "@latha/admin-sdk": "workspace:*",
+    "@latha/start": "workspace:*",
+    "@latha/ui": "workspace:*",
+    "react": "^18 || ^19",
+    "lucide-react": "^0.469.0"
+  },
+  "peerDependenciesMeta": {
+    "@latha/admin-sdk": { "optional": true },
+    "@latha/start": { "optional": true },
+    "@latha/ui": { "optional": true },
+    "react": { "optional": true },
+    "lucide-react": { "optional": true }
   },
   "devDependencies": {
     "@latha/core": "workspace:*",
+    "@latha/admin-sdk": "workspace:*",
+    "@latha/start": "workspace:*",
+    "@latha/ui": "workspace:*",
     "@types/node": "^22.10.0",
-    "typescript": "^5.7.2"
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
+    "lucide-react": "^0.469.0",
+    "typescript": "^5.7.2",
+    "vite": "^7.0.0"
   }
 }

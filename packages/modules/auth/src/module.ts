@@ -63,7 +63,7 @@ export function AuthModule(config: AuthModuleConfig): Module {
     name: 'auth',
     capabilities: ['auth', 'rbac'],
     entities: rbacEntities,
-    admin: { nav: { area: 'settings', label: 'Access', order: 90 } },
+    admin: { nav: { area: 'settings', label: 'Access', order: 90 }, ui: '@latha/auth/admin' },
 
     onInit(latha) {
       // Register the identity source (custom, a configured collection, or the
