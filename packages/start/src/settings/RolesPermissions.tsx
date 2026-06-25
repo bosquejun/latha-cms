@@ -263,7 +263,7 @@ export function RolesPermissions() {
                   {!selected.system && (
                     <Button
                       size="sm"
-                      variant="ghost"
+                      variant="ghost-outline"
                       onClick={() => deleteRole(selected)}
                     >
                       <Trash2 /> Delete

@@ -10,6 +10,7 @@
  *   import { lathaStart } from '@latha/start/vite'
  *   export default defineConfig({ plugins: [..., lathaStart(), viteReact()] })
  */
+import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
@@ -23,8 +24,15 @@ type TanStackStartPlugins = ReturnType<typeof tanstackStart>
 interface VitePluginLike {
   name: string
   enforce?: 'pre' | 'post'
+  config?: (
+    config: unknown,
+    env: { command: 'build' | 'serve' },
+  ) => Record<string, unknown> | undefined
   configResolved?: (config: { root: string }) => void
-  resolveId?: (id: string) => string | undefined
+  resolveId?: (
+    id: string,
+    importer?: string,
+  ) => string | undefined
   load?: (id: string) => string | undefined
 }
 
@@ -70,8 +78,32 @@ const ROUTES_DIR = './src/routes'
  * to the real file, which is what `import.meta.resolve` returns).
  */
 function routeFile(subpath: string): string {
-  const abs = fileURLToPath(import.meta.resolve(subpath))
+  let abs = fileURLToPath(import.meta.resolve(subpath))
+  // `import.meta.resolve` runs without the `development` export condition (this
+  // plugin is loaded from `dist/`), so it always returns the built `dist/` path.
+  // In dev we serve `@latha/*` from source via Vite's `development` condition;
+  // if the injected route stayed on `dist/`, it would import a *second* copy of
+  // `context.tsx`, so its `useLatha()` would miss the app's <LathaProvider>.
+  // Redirect to the matching source file so the whole graph shares one module.
+  if (process.env.NODE_ENV !== 'production') {
+    abs = toSourcePath(abs)
+  }
   return path.relative(path.resolve(process.cwd(), ROUTES_DIR), abs)
+}
+
+/** Map a built `…/dist/routes/admin.js` path to its `…/src/routes/admin.tsx`. */
+function toSourcePath(distAbs: string): string {
+  const marker = `${path.sep}dist${path.sep}`
+  const idx = distAbs.lastIndexOf(marker)
+  if (idx === -1) return distAbs
+  const base = distAbs
+    .slice(0, idx)
+    .concat(path.sep, 'src', path.sep, distAbs.slice(idx + marker.length))
+    .replace(/\.js$/, '')
+  for (const ext of ['.tsx', '.ts']) {
+    if (fs.existsSync(base + ext)) return base + ext
+  }
+  return distAbs
 }
 
 export interface LathaStartOptions {
@@ -124,7 +156,10 @@ export function lathaStart(
   // Framework virtual-module plugins, appended to TanStack's array (Vite
   // flattens nested plugin arrays, keeping the single `plugins: [lathaStart()]`
   // ergonomics): the config bridge plus, unless disabled, admin auto-discovery.
-  const extra: VitePluginLike[] = [lathaConfigPlugin(configPath)]
+  const extra: VitePluginLike[] = [
+    lathaDevSourcePlugin(),
+    lathaConfigPlugin(configPath),
+  ]
   if (options.admin !== false) {
     extra.push(adminExtensionsPlugin(options.admin?.dir ?? 'src/admin'))
   }
@@ -133,6 +168,90 @@ export function lathaStart(
     ...(plugins as unknown[]),
     ...extra,
   ] as unknown as TanStackStartPlugins
+}
+
+/**
+ * Resolves `@latha/start`'s own source directory if (and only if) this package
+ * is consumed as linked workspace source — i.e. its `src/index.ts` exists on
+ * disk next to the `dist/` we're running from. Published consumers install
+ * `files: ["dist"]`, so `src/` is absent and this returns `undefined`, which is
+ * how we tell "monorepo dev" apart from "installed from npm".
+ */
+function linkedSrcDir(): string | undefined {
+  try {
+    const distIndex = fileURLToPath(import.meta.resolve('@latha/start'))
+    const pkgRoot = distIndex.slice(0, distIndex.lastIndexOf(`${path.sep}dist${path.sep}`))
+    const srcDir = path.join(pkgRoot, 'src')
+    return fs.existsSync(path.join(srcDir, 'index.ts')) ? srcDir : undefined
+  } catch {
+    return undefined
+  }
+}
+
+/** Absolute `src/` dir of `@latha/ui` when linked as source, else `undefined`. */
+function lathaUiSrcDir(): string | undefined {
+  try {
+    const distIndex = fileURLToPath(import.meta.resolve('@latha/ui'))
+    const pkgRoot = distIndex.slice(0, distIndex.lastIndexOf(`${path.sep}dist${path.sep}`))
+    const srcDir = path.join(pkgRoot, 'src')
+    return fs.existsSync(path.join(srcDir, 'index.ts')) ? srcDir : undefined
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * Dev-only: when `@latha/*` packages are linked as workspace source (monorepo
+ * development), make Vite load them from source for instant HMR — without each
+ * app duplicating this in its own `vite.config`. A no-op for published
+ * consumers (no linked `src/`), so it never affects apps installed from npm.
+ *
+ * Wires three things, all dev-gated:
+ *  - the `development` export condition, so `@latha/*` resolve to their `src/`;
+ *  - `ssr.noExternal` for `@latha/*`, so Vite transpiles the raw TS/TSX on SSR;
+ *  - a scoped `@/` resolver for `@latha/ui` source (it uses a package-local
+ *    `@/*` alias), confined to importers inside ui's own `src/` so it can never
+ *    shadow the consuming app's own `@/`.
+ */
+function lathaDevSourcePlugin(): VitePluginLike {
+  const uiSrc = lathaUiSrcDir()
+  return {
+    name: 'latha:dev-source',
+    enforce: 'pre',
+    config(_config, { command }) {
+      if (command !== 'serve' || !linkedSrcDir()) return undefined
+      return {
+        resolve: { conditions: ['development'] },
+        ssr: {
+          resolve: { conditions: ['development'] },
+          noExternal: [/^@latha\//],
+        },
+      }
+    },
+    resolveId(id, importer) {
+      // Rewrite `@/…` only for imports originating inside @latha/ui's source.
+      if (
+        uiSrc &&
+        id.startsWith('@/') &&
+        importer &&
+        importer.startsWith(uiSrc + path.sep)
+      ) {
+        const base = path.join(uiSrc, id.slice(2))
+        // The alias carries no extension; resolve to the real file on disk
+        // (matching tsconfig's `@/*` -> `src/*` with bundler resolution).
+        for (const cand of [
+          base,
+          `${base}.ts`,
+          `${base}.tsx`,
+          path.join(base, 'index.ts'),
+          path.join(base, 'index.tsx'),
+        ]) {
+          if (fs.existsSync(cand) && fs.statSync(cand).isFile()) return cand
+        }
+      }
+      return undefined
+    },
+  }
 }
 
 const VIRTUAL_ID = 'virtual:latha/admin-extensions'

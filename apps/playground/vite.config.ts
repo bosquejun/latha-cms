@@ -9,7 +9,9 @@ export default defineConfig({
     tsConfigPaths({ projects: ['./tsconfig.json'] }),
     tailwindcss(),
     // lathaStart() wraps tanstackStart() and injects the framework's /login and
-    // /admin/$ routes, so this app needs no route files for them.
+    // /admin/$ routes, so this app needs no route files for them. In the
+    // monorepo it also serves @latha/* packages from source for instant HMR;
+    // that is a no-op for apps that install @latha/start from npm.
     lathaStart(),
     viteReact(),
   ],
