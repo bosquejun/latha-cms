@@ -29,11 +29,9 @@ interface VitePluginLike {
     env: { command: 'build' | 'serve' },
   ) => Record<string, unknown> | undefined
   configResolved?: (config: { root: string }) => void
-  resolveId?: (
-    id: string,
-    importer?: string,
-  ) => string | undefined
-  load?: (id: string) => string | undefined
+  configureServer?: (server: { ssrLoadModule: (id: string) => Promise<unknown> }) => void
+  resolveId?: (id: string, importer?: string) => string | undefined
+  load?: (id: string) => string | undefined | Promise<string | undefined>
 }
 
 const CONFIG_MODULE_ID = 'virtual:latha/config'
@@ -161,7 +159,7 @@ export function lathaStart(
     lathaConfigPlugin(configPath),
   ]
   if (options.admin !== false) {
-    extra.push(adminExtensionsPlugin(options.admin?.dir ?? 'src/admin'))
+    extra.push(adminExtensionsPlugin(options.admin?.dir ?? 'src/admin', configPath))
   }
 
   return [
@@ -257,53 +255,84 @@ function lathaDevSourcePlugin(): VitePluginLike {
 const VIRTUAL_ID = 'virtual:latha/admin-extensions'
 const RESOLVED_ID = '\0' + VIRTUAL_ID
 
+interface ModuleLike { admin?: { ui?: string } }
+
 /**
- * Resolves `virtual:latha/admin-extensions` to a module that collects the
- * convention folder via Vite's `import.meta.glob` (so HMR works for free) and
- * assembles a single `AdminExtensions` object from each file's default export
- * and `config`.
+ * Load the app's `latha.config` and read each module's `admin.ui` specifier.
+ * Reads static descriptor strings only — never bootstraps an instance. `load`
+ * is Vite's SSR module loader (`server.ssrLoadModule`) at serve time, or a
+ * direct `import()` wrapper at build time.
  */
-function adminExtensionsPlugin(dir: string): VitePluginLike {
+export async function readModuleUiSpecifiers(
+  load: (id: string) => Promise<unknown>,
+  configPath: string,
+): Promise<string[]> {
+  const mod = (await load(configPath)) as { default?: { modules?: ModuleLike[] } }
+  const seen = new Set<string>()
+  for (const m of mod.default?.modules ?? []) {
+    const ui = m.admin?.ui
+    if (ui) seen.add(ui)
+  }
+  return [...seen]
+}
+
+/**
+ * Resolves `virtual:latha/admin-extensions` to a module that statically imports
+ * each module's admin UI barrel and merges it with the app's own `src/admin/`
+ * glob via the shared helpers from `@latha/admin-sdk`.
+ */
+function adminExtensionsPlugin(dir: string, configPath: string): VitePluginLike {
   const base = '/' + dir.replace(/^\.?\/*/, '').replace(/\/*$/, '')
+  let specifiers: string[] | null = null
+  let server: { ssrLoadModule: (id: string) => Promise<unknown> } | undefined
+
   return {
     name: 'latha:admin-extensions',
+    // Vite calls configureServer with the dev server; cache it for SSR loads.
+    configureServer(s: { ssrLoadModule: (id: string) => Promise<unknown> }) {
+      server = s
+    },
     resolveId(id) {
       return id === VIRTUAL_ID ? RESOLVED_ID : undefined
     },
-    load(id) {
-      return id === RESOLVED_ID ? buildModuleSource(base) : undefined
+    async load(id) {
+      if (id !== RESOLVED_ID) return undefined
+      if (specifiers === null) {
+        const loader =
+          server?.ssrLoadModule ?? ((m: string) => import(/* @vite-ignore */ m))
+        try {
+          specifiers = await readModuleUiSpecifiers(loader, CONFIG_MODULE_ID)
+        } catch {
+          specifiers = [] // config not loadable yet (early build) — app-only
+        }
+      }
+      return buildModuleSource(base, specifiers)
     },
   }
 }
 
-function buildModuleSource(base: string): string {
+export function buildModuleSource(base: string, specifiers: string[]): string {
   const glob = (kind: string) =>
     `import.meta.glob('${base}/${kind}/**/*.{tsx,jsx,ts,js}', { eager: true })`
+
+  const moduleImports = specifiers
+    .map((spec, i) => `import { adminExtensions as mod${i} } from '${spec}'`)
+    .join('\n')
+  const moduleList = specifiers.map((_, i) => `mod${i}`).join(', ')
+
   return `
-const widgetMods = ${glob('widgets')}
-const pageMods = ${glob('pages')}
-const dashboardMods = ${glob('dashboard')}
-const settingsMods = ${glob('settings')}
-const fieldMods = ${glob('fields')}
+import { collectAdminExtensions, mergeExtensions } from '@latha/admin-sdk'
+${moduleImports}
 
-const list = (mods) => Object.keys(mods).sort().map((id) => ({ id, mod: mods[id] }))
+const appExtensions = collectAdminExtensions({
+  widgets: ${glob('widgets')},
+  pages: ${glob('pages')},
+  dashboard: ${glob('dashboard')},
+  settings: ${glob('settings')},
+  fields: ${glob('fields')},
+})
 
-export const adminExtensions = {
-  widgets: list(widgetMods)
-    .filter(({ mod }) => mod.default && mod.config && mod.config.zone)
-    .map(({ id, mod }) => ({ id, Component: mod.default, zone: mod.config.zone, order: mod.config.order })),
-  pages: list(pageMods)
-    .filter(({ mod }) => mod.default && mod.config && mod.config.path)
-    .map(({ id, mod }) => ({ id, Component: mod.default, ...mod.config })),
-  dashboardWidgets: list(dashboardMods)
-    .filter(({ mod }) => mod.default)
-    .map(({ id, mod }) => ({ id, Component: mod.default, ...(mod.config || {}) })),
-  settings: list(settingsMods)
-    .filter(({ mod }) => mod.default && mod.config && mod.config.path)
-    .map(({ id, mod }) => ({ id, Component: mod.default, ...mod.config })),
-  fields: list(fieldMods)
-    .filter(({ mod }) => mod.default && mod.config && mod.config.type)
-    .map(({ mod }) => ({ type: mod.config.type, renderer: mod.default })),
-}
+// Modules first, app last — the app overrides module UI on key conflict.
+export const adminExtensions = mergeExtensions([${moduleList ? moduleList + ', ' : ''}appExtensions])
 `
 }
