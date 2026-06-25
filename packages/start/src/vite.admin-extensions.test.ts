@@ -20,9 +20,10 @@ test('readModuleUiSpecifiers extracts and de-dupes module admin.ui strings', asy
 
 test('buildModuleSource imports each specifier and merges with the app glob', () => {
   const src = buildModuleSource('/src/admin', ['@latha/auth/admin'])
-  assert.match(src, /from '@latha\/auth\/admin'/)
+  assert.match(src, /from ["']@latha\/auth\/admin["']/)
   assert.match(src, /import\.meta\.glob\('\/src\/admin\/settings/)
   assert.match(src, /mergeExtensions/)
   assert.match(src, /collectAdminExtensions/)
   assert.match(src, /export const adminExtensions/)
+  assert.match(src, /mergeExtensions\(\[mod0,\s*appExtensions\]\)/)
 })

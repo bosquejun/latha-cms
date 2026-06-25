@@ -159,7 +159,7 @@ export function lathaStart(
     lathaConfigPlugin(configPath),
   ]
   if (options.admin !== false) {
-    extra.push(adminExtensionsPlugin(options.admin?.dir ?? 'src/admin', configPath))
+    extra.push(adminExtensionsPlugin(options.admin?.dir ?? 'src/admin'))
   }
 
   return [
@@ -281,8 +281,9 @@ export async function readModuleUiSpecifiers(
  * each module's admin UI barrel and merges it with the app's own `src/admin/`
  * glob via the shared helpers from `@latha/admin-sdk`.
  */
-function adminExtensionsPlugin(dir: string, configPath: string): VitePluginLike {
+function adminExtensionsPlugin(dir: string): VitePluginLike {
   const base = '/' + dir.replace(/^\.?\/*/, '').replace(/\/*$/, '')
+  // Cached once; a change to the config's module list needs a dev-server restart.
   let specifiers: string[] | null = null
   let server: { ssrLoadModule: (id: string) => Promise<unknown> } | undefined
 
@@ -316,7 +317,7 @@ export function buildModuleSource(base: string, specifiers: string[]): string {
     `import.meta.glob('${base}/${kind}/**/*.{tsx,jsx,ts,js}', { eager: true })`
 
   const moduleImports = specifiers
-    .map((spec, i) => `import { adminExtensions as mod${i} } from '${spec}'`)
+    .map((spec, i) => `import { adminExtensions as mod${i} } from ${JSON.stringify(spec)}`)
     .join('\n')
   const moduleList = specifiers.map((_, i) => `mod${i}`).join(', ')
 
