@@ -47,3 +47,10 @@ export {
 } from './context.js'
 
 export { Slot, type SlotProps } from './Slot.js'
+
+export {
+  collectAdminExtensions,
+  mergeExtensions,
+  type GlobMap,
+  type AdminGlobs,
+} from './collect.js'

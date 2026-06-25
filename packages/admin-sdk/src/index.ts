@@ -78,6 +78,10 @@ export {
   type ExtensionsProviderProps,
   Slot,
   type SlotProps,
+  collectAdminExtensions,
+  mergeExtensions,
+  type GlobMap,
+  type AdminGlobs,
 } from './extensions/index.js'
 
 // Views
