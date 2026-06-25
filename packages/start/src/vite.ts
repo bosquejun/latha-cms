@@ -356,25 +356,35 @@ function adminExtensionsPlugin(dir: string, configPath: string): VitePluginLike 
     async load(id) {
       if (id !== RESOLVED_ID) return undefined
       if (specifiers === null) {
-        try {
-          // Dev: reuse the running server's SSR loader. Build: spin up a
-          // throwaway SSR server so the virtual config id resolves.
-          specifiers = server
-            ? await readModuleUiSpecifiers(
-                (m) => server!.ssrLoadModule(m),
-                CONFIG_MODULE_ID,
-              )
-            : await loadSpecifiersAtBuild(root, configPath)
-        } catch (err) {
-          // Surface (rather than silently swallow) — a silent `[]` here is what
-          // hid this feature from production builds. App-only is still the
-          // graceful fallback so a genuinely missing config can't crash the build.
-          console.warn(
-            '[latha] admin extensions: could not load config; ' +
-              'module admin UI will be omitted —',
-            err instanceof Error ? err.message : err,
-          )
-          specifiers = []
+        if (server) {
+          // Dev: tolerate transient config-load failures (HMR/partial edits).
+          try {
+            specifiers = await readModuleUiSpecifiers(
+              (m) => server!.ssrLoadModule(m),
+              CONFIG_MODULE_ID,
+            )
+          } catch (err) {
+            console.warn(
+              '[latha] admin extensions: config not loadable yet; ' +
+                'module admin UI omitted for now —',
+              err instanceof Error ? err.message : err,
+            )
+            specifiers = []
+          }
+        } else {
+          // Build: a failure here would silently drop module admin UI from the
+          // production bundle (the bug we just fixed). Fail loudly instead.
+          try {
+            specifiers = await loadSpecifiersAtBuild(root, configPath)
+          } catch (err) {
+            throw new Error(
+              '[latha] failed to discover module admin UI at build time. ' +
+                'The admin config could not be loaded, so module-contributed UI ' +
+                '(e.g. @latha/auth/admin) would be missing from the build. ' +
+                `Original error: ${err instanceof Error ? err.message : String(err)}`,
+              { cause: err instanceof Error ? err : undefined },
+            )
+          }
         }
       }
       return buildModuleSource(base, specifiers)
