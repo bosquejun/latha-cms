@@ -24,6 +24,7 @@ export {
 } from './context.js'
 export { LathaAdmin } from './admin.js'
 export { LathaLogin } from './login.js'
+export { useAsync, type AsyncState } from './hooks.js'
 
 // Admin extension authoring surface — re-exported so apps import from one place.
 export {
