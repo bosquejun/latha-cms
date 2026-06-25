@@ -56,6 +56,13 @@ export interface ModuleNavConfig {
 export interface ModuleAdminConfig {
   /** Default sidebar section for this module's entities. */
   nav?: ModuleNavConfig
+  /**
+   * Bare import specifier for this module's admin-UI barrel (e.g.
+   * '@latha/auth/admin'). The Start Vite plugin statically imports and merges
+   * it into the admin extension registry at build time. A serializable string —
+   * never a component. Omit for backend-only modules.
+   */
+  ui?: string
 }
 
 export interface Module {
