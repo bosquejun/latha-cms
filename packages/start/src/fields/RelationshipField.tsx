@@ -6,7 +6,7 @@
  * collection's records to offer as options, so this renderer lives in
  * `@latha/start` where it can use the RPC client. It's registered into the SDK
  * renderer registry (see `admin.tsx`), so any `relationship` field — including
- * `roles.permissions` and `users.roles` — gets a real picker.
+ * any `many` relationship field — gets a real picker.
  *
  * Single relationships render as a `Select`; `many` relationships render as a
  * checkbox list. Option labels use the target entity's `useAsTitle`.

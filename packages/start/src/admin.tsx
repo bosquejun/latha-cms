@@ -47,7 +47,6 @@ import {
 import { PermissionsProvider, useCan, useLatha } from './context.js'
 import { useAsync } from './hooks.js'
 import { RelationshipField } from './fields/RelationshipField.js'
-import { RolesPermissions } from './settings/RolesPermissions.js'
 import type { EntityDescriptor, NavItem, NavSection } from './rpc.js'
 
 // Register the client-aware relationship renderer into the SDK registry so
@@ -381,12 +380,6 @@ function AdminView({
   /** Base for entity sub-routes — `/admin` or `/admin/settings`. */
   routeBase: string
 }) {
-  // The `roles` entity is managed through the Roles & Permissions matrix rather
-  // than the auto-generated list/form.
-  if ('slug' in route && route.slug === 'roles' && route.view !== 'document') {
-    return <RolesPermissions />
-  }
-
   switch (route.view) {
     case 'dashboard':
       return <Dashboard nav={nav} />
