@@ -15,11 +15,11 @@ test('collectAdminExtensions assembles settings + fields from glob maps', () => 
     },
   })
   assert.equal(ext.settings?.length, 1)
-  assert.equal(ext.settings?.[0].path, 'roles')
-  assert.equal(ext.settings?.[0].id, '/a/settings/roles.tsx')
+  assert.equal(ext.settings?.at(0)?.path, 'roles')
+  assert.equal(ext.settings?.at(0)?.id, '/a/settings/roles.tsx')
   assert.equal(ext.fields?.length, 1)
-  assert.equal(ext.fields?.[0].type, 'relationship')
-  assert.equal(ext.fields?.[0].renderer, Comp)
+  assert.equal(ext.fields?.at(0)?.type, 'relationship')
+  assert.equal(ext.fields?.at(0)?.renderer, Comp)
 })
 
 test('mergeExtensions lets later sources override by key', () => {
@@ -27,7 +27,7 @@ test('mergeExtensions lets later sources override by key', () => {
   const appExt = { settings: [{ path: 'roles', label: 'App Roles', Component: Comp }] }
   const merged = mergeExtensions([moduleExt, appExt])
   assert.equal(merged.settings?.length, 1)
-  assert.equal(merged.settings?.[0].label, 'App Roles') // app wins
+  assert.equal(merged.settings?.at(0)?.label, 'App Roles') // app wins
 })
 
 test('mergeExtensions concatenates distinct keys', () => {
