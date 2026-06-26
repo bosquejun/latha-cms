@@ -55,22 +55,23 @@ const SUPERADMIN_KEY = '*'
 const ADMIN_ACCESS_KEY = 'admin:access'
 const NON_MATRIX_SCOPES = new Set([SUPERADMIN_KEY, 'admin', 'scopes'])
 
-// Deterministic accent color from role name hash
-const AVATAR_COLORS = [
-  'bg-blue-500',
-  'bg-violet-500',
-  'bg-emerald-500',
-  'bg-amber-500',
-  'bg-rose-500',
-  'bg-cyan-500',
-  'bg-orange-500',
-  'bg-indigo-500',
+// Deterministic accent color from role name hash — using hex values so Tailwind
+// content scanning doesn't need to see dynamically constructed class names.
+const AVATAR_HEX = [
+  '#3b82f6', // blue-500
+  '#8b5cf6', // violet-500
+  '#10b981', // emerald-500
+  '#f59e0b', // amber-500
+  '#f43f5e', // rose-500
+  '#06b6d4', // cyan-500
+  '#f97316', // orange-500
+  '#6366f1', // indigo-500
 ] as const
 
 function avatarColor(name: string): string {
   let h = 0
   for (const c of name) h = (h * 31 + c.charCodeAt(0)) | 0
-  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length]!
+  return AVATAR_HEX[Math.abs(h) % AVATAR_HEX.length]!
 }
 
 interface PermLite {
@@ -279,7 +280,8 @@ function RoleItem({
       <Avatar
         fallback={name.slice(0, 2).toUpperCase()}
         size="sm"
-        className={cn('shrink-0 text-white', avatarColor(asStr(role.name)))}
+        className="shrink-0 text-white"
+        style={{ backgroundColor: avatarColor(asStr(role.name)) }}
       />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
@@ -731,10 +733,8 @@ export default function RolesPermissions() {
                       .slice(0, 2)
                       .toUpperCase()}
                     size="lg"
-                    className={cn(
-                      'shrink-0 text-white',
-                      avatarColor(asStr(selected.name)),
-                    )}
+                    className="shrink-0 text-white"
+                    style={{ backgroundColor: avatarColor(asStr(selected.name)) }}
                   />
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
