@@ -11,9 +11,9 @@
  *   - `authenticated` — baseline for every logged-in user. System, empty by
  *                       default.
  *
- * "Sensitive" scopes (users, roles, scopes, permissions, admin) are reserved
- * for the superadmin. These are only starting points — admins refine roles in
- * the UI. An app can override the set via `AuthModule({ roles })`.
+ * Auth-owned scopes (roles, scopes, permissions, admin) and the identity-store
+ * scope are reserved for the superadmin. These are only starting points —
+ * admins refine roles in the UI. An app can override via `AuthModule({ roles })`.
  */
 
 import type { LathaInstance } from '@latha/core'
@@ -36,20 +36,24 @@ export interface RoleSeed {
   system?: boolean
 }
 
-const SENSITIVE = new Set([
-  'users',
-  'roles',
-  'scopes',
-  'permissions',
-  'admin',
-  '*',
-])
+/** Auth-owned scopes that are always reserved for the superadmin. */
+const AUTH_SENSITIVE = new Set(['roles', 'scopes', 'permissions', 'admin', '*'])
 
-/** Built-in default roles, computed against the live catalog. */
-export function defaultRoles(catalog: RbacCatalog): RoleSeed[] {
+/**
+ * Built-in default roles, computed against the live catalog.
+ *
+ * `extraSensitive` lists additional scope slugs to withhold from the default
+ * editor/viewer grants — typically the identity-store slug, passed by the
+ * module so that whatever collection is configured as the user store is
+ * automatically protected without hardcoding a slug here.
+ */
+export function defaultRoles(catalog: RbacCatalog, extraSensitive: string[] = []): RoleSeed[] {
+  const sensitive = extraSensitive.length
+    ? new Set([...AUTH_SENSITIVE, ...extraSensitive])
+    : AUTH_SENSITIVE
   const editable = catalog.scopes
     .map((s) => s.key)
-    .filter((key) => !SENSITIVE.has(key))
+    .filter((key) => !sensitive.has(key))
 
   return [
     {
