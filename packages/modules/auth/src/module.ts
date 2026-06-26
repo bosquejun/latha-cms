@@ -27,6 +27,7 @@ import { defaultRoles, seedRoles, type RoleSeed } from './rbac/seed.js'
 import {
   collectionSubjectStore,
   setSubjectStore,
+  DEFAULT_USERS_SLUG,
   type SubjectStore,
 } from './subject-store.js'
 
@@ -82,7 +83,14 @@ export function AuthModule(config: AuthModuleConfig): Module {
       // Sync the scope/permission catalog from the live entity set, then seed
       // the default roles if none exist yet.
       const catalog = await syncCatalog(latha)
-      const roles = config.roles ?? defaultRoles(catalog)
+      // Protect the identity store from default editor/viewer grants. When a
+      // custom subjectStore is supplied we don't know the slug (it may not be a
+      // CMS collection), so nothing extra is withheld; the app can pass `roles`
+      // explicitly if it needs to protect additional scopes.
+      const identitySlugs = config.subjectStore
+        ? []
+        : [config.usersSlug ?? DEFAULT_USERS_SLUG]
+      const roles = config.roles ?? defaultRoles(catalog, identitySlugs)
       await seedRoles(latha, roles)
     },
   }

@@ -6,12 +6,11 @@
  *   - `"<scope>:*"`  — every action within a scope.
  *   - `"*:<action>"` — an action across every scope.
  *
- * Scopes are derived one-per-entity (so a `posts` collection yields the
- * `posts` scope with create/read/update/delete), plus the built-in `admin`
- * scope whose `access` action (`admin:access`) gates entry to the admin UI.
+ * Scopes are derived from entities that declare `entity.actions`, plus the
+ * built-in `admin` scope whose `access` action (`admin:access`) gates entry
+ * to the admin UI.
  */
 
-import type { EntityKind, Operation } from '@latha/core'
 import type { AuthUser } from '../types.js'
 
 /** The permission that gates access to the admin surface at all. */
@@ -29,18 +28,6 @@ export const AUTHENTICATED_ROLE = 'authenticated'
 /** Compose a `<scope>:<action>` permission key. */
 export function permissionKey(scope: string, action: string): string {
   return `${scope}:${action}`
-}
-
-/** The grantable actions for an entity of the given kind. */
-export function actionsForKind(kind: EntityKind): Operation[] {
-  switch (kind) {
-    case 'collection':
-      return ['read', 'create', 'update', 'delete']
-    case 'document':
-      return ['read', 'update']
-    case 'taxonomy':
-      return ['read', 'create', 'delete']
-  }
 }
 
 /** Does a single granted key satisfy the required key (incl. wildcards)? */

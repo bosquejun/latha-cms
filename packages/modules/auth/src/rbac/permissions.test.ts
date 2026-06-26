@@ -1,12 +1,11 @@
 /**
- * Unit coverage for the pure permission logic: wildcard matching, principal
- * permission lookups, and the per-kind action sets.
+ * Unit coverage for the pure permission logic: wildcard matching and principal
+ * permission lookups.
  */
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
-  actionsForKind,
   hasPermission,
   matchesPermission,
   permissionKey,
@@ -41,17 +40,6 @@ test('hasPermission: anonymous / malformed principals deny', () => {
   assert.equal(hasPermission(null, 'posts:read'), false)
   assert.equal(hasPermission({ id: 'u1' }, 'posts:read'), false)
   assert.equal(hasPermission('nope', 'posts:read'), false)
-})
-
-test('actionsForKind: per-kind grantable actions', () => {
-  assert.deepEqual(actionsForKind('collection'), [
-    'read',
-    'create',
-    'update',
-    'delete',
-  ])
-  assert.deepEqual(actionsForKind('document'), ['read', 'update'])
-  assert.deepEqual(actionsForKind('taxonomy'), ['read', 'create', 'delete'])
 })
 
 test('permissionKey composes scope:action', () => {

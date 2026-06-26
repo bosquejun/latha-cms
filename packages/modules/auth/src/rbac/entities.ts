@@ -26,6 +26,7 @@ const ACCESS_GROUP = 'Access'
 export const rolesEntity: Entity = {
   kind: 'collection',
   slug: ROLES_SLUG,
+  actions: ['read', 'create', 'update', 'delete'],
   admin: {
     area: 'settings',
     group: ACCESS_GROUP,
@@ -68,6 +69,7 @@ export const rolesEntity: Entity = {
 export const scopesEntity: Entity = {
   kind: 'collection',
   slug: SCOPES_SLUG,
+  actions: ['read'],
   admin: {
     area: 'settings',
     group: ACCESS_GROUP,
@@ -89,6 +91,7 @@ export const scopesEntity: Entity = {
 export const permissionsEntity: Entity = {
   kind: 'collection',
   slug: PERMISSIONS_SLUG,
+  actions: ['read'],
   admin: {
     area: 'settings',
     group: ACCESS_GROUP,
