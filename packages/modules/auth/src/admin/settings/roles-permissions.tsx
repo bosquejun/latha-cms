@@ -819,7 +819,7 @@ export default function RolesPermissions() {
                           key={action}
                           className="min-w-[80px] text-center"
                         >
-                          <div className="flex flex-col items-center gap-2">
+                          <div className="flex flex-col items-center gap-3 py-1">
                             <span className="capitalize">{action}</span>
                             <BulkCheckbox
                               checked={columnState[action].allChecked}
