@@ -852,7 +852,7 @@ export default function RolesPermissions() {
                             <TR className="bg-muted/30 hover:bg-muted/40">
                               <TD
                                 colSpan={1 + ACTION_COLUMNS.length}
-                                className="py-2 pr-4"
+                                className="py-2"
                               >
                                 <div className="flex items-center gap-2">
                                   {/* Accordion toggle */}
@@ -897,7 +897,7 @@ export default function RolesPermissions() {
                                   key={scope.key}
                                   className="hover:bg-accent/20"
                                 >
-                                  <TD className="pl-8">
+                                  <TD>
                                     <span className="text-small font-medium">
                                       {scope.label || scope.key}
                                     </span>
