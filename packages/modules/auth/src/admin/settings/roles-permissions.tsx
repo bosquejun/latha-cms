@@ -4,7 +4,7 @@
  * Lives in @latha/auth and is registered as a settings extension via the
  * @latha/auth/admin barrel. Migrated from @latha/start.
  *
- * Left: the role list with avatar, description, and permission count.
+ * Left: the role list with description and permission count.
  * Right: the selected role's permission matrix — rows = scopes (grouped by
  * module), columns = read/create/update/delete — plus the `admin:access` and
  * superadmin (`*`) toggles. Includes column/module bulk-select, scope search,
@@ -13,13 +13,11 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Avatar,
   Badge,
   Button,
   Card,
   Checkbox,
   Input,
-  Separator,
   Switch,
   Table,
   TBody,
@@ -55,24 +53,6 @@ const SUPERADMIN_KEY = '*'
 const ADMIN_ACCESS_KEY = 'admin:access'
 const NON_MATRIX_SCOPES = new Set([SUPERADMIN_KEY, 'admin', 'scopes'])
 
-// Deterministic accent color from role name hash — using hex values so Tailwind
-// content scanning doesn't need to see dynamically constructed class names.
-const AVATAR_HEX = [
-  '#3b82f6', // blue-500
-  '#8b5cf6', // violet-500
-  '#10b981', // emerald-500
-  '#f59e0b', // amber-500
-  '#f43f5e', // rose-500
-  '#06b6d4', // cyan-500
-  '#f97316', // orange-500
-  '#6366f1', // indigo-500
-] as const
-
-function avatarColor(name: string): string {
-  let h = 0
-  for (const c of name) h = (h * 31 + c.charCodeAt(0)) | 0
-  return AVATAR_HEX[Math.abs(h) % AVATAR_HEX.length]!
-}
 
 interface PermLite {
   id: string
@@ -252,7 +232,7 @@ function Skeleton({ className }: { className?: string }) {
   return <div className={cn('animate-pulse rounded-md bg-muted', className)} />
 }
 
-/** Sidebar role item — avatar + name + description + permission count. */
+/** Sidebar role item — name + description + permission count. */
 function RoleItem({
   role,
   selected,
@@ -277,12 +257,6 @@ function RoleItem({
           : 'text-foreground hover:bg-accent/50',
       )}
     >
-      <Avatar
-        fallback={name.slice(0, 2).toUpperCase()}
-        size="sm"
-        className="shrink-0 text-white"
-        style={{ backgroundColor: avatarColor(asStr(role.name)) }}
-      />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <span className="truncate text-small font-medium">{name}</span>
@@ -624,7 +598,6 @@ export default function RolesPermissions() {
             <div className="flex flex-col gap-1">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="flex items-center gap-3 px-3 py-2.5">
-                  <Skeleton className="size-7 rounded-full" />
                   <div className="flex-1 space-y-1.5">
                     <Skeleton className="h-3 w-3/4" />
                     <Skeleton className="h-2.5 w-1/2" />
@@ -725,17 +698,7 @@ export default function RolesPermissions() {
             <div className="flex min-w-0 flex-col gap-4">
               {/* Role header */}
               <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <Avatar
-                    fallback={(
-                      asStr(selected.label) || asStr(selected.name)
-                    )
-                      .slice(0, 2)
-                      .toUpperCase()}
-                    size="lg"
-                    className="shrink-0 text-white"
-                    style={{ backgroundColor: avatarColor(asStr(selected.name)) }}
-                  />
+                <div>
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="text-base font-semibold">
