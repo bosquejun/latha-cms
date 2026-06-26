@@ -2,26 +2,19 @@
  * Permission catalog — derived from the live config, synced into the DB.
  *
  * The catalog (scopes + permissions) is authoritative *from code*: one scope
- * per entity (so every content collection gets granular create/read/update/
- * delete), plus the built-in `admin` scope and the superadmin `*`. At boot we
- * upsert it into the `scopes`/`permissions` tables and prune anything stale, so
- * the admin UI can browse and assign real, current permissions. Roles (the
- * grants) remain hand-managed data — only the catalog is synced.
+ * per entity that declares `entity.actions`, plus the built-in `admin` scope
+ * and the superadmin `*`. Entities without `actions` are excluded — each module
+ * controls which operations are grantable on its own entities. At boot we
+ * upsert into `scopes`/`permissions` and prune stale rows so the admin UI
+ * always shows current permissions. Roles (the grants) remain hand-managed
+ * data — only the catalog is synced.
  *
  * The id↔key maps are cached per instance for fast enforcement and seeding.
  */
 
 import type { Doc, LathaInstance } from '@latha/core'
-import {
-  ADMIN_ACCESS,
-  SUPERADMIN,
-  actionsForKind,
-  permissionKey,
-} from './permissions.js'
+import { ADMIN_ACCESS, SUPERADMIN, permissionKey } from './permissions.js'
 import { PERMISSIONS_SLUG, SCOPES_SLUG } from './entities.js'
-
-/** Catalog entities that are read-only (synced from config) — `read` only. */
-const READONLY_SCOPES = new Set<string>([SCOPES_SLUG, PERMISSIONS_SLUG])
 
 export interface ScopeRecord {
   key: string
@@ -77,14 +70,10 @@ function buildDesired(latha: LathaInstance): {
   const permissions: PermissionRecord[] = []
 
   for (const entity of latha.entities) {
+    const actions = entity.actions
+    if (!actions?.length) continue
     const module = moduleOf.get(entity.slug) ?? ''
     scopes.push({ key: entity.slug, label: humanize(entity.slug), module })
-    // The RBAC catalog entities (scopes/permissions) are synced from config, not
-    // user-managed — only `read` is meaningful, so don't emit write permissions
-    // that could never do anything.
-    const actions = READONLY_SCOPES.has(entity.slug)
-      ? (['read'] as const)
-      : actionsForKind(entity.kind)
     for (const action of actions) {
       permissions.push({
         key: permissionKey(entity.slug, action),

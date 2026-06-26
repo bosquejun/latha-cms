@@ -48,7 +48,6 @@ export {
   matchesPermission,
   permissionsOf,
   permissionKey,
-  actionsForKind,
   ADMIN_ACCESS,
   SUPERADMIN,
   PUBLIC_ROLE,

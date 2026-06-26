@@ -7,7 +7,7 @@
  * them.
  */
 
-import type { CollectionAccess } from './access.js'
+import type { CollectionAccess, Operation } from './access.js'
 import type { Field } from './field.js'
 import type { CollectionHooks } from './hook.js'
 
@@ -47,6 +47,12 @@ export interface Collection<TDoc = Record<string, unknown>> {
   hooks?: CollectionHooks<TDoc>
   /** Add `createdAt` / `updatedAt` columns. Defaults to `true`. */
   timestamps?: boolean
+  /**
+   * Operations exposed as grantable RBAC permissions for this entity. Set by
+   * the entity factory so the RBAC catalog can read them without knowing the
+   * entity kind. Omit to exclude this entity from the permission catalog.
+   */
+  actions?: Operation[]
 }
 
 /** Single instance — no list view, exactly one record. */
@@ -58,6 +64,8 @@ export interface Document<TDoc = Record<string, unknown>> {
   access?: CollectionAccess<TDoc>
   hooks?: CollectionHooks<TDoc>
   timestamps?: boolean
+  /** @see Collection.actions */
+  actions?: Operation[]
 }
 
 /** Hierarchical or flat grouping. */
@@ -69,6 +77,8 @@ export interface Taxonomy {
   /** Extra fields beyond the implicit `name` / `slug`. */
   fields?: Field[]
   admin?: CollectionAdminConfig
+  /** @see Collection.actions */
+  actions?: Operation[]
 }
 
 /**
