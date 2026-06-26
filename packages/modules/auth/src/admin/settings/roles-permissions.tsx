@@ -812,15 +812,26 @@ export default function RolesPermissions() {
 
                 <Table>
                   <THead>
-                    <TR>
+                    {/* Row 1 — column labels, aligned on the same baseline */}
+                    <TR className="border-b-0">
                       <TH>Resource</TH>
                       {ACTION_COLUMNS.map((action) => (
                         <TH
                           key={action}
-                          className="min-w-[80px] text-center"
+                          className="min-w-[80px] text-center capitalize"
                         >
-                          <div className="flex flex-col items-center gap-3 py-1">
-                            <span className="capitalize">{action}</span>
+                          {action}
+                        </TH>
+                      ))}
+                    </TR>
+                    {/* Row 2 — bulk-select checkboxes with room to breathe */}
+                    <TR>
+                      <TH className="py-3 font-normal text-muted-foreground">
+                        Select all
+                      </TH>
+                      {ACTION_COLUMNS.map((action) => (
+                        <TH key={action} className="py-3 text-center">
+                          <div className="flex items-center justify-center">
                             <BulkCheckbox
                               checked={columnState[action].allChecked}
                               indeterminate={columnState[action].someChecked}
