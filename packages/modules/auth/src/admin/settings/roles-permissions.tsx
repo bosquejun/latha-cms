@@ -912,7 +912,7 @@ export default function RolesPermissions() {
                                     <span className="text-small font-medium">
                                       {scope.label || scope.key}
                                     </span>
-                                    {scope.label && scope.label !== scope.key && (
+                                    {scope.label && scope.label.toLowerCase() !== scope.key.toLowerCase() && (
                                       <span className="ml-1.5 text-caption text-muted-foreground">
                                         {scope.key}
                                       </span>
