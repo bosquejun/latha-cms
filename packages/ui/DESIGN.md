@@ -11,20 +11,45 @@ Use these only when no semantic alias fits.
 
 Layer B — semantic aliases (use these by default):
 
-| Utility       | Value | Use for                          |
-| ------------- | ----- | -------------------------------- |
-| `p-page`      | 24px  | page / content padding           |
-| `p-sidebar`   | 16px  | sidebar inner padding            |
-| `p-card`      | 24px  | card inner padding               |
-| `gap-section` | 32px  | between page sections            |
-| `gap-card`    | 16px  | inside a card                    |
-| `gap-form`    | 20px  | between form fields              |
-| `gap-field`   | 8px   | label / control / helper         |
-| `gap-inline`  | 8px   | icon-text, button rows           |
-| `gap-stack`   | 4px   | nav item lists                   |
+| Utility        | Value | Use for                                      |
+| -------------- | ----- | -------------------------------------------- |
+| `p-page`       | 24px  | page / content padding                       |
+| `mb-page-gap`  | 24px  | gap between PageHeader and page content      |
+| `p-sidebar`    | 16px  | sidebar inner padding                        |
+| `p-card`       | 24px  | card inner padding                           |
+| `p-empty`      | 64px  | empty / placeholder state padding            |
+| `gap-section`  | 32px  | between page sections                        |
+| `gap-card`     | 16px  | inside a card                                |
+| `gap-group`    | 12px  | within a component row (title + actions row) |
+| `gap-form`     | 20px  | between form fields                          |
+| `gap-field`    | 8px   | label / control / helper                     |
+| `gap-inline`   | 8px   | icon-text, button rows                       |
+| `gap-stack`    | 4px   | nav item lists                               |
 
 (`p-*` utilities also come as `px-*` / `py-*` / `pt-*` etc.; spacing aliases
 also produce `gap-*` and `m-*`.)
+
+## Container awareness
+
+Padded block containers (e.g. `Card`, `AdminShell <main>`) declare their
+horizontal padding as an inheritable CSS variable:
+
+```
+[--container-px:var(--space-card)]   ← set on the container
+```
+
+Children that need to break out of that padding (full-bleed tables, dividers,
+images) apply the `bleed-x` utility:
+
+```jsx
+<CardContent>
+  <Table className="bleed-x" />  {/* extends to the card's inner border */}
+</CardContent>
+```
+
+`bleed-x` expands to `margin-inline: calc(-1 * var(--container-px, 0px))`.
+Because CSS custom properties cascade, nested containers override the variable
+for their own subtree automatically.
 
 ## Typography
 

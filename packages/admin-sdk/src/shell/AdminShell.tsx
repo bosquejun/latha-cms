@@ -68,7 +68,7 @@ export function AdminShell({
           header={sidebarHeader}
           footer={sidebarFooter}
         />
-        <main className="min-w-0 flex-1 p-page">
+        <main className="min-w-0 flex-1 p-page [--container-px:var(--space-page)]">
           <div className="mx-auto w-full max-w-content-max">
             <Slot zone="shell.main.before" />
             {children}

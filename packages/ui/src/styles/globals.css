@@ -107,15 +107,21 @@
   --space-16: 4rem;     /* 64px */
 
   /* Spacing — semantic aliases (Layer B), intent-named */
-  --space-page: var(--space-6);        /* page / content padding       */
-  --space-section: var(--space-8);     /* gap between page sections    */
-  --space-card: var(--space-6);        /* card inner padding           */
-  --space-card-gap: var(--space-4);    /* gap inside a card            */
-  --space-field-gap: var(--space-2);   /* label <-> control <-> help   */
-  --space-form-gap: var(--space-5);    /* gap between form fields      */
-  --space-inline: var(--space-2);      /* icon <-> text, button rows   */
-  --space-stack: var(--space-1);       /* nav item lists               */
-  --space-sidebar: var(--space-4);     /* sidebar inner padding        */
+  --space-page: var(--space-6);        /* page / content padding                           */
+  --space-page-gap: var(--space-6);    /* gap between PageHeader and page content          */
+  --space-section: var(--space-8);     /* gap between page sections                        */
+  --space-card: var(--space-6);        /* card inner padding                               */
+  --space-card-gap: var(--space-4);    /* gap inside a card                                */
+  --space-group: var(--space-3);       /* gap within a component row (title + actions row) */
+  --space-field-gap: var(--space-2);   /* label <-> control <-> help                       */
+  --space-form-gap: var(--space-5);    /* gap between form fields                          */
+  --space-inline: var(--space-2);      /* icon <-> text, button rows                       */
+  --space-stack: var(--space-1);       /* nav item lists                                   */
+  --space-sidebar: var(--space-4);     /* sidebar inner padding                            */
+  --space-empty: var(--space-16);      /* empty / placeholder state padding                */
+
+  /* Container-awareness hook — set by any padded block container, inherited by children */
+  --container-px: 0px;
 
   /* Typography scale — size / line-height pairs */
   --text-display: 1.875rem;
@@ -224,14 +230,17 @@
 
   /* Spacing scale -> Tailwind spacing utilities (p-*, px-*, gap-*, m-*) */
   --spacing-page: var(--space-page);
+  --spacing-page-gap: var(--space-page-gap);
   --spacing-section: var(--space-section);
   --spacing-card: var(--space-card);
   --spacing-card-gap: var(--space-card-gap);
+  --spacing-group: var(--space-group);
   --spacing-field: var(--space-field-gap);
   --spacing-form: var(--space-form-gap);
   --spacing-inline: var(--space-inline);
   --spacing-stack: var(--space-stack);
   --spacing-sidebar: var(--space-sidebar);
+  --spacing-empty: var(--space-empty);
 
   /* Layout constants -> width/height/max-width utilities */
   --spacing-sidebar-width: var(--sidebar-width);
@@ -255,6 +264,13 @@
   --text-caption--line-height: var(--text-caption--line-height);
   --text-label: var(--text-label);
   --text-label--line-height: var(--text-label--line-height);
+}
+
+@layer utilities {
+  /* Pull a child out of its container's horizontal padding — container must set --container-px. */
+  .bleed-x {
+    margin-inline: calc(-1 * var(--container-px, 0px));
+  }
 }
 
 @layer base {
