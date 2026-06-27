@@ -17,7 +17,7 @@ export default function TopbarHelp(_props: WidgetContext) {
       href="https://github.com/bosquejun/latha-cms"
       target="_blank"
       rel="noreferrer"
-      className="flex items-center gap-1.5 rounded-md px-2 py-1 text-small text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      className="flex items-center gap-tight rounded-md px-inline py-stack text-small text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
     >
       <LifeBuoy className="size-4" />
       Help

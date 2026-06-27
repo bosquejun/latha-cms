@@ -116,6 +116,7 @@
   --space-field-gap: var(--space-2);   /* label <-> control <-> help                       */
   --space-form-gap: var(--space-5);    /* gap between form fields                          */
   --space-inline: var(--space-2);      /* icon <-> text, button rows                       */
+  --space-tight: 0.375rem;             /* 6px  — compact atom padding (dropdown items, tabs) */
   --space-stack: var(--space-1);       /* nav item lists                                   */
   --space-sidebar: var(--space-4);     /* sidebar inner padding                            */
   --space-empty: var(--space-16);      /* empty / placeholder state padding                */
@@ -234,6 +235,7 @@
   --spacing-section: var(--space-section);
   --spacing-card: var(--space-card);
   --spacing-card-gap: var(--space-card-gap);
+  --spacing-tight: var(--space-tight);
   --spacing-group: var(--space-group);
   --spacing-field: var(--space-field-gap);
   --spacing-form: var(--space-form-gap);

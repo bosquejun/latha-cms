@@ -139,7 +139,7 @@ export function Sidebar({
     !item.external && (currentPath?.startsWith(item.href) ?? false)
 
   return (
-    <nav className="flex h-full w-(--sidebar-width) shrink-0 flex-col gap-4 overflow-y-auto border-r border-sidebar-border bg-sidebar p-sidebar">
+    <nav className="flex h-full w-(--sidebar-width) shrink-0 flex-col gap-card-gap overflow-y-auto border-r border-sidebar-border bg-sidebar p-sidebar">
       {header}
       <Slot zone="shell.sidebar.top" />
 

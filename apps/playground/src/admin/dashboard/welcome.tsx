@@ -15,7 +15,7 @@ export default function Welcome(_props: WidgetContext) {
   return (
     <Card className="h-full">
       <CardHeader>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-inline">
           <Sparkles className="size-4 text-muted-foreground" />
           <CardTitle>Welcome to your admin</CardTitle>
         </div>

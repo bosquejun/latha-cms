@@ -10,8 +10,8 @@ export interface TopbarProps {
 
 export function Topbar({ brand = 'LathaCMS', onMenuClick, children }: TopbarProps) {
   return (
-    <header className="sticky top-0 z-40 flex h-(--header-height) items-center justify-between gap-3 border-b border-border bg-background px-4">
-      <div className="flex min-w-0 items-center gap-2">
+    <header className="sticky top-0 z-40 flex h-(--header-height) items-center justify-between gap-group border-b border-border bg-background px-sidebar">
+      <div className="flex min-w-0 items-center gap-inline">
         <button
           type="button"
           onClick={onMenuClick}

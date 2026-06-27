@@ -7,8 +7,8 @@ export const Route = createFileRoute('/')({
 
 function LandingPage() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-start justify-center gap-6 px-6">
-      <div className="flex items-baseline gap-3">
+    <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-start justify-center gap-page px-6">
+      <div className="flex items-baseline gap-group">
         <h1 className="text-3xl font-semibold tracking-tight">LathaCMS</h1>
         <span className="text-sm text-muted-foreground">playground</span>
       </div>

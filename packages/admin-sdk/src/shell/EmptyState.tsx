@@ -18,7 +18,7 @@ export function EmptyState({ icon: Icon, title, description, action }: EmptyStat
       <div>
         <h3 className="text-small font-semibold">{title}</h3>
         {description && (
-          <p className="mx-auto mt-1 max-w-[360px] text-caption text-muted-foreground">
+          <p className="mx-auto mt-stack max-w-[360px] text-caption text-muted-foreground">
             {description}
           </p>
         )}

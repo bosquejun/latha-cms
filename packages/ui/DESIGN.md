@@ -25,6 +25,7 @@ Layer B — semantic aliases (use these by default):
 | `gap-field`    | 8px   | label / control / helper                     |
 | `gap-inline`   | 8px   | icon-text, button rows                       |
 | `gap-stack`    | 4px   | nav item lists                               |
+| `gap-tight`    | 6px   | compact atom padding (dropdown items, tabs)  |
 
 (`p-*` utilities also come as `px-*` / `py-*` / `pt-*` etc.; spacing aliases
 also produce `gap-*` and `m-*`.)
@@ -66,6 +67,31 @@ for their own subtree automatically.
 
 Apply color (`text-muted-foreground`) and weight (`font-semibold`) on top of
 the size utility as needed.
+
+## Compliance
+
+**All non-primitive components must use semantic tokens** — shell components,
+module pages, admin views, custom widgets, and playground files.
+
+**Exempt:** `packages/ui/src/components/ui/` — shadcn primitive atoms (button,
+input, badge, card, etc.). Their internal padding is part of their visual design
+contract, not layout composition.
+
+The ESLint rule `design-system/no-raw-spacing` (defined in `eslint.config.mjs`
+at the repo root) enforces this automatically. It checks `className` strings and
+`cn(...)` call arguments in `.tsx` files, warns when a semantic token exists for
+a raw numeric class, and skips the exempt directory.
+
+Run the check across all packages:
+
+```sh
+pnpm lint
+```
+
+The rule fires as a **warning** so existing regressions surface without breaking CI
+immediately. Treat every new warning as a token violation to fix before merging.
+
+---
 
 ## Layout tokens
 

@@ -41,10 +41,10 @@ export function AdminShell({
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Topbar brand={brand} onMenuClick={() => setDrawerOpen(true)}>
-        <div className="flex items-center gap-3">
-          <Slot zone="shell.topbar.start" className="flex items-center gap-2" />
+        <div className="flex items-center gap-group">
+          <Slot zone="shell.topbar.start" className="flex items-center gap-inline" />
           {userMenu}
-          <Slot zone="shell.topbar.end" className="flex items-center gap-2" />
+          <Slot zone="shell.topbar.end" className="flex items-center gap-inline" />
         </div>
       </Topbar>
       <div className="flex min-h-0 flex-1">

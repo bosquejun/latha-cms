@@ -188,13 +188,13 @@ function ConfirmModal({
   onCancel: () => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-page">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onCancel}
       />
-      <Card className="relative z-10 w-full max-w-sm p-6 shadow-2xl">
-        <div className="flex flex-col gap-4">
+      <Card className="relative z-10 w-full max-w-sm p-card shadow-2xl">
+        <div className="flex flex-col gap-card-gap">
           {icon && (
             <div
               className={cn(
@@ -207,9 +207,9 @@ function ConfirmModal({
           )}
           <div>
             <h3 className="font-semibold">{title}</h3>
-            <p className="mt-1 text-small text-muted-foreground">{description}</p>
+            <p className="mt-stack text-small text-muted-foreground">{description}</p>
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-inline">
             <Button variant="outline" size="sm" onClick={onCancel}>
               Cancel
             </Button>
@@ -251,14 +251,14 @@ function RoleItem({
       type="button"
       onClick={onClick}
       className={cn(
-        'group flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors',
+        'group flex w-full items-center gap-group rounded-md px-group py-group text-left transition-colors',
         selected
           ? 'bg-accent text-accent-foreground'
           : 'text-foreground hover:bg-accent/50',
       )}
     >
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-tight">
           <span className="truncate text-small font-medium">{name}</span>
           {role.system ? (
             <Lock className="size-3 shrink-0 text-muted-foreground" />
@@ -296,11 +296,11 @@ function ToggleRow({
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-4 p-4',
+        'flex items-center justify-between gap-card-gap p-card-gap',
         danger && checked && 'bg-warning/5',
       )}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-group">
         {icon && (
           <div
             className={cn(
@@ -592,13 +592,13 @@ export default function RolesPermissions() {
       )}
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+        <div className="grid grid-cols-1 gap-page lg:grid-cols-[280px_1fr]">
           {/* Sidebar skeleton */}
-          <Card className="p-2">
-            <div className="flex flex-col gap-1">
+          <Card className="p-inline">
+            <div className="flex flex-col gap-stack">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex items-center gap-3 px-3 py-2.5">
-                  <div className="flex-1 space-y-1.5">
+                <div key={i} className="flex items-center gap-group px-group py-group">
+                  <div className="flex-1 space-y-tight">
                     <Skeleton className="h-3 w-3/4" />
                     <Skeleton className="h-2.5 w-1/2" />
                   </div>
@@ -608,19 +608,19 @@ export default function RolesPermissions() {
             </div>
           </Card>
           {/* Matrix skeleton */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-card-gap">
             <Skeleton className="h-20 w-full" />
             <Skeleton className="h-28 w-full" />
             <Skeleton className="h-64 w-full" />
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+        <div className="grid grid-cols-1 gap-page lg:grid-cols-[280px_1fr]">
           {/* ── Sidebar ─────────────────────────────────────────────────── */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-inline">
             {/* Sidebar header */}
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between px-stack">
+              <div className="flex items-center gap-inline">
                 <span className="text-small font-semibold text-foreground">
                   Roles
                 </span>
@@ -638,7 +638,7 @@ export default function RolesPermissions() {
             </div>
 
             {/* Role list */}
-            <Card className="p-2">
+            <Card className="p-inline">
               {roleList.length > 0 ? (
                 <div className="flex flex-col gap-0.5">
                   {roleList.map((role) => (
@@ -651,7 +651,7 @@ export default function RolesPermissions() {
                   ))}
                 </div>
               ) : (
-                <p className="px-3 py-4 text-center text-small text-muted-foreground">
+                <p className="px-group py-card-gap text-center text-small text-muted-foreground">
                   No roles yet.
                 </p>
               )}
@@ -659,9 +659,9 @@ export default function RolesPermissions() {
 
             {/* Inline create form */}
             {creating && (
-              <Card className="p-3">
-                <p className="mb-2 text-small font-medium">New role</p>
-                <div className="flex flex-col gap-2">
+              <Card className="p-group">
+                <p className="mb-inline text-small font-medium">New role</p>
+                <div className="flex flex-col gap-inline">
                   <Input
                     autoFocus
                     placeholder="Role name (e.g. author)"
@@ -669,7 +669,7 @@ export default function RolesPermissions() {
                     onChange={(e) => setNewName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && void createRole()}
                   />
-                  <div className="flex gap-2">
+                  <div className="flex gap-inline">
                     <Button
                       size="sm"
                       onClick={() => void createRole()}
@@ -695,12 +695,12 @@ export default function RolesPermissions() {
 
           {/* ── Matrix panel ─────────────────────────────────────────────── */}
           {selected ? (
-            <div className="flex min-w-0 flex-col gap-4">
+            <div className="flex min-w-0 flex-col gap-card-gap">
               {/* Role header */}
-              <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="flex flex-wrap items-start justify-between gap-card-gap">
                 <div>
                   <div>
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-inline">
                       <h2 className="text-base font-semibold">
                         {asStr(selected.label) || asStr(selected.name)}
                       </h2>
@@ -721,7 +721,7 @@ export default function RolesPermissions() {
                       {checked.size} permission
                       {checked.size !== 1 ? 's' : ''} granted
                       {dirty && (
-                        <span className="ml-1.5 font-medium text-warning-foreground">
+                        <span className="ml-tight font-medium text-warning-foreground">
                           · Unsaved changes
                         </span>
                       )}
@@ -729,7 +729,7 @@ export default function RolesPermissions() {
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 items-center gap-inline">
                   {!selected.system && (
                     <Button
                       size="sm"
@@ -788,7 +788,7 @@ export default function RolesPermissions() {
                 )}
               >
                 {/* Search bar */}
-                <div className="border-b border-border p-3">
+                <div className="border-b border-border p-group">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -826,11 +826,11 @@ export default function RolesPermissions() {
                     </TR>
                     {/* Row 2 — bulk-select checkboxes with room to breathe */}
                     <TR>
-                      <TH className="py-3 font-normal text-muted-foreground">
+                      <TH className="py-group font-normal text-muted-foreground">
                         Select all
                       </TH>
                       {ACTION_COLUMNS.map((action) => (
-                        <TH key={action} className="py-3 text-center">
+                        <TH key={action} className="py-group text-center">
                           <div className="flex items-center justify-center">
                             <BulkCheckbox
                               checked={columnState[action].allChecked}
@@ -863,14 +863,14 @@ export default function RolesPermissions() {
                             <TR className="bg-muted/30 hover:bg-muted/40">
                               <TD
                                 colSpan={1 + ACTION_COLUMNS.length}
-                                className="py-2"
+                                className="py-inline"
                               >
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-inline">
                                   {/* Accordion toggle */}
                                   <button
                                     type="button"
                                     onClick={() => toggleSection(mod)}
-                                    className="flex flex-1 items-center gap-2 text-small font-medium capitalize"
+                                    className="flex flex-1 items-center gap-inline text-small font-medium capitalize"
                                   >
                                     <ChevronDown
                                       className={cn(
@@ -913,7 +913,7 @@ export default function RolesPermissions() {
                                       {scope.label || scope.key}
                                     </span>
                                     {scope.label && scope.label.toLowerCase() !== scope.key.toLowerCase() && (
-                                      <span className="ml-1.5 text-caption text-muted-foreground">
+                                      <span className="ml-tight text-caption text-muted-foreground">
                                         {scope.key}
                                       </span>
                                     )}
@@ -952,18 +952,18 @@ export default function RolesPermissions() {
             </div>
           ) : (
             /* Empty state — no roles exist */
-            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-20 text-center">
-              <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-muted">
+            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-empty text-center">
+              <div className="mb-card-gap flex size-14 items-center justify-center rounded-full bg-muted">
                 <ShieldAlert className="size-7 text-muted-foreground" />
               </div>
               <p className="font-semibold">No roles yet</p>
-              <p className="mt-1 max-w-xs text-small text-muted-foreground">
+              <p className="mt-stack max-w-xs text-small text-muted-foreground">
                 Create your first role to start managing who can do what across
                 your content.
               </p>
               <Button
                 size="sm"
-                className="mt-5"
+                className="mt-form"
                 onClick={() => setCreating(true)}
               >
                 <Plus /> Create a role

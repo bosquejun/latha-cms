@@ -14,7 +14,7 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
         <div>
           <h1 className="text-h1 font-semibold">{title}</h1>
           {description && (
-            <p className="mt-1 text-body text-muted-foreground">{description}</p>
+            <p className="mt-stack text-body text-muted-foreground">{description}</p>
           )}
         </div>
         {actions && <div className="flex gap-inline">{actions}</div>}
