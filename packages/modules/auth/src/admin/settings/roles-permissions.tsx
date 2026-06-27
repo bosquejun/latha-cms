@@ -4,15 +4,14 @@
  * Lives in @latha/auth and is registered as a settings extension via the
  * @latha/auth/admin barrel. Migrated from @latha/start.
  *
- * Left: the role list (with a System badge and a create/delete affordance).
+ * Left: the role list with description and permission count.
  * Right: the selected role's permission matrix — rows = scopes (grouped by
  * module), columns = read/create/update/delete — plus the `admin:access` and
- * superadmin (`*`) toggles. Everything is driven by the catalog the kernel
- * already syncs (`scopes`/`permissions`) and saved through the standard RPC
- * `roles` mutations, so there's no special endpoint.
+ * superadmin (`*`) toggles. Includes column/module bulk-select, scope search,
+ * and a confirmation modal for destructive actions.
  */
 
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Badge,
   Button,
@@ -35,17 +34,25 @@ import {
   useAsync,
   type JsonDoc,
 } from '@latha/admin-sdk'
-import { ChevronDown, Plus, ShieldCheck, Trash2 } from 'lucide-react'
+import {
+  ChevronDown,
+  Lock,
+  Plus,
+  Search,
+  ShieldAlert,
+  ShieldCheck,
+  Trash2,
+  TriangleAlert,
+  X,
+} from 'lucide-react'
 
 const ACTION_COLUMNS = ['read', 'create', 'update', 'delete'] as const
+type Action = (typeof ACTION_COLUMNS)[number]
 
 const SUPERADMIN_KEY = '*'
 const ADMIN_ACCESS_KEY = 'admin:access'
-
-// Scopes that aren't grantable resources in the matrix: the superadmin/admin
-// gates (surfaced as the toggles above), and `scopes`, which is pure catalog
-// plumbing (synced from config, not user-managed).
 const NON_MATRIX_SCOPES = new Set([SUPERADMIN_KEY, 'admin', 'scopes'])
+
 
 interface PermLite {
   id: string
@@ -57,6 +64,18 @@ interface ScopeLite {
   key: string
   label: string
   module: string
+}
+interface ModuleState {
+  perms: PermLite[]
+  checkedCount: number
+  allChecked: boolean
+  someChecked: boolean
+}
+interface ColumnState {
+  perms: PermLite[]
+  checkedCount: number
+  allChecked: boolean
+  someChecked: boolean
 }
 
 const asStr = (v: unknown): string => (typeof v === 'string' ? v : '')
@@ -70,6 +89,251 @@ export const config = defineSettingsConfig({
   icon: ShieldCheck,
 })
 
+// ─── Primitive sub-components ─────────────────────────────────────────────────
+
+/** Checkbox with native indeterminate state support. */
+function BulkCheckbox({
+  checked,
+  indeterminate,
+  disabled,
+  onChange,
+  className,
+}: {
+  checked: boolean
+  indeterminate: boolean
+  disabled?: boolean
+  onChange: (on: boolean) => void
+  className?: string
+}) {
+  const ref = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if (ref.current) ref.current.indeterminate = indeterminate && !checked
+  }, [checked, indeterminate])
+
+  return (
+    <span
+      className={cn(
+        'relative inline-flex size-4 shrink-0 items-center justify-center',
+        disabled && 'pointer-events-none opacity-50',
+        className,
+      )}
+    >
+      <input
+        ref={ref}
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+        className={cn(
+          'size-4 cursor-pointer appearance-none rounded-[4px] border shadow-2xs outline-none transition-colors',
+          'focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed',
+          checked || indeterminate
+            ? 'border-primary bg-primary'
+            : 'border-input bg-background',
+        )}
+      />
+      {checked && (
+        <svg
+          aria-hidden
+          viewBox="0 0 12 12"
+          className="pointer-events-none absolute size-3 text-white"
+        >
+          <polyline
+            points="1.5,6 4.5,9 10.5,3"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+      {!checked && indeterminate && (
+        <svg
+          aria-hidden
+          viewBox="0 0 12 12"
+          className="pointer-events-none absolute size-3 text-white"
+        >
+          <line
+            x1="2"
+            y1="6"
+            x2="10"
+            y2="6"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          />
+        </svg>
+      )}
+    </span>
+  )
+}
+
+/** Inline confirmation dialog rendered over a dark overlay. */
+function ConfirmModal({
+  icon,
+  title,
+  description,
+  confirmLabel = 'Confirm',
+  variant = 'default',
+  onConfirm,
+  onCancel,
+}: {
+  icon?: React.ReactNode
+  title: string
+  description: React.ReactNode
+  confirmLabel?: string
+  variant?: 'default' | 'destructive'
+  onConfirm: () => void
+  onCancel: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onCancel}
+      />
+      <Card className="relative z-10 w-full max-w-sm p-6 shadow-2xl">
+        <div className="flex flex-col gap-4">
+          {icon && (
+            <div
+              className={cn(
+                'flex size-10 items-center justify-center rounded-full',
+                variant === 'destructive' ? 'bg-destructive/10' : 'bg-muted',
+              )}
+            >
+              {icon}
+            </div>
+          )}
+          <div>
+            <h3 className="font-semibold">{title}</h3>
+            <p className="mt-1 text-small text-muted-foreground">{description}</p>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button
+              variant={variant === 'destructive' ? 'destructive' : 'default'}
+              size="sm"
+              onClick={onConfirm}
+            >
+              {confirmLabel}
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  )
+}
+
+/** Animated skeleton block for loading states. */
+function Skeleton({ className }: { className?: string }) {
+  return <div className={cn('animate-pulse rounded-md bg-muted', className)} />
+}
+
+/** Sidebar role item — name + description + permission count. */
+function RoleItem({
+  role,
+  selected,
+  onClick,
+}: {
+  role: JsonDoc
+  selected: boolean
+  onClick: () => void
+}) {
+  const name = asStr(role.label) || asStr(role.name)
+  const description = asStr(role.description)
+  const permCount = asIds(role.permissions).length
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'group flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors',
+        selected
+          ? 'bg-accent text-accent-foreground'
+          : 'text-foreground hover:bg-accent/50',
+      )}
+    >
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          <span className="truncate text-small font-medium">{name}</span>
+          {role.system ? (
+            <Lock className="size-3 shrink-0 text-muted-foreground" />
+          ) : null}
+        </div>
+        {description ? (
+          <p className="truncate text-caption text-muted-foreground">{description}</p>
+        ) : null}
+      </div>
+      <Badge variant="secondary" className="shrink-0 font-mono text-[10px]">
+        {permCount}
+      </Badge>
+    </button>
+  )
+}
+
+/** Toggle row inside the special-permissions card. */
+function ToggleRow({
+  icon,
+  title,
+  description,
+  checked,
+  onChange,
+  disabled,
+  danger,
+}: {
+  icon?: React.ReactNode
+  title: string
+  description: string
+  checked: boolean
+  onChange: (on: boolean) => void
+  disabled?: boolean
+  danger?: boolean
+}) {
+  return (
+    <div
+      className={cn(
+        'flex items-center justify-between gap-4 p-4',
+        danger && checked && 'bg-warning/5',
+      )}
+    >
+      <div className="flex items-start gap-3">
+        {icon && (
+          <div
+            className={cn(
+              'mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full',
+              danger && checked ? 'bg-warning/15' : 'bg-muted',
+            )}
+          >
+            {icon}
+          </div>
+        )}
+        <div>
+          <p
+            className={cn(
+              'text-small font-medium',
+              danger && checked && 'text-warning-foreground',
+            )}
+          >
+            {title}
+          </p>
+          <p className="text-caption text-muted-foreground">{description}</p>
+        </div>
+      </div>
+      <Switch
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        disabled={disabled}
+      />
+    </div>
+  )
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
+
 export default function RolesPermissions() {
   const { client } = useLatha()
   const roles = useAsync(() => client.list('roles'), [])
@@ -82,24 +346,17 @@ export default function RolesPermissions() {
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
-
-  const toggleModule = (mod: string) =>
-    setCollapsed((prev) => {
-      const next = new Set(prev)
-      if (next.has(mod)) next.delete(mod)
-      else next.add(mod)
-      return next
-    })
+  const [filterQuery, setFilterQuery] = useState('')
+  const [pendingDelete, setPendingDelete] = useState<JsonDoc | null>(null)
+  const [pendingSwitch, setPendingSwitch] = useState<string | null>(null)
 
   const roleList = roles.data ?? []
   const selected = roleList.find((r) => r.id === selectedId) ?? roleList[0] ?? null
 
-  // Sync the local matrix when the selected role (or the role data) changes.
   useEffect(() => {
     if (selected) setChecked(new Set(asIds(selected.permissions)))
   }, [selected?.id, roles.data])
 
-  // Index the catalog: permission by key, and scope rows grouped by module.
   const permByKey = useMemo(() => {
     const map = new Map<string, PermLite>()
     for (const p of permissions.data ?? []) {
@@ -121,7 +378,6 @@ export default function RolesPermissions() {
     return rows
   }, [scopes.data])
 
-  // Group the scope rows into [module, rows] sections for the accordion.
   const moduleGroups = useMemo<Array<[string, ScopeLite[]]>>(() => {
     const groups = new Map<string, ScopeLite[]>()
     for (const row of scopeRows) {
@@ -131,6 +387,69 @@ export default function RolesPermissions() {
     }
     return [...groups.entries()]
   }, [scopeRows])
+
+  // Scope rows filtered by the search query
+  const filteredModuleGroups = useMemo<Array<[string, ScopeLite[]]>>(() => {
+    const q = filterQuery.trim().toLowerCase()
+    if (!q) return moduleGroups
+    return moduleGroups
+      .map(([mod, rows]): [string, ScopeLite[]] => [
+        mod,
+        rows.filter(
+          (s) =>
+            s.label.toLowerCase().includes(q) ||
+            s.key.toLowerCase().includes(q) ||
+            mod.toLowerCase().includes(q),
+        ),
+      ])
+      .filter(([, rows]) => rows.length > 0)
+  }, [moduleGroups, filterQuery])
+
+  // Permission states per module (unfiltered — for bulk selects)
+  const moduleState = useMemo<Map<string, ModuleState>>(() => {
+    return new Map(
+      moduleGroups.map(([mod, rows]) => {
+        const perms = rows.flatMap((s) =>
+          ACTION_COLUMNS.map((a) => permByKey.get(`${s.key}:${a}`)).filter(
+            (p): p is PermLite => Boolean(p),
+          ),
+        )
+        const checkedCount = perms.filter((p) => checked.has(p.id)).length
+        return [
+          mod,
+          {
+            perms,
+            checkedCount,
+            allChecked: perms.length > 0 && checkedCount === perms.length,
+            someChecked: checkedCount > 0 && checkedCount < perms.length,
+          },
+        ]
+      }),
+    )
+  }, [moduleGroups, permByKey, checked])
+
+  // Permission states per action column (unfiltered)
+  const columnState = useMemo<Record<Action, ColumnState>>(
+    () =>
+      Object.fromEntries(
+        ACTION_COLUMNS.map((action) => {
+          const perms = scopeRows
+            .map((s) => permByKey.get(`${s.key}:${action}`))
+            .filter((p): p is PermLite => Boolean(p))
+          const checkedCount = perms.filter((p) => checked.has(p.id)).length
+          return [
+            action,
+            {
+              perms,
+              checkedCount,
+              allChecked: perms.length > 0 && checkedCount === perms.length,
+              someChecked: checkedCount > 0 && checkedCount < perms.length,
+            },
+          ]
+        }),
+      ) as Record<Action, ColumnState>,
+    [scopeRows, permByKey, checked],
+  )
 
   const superId = permByKey.get(SUPERADMIN_KEY)?.id
   const adminAccessId = permByKey.get(ADMIN_ACCESS_KEY)?.id
@@ -143,6 +462,7 @@ export default function RolesPermissions() {
   const dirty =
     checked.size !== original.size || [...checked].some((id) => !original.has(id))
 
+  // Toggle a single permission
   const toggle = (id: string | undefined, on?: boolean) => {
     if (!id) return
     setChecked((prev) => {
@@ -152,6 +472,44 @@ export default function RolesPermissions() {
       else next.delete(id)
       return next
     })
+  }
+
+  // Bulk-toggle all permissions in an action column
+  const toggleColumn = (action: Action, on: boolean) => {
+    const perms = columnState[action].perms
+    setChecked((prev) => {
+      const next = new Set(prev)
+      for (const p of perms) on ? next.add(p.id) : next.delete(p.id)
+      return next
+    })
+  }
+
+  // Bulk-toggle all permissions in a module group
+  const toggleModulePerms = (mod: string, on: boolean) => {
+    const state = moduleState.get(mod)
+    if (!state) return
+    setChecked((prev) => {
+      const next = new Set(prev)
+      for (const p of state.perms) on ? next.add(p.id) : next.delete(p.id)
+      return next
+    })
+  }
+
+  // Collapse/expand a module section in the accordion
+  const toggleSection = (mod: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev)
+      next.has(mod) ? next.delete(mod) : next.add(mod)
+      return next
+    })
+
+  // Switch roles, prompting for confirmation when there are unsaved changes
+  const trySelectRole = (id: string) => {
+    if (dirty && id !== selected?.id) {
+      setPendingSwitch(id)
+    } else {
+      setSelectedId(id)
+    }
   }
 
   const loading = roles.loading || scopes.loading || permissions.loading
@@ -182,10 +540,10 @@ export default function RolesPermissions() {
     setSelectedId(created.id)
   }
 
-  const deleteRole = async (role: JsonDoc) => {
-    if (role.system) return
-    if (!confirm(`Delete the "${asStr(role.label) || asStr(role.name)}" role?`)) return
-    await client.remove('roles', role.id)
+  const confirmDelete = async () => {
+    if (!pendingDelete) return
+    await client.remove('roles', pendingDelete.id)
+    setPendingDelete(null)
     setSelectedId(null)
     await roles.reload()
   }
@@ -197,38 +555,113 @@ export default function RolesPermissions() {
         description="Define what each role can do. Public applies to anonymous requests; Authenticated is the baseline for every logged-in user."
       />
 
+      {/* Delete confirmation */}
+      {pendingDelete && (
+        <ConfirmModal
+          variant="destructive"
+          icon={<Trash2 className="size-5 text-destructive" />}
+          title="Delete role"
+          description={
+            <>
+              Delete{' '}
+              <strong>
+                {asStr(pendingDelete.label) || asStr(pendingDelete.name)}
+              </strong>
+              ? This cannot be undone and will remove the role from all users
+              assigned to it.
+            </>
+          }
+          confirmLabel="Delete role"
+          onConfirm={() => void confirmDelete()}
+          onCancel={() => setPendingDelete(null)}
+        />
+      )}
+
+      {/* Unsaved-changes guard when switching roles */}
+      {pendingSwitch && (
+        <ConfirmModal
+          title="Discard unsaved changes?"
+          description="You have unsaved permission changes for this role. Switching away will discard them."
+          confirmLabel="Discard & switch"
+          onConfirm={() => {
+            setSelectedId(pendingSwitch)
+            setPendingSwitch(null)
+          }}
+          onCancel={() => setPendingSwitch(null)}
+        />
+      )}
+
       {loading ? (
-        <p className="text-small text-muted-foreground">Loading…</p>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
-          {/* Role list */}
-          <Card className="h-fit p-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+          {/* Sidebar skeleton */}
+          <Card className="p-2">
             <div className="flex flex-col gap-1">
-              {roleList.map((role) => (
-                <button
-                  key={role.id}
-                  type="button"
-                  onClick={() => setSelectedId(role.id)}
-                  className={cn(
-                    'flex items-center justify-between rounded-md px-3 py-2 text-left text-small transition-colors',
-                    selected?.id === role.id
-                      ? 'bg-accent font-medium text-accent-foreground'
-                      : 'hover:bg-accent/60',
-                  )}
-                >
-                  <span className="truncate">{asStr(role.label) || asStr(role.name)}</span>
-                  {role.system ? (
-                    <Badge variant="secondary" className="ml-2 shrink-0">
-                      System
-                    </Badge>
-                  ) : null}
-                </button>
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-3 px-3 py-2.5">
+                  <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-3 w-3/4" />
+                    <Skeleton className="h-2.5 w-1/2" />
+                  </div>
+                  <Skeleton className="h-4 w-7 rounded" />
+                </div>
               ))}
             </div>
+          </Card>
+          {/* Matrix skeleton */}
+          <div className="flex flex-col gap-4">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+          {/* ── Sidebar ─────────────────────────────────────────────────── */}
+          <div className="flex flex-col gap-2">
+            {/* Sidebar header */}
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <span className="text-small font-semibold text-foreground">
+                  Roles
+                </span>
+                <Badge variant="secondary">{roleList.length}</Badge>
+              </div>
+              {!creating && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setCreating(true)}
+                >
+                  <Plus /> New role
+                </Button>
+              )}
+            </div>
 
-            <div className="mt-2 border-t border-border pt-2">
-              {creating ? (
-                <div className="flex flex-col gap-2 p-1">
+            {/* Role list */}
+            <Card className="p-2">
+              {roleList.length > 0 ? (
+                <div className="flex flex-col gap-0.5">
+                  {roleList.map((role) => (
+                    <RoleItem
+                      key={role.id}
+                      role={role}
+                      selected={selected?.id === role.id}
+                      onClick={() => trySelectRole(role.id)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="px-3 py-4 text-center text-small text-muted-foreground">
+                  No roles yet.
+                </p>
+              )}
+            </Card>
+
+            {/* Inline create form */}
+            {creating && (
+              <Card className="p-3">
+                <p className="mb-2 text-small font-medium">New role</p>
+                <div className="flex flex-col gap-2">
                   <Input
                     autoFocus
                     placeholder="Role name (e.g. author)"
@@ -237,183 +670,308 @@ export default function RolesPermissions() {
                     onKeyDown={(e) => e.key === 'Enter' && void createRole()}
                   />
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={createRole} disabled={!newName.trim()}>
+                    <Button
+                      size="sm"
+                      onClick={() => void createRole()}
+                      disabled={!newName.trim()}
+                    >
                       Create
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setCreating(false)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setCreating(false)
+                        setNewName('')
+                      }}
+                    >
                       Cancel
                     </Button>
                   </div>
                 </div>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => setCreating(true)}
-                >
-                  <Plus /> New role
-                </Button>
-              )}
-            </div>
-          </Card>
+              </Card>
+            )}
+          </div>
 
-          {/* Matrix */}
+          {/* ── Matrix panel ─────────────────────────────────────────────── */}
           {selected ? (
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex min-w-0 flex-col gap-4">
+              {/* Role header */}
+              <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-base font-semibold">
-                    {asStr(selected.label) || asStr(selected.name)}
-                  </h2>
-                  {asStr(selected.description) ? (
-                    <p className="text-small text-muted-foreground">
-                      {asStr(selected.description)}
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-base font-semibold">
+                        {asStr(selected.label) || asStr(selected.name)}
+                      </h2>
+                      {selected.system ? (
+                        <Badge variant="secondary">
+                          <Lock className="size-3" /> System
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">Custom</Badge>
+                      )}
+                    </div>
+                    {asStr(selected.description) ? (
+                      <p className="text-small text-muted-foreground">
+                        {asStr(selected.description)}
+                      </p>
+                    ) : null}
+                    <p className="text-caption text-muted-foreground">
+                      {checked.size} permission
+                      {checked.size !== 1 ? 's' : ''} granted
+                      {dirty && (
+                        <span className="ml-1.5 font-medium text-warning-foreground">
+                          · Unsaved changes
+                        </span>
+                      )}
                     </p>
-                  ) : null}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
+
+                <div className="flex shrink-0 items-center gap-2">
                   {!selected.system && (
                     <Button
                       size="sm"
                       variant="ghost-outline"
-                      onClick={() => deleteRole(selected)}
+                      onClick={() => setPendingDelete(selected)}
                     >
                       <Trash2 /> Delete
                     </Button>
                   )}
-                  <Button size="sm" onClick={save} disabled={!dirty || saving}>
+                  <Button size="sm" onClick={() => void save()} disabled={!dirty || saving}>
                     {saving ? 'Saving…' : 'Save changes'}
                   </Button>
                 </div>
               </div>
 
-              {/* Special toggles */}
-              <Card className="flex flex-col gap-3 p-4">
+              {/* Special permission toggles */}
+              <Card
+                className={cn(
+                  'divide-y divide-border overflow-hidden p-0',
+                  isSuper && 'ring-1 ring-warning/50',
+                )}
+              >
                 <ToggleRow
-                  icon={<ShieldCheck className="size-4 text-muted-foreground" />}
-                  title="Full access (superadmin)"
-                  description="Grants every permission. Overrides the matrix below."
+                  icon={
+                    <TriangleAlert
+                      className={cn(
+                        'size-4',
+                        isSuper
+                          ? 'text-warning-foreground'
+                          : 'text-muted-foreground',
+                      )}
+                    />
+                  }
+                  title="Superadmin — unrestricted access"
+                  description="Bypasses all permission checks. Grant only to highly trusted administrators; overrides the matrix below."
                   checked={isSuper}
                   onChange={(on) => toggle(superId, on)}
                   disabled={!superId}
+                  danger
                 />
                 <ToggleRow
+                  icon={<ShieldCheck className="size-4 text-muted-foreground" />}
                   title="Access the admin UI"
-                  description="Required to sign in to the admin. Leave off for Public / app-only roles."
+                  description="Required to sign in to the admin. Leave off for Public and API-only roles."
                   checked={adminAccessId ? checked.has(adminAccessId) : false}
                   onChange={(on) => toggle(adminAccessId, on)}
                   disabled={!adminAccessId || isSuper}
                 />
               </Card>
 
-              {/* One matrix card; modules are collapsible group-header rows. */}
-              <Card className={cn('overflow-hidden p-0', isSuper && 'opacity-50')}>
+              {/* Permission matrix */}
+              <Card
+                className={cn(
+                  'overflow-hidden p-0',
+                  isSuper && 'pointer-events-none opacity-40',
+                )}
+              >
+                {/* Search bar */}
+                <div className="border-b border-border p-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      placeholder="Filter permissions…"
+                      value={filterQuery}
+                      onChange={(e) => setFilterQuery(e.target.value)}
+                      className="pl-9 pr-9"
+                    />
+                    {filterQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setFilterQuery('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                        aria-label="Clear filter"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 <Table>
                   <THead>
-                    <TR>
+                    {/* Row 1 — column labels, aligned on the same baseline */}
+                    <TR className="border-b-0">
                       <TH>Resource</TH>
-                      {ACTION_COLUMNS.map((a) => (
-                        <TH key={a} className="text-center capitalize">
-                          {a}
+                      {ACTION_COLUMNS.map((action) => (
+                        <TH
+                          key={action}
+                          className="min-w-[80px] text-center capitalize"
+                        >
+                          {action}
+                        </TH>
+                      ))}
+                    </TR>
+                    {/* Row 2 — bulk-select checkboxes with room to breathe */}
+                    <TR>
+                      <TH className="py-3 font-normal text-muted-foreground">
+                        Select all
+                      </TH>
+                      {ACTION_COLUMNS.map((action) => (
+                        <TH key={action} className="py-3 text-center">
+                          <div className="flex items-center justify-center">
+                            <BulkCheckbox
+                              checked={columnState[action].allChecked}
+                              indeterminate={columnState[action].someChecked}
+                              onChange={(on) => toggleColumn(action, on)}
+                              disabled={isSuper}
+                            />
+                          </div>
                         </TH>
                       ))}
                     </TR>
                   </THead>
                   <TBody>
-                    {moduleGroups.map(([mod, rows]) => {
-                      const open = !collapsed.has(mod)
-                      return (
-                        <Fragment key={mod}>
-                          <TR
-                            className="cursor-pointer bg-muted/40 hover:bg-muted/60"
-                            onClick={() => toggleModule(mod)}
-                          >
-                            <TD colSpan={1 + ACTION_COLUMNS.length} className="py-2">
-                              <span className="flex items-center gap-2 text-small font-medium capitalize">
-                                <ChevronDown
-                                  className={cn(
-                                    'size-4 text-muted-foreground transition-transform',
-                                    !open && '-rotate-90',
+                    {filteredModuleGroups.length === 0 ? (
+                      <TR>
+                        <TD
+                          colSpan={1 + ACTION_COLUMNS.length}
+                          className="py-10 text-center text-small text-muted-foreground"
+                        >
+                          No permissions match &ldquo;{filterQuery}&rdquo;
+                        </TD>
+                      </TR>
+                    ) : (
+                      filteredModuleGroups.map(([mod, rows]) => {
+                        const open = !collapsed.has(mod)
+                        const modSt = moduleState.get(mod)
+                        return (
+                          <Fragment key={mod}>
+                            {/* Module group header */}
+                            <TR className="bg-muted/30 hover:bg-muted/40">
+                              <TD
+                                colSpan={1 + ACTION_COLUMNS.length}
+                                className="py-2"
+                              >
+                                <div className="flex items-center gap-2">
+                                  {/* Accordion toggle */}
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleSection(mod)}
+                                    className="flex flex-1 items-center gap-2 text-small font-medium capitalize"
+                                  >
+                                    <ChevronDown
+                                      className={cn(
+                                        'size-4 text-muted-foreground transition-transform',
+                                        !open && '-rotate-90',
+                                      )}
+                                    />
+                                    {mod || 'Other'}
+                                  </button>
+                                  {/* Granted / total count */}
+                                  {modSt && (
+                                    <span className="text-caption text-muted-foreground">
+                                      {modSt.checkedCount}/{modSt.perms.length}
+                                    </span>
                                   )}
-                                />
-                                {mod || 'Other'}
-                                <span className="text-caption font-normal text-muted-foreground">
-                                  {rows.length}
-                                </span>
-                              </span>
-                            </TD>
-                          </TR>
-                          {open
-                            ? rows.map((scope) => (
-                                <TR key={scope.key}>
-                                  <TD className="font-medium">
-                                    {scope.label || scope.key}
+                                  {/* Bulk-select the whole module */}
+                                  {modSt && (
+                                    <BulkCheckbox
+                                      checked={modSt.allChecked}
+                                      indeterminate={modSt.someChecked}
+                                      onChange={(on) =>
+                                        toggleModulePerms(mod, on)
+                                      }
+                                      disabled={isSuper}
+                                    />
+                                  )}
+                                </div>
+                              </TD>
+                            </TR>
+
+                            {/* Scope rows */}
+                            {open &&
+                              rows.map((scope) => (
+                                <TR
+                                  key={scope.key}
+                                  className="hover:bg-accent/20"
+                                >
+                                  <TD>
+                                    <span className="text-small font-medium">
+                                      {scope.label || scope.key}
+                                    </span>
+                                    {scope.label && scope.label.toLowerCase() !== scope.key.toLowerCase() && (
+                                      <span className="ml-1.5 text-caption text-muted-foreground">
+                                        {scope.key}
+                                      </span>
+                                    )}
                                   </TD>
                                   {ACTION_COLUMNS.map((action) => {
-                                    const perm = permByKey.get(`${scope.key}:${action}`)
+                                    const perm = permByKey.get(
+                                      `${scope.key}:${action}`,
+                                    )
                                     return (
                                       <TD key={action} className="text-center">
                                         {perm ? (
                                           <Checkbox
-                                            checked={isSuper || checked.has(perm.id)}
+                                            checked={
+                                              isSuper || checked.has(perm.id)
+                                            }
                                             disabled={isSuper}
                                             onChange={() => toggle(perm.id)}
                                           />
                                         ) : (
-                                          <span className="text-muted-foreground">—</span>
+                                          <span className="inline-flex size-4 items-center justify-center text-muted-foreground/30">
+                                            —
+                                          </span>
                                         )}
                                       </TD>
                                     )
                                   })}
                                 </TR>
-                              ))
-                            : null}
-                        </Fragment>
-                      )
-                    })}
+                              ))}
+                          </Fragment>
+                        )
+                      })
+                    )}
                   </TBody>
                 </Table>
               </Card>
             </div>
           ) : (
-            <p className="text-small text-muted-foreground">No roles yet.</p>
+            /* Empty state — no roles exist */
+            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-20 text-center">
+              <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-muted">
+                <ShieldAlert className="size-7 text-muted-foreground" />
+              </div>
+              <p className="font-semibold">No roles yet</p>
+              <p className="mt-1 max-w-xs text-small text-muted-foreground">
+                Create your first role to start managing who can do what across
+                your content.
+              </p>
+              <Button
+                size="sm"
+                className="mt-5"
+                onClick={() => setCreating(true)}
+              >
+                <Plus /> Create a role
+              </Button>
+            </div>
           )}
         </div>
       )}
     </>
-  )
-}
-
-function ToggleRow({
-  icon,
-  title,
-  description,
-  checked,
-  onChange,
-  disabled,
-}: {
-  icon?: React.ReactNode
-  title: string
-  description: string
-  checked: boolean
-  onChange: (on: boolean) => void
-  disabled?: boolean
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4">
-      <div className="flex items-start gap-2">
-        {icon}
-        <div>
-          <p className="text-small font-medium">{title}</p>
-          <p className="text-caption text-muted-foreground">{description}</p>
-        </div>
-      </div>
-      <Switch
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        disabled={disabled}
-      />
-    </div>
   )
 }
