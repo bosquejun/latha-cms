@@ -29,6 +29,7 @@ import {
 } from '@latha/ui'
 import {
   PageHeader,
+  PageLayout,
   defineSettingsConfig,
   useLatha,
   useAsync,
@@ -592,32 +593,33 @@ export default function RolesPermissions() {
       )}
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-page lg:grid-cols-[280px_1fr]">
-          {/* Sidebar skeleton */}
-          <Card className="p-inline">
-            <div className="flex flex-col gap-stack">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex items-center gap-group px-group py-group">
-                  <div className="flex-1 space-y-tight">
-                    <Skeleton className="h-3 w-3/4" />
-                    <Skeleton className="h-2.5 w-1/2" />
+        <PageLayout
+          left={
+            <Card className="p-inline">
+              <div className="flex flex-col gap-stack">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex items-center gap-group px-group py-group">
+                    <div className="flex-1 space-y-tight">
+                      <Skeleton className="h-3 w-3/4" />
+                      <Skeleton className="h-2.5 w-1/2" />
+                    </div>
+                    <Skeleton className="h-4 w-7 rounded" />
                   </div>
-                  <Skeleton className="h-4 w-7 rounded" />
-                </div>
-              ))}
-            </div>
-          </Card>
-          {/* Matrix skeleton */}
+                ))}
+              </div>
+            </Card>
+          }
+        >
           <div className="flex flex-col gap-card-gap">
             <Skeleton className="h-20 w-full" />
             <Skeleton className="h-28 w-full" />
             <Skeleton className="h-64 w-full" />
           </div>
-        </div>
+        </PageLayout>
       ) : (
-        <div className="grid grid-cols-1 gap-page lg:grid-cols-[280px_1fr]">
-          {/* ── Sidebar ─────────────────────────────────────────────────── */}
-          <div className="flex flex-col gap-inline">
+        <PageLayout
+          left={
+            <div className="flex flex-col gap-inline">
             {/* Sidebar header */}
             <div className="flex items-center justify-between px-stack">
               <div className="flex items-center gap-inline">
@@ -691,8 +693,9 @@ export default function RolesPermissions() {
                 </div>
               </Card>
             )}
-          </div>
-
+            </div>
+          }
+        >
           {/* ── Matrix panel ─────────────────────────────────────────────── */}
           {selected ? (
             <div className="flex min-w-0 flex-col gap-card-gap">
@@ -970,7 +973,7 @@ export default function RolesPermissions() {
               </Button>
             </div>
           )}
-        </div>
+        </PageLayout>
       )}
     </>
   )
