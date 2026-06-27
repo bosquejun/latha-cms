@@ -91,6 +91,8 @@
   --sidebar-width: 16rem;
   --header-height: 3.5rem;
   --content-max: 72rem;
+  --panel-left: 17.5rem;   /* secondary left panel (navigation, list) */
+  --panel-right: 20rem;    /* right sidebar panel (metadata, actions) */
 
   /* Spacing — primitive 4px rhythm (Layer A) */
   --space-0: 0;

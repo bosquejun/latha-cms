@@ -7,7 +7,7 @@
  */
 
 import { definePageConfig, type PageComponentProps } from '@latha/start'
-import { PageHeader } from '@latha/admin-sdk'
+import { PageHeader, PageLayout } from '@latha/admin-sdk'
 import { Card, CardHeader, CardTitle, CardContent } from '@latha/ui'
 import { BarChart3 } from 'lucide-react'
 
@@ -28,16 +28,18 @@ export default function Analytics({ params }: PageComponentProps) {
         title="Analytics"
         description="A custom page mounted at /admin/analytics."
       />
-      <Card>
-        <CardHeader>
-          <CardTitle>Custom page</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0 text-small text-muted-foreground">
-          This whole view is rendered by a dev-owned component. Sub-path
-          segments arrive as <code>params</code>:{' '}
-          <code>[{params.map((p) => `"${p}"`).join(', ')}]</code>.
-        </CardContent>
-      </Card>
+      <PageLayout>
+        <Card>
+          <CardHeader>
+            <CardTitle>Custom page</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 text-small text-muted-foreground">
+            This whole view is rendered by a dev-owned component. Sub-path
+            segments arrive as <code>params</code>:{' '}
+            <code>[{params.map((p) => `"${p}"`).join(', ')}]</code>.
+          </CardContent>
+        </Card>
+      </PageLayout>
     </>
   )
 }

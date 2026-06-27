@@ -15,6 +15,7 @@ import { useId, useMemo, useState } from 'react'
 import { getFieldRenderer } from '../fields/registry.js'
 import { Slot } from '../extensions/Slot.js'
 import { useExtensions } from '../extensions/context.js'
+import { PageLayout } from '../shell/PageLayout.js'
 
 export interface EntityFormProps {
   fields: Field[]
@@ -143,6 +144,8 @@ export function EntityForm({
     )
   }
 
+  const hasSidebar = sidebarFields.length > 0 || hasSidebarSlots
+
   return (
     <form
       onSubmit={(e) => {
@@ -150,23 +153,26 @@ export function EntityForm({
         e.stopPropagation()
         void form.handleSubmit()
       }}
-      className="grid grid-cols-1 gap-section lg:grid-cols-3"
     >
-      <div className="flex flex-col gap-form lg:col-span-2">
-        <Slot zone="form.before" entity={entity} recordId={recordId} className="flex flex-col gap-form" />
-        {mainFields.map(renderField)}
-        <Slot zone="form.after" entity={entity} recordId={recordId} className="flex flex-col gap-form" />
-      </div>
+      <PageLayout
+        right={
+          hasSidebar ? (
+            <aside className="flex flex-col gap-form">
+              <Slot zone="form.sidebar.before" entity={entity} recordId={recordId} className="flex flex-col gap-form" />
+              {sidebarFields.map(renderField)}
+              <Slot zone="form.sidebar.after" entity={entity} recordId={recordId} className="flex flex-col gap-form" />
+            </aside>
+          ) : undefined
+        }
+      >
+        <div className="flex flex-col gap-form">
+          <Slot zone="form.before" entity={entity} recordId={recordId} className="flex flex-col gap-form" />
+          {mainFields.map(renderField)}
+          <Slot zone="form.after" entity={entity} recordId={recordId} className="flex flex-col gap-form" />
+        </div>
+      </PageLayout>
 
-      {(sidebarFields.length > 0 || hasSidebarSlots) && (
-        <aside className="flex flex-col gap-form">
-          <Slot zone="form.sidebar.before" entity={entity} recordId={recordId} className="flex flex-col gap-form" />
-          {sidebarFields.map(renderField)}
-          <Slot zone="form.sidebar.after" entity={entity} recordId={recordId} className="flex flex-col gap-form" />
-        </aside>
-      )}
-
-      <div className="flex items-center gap-inline lg:col-span-3">
+      <div className="mt-section flex items-center gap-inline">
         <form.Subscribe selector={(s) => s.isSubmitting}>
           {(isSubmitting) => (
             <Button type="submit" disabled={isSubmitting}>
