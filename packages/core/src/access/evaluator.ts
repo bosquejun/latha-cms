@@ -11,7 +11,7 @@
 import type {
   AccessContext,
   AccessFn,
-  CollectionAccess,
+  EntityAccess,
   Operation,
 } from '../types/access.js'
 
@@ -26,7 +26,7 @@ export class AccessDeniedError extends Error {
 
 /** Resolve whether `ctx.operation` is allowed under `access`. */
 export async function evaluateAccess(
-  access: CollectionAccess | undefined,
+  access: EntityAccess | undefined,
   ctx: AccessContext,
 ): Promise<boolean> {
   if (!access) return true
@@ -37,7 +37,7 @@ export async function evaluateAccess(
 
 /** Like {@link evaluateAccess} but throws {@link AccessDeniedError} on denial. */
 export async function assertAccess(
-  access: CollectionAccess | undefined,
+  access: EntityAccess | undefined,
   ctx: AccessContext,
   collection: string,
 ): Promise<void> {

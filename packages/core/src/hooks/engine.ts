@@ -6,7 +6,7 @@
  */
 
 import type {
-  CollectionHooks,
+  EntityHooks,
   HookArgs,
   HookEvent,
   HookFn,
@@ -25,11 +25,11 @@ export async function runHooks<T extends Record<string, unknown>>(
   return data
 }
 
-/** Convenience: pull the chain for `event` off a `CollectionHooks` map and run it. */
+/** Convenience: pull the chain for `event` off an `EntityHooks` map and run it. */
 export async function runHookEvent<T extends Record<string, unknown>>(
-  collectionHooks: CollectionHooks<T> | undefined,
+  entityHooks: EntityHooks<T> | undefined,
   event: HookEvent,
   args: HookArgs<T>,
 ): Promise<T> {
-  return runHooks(collectionHooks?.[event], args)
+  return runHooks(entityHooks?.[event], args)
 }

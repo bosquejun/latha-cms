@@ -13,13 +13,22 @@
  * for free.
  */
 
-import { operations } from '@latha/core'
+import { operations, buildZodSchema } from '@latha/core'
 import type {
   LathaInstance,
   Doc,
   JsonValue,
   Query,
+  Taxonomy,
 } from '@latha/core'
+
+function resolveTaxonomy(cms: LathaInstance, slug: string): Taxonomy {
+  const entity = cms.getEntity(slug)
+  if (!entity || entity.kind !== 'taxonomy') {
+    throw new Error(`"${slug}" is not a taxonomy.`)
+  }
+  return entity
+}
 
 /** A JSON-serializable document. */
 export type JsonDoc = { id: string } & Record<string, JsonValue>
@@ -60,6 +69,7 @@ export interface ContentApi {
 
   listTerms(slug: string): Promise<JsonDoc[]>
   createTerm(slug: string, data: unknown): Promise<JsonDoc>
+  updateTerm(slug: string, id: string, data: unknown): Promise<JsonDoc>
   removeTerm(slug: string, id: string): Promise<void>
   tree(slug: string): Promise<JsonTermNode[]>
 }
@@ -101,16 +111,60 @@ export function createContentApi(options: ContentApiOptions): ContentApi {
     },
 
     async listTerms(slug) {
-      return (await operations.listTerms(await ctx(), slug)).map(asDoc)
+      const opCtx = await ctx()
+      resolveTaxonomy(opCtx.cms, slug)
+      for (const guard of opCtx.cms.guards) {
+        await guard({ cms: opCtx.cms, operation: 'read', slug, kind: 'taxonomy', principal: opCtx.principal ?? null, context: opCtx.context ?? {} })
+      }
+      const docs = await opCtx.cms.db.find(slug, { sort: [{ field: 'name', direction: 'asc' }] })
+      return docs.map(asDoc)
     },
     async createTerm(slug, data) {
-      return asDoc(await operations.createTerm(await ctx(), slug, data))
+      const opCtx = await ctx()
+      const entity = resolveTaxonomy(opCtx.cms, slug)
+      for (const guard of opCtx.cms.guards) {
+        await guard({ cms: opCtx.cms, operation: 'create', slug, kind: 'taxonomy', principal: opCtx.principal ?? null, data, context: opCtx.context ?? {} })
+      }
+      const schema = buildZodSchema(entity.fields ?? [])
+      const validated = schema.parse(data) as Record<string, unknown>
+      return asDoc(await opCtx.cms.db.create(slug, validated))
+    },
+    async updateTerm(slug, id, data) {
+      const opCtx = await ctx()
+      const entity = resolveTaxonomy(opCtx.cms, slug)
+      for (const guard of opCtx.cms.guards) {
+        await guard({ cms: opCtx.cms, operation: 'update', slug, kind: 'taxonomy', principal: opCtx.principal ?? null, data, doc: { id }, context: opCtx.context ?? {} })
+      }
+      const schema = buildZodSchema(entity.fields ?? []).partial()
+      const validated = schema.parse(data) as Record<string, unknown>
+      return asDoc(await opCtx.cms.db.update(slug, id, validated))
     },
     async removeTerm(slug, id) {
-      await operations.removeTerm(await ctx(), slug, id)
+      const opCtx = await ctx()
+      resolveTaxonomy(opCtx.cms, slug)
+      for (const guard of opCtx.cms.guards) {
+        await guard({ cms: opCtx.cms, operation: 'delete', slug, kind: 'taxonomy', principal: opCtx.principal ?? null, doc: { id }, context: opCtx.context ?? {} })
+      }
+      await opCtx.cms.db.delete(slug, id)
     },
     async tree(slug) {
-      return serialize(await operations.tree(await ctx(), slug)) as JsonTermNode[]
+      const opCtx = await ctx()
+      resolveTaxonomy(opCtx.cms, slug)
+      for (const guard of opCtx.cms.guards) {
+        await guard({ cms: opCtx.cms, operation: 'read', slug, kind: 'taxonomy', principal: opCtx.principal ?? null, context: opCtx.context ?? {} })
+      }
+      const docs = await opCtx.cms.db.find(slug, { sort: [{ field: 'name', direction: 'asc' }] })
+      const terms = docs.map(asDoc)
+      const byId = new Map<string, JsonTermNode>()
+      for (const term of terms) byId.set(term.id, { ...term, children: [] } as JsonTermNode)
+      const roots: JsonTermNode[] = []
+      for (const node of byId.values()) {
+        const parentId = node.parent as string | undefined
+        const parent = parentId ? byId.get(parentId) : undefined
+        if (parent) parent.children.push(node)
+        else roots.push(node)
+      }
+      return serialize(roots) as JsonTermNode[]
     },
   }
 }

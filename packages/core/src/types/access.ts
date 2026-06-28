@@ -33,7 +33,7 @@ export type AccessFn<TDoc = Record<string, unknown>> = (
   ctx: AccessContext<TDoc>,
 ) => boolean | Promise<boolean>
 
-export interface CollectionAccess<TDoc = Record<string, unknown>> {
+export interface EntityAccess<TDoc = Record<string, unknown>> {
   read?: AccessFn<TDoc>
   create?: AccessFn<TDoc>
   update?: AccessFn<TDoc>

@@ -35,6 +35,10 @@ export interface LathaClient {
   remove(collection: string, id: string): Promise<{ id: string }>
   getGlobal(slug: string): Promise<JsonDoc | null>
   saveGlobal(slug: string, data: Record<string, unknown>): Promise<JsonDoc>
+  listTerms(slug: string): Promise<JsonDoc[]>
+  createTerm(slug: string, data: Record<string, unknown>): Promise<JsonDoc>
+  updateTerm(slug: string, id: string, data: Record<string, unknown>): Promise<JsonDoc>
+  removeTerm(slug: string, id: string): Promise<{ id: string }>
   currentUser(): Promise<SessionUser | null>
   login(
     email: string,
@@ -98,6 +102,12 @@ export function createLathaClient(
     getGlobal: (slug) => call<JsonDoc | null>({ action: 'getGlobal', slug }),
     saveGlobal: (slug, data) =>
       call<JsonDoc>({ action: 'saveGlobal', slug, data }),
+    listTerms: (slug) => call<JsonDoc[]>({ action: 'listTerms', slug }),
+    createTerm: (slug, data) => call<JsonDoc>({ action: 'createTerm', slug, data }),
+    updateTerm: (slug, id, data) =>
+      call<JsonDoc>({ action: 'updateTerm', slug, id, data }),
+    removeTerm: (slug, id) =>
+      call<{ id: string }>({ action: 'removeTerm', slug, id }),
     currentUser: () => call<SessionUser | null>({ action: 'currentUser' }),
     login: (email, password) =>
       call<{ ok: boolean; user: SessionUser | null }>({
