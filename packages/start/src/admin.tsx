@@ -73,11 +73,14 @@ type Route =
   | { view: 'create'; slug: string }
   | { view: 'edit'; slug: string; id: string }
   | { view: 'document'; slug: string }
+  | { view: 'taxonomy-list'; slug: string }
+  | { view: 'taxonomy-create'; slug: string }
+  | { view: 'taxonomy-edit'; slug: string; id: string }
   | { view: 'page'; page: PageExtension; params: string[] }
   | { view: 'settings'; page?: SettingsPageExtension; params: string[] }
   | { view: 'notfound' }
 
-/** Parse an entity route (`content/<slug>[/new|/<id>]` or `documents/<slug>`). */
+/** Parse an entity route (`content/<slug>[/new|/<id>]`, `documents/<slug>`, or `taxonomy/<slug>[/new|/<id>]`). */
 function parseEntitySegs(seg: string[]): Route | null {
   if (seg[0] === 'content' && seg[1]) {
     if (seg[2] === 'new') return { view: 'create', slug: seg[1] }
@@ -85,6 +88,11 @@ function parseEntitySegs(seg: string[]): Route | null {
     return { view: 'list', slug: seg[1] }
   }
   if (seg[0] === 'documents' && seg[1]) return { view: 'document', slug: seg[1] }
+  if (seg[0] === 'taxonomy' && seg[1]) {
+    if (seg[2] === 'new') return { view: 'taxonomy-create', slug: seg[1] }
+    if (seg[2]) return { view: 'taxonomy-edit', slug: seg[1], id: seg[2] }
+    return { view: 'taxonomy-list', slug: seg[1] }
+  }
   return null
 }
 
@@ -395,6 +403,12 @@ function AdminView({
       return <EditView slug={route.slug} id={route.id} base={routeBase} />
     case 'document':
       return <DocumentView slug={route.slug} />
+    case 'taxonomy-list':
+      return <TaxonomyListView slug={route.slug} base={routeBase} />
+    case 'taxonomy-create':
+      return <TaxonomyCreateView slug={route.slug} base={routeBase} />
+    case 'taxonomy-edit':
+      return <TaxonomyEditView slug={route.slug} id={route.id} base={routeBase} />
     case 'page':
       return <route.page.Component path={route.page.path} params={route.params} />
     case 'settings':
@@ -458,10 +472,17 @@ function DashboardWidget({ widget }: { widget: DashboardWidgetExtension }) {
 
 function StatCount({ client, item }: { client: ReturnType<typeof useLatha>['client']; item: NavItem }) {
   const count = useAsync(
-    () => (item.kind === 'collection' ? client.list(item.slug) : Promise.resolve([])),
+    () => {
+      if (item.kind === 'collection') return client.list(item.slug)
+      if (item.kind === 'taxonomy') return client.listTerms(item.slug)
+      return Promise.resolve([])
+    },
     [item.slug, item.kind],
   )
-  const value = item.kind === 'collection' ? (count.data?.length ?? '—') : '—'
+  const value =
+    item.kind === 'collection' || item.kind === 'taxonomy'
+      ? (count.data?.length ?? '—')
+      : '—'
   return (
     <div className="px-4 pb-4 pt-1.5 text-3xl font-semibold tracking-[-0.02em]">
       {count.loading ? '·' : value}
@@ -522,6 +543,7 @@ function ListView({ slug, base }: { slug: string; base: string }) {
             onDelete={
               canDelete
                 ? async (id) => {
+                    if (!window.confirm('Delete this record? This cannot be undone.')) return
                     await client.remove(slug, id)
                     rows.reload()
                   }
@@ -586,6 +608,7 @@ function EditView({ slug, id, base }: { slug: string; id: string; base: string }
               variant="destructive"
               size="sm"
               onClick={async () => {
+                if (!window.confirm('Delete this record? This cannot be undone.')) return
                 await client.remove(slug, id)
                 await toList()
               }}
@@ -609,6 +632,149 @@ function EditView({ slug, id, base }: { slug: string; id: string; base: string }
   )
 }
 
+function TaxonomyListView({ slug, base }: { slug: string; base: string }) {
+  const { client } = useLatha()
+  const can = useCan()
+  const entity = useAsync(() => client.entity(slug), [slug])
+  const rows = useAsync(() => client.listTerms(slug), [slug])
+
+  if (entity.loading || rows.loading)
+    return <p className="text-small text-muted-foreground">Loading…</p>
+  if (!entity.data)
+    return <p className="text-small text-muted-foreground">Unknown taxonomy.</p>
+
+  const canCreate = can(`${slug}:create`)
+  const canDelete = can(`${slug}:delete`)
+  const list = rows.data ?? []
+  return (
+    <>
+      <PageHeader
+        title={entity.data.label}
+        actions={
+          canCreate ? (
+            <Button asChild size="sm">
+              <Link to={`${base}/taxonomy/${slug}/new`}>
+                <Plus /> New
+              </Link>
+            </Button>
+          ) : undefined
+        }
+      />
+      {list.length === 0 ? (
+        <EmptyState
+          icon={FolderTree}
+          title={`No ${entity.data.label.toLowerCase()} yet`}
+          description={`Create your first term to start managing ${entity.data.label.toLowerCase()}.`}
+          action={
+            canCreate ? (
+              <Button asChild size="sm" className="mt-1">
+                <Link to={`${base}/taxonomy/${slug}/new`}>
+                  <Plus /> New
+                </Link>
+              </Button>
+            ) : undefined
+          }
+        />
+      ) : (
+        <Card className="overflow-hidden p-0">
+          <CollectionList
+            entity={asEntity(entity.data)}
+            rows={list}
+            getEditHref={(id) => `${base}/taxonomy/${slug}/${id}`}
+            onDelete={
+              canDelete
+                ? async (id) => {
+                    if (!window.confirm('Delete this term? This cannot be undone.')) return
+                    await client.removeTerm(slug, id)
+                    rows.reload()
+                  }
+                : undefined
+            }
+          />
+        </Card>
+      )}
+    </>
+  )
+}
+
+function TaxonomyCreateView({ slug, base }: { slug: string; base: string }) {
+  const { client } = useLatha()
+  const navigate = useNavigate()
+  const entity = useAsync(() => client.entity(slug), [slug])
+
+  if (entity.loading) return <p className="text-small text-muted-foreground">Loading…</p>
+  if (!entity.data) return <p className="text-small text-muted-foreground">Unknown taxonomy.</p>
+
+  const toList = () => navigate({ to: `${base}/taxonomy/${slug}` })
+
+  return (
+    <>
+      <PageHeader
+        title={`New ${entity.data.label.toLowerCase()}`}
+        description="Create a new term for this taxonomy."
+      />
+      <CollectionForm
+        entity={asEntity(entity.data)}
+        onSubmit={async (values) => {
+          await client.createTerm(slug, values)
+          await toList()
+        }}
+        onCancel={toList}
+      />
+    </>
+  )
+}
+
+function TaxonomyEditView({ slug, id, base }: { slug: string; id: string; base: string }) {
+  const { client } = useLatha()
+  const can = useCan()
+  const navigate = useNavigate()
+  const entity = useAsync(() => client.entity(slug), [slug])
+  const terms = useAsync(() => client.listTerms(slug), [slug])
+
+  if (entity.loading || terms.loading)
+    return <p className="text-small text-muted-foreground">Loading…</p>
+  if (!entity.data) return <p className="text-small text-muted-foreground">Unknown taxonomy.</p>
+
+  const term = terms.data?.find((t) => t.id === id) ?? null
+  if (!term) return <p className="text-small text-muted-foreground">Term not found.</p>
+
+  const toList = () => navigate({ to: `${base}/taxonomy/${slug}` })
+
+  return (
+    <>
+      <PageHeader
+        title={`Edit ${entity.data.label.toLowerCase()}`}
+        actions={
+          can(`${slug}:delete`) ? (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={async () => {
+                if (!window.confirm('Delete this term? This cannot be undone.')) return
+                await client.removeTerm(slug, id)
+                await toList()
+              }}
+            >
+              Delete
+            </Button>
+          ) : undefined
+        }
+      />
+      <CollectionForm
+        entity={asEntity(entity.data)}
+        initialValues={term}
+        recordId={id}
+        onSubmit={async (values) => {
+          await client.updateTerm(slug, id, values)
+          await toList()
+        }}
+        onCancel={toList}
+      />
+    </>
+  )
+}
+
 function DocumentView({ slug }: { slug: string }) {
   const { client } = useLatha()
   const entity = useAsync(() => client.entity(slug), [slug])
@@ -620,33 +786,15 @@ function DocumentView({ slug }: { slug: string }) {
   return (
     <>
       <Slot zone="document.before" entity={entity.data} />
-      <PageHeader title={entity.data.label} description="A document singleton — exactly one record." />
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>About</CardTitle>
-            <CardDescription>This document holds exactly one record.</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0 text-small text-muted-foreground">
-            Edit the fields and save to update the singleton.
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>{entity.data.label}</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <DocumentForm
-              entity={asEntity(entity.data)}
-              value={value.data ?? null}
-              onSubmit={async (values) => {
-                await client.saveGlobal(slug, values)
-                value.reload()
-              }}
-            />
-          </CardContent>
-        </Card>
-      </div>
+      <PageHeader title={entity.data.label} />
+      <DocumentForm
+        entity={asEntity(entity.data)}
+        value={value.data ?? null}
+        onSubmit={async (values) => {
+          await client.saveGlobal(slug, values)
+          value.reload()
+        }}
+      />
       <Slot zone="document.after" entity={entity.data} />
     </>
   )

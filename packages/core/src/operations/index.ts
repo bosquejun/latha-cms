@@ -319,6 +319,20 @@ export async function createTerm(
   return ctx.cms.db.create(slug, validated)
 }
 
+/** Update a taxonomy term. */
+export async function updateTerm(
+  ctx: OperationContext,
+  slug: string,
+  id: string,
+  data: unknown,
+): Promise<Doc> {
+  const taxonomy = resolveTaxonomy(ctx.cms, slug)
+  await runGuards(ctx, taxonomy, 'update', { doc: { id }, data })
+  const schema = buildZodSchema(taxonomy.fields ?? []).partial()
+  const validated = schema.parse(data) as Record<string, unknown>
+  return ctx.cms.db.update(slug, id, validated)
+}
+
 /** Delete a taxonomy term. */
 export async function removeTerm(
   ctx: OperationContext,

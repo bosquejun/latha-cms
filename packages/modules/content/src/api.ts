@@ -60,6 +60,7 @@ export interface ContentApi {
 
   listTerms(slug: string): Promise<JsonDoc[]>
   createTerm(slug: string, data: unknown): Promise<JsonDoc>
+  updateTerm(slug: string, id: string, data: unknown): Promise<JsonDoc>
   removeTerm(slug: string, id: string): Promise<void>
   tree(slug: string): Promise<JsonTermNode[]>
 }
@@ -105,6 +106,9 @@ export function createContentApi(options: ContentApiOptions): ContentApi {
     },
     async createTerm(slug, data) {
       return asDoc(await operations.createTerm(await ctx(), slug, data))
+    },
+    async updateTerm(slug, id, data) {
+      return asDoc(await operations.updateTerm(await ctx(), slug, id, data))
     },
     async removeTerm(slug, id) {
       await operations.removeTerm(await ctx(), slug, id)

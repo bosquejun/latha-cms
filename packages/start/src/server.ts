@@ -271,6 +271,16 @@ export async function handleLathaRequest(
     case 'saveGlobal':
       return api.saveGlobal(input.slug, input.data)
 
+    case 'listTerms':
+      return api.listTerms(input.slug)
+    case 'createTerm':
+      return api.createTerm(input.slug, input.data)
+    case 'updateTerm':
+      return api.updateTerm(input.slug, input.id, input.data)
+    case 'removeTerm':
+      await api.removeTerm(input.slug, input.id)
+      return { id: input.id }
+
     case 'currentUser':
       return sessionUser ? toSessionUser(sessionUser) : null
     case 'login': {
