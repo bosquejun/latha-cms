@@ -13,7 +13,7 @@
  * for free.
  */
 
-import { operations } from '@latha/core'
+import { operations, buildZodSchema } from '@latha/core'
 import type {
   LathaInstance,
   Doc,
@@ -108,7 +108,26 @@ export function createContentApi(options: ContentApiOptions): ContentApi {
       return asDoc(await operations.createTerm(await ctx(), slug, data))
     },
     async updateTerm(slug, id, data) {
-      return asDoc(await operations.updateTerm(await ctx(), slug, id, data))
+      const opCtx = await ctx()
+      const entity = opCtx.cms.getEntity(slug)
+      if (!entity || entity.kind !== 'taxonomy') {
+        throw new Error(`"${slug}" is not a taxonomy.`)
+      }
+      for (const guard of opCtx.cms.guards) {
+        await guard({
+          cms: opCtx.cms,
+          operation: 'update',
+          slug,
+          kind: 'taxonomy',
+          principal: opCtx.principal ?? null,
+          data,
+          doc: { id },
+          context: opCtx.context ?? {},
+        })
+      }
+      const schema = buildZodSchema(entity.fields ?? []).partial()
+      const validated = schema.parse(data) as Record<string, unknown>
+      return asDoc(await opCtx.cms.db.update(slug, id, validated))
     },
     async removeTerm(slug, id) {
       await operations.removeTerm(await ctx(), slug, id)
