@@ -17,7 +17,7 @@ import { assertAccess } from '../access/evaluator.js'
 import { runHookEvent } from '../hooks/engine.js'
 import { buildZodSchema } from '../schema/builder.js'
 import type { Doc, Query } from '../types/adapter.js'
-import type { Collection, Document, Entity, Taxonomy } from '../types/collection.js'
+import type { Collection, Document, Entity } from '../types/collection.js'
 import type { LathaInstance } from '../types/config.js'
 import type { Operation } from '../types/access.js'
 import type { GuardContext } from '../types/guard.js'
@@ -69,15 +69,6 @@ function resolveDocument(cms: LathaInstance, slug: string): Document {
   if (!entity) throw new Error(`Unknown entity: "${slug}".`)
   if (entity.kind !== 'document') {
     throw new Error(`Entity "${slug}" is not a document (kind: ${entity.kind}).`)
-  }
-  return entity
-}
-
-function resolveTaxonomy(cms: LathaInstance, slug: string): Taxonomy {
-  const entity = cms.getEntity(slug)
-  if (!entity) throw new Error(`Unknown entity: "${slug}".`)
-  if (entity.kind !== 'taxonomy') {
-    throw new Error(`Entity "${slug}" is not a taxonomy (kind: ${entity.kind}).`)
   }
   return entity
 }
@@ -288,66 +279,3 @@ export async function saveGlobal(
   }) as Promise<Doc>
 }
 
-// ---------------------------------------------------------------------------
-// Taxonomy operations
-// ---------------------------------------------------------------------------
-
-export interface TermNode extends Doc {
-  children: TermNode[]
-}
-
-/** List taxonomy terms, ordered by name. */
-export async function listTerms(
-  ctx: OperationContext,
-  slug: string,
-): Promise<Doc[]> {
-  const taxonomy = resolveTaxonomy(ctx.cms, slug)
-  await runGuards(ctx, taxonomy, 'read')
-  return ctx.cms.db.find(slug, { sort: [{ field: 'name', direction: 'asc' }] })
-}
-
-/** Create a taxonomy term. */
-export async function createTerm(
-  ctx: OperationContext,
-  slug: string,
-  data: unknown,
-): Promise<Doc> {
-  const taxonomy = resolveTaxonomy(ctx.cms, slug)
-  await runGuards(ctx, taxonomy, 'create', { data })
-  const schema = buildZodSchema(taxonomy.fields ?? [])
-  const validated = schema.parse(data) as Record<string, unknown>
-  return ctx.cms.db.create(slug, validated)
-}
-
-/** Delete a taxonomy term. */
-export async function removeTerm(
-  ctx: OperationContext,
-  slug: string,
-  id: string,
-): Promise<void> {
-  const taxonomy = resolveTaxonomy(ctx.cms, slug)
-  await runGuards(ctx, taxonomy, 'delete', { doc: { id } })
-  await ctx.cms.db.delete(slug, id)
-}
-
-/**
- * Build a nested tree from a (hierarchical) taxonomy's terms using each
- * term's `parent` field. Flat taxonomies simply return all terms as roots.
- */
-export async function tree(
-  ctx: OperationContext,
-  slug: string,
-): Promise<TermNode[]> {
-  const terms = await listTerms(ctx, slug)
-  const byId = new Map<string, TermNode>()
-  for (const term of terms) byId.set(term.id, { ...term, children: [] })
-
-  const roots: TermNode[] = []
-  for (const node of byId.values()) {
-    const parentId = node.parent as string | undefined
-    const parent = parentId ? byId.get(parentId) : undefined
-    if (parent) parent.children.push(node)
-    else roots.push(node)
-  }
-  return roots
-}
