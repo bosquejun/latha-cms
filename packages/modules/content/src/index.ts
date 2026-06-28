@@ -5,8 +5,8 @@
 
 export { Collection, Document, Taxonomy } from './entities.js'
 export type {
-  CollectionInput,
-  DocumentInput,
+  CollectionConfig,
+  DocumentConfig,
   TaxonomyInput,
 } from './entities.js'
 

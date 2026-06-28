@@ -121,7 +121,7 @@ export async function create(
     data: validated,
     principal,
     operation: 'create',
-    collection: slug,
+    slug,
   })
 
   const created = await ctx.cms.db.create(slug, afterHooks)
@@ -130,7 +130,7 @@ export async function create(
     data: created,
     principal,
     operation: 'create',
-    collection: slug,
+    slug,
   }) as Promise<Doc>
 }
 
@@ -161,7 +161,7 @@ export async function update(
     data: validated,
     principal,
     operation: 'update',
-    collection: slug,
+    slug,
     previousDoc,
   })
 
@@ -171,7 +171,7 @@ export async function update(
     data: updated,
     principal,
     operation: 'update',
-    collection: slug,
+    slug,
     previousDoc,
   }) as Promise<Doc>
 }
@@ -194,7 +194,7 @@ export async function destroy(
     data: doc,
     principal,
     operation: 'delete',
-    collection: slug,
+    slug,
   })
 
   await ctx.cms.db.delete(slug, id)
@@ -203,7 +203,7 @@ export async function destroy(
     data: doc,
     principal,
     operation: 'delete',
-    collection: slug,
+    slug,
   })
 }
 
@@ -262,7 +262,7 @@ export async function saveGlobal(
     data: validated,
     principal,
     operation,
-    collection: slug,
+    slug,
     previousDoc: existing ?? undefined,
   })
 
@@ -274,7 +274,7 @@ export async function saveGlobal(
     data: saved,
     principal,
     operation,
-    collection: slug,
+    slug,
     previousDoc: existing ?? undefined,
   }) as Promise<Doc>
 }

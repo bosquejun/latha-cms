@@ -16,30 +16,26 @@ import {
   stampFields,
   text,
   type Collection,
-  type CollectionAccess,
-  type CollectionAdminConfig,
-  type CollectionHooks,
+  type EntityAccess,
+  type EntityAdminConfig,
+  type EntityHooks,
   type Document,
   type FieldsRecord,
   type InferDoc,
   type Taxonomy,
 } from '@latha/core'
 
-export interface CollectionInput<
-  TFields extends FieldsRecord,
-  TDoc = InferDoc<TFields>,
-> {
+export interface CollectionConfig<TDoc = Record<string, unknown>> {
   slug: string
-  fields: TFields
-  admin?: CollectionAdminConfig
-  access?: CollectionAccess<TDoc>
-  hooks?: CollectionHooks<TDoc>
+  admin?: EntityAdminConfig
+  access?: EntityAccess<TDoc>
+  hooks?: EntityHooks<TDoc>
   timestamps?: boolean
 }
 
 /** Define a Collection — many records, standard CRUD. */
 export function Collection<TFields extends FieldsRecord>(
-  input: CollectionInput<TFields>,
+  input: { fields: TFields } & CollectionConfig<InferDoc<TFields>>,
 ): Collection<InferDoc<TFields>> {
   const { fields, ...rest } = input
   return {
@@ -51,21 +47,17 @@ export function Collection<TFields extends FieldsRecord>(
   }
 }
 
-export interface DocumentInput<
-  TFields extends FieldsRecord,
-  TDoc = InferDoc<TFields>,
-> {
+export interface DocumentConfig<TDoc = Record<string, unknown>> {
   slug: string
-  fields: TFields
   admin?: Document<TDoc>['admin']
-  access?: CollectionAccess<TDoc>
-  hooks?: CollectionHooks<TDoc>
+  access?: EntityAccess<TDoc>
+  hooks?: EntityHooks<TDoc>
   timestamps?: boolean
 }
 
 /** Define a Document — a single-instance singleton (no list view). */
 export function Document<TFields extends FieldsRecord>(
-  input: DocumentInput<TFields>,
+  input: { fields: TFields } & DocumentConfig<InferDoc<TFields>>,
 ): Document<InferDoc<TFields>> {
   const { fields, ...rest } = input
   return {
@@ -83,7 +75,7 @@ export interface TaxonomyInput {
   hierarchical?: boolean
   /** Extra fields beyond the implicit `name` / `slug` (and `parent`). */
   fields?: FieldsRecord
-  admin?: CollectionAdminConfig
+  admin?: EntityAdminConfig
 }
 
 /**
