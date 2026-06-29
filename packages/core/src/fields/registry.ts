@@ -99,3 +99,15 @@ export const fieldRegistry = new FieldRegistry()
 export function registerFieldType(entry: FieldTypeEntry): void {
   fieldRegistry.register(entry)
 }
+
+/**
+ * Build a `z.ZodObject` from a list of field definitions.
+ * Thin wrapper over `fieldRegistry.buildDocumentSchema` kept as a named
+ * export so external consumers don't need to access the singleton directly.
+ */
+export function buildZodSchema(fields: Array<Record<string, unknown>>): z.ZodObject<z.ZodRawShape> {
+  return fieldRegistry.buildDocumentSchema(fields)
+}
+
+/** Infer the TypeScript type of a built schema. */
+export type InferFields<T extends z.ZodObject<z.ZodRawShape>> = z.infer<T>

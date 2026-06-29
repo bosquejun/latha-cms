@@ -7,7 +7,7 @@
  * `CREATE TABLE` statements and to marshal values to/from SQLite.
  *
  * Field → column mapping:
- *   text | richtext | media | date | select(single) | relationship(single)  → TEXT
+ *   text | richtext | date | select(single) | relationship(single)         → TEXT
  *   number                                                                   → REAL / INTEGER
  *   boolean                                                                  → INTEGER (0/1)
  *   group | array | *(many)                                                  → TEXT (JSON)
@@ -38,7 +38,6 @@ function columnKindForField(field: Field): ColumnKind {
   switch (field.type) {
     case 'text':
     case 'richtext':
-    case 'media':
     case 'date':
       return 'text'
     case 'number':

@@ -6,6 +6,8 @@ export {
   type BaseFieldConfig,
   fieldRegistry,
   registerFieldType,
+  buildZodSchema,
+  type InferFields,
 } from './registry.js'
 export type {
   FieldTypeMap,
@@ -19,7 +21,6 @@ export type {
   DateField,
   SelectField,
   RichTextField,
-  MediaField,
   RelationshipField,
   GroupField,
   ArrayField,

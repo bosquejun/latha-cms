@@ -9,9 +9,6 @@
 // Types
 export * from './types/index.js'
 
-// Schema bridge
-export { buildZodSchema, type InferFields } from './schema/builder.js'
-
 // Field builders + document type inference
 export {
   text,
@@ -65,10 +62,11 @@ export {
   type DateField,
   type SelectField,
   type RichTextField,
-  type MediaField,
   type RelationshipField,
   type GroupField,
   type ArrayField,
+  buildZodSchema,
+  type InferFields,
 } from './fields/index.js'
 
 // Bootstrap
