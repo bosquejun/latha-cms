@@ -268,15 +268,18 @@ export function BlocksField({
                 {!isCollapsed && (
                   <CardContent className="flex flex-col gap-form pt-form">
                     {def.fields.map((f) => {
-                      const renderer = getFieldRenderer(f.type)
-                      return renderer({
-                        field: f,
-                        id: `${id}-${index}-${f.name}`,
-                        value: item[f.name],
-                        onChange: (v) => updateField(index, f.name, v),
-                        onBlur,
-                        error: undefined,
-                      })
+                      const Renderer = getFieldRenderer(f.type)
+                      return (
+                        <Renderer
+                          key={f.name}
+                          field={f}
+                          id={`${id}-${index}-${f.name}`}
+                          value={item[f.name]}
+                          onChange={(v) => updateField(index, f.name, v)}
+                          onBlur={onBlur}
+                          error={undefined}
+                        />
+                      )
                     })}
                   </CardContent>
                 )}

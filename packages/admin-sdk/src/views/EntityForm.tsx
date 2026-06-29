@@ -128,20 +128,20 @@ export function EntityForm({
     extensions.widgetsForZone('form.sidebar.after').length > 0
 
   const renderField = (field: Field) => {
-    const renderer = getFieldRenderer(field.type)
+    const Renderer = getFieldRenderer(field.type)
     const id = `${idPrefix}-${field.name}`
     return (
       <form.Field key={field.name} name={field.name}>
-        {(api) =>
-          renderer({
-            field,
-            id,
-            value: api.state.value,
-            onChange: (v) => api.handleChange(v as never),
-            onBlur: api.handleBlur,
-            error: errors[field.name],
-          })
-        }
+        {(api) => (
+          <Renderer
+            field={field}
+            id={id}
+            value={api.state.value}
+            onChange={(v) => api.handleChange(v as never)}
+            onBlur={api.handleBlur}
+            error={errors[field.name]}
+          />
+        )}
       </form.Field>
     )
   }
