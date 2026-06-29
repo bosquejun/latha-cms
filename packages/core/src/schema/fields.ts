@@ -29,15 +29,13 @@ import type {
   BooleanField,
   DateField,
   Field,
-  FieldAdminConfig,
+  FieldMeta,
   FieldType,
   GroupField,
-  MediaField,
   NumberField,
   RelationshipField,
   RichTextField,
   SelectField,
-  TaxonomyField,
   TextField,
 } from '../types/field.js'
 
@@ -46,12 +44,12 @@ import type {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Compile-time only metadata stamped onto a builder's return type.
+ * Compile-time only phantom type stamped onto a builder's return type.
  * `__out` is the field's parsed value type; `__present` is `true` when the
  * field is guaranteed present on the document (required, or has a default).
  * Neither key exists at runtime.
  */
-interface FieldMeta<TOut, TPresent extends boolean> {
+export interface PhantomMeta<TOut, TPresent extends boolean> {
   /** @internal phantom — never present at runtime, hence optional */
   readonly __out?: TOut
   /** @internal phantom — never present at runtime, hence optional */
@@ -63,22 +61,23 @@ type Built<TField extends Field, TOut, TPresent extends boolean> = Omit<
   TField,
   'name'
 > &
-  FieldMeta<TOut, TPresent>
+  PhantomMeta<TOut, TPresent>
 
 /** The loose, structural form every builder result satisfies. */
-export interface AnyFieldDef extends FieldMeta<unknown, boolean> {
+export interface AnyFieldDef extends PhantomMeta<unknown, boolean> {
   readonly type: FieldType
   readonly required?: boolean
   readonly unique?: boolean
   readonly defaultValue?: unknown
-  readonly admin?: FieldAdminConfig
+  /** Display hints for the admin UI (label, placeholder, etc.). */
+  readonly meta?: FieldMeta
 }
 
 /** A collection/group/array field set: name → builder result. */
 export type FieldsRecord = Record<string, AnyFieldDef>
 
-type OutputOf<D> = D extends FieldMeta<infer T, boolean> ? T : never
-type PresentOf<D> = D extends FieldMeta<unknown, infer P> ? P : false
+type OutputOf<D> = D extends PhantomMeta<infer T, boolean> ? T : never
+type PresentOf<D> = D extends PhantomMeta<unknown, infer P> ? P : false
 
 /** Pretty-print an intersection so editors show a flat object. */
 type Prettify<T> = { [K in keyof T]: T[K] } & {}
@@ -131,7 +130,7 @@ export function stampFields(defs: FieldsRecord): Field[] {
 interface CommonOpts {
   required?: boolean
   unique?: boolean
-  admin?: FieldAdminConfig
+  meta?: FieldMeta
 }
 
 type TextOpts = CommonOpts & {
@@ -245,13 +244,6 @@ export function richtext<
   })
 }
 
-/** Media reference — stored as a media id / url string. */
-export function media<
-  const O extends CommonOpts & { defaultValue?: string } = {},
->(opts?: O): Built<MediaField, string, IsPresent<O>> {
-  return withMeta<MediaField, string, IsPresent<O>>({ type: 'media', ...opts })
-}
-
 /** Relationship to another collection. `many: true` stores an array of ids. */
 export function relationship<const O extends StringRefOpts>(
   opts: O,
@@ -259,16 +251,6 @@ export function relationship<const O extends StringRefOpts>(
   return withMeta<RelationshipField, RefOut<O>, IsPresent<O>>({
     ...opts,
     type: 'relationship',
-  })
-}
-
-/** Relationship to a taxonomy. `many: true` stores an array of term ids. */
-export function taxonomy<const O extends StringRefOpts>(
-  opts: O,
-): Built<TaxonomyField, RefOut<O>, IsPresent<O>> {
-  return withMeta<TaxonomyField, RefOut<O>, IsPresent<O>>({
-    ...opts,
-    type: 'taxonomy',
   })
 }
 

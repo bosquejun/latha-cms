@@ -32,7 +32,7 @@ export function RelationshipField({
   )
   const rows = useAsync(() => (to ? client.list(to) : Promise.resolve([])), [to])
 
-  const label = field.admin?.label ?? humanize(field.name)
+  const label = field.meta?.label ?? humanize(field.name)
   const titleField = entity.data?.useAsTitle
 
   const optionLabelFor = (row: Record<string, unknown>): string => {
@@ -101,7 +101,7 @@ export function RelationshipField({
       htmlFor={id}
       label={label}
       required={field.required}
-      description={field.admin?.description}
+      description={field.meta?.description}
       error={error}
     >
       {control()}

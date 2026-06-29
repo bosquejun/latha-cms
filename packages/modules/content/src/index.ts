@@ -28,15 +28,16 @@ export {
   date,
   select,
   richtext,
-  media,
   relationship,
-  taxonomy,
   group,
   array,
   type AnyFieldDef,
   type FieldsRecord,
   type InferDoc,
 } from '@latha/core'
+
+// taxonomy builder lives in @latha/content — the field type is owned here.
+export { taxonomy } from './builders.js'
 
 export { ContentModule } from './module.js'
 export type { ContentModuleConfig } from './module.js'

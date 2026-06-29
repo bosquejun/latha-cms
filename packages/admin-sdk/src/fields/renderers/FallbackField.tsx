@@ -15,7 +15,7 @@ export function FallbackField(props: FieldControlProps) {
     field.type === 'array' ||
     ('many' in field && field.many)
 
-  const label = field.admin?.label ?? humanize(field.name)
+  const label = field.meta?.label ?? humanize(field.name)
 
   if (!isStructured) {
     return (
@@ -23,7 +23,7 @@ export function FallbackField(props: FieldControlProps) {
         htmlFor={id}
         label={label}
         required={field.required}
-        description={field.admin?.description ?? `${field.type} reference`}
+        description={field.meta?.description ?? `${field.type} reference`}
         error={error}
       >
         <Input

@@ -2,9 +2,13 @@
  * Field definitions.
  *
  * Fields are the data-shape unit of LathaCMS. Every field compiles to a Zod
- * schema (see `schema/builder.ts`), which in turn drives API validation,
- * form validation, and TypeScript inference.
+ * schema via the field registry (see `fields/registry.ts`), which in turn
+ * drives API validation, form validation, and TypeScript inference.
  */
+
+import type { FieldMeta } from '../fields/meta.js'
+
+export type { FieldMeta }
 
 export type FieldType =
   | 'text'
@@ -19,20 +23,6 @@ export type FieldType =
   | 'group'
   | 'array'
 
-/** Per-field admin placement and presentation hints. */
-export interface FieldAdminConfig {
-  /** Render this field in the form sidebar (meta) rather than the main area. */
-  sidebar?: boolean
-  /** Human-friendly label; defaults to a humanized `name`. */
-  label?: string
-  /** Helper text shown beneath the input. */
-  description?: string
-  /** Placeholder for text-like inputs. */
-  placeholder?: string
-  /** Hide the field from the admin UI entirely (still persisted). */
-  hidden?: boolean
-}
-
 interface BaseField {
   name: string
   type: FieldType
@@ -40,7 +30,8 @@ interface BaseField {
   unique?: boolean
   /** Default value applied when the incoming payload omits the field. */
   defaultValue?: unknown
-  admin?: FieldAdminConfig
+  /** Display hints for the admin UI. The kernel carries this opaquely. */
+  meta?: FieldMeta
 }
 
 export interface TextField extends BaseField {

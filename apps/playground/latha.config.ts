@@ -78,7 +78,7 @@ export default defineConfig({
             status: select({
               options: ['draft', 'published'],
               defaultValue: 'draft',
-              admin: { sidebar: true },
+              meta: { sidebar: true },
             }),
             views: number({ integer: true, defaultValue: 0 }),
           },

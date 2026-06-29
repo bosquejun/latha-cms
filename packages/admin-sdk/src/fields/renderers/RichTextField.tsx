@@ -17,15 +17,15 @@ export function RichTextField({
   return (
     <FieldWrap
       htmlFor={id}
-      label={field.admin?.label ?? humanize(field.name)}
+      label={field.meta?.label ?? humanize(field.name)}
       required={field.required}
-      description={field.admin?.description}
+      description={field.meta?.description}
       error={error}
     >
       <Textarea
         id={id}
         value={typeof value === 'string' ? value : ''}
-        placeholder={field.admin?.placeholder}
+        placeholder={field.meta?.placeholder}
         onChange={(e) => onChange(e.target.value)}
         onBlur={onBlur}
       />
