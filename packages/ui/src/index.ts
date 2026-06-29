@@ -54,6 +54,55 @@ export {
   TableCaption,
 } from './components/ui/table.js'
 
+// Feedback & status primitives
+export { Skeleton } from './components/ui/skeleton.js'
+export { Spinner, spinnerVariants, type SpinnerProps } from './components/ui/spinner.js'
+export {
+  Alert,
+  AlertTitle,
+  AlertDescription,
+  alertVariants,
+} from './components/ui/alert.js'
+
+// Overlay primitives (Radix-backed)
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+} from './components/ui/dialog.js'
+export {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from './components/ui/tooltip.js'
+export {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from './components/ui/dropdown-menu.js'
+
+// Input composition
+export { InputGroup, InputAddon } from './components/ui/input-group.js'
+
 // Composites
 export { Field, type FieldProps } from './components/Field.js'
 export {
@@ -61,3 +110,5 @@ export {
   type SelectInputProps,
   type SelectOption,
 } from './components/SelectInput.js'
+export { CopyButton, type CopyButtonProps } from './components/CopyButton.js'
+export { PasswordInput, type PasswordInputProps } from './components/PasswordInput.js'
