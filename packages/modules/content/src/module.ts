@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod'
-import { type Module, type Entity, registerFieldType } from '@latha/core'
+import { type Module, type Entity, type LathaInstance } from '@latha/core'
 
 export interface ContentModuleConfig {
   entities: Entity[]
@@ -23,8 +23,8 @@ export function ContentModule(config: ContentModuleConfig): Module {
     capabilities: ['content'],
     admin: { nav: { label: 'Content', order: 10, collapsible: true } },
     entities: config.entities,
-    onInit() {
-      registerFieldType({
+    onInit(cms: LathaInstance) {
+      cms.registerFieldType({
         configSchema: z.object({
           type: z.literal('taxonomy'),
           to: z.string(),

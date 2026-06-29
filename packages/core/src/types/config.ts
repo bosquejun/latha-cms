@@ -5,6 +5,7 @@
 import type { DBAdapter } from './adapter.js'
 import type { Entity } from './collection.js'
 import type { Guard } from './guard.js'
+import type { FieldTypeEntry } from '../fields/registry.js'
 
 /** Forward reference to the live instance; defined in `bootstrap`. */
 export interface LathaInstance {
@@ -23,6 +24,8 @@ export interface LathaInstance {
   guards: Guard[]
   /** Register an authorization guard (typically from a module's `onInit`). */
   registerGuard(guard: Guard): void
+  /** Register a field type with the field registry (typically from a module's `onInit`). */
+  registerFieldType(entry: FieldTypeEntry): void
   ready: boolean
 }
 
