@@ -20,7 +20,7 @@ Every package has a strict boundary. Nothing crosses it. This is not a soft guid
 | `@latha/admin-sdk` | Admin UI shell, field renderers, views, display hints | Business logic, persistence logic |
 | `@latha/ui` | Pure design system primitives | Any CMS knowledge whatsoever |
 | `@latha/start` | TanStack Start integration, RPC dispatcher | Business logic |
-| `@latha/storage` | `DBAdapter` implementation | Application logic |
+| `@latha/storage` | `DBAdapter` implementation — `migrate()` issues `CREATE TABLE IF NOT EXISTS` only; no ALTER, schema drift is silent | Application logic |
 
 **The test:** If you find yourself importing `@latha/content` from `@latha/core`, or `@latha/auth` from `@latha/content`, stop. The dependency direction is always inward toward core, never across modules.
 
@@ -175,7 +175,7 @@ Ask: "Would a minimal CMS with only users and no content need this?" If yes → 
 
 ## Active Refactor: Zod-First Field Registry
 
-**Status: Planned** (next major work item)
+**Status: Planned** (next major work item — security & architecture hardening from the June 2026 audit is complete)
 
 The field type system is being migrated from TypeScript-first (TS interfaces → Zod) to Zod-first (Zod schemas → inferred TS types). See the plan in `docs/refactor-zod-first-fields.md`.
 

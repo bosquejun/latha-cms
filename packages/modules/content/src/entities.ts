@@ -97,7 +97,7 @@ export function Taxonomy(input: TaxonomyInput): Taxonomy {
     slug: input.slug,
     hierarchical: input.hierarchical,
     admin: input.admin,
-    actions: ['read', 'create', 'delete'],
+    actions: ['read', 'create', 'update', 'delete'],
     fields: stampFields({ ...implicit, ...(input.fields ?? {}) }),
   }
 }

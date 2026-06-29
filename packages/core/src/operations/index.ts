@@ -17,7 +17,7 @@ import { assertAccess } from '../access/evaluator.js'
 import { runHookEvent } from '../hooks/engine.js'
 import { fieldRegistry } from '../fields/registry.js'
 import type { Doc, Query } from '../types/adapter.js'
-import type { Collection, Document, Entity } from '../types/collection.js'
+import type { Collection, Document, Entity, Taxonomy } from '../types/collection.js'
 import type { LathaInstance } from '../types/config.js'
 import type { Operation } from '../types/access.js'
 import type { GuardContext } from '../types/guard.js'
@@ -277,5 +277,133 @@ export async function saveGlobal(
     slug,
     previousDoc: existing ?? undefined,
   }) as Promise<Doc>
+}
+
+// ---------------------------------------------------------------------------
+// Taxonomy (term) operations
+// ---------------------------------------------------------------------------
+
+function resolveTaxonomy(cms: LathaInstance, slug: string): Taxonomy {
+  const entity = cms.getEntity(slug)
+  if (!entity) throw new Error(`Unknown entity: "${slug}".`)
+  if (entity.kind !== 'taxonomy') {
+    throw new Error(`Entity "${slug}" is not a taxonomy (kind: ${entity.kind}).`)
+  }
+  return entity
+}
+
+export async function findTerms(
+  ctx: OperationContext,
+  slug: string,
+  query?: Query,
+): Promise<Doc[]> {
+  const taxonomy = resolveTaxonomy(ctx.cms, slug)
+  const principal = ctx.principal ?? null
+  await assertAccess(taxonomy.access, { principal, operation: 'read' }, slug)
+  await runGuards(ctx, taxonomy, 'read')
+  return ctx.cms.db.find(slug, query)
+}
+
+export async function createTerm(
+  ctx: OperationContext,
+  slug: string,
+  data: unknown,
+): Promise<Doc> {
+  const taxonomy = resolveTaxonomy(ctx.cms, slug)
+  const principal = ctx.principal ?? null
+
+  await assertAccess(taxonomy.access, { principal, operation: 'create', data }, slug)
+  await runGuards(ctx, taxonomy, 'create', { data })
+
+  const schema = fieldRegistry.buildDocumentSchema(taxonomy.fields ?? [])
+  const validated = schema.parse(data) as Record<string, unknown>
+
+  const beforeData = await runHookEvent(taxonomy.hooks, 'beforeCreate', {
+    data: validated,
+    principal,
+    operation: 'create',
+    slug,
+  })
+
+  const created = await ctx.cms.db.create(slug, beforeData)
+
+  return runHookEvent(taxonomy.hooks, 'afterCreate', {
+    data: created,
+    principal,
+    operation: 'create',
+    slug,
+  }) as Promise<Doc>
+}
+
+export async function updateTerm(
+  ctx: OperationContext,
+  slug: string,
+  id: string,
+  data: unknown,
+): Promise<Doc> {
+  const taxonomy = resolveTaxonomy(ctx.cms, slug)
+  const principal = ctx.principal ?? null
+
+  const previousDoc = await ctx.cms.db.findOne(slug, id)
+  if (!previousDoc) throw new Error(`Term "${slug}/${id}" not found.`)
+
+  await assertAccess(
+    taxonomy.access,
+    { principal, operation: 'update', doc: previousDoc, data },
+    slug,
+  )
+  await runGuards(ctx, taxonomy, 'update', { doc: previousDoc, data })
+
+  const schema = fieldRegistry.buildDocumentSchema(taxonomy.fields ?? []).partial()
+  const validated = schema.parse(data) as Record<string, unknown>
+
+  const beforeData = await runHookEvent(taxonomy.hooks, 'beforeUpdate', {
+    data: validated,
+    principal,
+    operation: 'update',
+    slug,
+    previousDoc,
+  })
+
+  const updated = await ctx.cms.db.update(slug, id, beforeData)
+
+  return runHookEvent(taxonomy.hooks, 'afterUpdate', {
+    data: updated,
+    principal,
+    operation: 'update',
+    slug,
+    previousDoc,
+  }) as Promise<Doc>
+}
+
+export async function destroyTerm(
+  ctx: OperationContext,
+  slug: string,
+  id: string,
+): Promise<void> {
+  const taxonomy = resolveTaxonomy(ctx.cms, slug)
+  const principal = ctx.principal ?? null
+
+  const doc = await ctx.cms.db.findOne(slug, id)
+  if (!doc) throw new Error(`Term "${slug}/${id}" not found.`)
+
+  await assertAccess(taxonomy.access, { principal, operation: 'delete', doc }, slug)
+  await runGuards(ctx, taxonomy, 'delete', { doc })
+
+  await runHookEvent(taxonomy.hooks, 'beforeDelete', {
+    data: doc,
+    principal,
+    operation: 'delete',
+    slug,
+  })
+
+  await ctx.cms.db.delete(slug, id)
+
+  await runHookEvent(taxonomy.hooks, 'afterDelete', {
+    data: doc,
+    principal,
+    operation: 'delete',
+    slug,
+  })
 }
 

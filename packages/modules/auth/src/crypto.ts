@@ -7,7 +7,7 @@
  * Works identically on Node 20+ and serverless/edge runtimes.
  */
 
-const PBKDF2_ITERATIONS = 100_000
+const PBKDF2_ITERATIONS = 600_000
 const KEY_LENGTH_BITS = 256
 
 const textEncoder = new TextEncoder()
@@ -34,12 +34,14 @@ export function fromBase64Url(input: string): Uint8Array {
   return fromBase64(padded.padEnd(Math.ceil(padded.length / 4) * 4, '='))
 }
 
-/** Constant-time string comparison to avoid timing leaks. */
+/** Constant-time string comparison — iterates maxLen to avoid length leaks. */
 export function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false
+  const maxLen = Math.max(a.length, b.length)
   let mismatch = 0
-  for (let i = 0; i < a.length; i++) mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i)
-  return mismatch === 0
+  for (let i = 0; i < maxLen; i++) {
+    mismatch |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0)
+  }
+  return mismatch === 0 && a.length === b.length
 }
 
 async function pbkdf2(

@@ -78,6 +78,10 @@ export interface Taxonomy {
   admin?: EntityAdminConfig
   /** @see Collection.actions */
   actions?: Operation[]
+  /** Optional per-taxonomy access predicates, evaluated before guard chain. */
+  access?: EntityAccess
+  /** Optional lifecycle hooks, run around term mutations. */
+  hooks?: EntityHooks
 }
 
 /**

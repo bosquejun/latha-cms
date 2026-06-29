@@ -13,22 +13,13 @@
  * for free.
  */
 
-import { operations, buildZodSchema } from '@latha/core'
+import { operations } from '@latha/core'
 import type {
-  LathaInstance,
   Doc,
   JsonValue,
+  LathaInstance,
   Query,
-  Taxonomy,
 } from '@latha/core'
-
-function resolveTaxonomy(cms: LathaInstance, slug: string): Taxonomy {
-  const entity = cms.getEntity(slug)
-  if (!entity || entity.kind !== 'taxonomy') {
-    throw new Error(`"${slug}" is not a taxonomy.`)
-  }
-  return entity
-}
 
 /** A JSON-serializable document. */
 export type JsonDoc = { id: string } & Record<string, JsonValue>
@@ -111,49 +102,25 @@ export function createContentApi(options: ContentApiOptions): ContentApi {
     },
 
     async listTerms(slug) {
-      const opCtx = await ctx()
-      resolveTaxonomy(opCtx.cms, slug)
-      for (const guard of opCtx.cms.guards) {
-        await guard({ cms: opCtx.cms, operation: 'read', slug, kind: 'taxonomy', principal: opCtx.principal ?? null, context: opCtx.context ?? {} })
-      }
-      const docs = await opCtx.cms.db.find(slug, { sort: [{ field: 'name', direction: 'asc' }] })
-      return docs.map(asDoc)
+      return (
+        await operations.findTerms(await ctx(), slug, {
+          sort: [{ field: 'name', direction: 'asc' }],
+        })
+      ).map(asDoc)
     },
     async createTerm(slug, data) {
-      const opCtx = await ctx()
-      const entity = resolveTaxonomy(opCtx.cms, slug)
-      for (const guard of opCtx.cms.guards) {
-        await guard({ cms: opCtx.cms, operation: 'create', slug, kind: 'taxonomy', principal: opCtx.principal ?? null, data, context: opCtx.context ?? {} })
-      }
-      const schema = buildZodSchema(entity.fields ?? [])
-      const validated = schema.parse(data) as Record<string, unknown>
-      return asDoc(await opCtx.cms.db.create(slug, validated))
+      return asDoc(await operations.createTerm(await ctx(), slug, data))
     },
     async updateTerm(slug, id, data) {
-      const opCtx = await ctx()
-      const entity = resolveTaxonomy(opCtx.cms, slug)
-      for (const guard of opCtx.cms.guards) {
-        await guard({ cms: opCtx.cms, operation: 'update', slug, kind: 'taxonomy', principal: opCtx.principal ?? null, data, doc: { id }, context: opCtx.context ?? {} })
-      }
-      const schema = buildZodSchema(entity.fields ?? []).partial()
-      const validated = schema.parse(data) as Record<string, unknown>
-      return asDoc(await opCtx.cms.db.update(slug, id, validated))
+      return asDoc(await operations.updateTerm(await ctx(), slug, id, data))
     },
     async removeTerm(slug, id) {
-      const opCtx = await ctx()
-      resolveTaxonomy(opCtx.cms, slug)
-      for (const guard of opCtx.cms.guards) {
-        await guard({ cms: opCtx.cms, operation: 'delete', slug, kind: 'taxonomy', principal: opCtx.principal ?? null, doc: { id }, context: opCtx.context ?? {} })
-      }
-      await opCtx.cms.db.delete(slug, id)
+      await operations.destroyTerm(await ctx(), slug, id)
     },
     async tree(slug) {
-      const opCtx = await ctx()
-      resolveTaxonomy(opCtx.cms, slug)
-      for (const guard of opCtx.cms.guards) {
-        await guard({ cms: opCtx.cms, operation: 'read', slug, kind: 'taxonomy', principal: opCtx.principal ?? null, context: opCtx.context ?? {} })
-      }
-      const docs = await opCtx.cms.db.find(slug, { sort: [{ field: 'name', direction: 'asc' }] })
+      const docs = await operations.findTerms(await ctx(), slug, {
+        sort: [{ field: 'name', direction: 'asc' }],
+      })
       const terms = docs.map(asDoc)
       const byId = new Map<string, JsonTermNode>()
       for (const term of terms) byId.set(term.id, { ...term, children: [] } as JsonTermNode)

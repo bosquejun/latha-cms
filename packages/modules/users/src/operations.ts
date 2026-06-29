@@ -35,7 +35,7 @@ export function countUsers(latha: LathaInstance): Promise<number> {
   return latha.db.count(USERS_SLUG)
 }
 
-/** List users (without stripping the hash — callers should project as needed). */
-export function listUsers(latha: LathaInstance): Promise<Doc[]> {
-  return operations.find(systemCtx(latha), USERS_SLUG)
+export async function listUsers(latha: LathaInstance): Promise<Doc[]> {
+  const rows = await operations.find(systemCtx(latha), USERS_SLUG)
+  return rows.map(({ passwordHash: _, ...rest }) => rest as Doc)
 }

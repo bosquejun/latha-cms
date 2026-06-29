@@ -213,10 +213,17 @@ function buildSelect(
   let sql = `SELECT * FROM "${plan.table}"${whereSql}`
 
   if (query.sort && query.sort.length > 0) {
-    const order = query.sort
-      .map((s) => `"${s.field}" ${s.direction === 'desc' ? 'DESC' : 'ASC'}`)
-      .join(', ')
-    sql += ` ORDER BY ${order}`
+    const validFields = new Set(['id', ...plan.columns.map((c) => c.name)])
+    if (plan.timestamps) { validFields.add('createdAt'); validFields.add('updatedAt') }
+    const safeSorts = query.sort.filter((s) => validFields.has(s.field))
+    if (safeSorts.length > 0) {
+      const order = safeSorts
+        .map((s) => `"${s.field}" ${s.direction === 'desc' ? 'DESC' : 'ASC'}`)
+        .join(', ')
+      sql += ` ORDER BY ${order}`
+    } else if (plan.timestamps) {
+      sql += ` ORDER BY "createdAt" DESC`
+    }
   } else if (plan.timestamps) {
     sql += ` ORDER BY "createdAt" DESC`
   }
