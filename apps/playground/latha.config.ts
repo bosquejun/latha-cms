@@ -13,6 +13,12 @@ import {
   ContentModule,
   Document,
   Taxonomy,
+  blocks,
+  heroBlock,
+  ctaBlock,
+  richTextBlock,
+  imageBlock,
+  featuresBlock,
   number,
   richtext,
   select,
@@ -85,6 +91,23 @@ export default defineConfig({
         }),
 
         Taxonomy({ slug: 'categories', hierarchical: true, admin: { order: 20 } }),
+
+        Collection({
+          slug: 'pages',
+          admin: { order: 15, useAsTitle: 'title', defaultColumns: ['title', 'status'] },
+          fields: {
+            title: text({ required: true }),
+            slug: text({ unique: true }),
+            status: select({
+              options: ['draft', 'published'],
+              defaultValue: 'draft',
+              meta: { sidebar: true },
+            }),
+            content: blocks({
+              blocks: [heroBlock, richTextBlock, ctaBlock, imageBlock, featuresBlock],
+            }),
+          },
+        }),
       ],
     }),
   ],
