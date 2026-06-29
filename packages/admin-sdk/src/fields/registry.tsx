@@ -13,6 +13,7 @@ import { NumberField } from './renderers/NumberField.js'
 import { BooleanField } from './renderers/BooleanField.js'
 import { DateField } from './renderers/DateField.js'
 import { SelectField } from './renderers/SelectField.js'
+import { BlocksField } from './renderers/BlocksField.js'
 import { FallbackField } from './renderers/FallbackField.js'
 
 // Keyed by string so module-registered types (taxonomy, media, etc.) can be
@@ -24,6 +25,7 @@ const registry = new Map<string, FieldRenderer>([
   ['boolean', BooleanField],
   ['date', DateField],
   ['select', SelectField],
+  ['blocks', BlocksField],
   ['media', FallbackField],
   ['relationship', FallbackField],
   ['taxonomy', FallbackField],

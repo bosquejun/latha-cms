@@ -31,12 +31,13 @@ export interface EntityFormProps {
 
 function defaultForField(field: Field): unknown {
   if (field.defaultValue !== undefined) return field.defaultValue
-  switch (field.type) {
+  switch (field.type as string) {
     case 'boolean':
       return false
     case 'number':
       return ''
     case 'array':
+    case 'blocks':
       return []
     case 'group':
       return {}

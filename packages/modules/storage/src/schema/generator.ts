@@ -51,9 +51,11 @@ function columnKindForField(field: Field): ColumnKind {
     case 'array':
       return 'json'
     default: {
-      // Module-registered types (e.g. taxonomy) are handled generically:
-      // multi-value fields are stored as JSON, single-value as TEXT.
+      // Module-registered types are handled generically.
+      // Multi-value and always-JSON types (e.g. blocks) store as JSON;
+      // single-value types store as TEXT.
       const ext = field as unknown as Record<string, unknown>
+      if (ext.type === 'blocks') return 'json'
       return ext.many ? 'json' : 'text'
     }
   }

@@ -4,11 +4,13 @@
  */
 
 import type { BaseFieldConfig } from '@latha/core'
+import type { BlockDefinition } from './builders.js'
 
-// Augment core's FieldTypeMap so consumers get taxonomy field types automatically.
+// Augment core's FieldTypeMap so consumers get the content-module field types.
 declare module '@latha/core' {
   interface FieldTypeMap {
     taxonomy: BaseFieldConfig & { type: 'taxonomy'; to: string; many?: boolean }
+    blocks: BaseFieldConfig & { type: 'blocks'; blocks: BlockDefinition[] }
   }
 }
 
@@ -36,8 +38,16 @@ export {
   type InferDoc,
 } from '@latha/core'
 
-// taxonomy builder lives in @latha/content — the field type is owned here.
-export { taxonomy } from './builders.js'
+// Content-module field builders — these field types are owned by this module.
+export { taxonomy, blocks, type BlockInput, type BlockDefinition } from './builders.js'
+
+// Built-in block definitions for common page sections.
+export {
+  heroBlock,
+  ctaBlock,
+  richTextBlock,
+  imageBlock,
+} from './built-in-blocks.js'
 
 export { ContentModule } from './module.js'
 export type { ContentModuleConfig } from './module.js'
