@@ -7,6 +7,7 @@
  * server-function handler — never statically from client-reachable code.
  */
 
+import { z } from 'zod'
 import { getCookie, setCookie } from '@tanstack/react-start/server'
 import {
   operations,
@@ -48,12 +49,39 @@ declare const process: { env: Record<string, string | undefined> }
 export const DEV_SECRET = 'latha-dev-secret-change-me'
 
 function authOptions(): AuthOptions {
+  const secret = process.env['AUTH_SECRET']
+  if (!secret && process.env['NODE_ENV'] === 'production') {
+    throw new Error('[latha] AUTH_SECRET environment variable is required in production.')
+  }
   return {
-    secret: process.env.AUTH_SECRET ?? DEV_SECRET,
+    secret: secret ?? DEV_SECRET,
     cookieName: DEFAULT_COOKIE_NAME,
     sessionTtlSeconds: DEFAULT_SESSION_TTL_SECONDS,
   }
 }
+
+/**
+ * Zod schema that mirrors `LathaRpcInput`. Validates the raw JSON body before
+ * it reaches the switch — prevents runtime errors from malformed payloads.
+ */
+const LathaRpcInputSchema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('nav') }),
+  z.object({ action: z.literal('entity'), slug: z.string() }),
+  z.object({ action: z.literal('list'), collection: z.string() }),
+  z.object({ action: z.literal('get'), collection: z.string(), id: z.string() }),
+  z.object({ action: z.literal('create'), collection: z.string(), data: z.record(z.unknown()) }),
+  z.object({ action: z.literal('update'), collection: z.string(), id: z.string(), data: z.record(z.unknown()) }),
+  z.object({ action: z.literal('remove'), collection: z.string(), id: z.string() }),
+  z.object({ action: z.literal('getGlobal'), slug: z.string() }),
+  z.object({ action: z.literal('saveGlobal'), slug: z.string(), data: z.record(z.unknown()) }),
+  z.object({ action: z.literal('listTerms'), slug: z.string() }),
+  z.object({ action: z.literal('createTerm'), slug: z.string(), data: z.record(z.unknown()) }),
+  z.object({ action: z.literal('updateTerm'), slug: z.string(), id: z.string(), data: z.record(z.unknown()) }),
+  z.object({ action: z.literal('removeTerm'), slug: z.string(), id: z.string() }),
+  z.object({ action: z.literal('currentUser') }),
+  z.object({ action: z.literal('login'), email: z.string(), password: z.string() }),
+  z.object({ action: z.literal('logout') }),
+])
 
 function humanize(input: string): string {
   const spaced = input.replace(/[_-]+/g, ' ').trim()
@@ -208,9 +236,9 @@ async function currentAuthUser(latha: LathaInstance): Promise<AuthUser | null> {
  */
 export async function dispatchLathaRpc(
   config: ResolvedConfig,
-  input: LathaRpcInput,
+  rawInput: unknown,
 ): Promise<JsonValue> {
-  return (await handleLathaRequest(config, input)) as JsonValue
+  return (await handleLathaRequest(config, rawInput)) as JsonValue
 }
 
 /** Actions available without an authenticated admin session. */
@@ -223,8 +251,13 @@ const PUBLIC_ACTIONS = new Set<LathaRpcInput['action']>([
 /** Dispatch a single RPC request against the running instance. */
 export async function handleLathaRequest(
   config: ResolvedConfig,
-  input: LathaRpcInput,
+  rawInput: unknown,
 ): Promise<unknown> {
+  const parseResult = LathaRpcInputSchema.safeParse(rawInput)
+  if (!parseResult.success) {
+    throw new Error(`Invalid RPC input: ${parseResult.error.message}`)
+  }
+  const input = parseResult.data
   const latha = await getRuntime(config)
   const basePath = config.adminPath || '/admin'
 
@@ -294,6 +327,7 @@ export async function handleLathaRequest(
       )
       setCookie(opts.cookieName ?? DEFAULT_COOKIE_NAME, token, {
         httpOnly: true,
+        secure: process.env['NODE_ENV'] !== 'development',
         sameSite: 'lax',
         path: '/',
         maxAge: opts.sessionTtlSeconds,
@@ -304,6 +338,7 @@ export async function handleLathaRequest(
       const opts = authOptions()
       setCookie(opts.cookieName ?? DEFAULT_COOKIE_NAME, '', {
         httpOnly: true,
+        secure: process.env['NODE_ENV'] !== 'development',
         path: '/',
         maxAge: 0,
       })

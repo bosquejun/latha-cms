@@ -12,7 +12,6 @@
  * `latha.config` module.
  */
 import { createFileRoute } from '@tanstack/react-router'
-import type { LathaRpcInput } from '@latha/admin-sdk'
 
 // The route id must be a string literal — TanStack's router generator parses it
 // statically. Keep it in sync with `DEFAULT_RPC_PATH` in `default-rpc.ts`.
@@ -22,7 +21,8 @@ export const Route = (createFileRoute as (path: string) => any)('/__latha/rpc')(
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {
-        const data = (await request.json()) as LathaRpcInput
+        // Pass raw JSON — dispatchLathaRpc validates shape with Zod before dispatch.
+        const data: unknown = await request.json()
         const [{ default: config }, { dispatchLathaRpc }] = await Promise.all([
           import('virtual:latha/config'),
           import('../server.js'),
