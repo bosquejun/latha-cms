@@ -117,8 +117,8 @@ export function EntityForm({
     },
   })
 
-  const mainFields = fields.filter((f) => !f.admin?.sidebar && !f.admin?.hidden)
-  const sidebarFields = fields.filter((f) => f.admin?.sidebar && !f.admin?.hidden)
+  const mainFields = fields.filter((f) => !f.meta?.sidebar && !f.meta?.hidden)
+  const sidebarFields = fields.filter((f) => f.meta?.sidebar && !f.meta?.hidden)
 
   const extensions = useExtensions()
   const hasSidebarSlots =

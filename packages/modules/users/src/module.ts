@@ -27,10 +27,10 @@ export function UsersModule(config: UsersModuleConfig = {}): Module {
     roles: relationship({
       to: 'roles',
       many: true,
-      admin: { sidebar: true, description: 'Roles assigned to this user.' },
+      meta: { sidebar: true, description: 'Roles assigned to this user.' },
     }),
     // Write-only credential material — never shown in the admin UI.
-    passwordHash: text({ admin: { hidden: true } }),
+    passwordHash: text({ meta: { hidden: true } }),
     ...(config.fields ?? {}),
   })
 

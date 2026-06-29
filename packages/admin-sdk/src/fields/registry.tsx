@@ -6,7 +6,6 @@
  * (`registerFieldRenderer`) without forking the SDK.
  */
 
-import type { FieldType } from '@latha/core'
 import type { FieldRenderer } from './types.js'
 import { TextField } from './renderers/TextField.js'
 import { RichTextField } from './renderers/RichTextField.js'
@@ -16,7 +15,9 @@ import { DateField } from './renderers/DateField.js'
 import { SelectField } from './renderers/SelectField.js'
 import { FallbackField } from './renderers/FallbackField.js'
 
-const registry = new Map<FieldType, FieldRenderer>([
+// Keyed by string so module-registered types (taxonomy, media, etc.) can be
+// added without requiring admin-sdk to know about every possible type.
+const registry = new Map<string, FieldRenderer>([
   ['text', TextField],
   ['richtext', RichTextField],
   ['number', NumberField],
@@ -31,15 +32,12 @@ const registry = new Map<FieldType, FieldRenderer>([
 ])
 
 /** Resolve the renderer for a field type, falling back to the JSON editor. */
-export function getFieldRenderer(type: FieldType): FieldRenderer {
+export function getFieldRenderer(type: string): FieldRenderer {
   return registry.get(type) ?? FallbackField
 }
 
 /** Override or add a renderer for a field type. */
-export function registerFieldRenderer(
-  type: FieldType,
-  renderer: FieldRenderer,
-): void {
+export function registerFieldRenderer(type: string, renderer: FieldRenderer): void {
   registry.set(type, renderer)
 }
 

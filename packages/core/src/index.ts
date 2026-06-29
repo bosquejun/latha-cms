@@ -9,9 +9,6 @@
 // Types
 export * from './types/index.js'
 
-// Schema bridge
-export { buildZodSchema, type InferFields } from './schema/builder.js'
-
 // Field builders + document type inference
 export {
   text,
@@ -20,12 +17,11 @@ export {
   date,
   select,
   richtext,
-  media,
   relationship,
-  taxonomy,
   group,
   array,
   stampFields,
+  type PhantomMeta,
   type AnyFieldDef,
   type FieldsRecord,
   type InferDoc,
@@ -43,6 +39,35 @@ export { runHooks, runHookEvent } from './hooks/engine.js'
 
 // Registry
 export { ModuleRegistry } from './registry/index.js'
+
+// Field type registry + canonical field types (extensibility seam for modules)
+export {
+  type FieldMeta,
+  type FieldTypeEntry,
+  FieldRegistry,
+  baseFieldConfigSchema,
+  type BaseFieldConfig,
+  fieldRegistry,
+  registerFieldType,
+  type FieldTypeMap,
+  type FieldFromMap,
+  type FieldTypeKey,
+  // Canonical aliases — widen as modules augment FieldTypeMap
+  type Field,
+  type FieldType,
+  // Convenience aliases for built-in field config types
+  type TextField,
+  type NumberField,
+  type BooleanField,
+  type DateField,
+  type SelectField,
+  type RichTextField,
+  type RelationshipField,
+  type GroupField,
+  type ArrayField,
+  buildZodSchema,
+  type InferFields,
+} from './fields/index.js'
 
 // Bootstrap
 export { defineConfig, bootstrapLatha } from './bootstrap/index.js'

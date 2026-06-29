@@ -12,7 +12,6 @@
 
 import type { ComponentType } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import type { FieldType } from '@latha/core'
 import type { AdminZone, WidgetContext } from './zones.js'
 import type { FieldRenderer } from '../fields/types.js'
 
@@ -87,7 +86,7 @@ export interface SettingsPageExtension extends SettingsPageConfig {
 
 export interface FieldRendererConfig {
   /** The field type this renderer handles (overrides the built-in). */
-  type: FieldType
+  type: string
 }
 
 export interface FieldRendererExtension extends FieldRendererConfig {

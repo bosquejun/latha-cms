@@ -45,11 +45,11 @@ export const rolesEntity: Entity = {
     label: text(),
     description: text(),
     // System roles (public/authenticated/admin) are seeded and non-deletable.
-    system: boolean({ defaultValue: false, admin: { hidden: true } }),
+    system: boolean({ defaultValue: false, meta: { hidden: true } }),
     permissions: relationship({
       to: PERMISSIONS_SLUG,
       many: true,
-      admin: { description: 'Permissions granted to this role.' },
+      meta: { description: 'Permissions granted to this role.' },
     }),
   }),
   hooks: {

@@ -15,7 +15,7 @@
 
 import { assertAccess } from '../access/evaluator.js'
 import { runHookEvent } from '../hooks/engine.js'
-import { buildZodSchema } from '../schema/builder.js'
+import { fieldRegistry } from '../fields/registry.js'
 import type { Doc, Query } from '../types/adapter.js'
 import type { Collection, Document, Entity } from '../types/collection.js'
 import type { LathaInstance } from '../types/config.js'
@@ -114,7 +114,7 @@ export async function create(
   )
   await runGuards(ctx, collection, 'create', { data })
 
-  const schema = buildZodSchema(collection.fields)
+  const schema = fieldRegistry.buildDocumentSchema(collection.fields)
   const validated = schema.parse(data) as Record<string, unknown>
 
   const afterHooks = await runHookEvent(collection.hooks, 'beforeCreate', {
@@ -154,7 +154,7 @@ export async function update(
   await runGuards(ctx, collection, 'update', { doc: previousDoc, data })
 
   // Partial update: only validate the provided keys.
-  const schema = buildZodSchema(collection.fields).partial()
+  const schema = fieldRegistry.buildDocumentSchema(collection.fields).partial()
   const validated = schema.parse(data) as Record<string, unknown>
 
   const beforeData = await runHookEvent(collection.hooks, 'beforeUpdate', {
@@ -251,7 +251,7 @@ export async function saveGlobal(
   )
   await runGuards(ctx, document, operation, { doc: existing ?? undefined, data })
 
-  const base = buildZodSchema(document.fields)
+  const base = fieldRegistry.buildDocumentSchema(document.fields)
   const schema = existing ? base.partial() : base
   const validated = schema.parse(data) as Record<string, unknown>
 

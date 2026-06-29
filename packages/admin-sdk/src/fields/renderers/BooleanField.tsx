@@ -22,7 +22,7 @@ export function BooleanField({
           onChange={(e) => onChange(e.target.checked)}
           onBlur={onBlur}
         />
-        {field.admin?.label ?? humanize(field.name)}
+        {field.meta?.label ?? humanize(field.name)}
       </label>
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>

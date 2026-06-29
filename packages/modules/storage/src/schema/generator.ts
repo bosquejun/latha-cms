@@ -7,7 +7,7 @@
  * `CREATE TABLE` statements and to marshal values to/from SQLite.
  *
  * Field → column mapping:
- *   text | richtext | media | date | select(single) | relationship(single)  → TEXT
+ *   text | richtext | date | select(single) | relationship(single)         → TEXT
  *   number                                                                   → REAL / INTEGER
  *   boolean                                                                  → INTEGER (0/1)
  *   group | array | *(many)                                                  → TEXT (JSON)
@@ -38,7 +38,6 @@ function columnKindForField(field: Field): ColumnKind {
   switch (field.type) {
     case 'text':
     case 'richtext':
-    case 'media':
     case 'date':
       return 'text'
     case 'number':
@@ -46,15 +45,17 @@ function columnKindForField(field: Field): ColumnKind {
     case 'boolean':
       return 'boolean'
     case 'select':
-      return field.many ? 'json' : 'text'
     case 'relationship':
-    case 'taxonomy':
       return field.many ? 'json' : 'text'
     case 'group':
     case 'array':
       return 'json'
-    default:
-      return 'text'
+    default: {
+      // Module-registered types (e.g. taxonomy) are handled generically:
+      // multi-value fields are stored as JSON, single-value as TEXT.
+      const ext = field as unknown as Record<string, unknown>
+      return ext.many ? 'json' : 'text'
+    }
   }
 }
 

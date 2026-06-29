@@ -3,6 +3,15 @@
  * entity factories, plus the config-driven content API.
  */
 
+import type { BaseFieldConfig } from '@latha/core'
+
+// Augment core's FieldTypeMap so consumers get taxonomy field types automatically.
+declare module '@latha/core' {
+  interface FieldTypeMap {
+    taxonomy: BaseFieldConfig & { type: 'taxonomy'; to: string; many?: boolean }
+  }
+}
+
 export { Collection, Document, Taxonomy } from './entities.js'
 export type {
   CollectionConfig,
@@ -19,15 +28,16 @@ export {
   date,
   select,
   richtext,
-  media,
   relationship,
-  taxonomy,
   group,
   array,
   type AnyFieldDef,
   type FieldsRecord,
   type InferDoc,
 } from '@latha/core'
+
+// taxonomy builder lives in @latha/content — the field type is owned here.
+export { taxonomy } from './builders.js'
 
 export { ContentModule } from './module.js'
 export type { ContentModuleConfig } from './module.js'

@@ -8,6 +8,9 @@
  * runs `onInit` → `migrate` → `onReady`, and exposes entity lookups.
  */
 
+import '../fields/builtins.js'
+import { fieldRegistry } from '../fields/registry.js'
+import type { FieldTypeEntry } from '../fields/registry.js'
 import { ModuleRegistry } from '../registry/index.js'
 import type { Entity } from '../types/collection.js'
 import type { Guard } from '../types/guard.js'
@@ -61,6 +64,10 @@ class Latha implements LathaInstance {
 
   registerGuard(guard: Guard): void {
     this.guards.push(guard)
+  }
+
+  registerFieldType(entry: FieldTypeEntry): void {
+    fieldRegistry.register(entry)
   }
 
   async boot(): Promise<this> {

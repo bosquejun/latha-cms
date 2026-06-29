@@ -17,9 +17,9 @@ export function SelectField({
   return (
     <FieldWrap
       htmlFor={id}
-      label={field.admin?.label ?? humanize(field.name)}
+      label={field.meta?.label ?? humanize(field.name)}
       required={field.required}
-      description={field.admin?.description}
+      description={field.meta?.description}
       error={error}
     >
       <Select
