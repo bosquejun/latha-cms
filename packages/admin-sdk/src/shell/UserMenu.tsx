@@ -1,10 +1,15 @@
-/**
- * UserMenu — avatar trigger + dropdown: identity, theme toggle, sign out.
- * Closes on outside click via a transparent fixed overlay (kit pattern).
- */
-import { useState } from 'react'
-import { Avatar } from '@latha/ui'
-import { Check, LogOut, Moon, Sun, UserRound } from 'lucide-react'
+/** UserMenu — avatar trigger + dropdown: identity, theme toggle, sign out. */
+import {
+  Avatar,
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@latha/ui'
+import { LogOut, Moon, Sun, UserRound } from 'lucide-react'
 import type { Theme } from './useTheme.js'
 
 export interface UserMenuProps {
@@ -24,55 +29,50 @@ function initials(email: string | null): string {
 }
 
 export function UserMenu({ email, role, theme, onThemeChange, onSignOut }: UserMenuProps) {
-  const [open, setOpen] = useState(false)
   return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-label={email ?? 'User menu'}
-        className="flex h-9 items-center gap-inline rounded-md px-inline text-foreground hover:bg-accent"
-      >
-        <Avatar size="sm" fallback={initials(email)} alt={email ?? undefined} />
-        <span className="hidden text-body font-medium sm:inline">{email}</span>
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-[60]" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-[calc(100%+var(--space-tight))] z-[70] min-w-[224px] rounded-md border border-border bg-popover p-stack text-popover-foreground shadow-lg">
-            <div className="px-inline pb-tight pt-inline">
-              <div className="text-body font-medium">{email}</div>
-              {role && (
-                <div className="mt-stack flex items-center gap-stack text-caption capitalize text-muted-foreground">
-                  <UserRound className="size-3" />
-                  {role}
-                </div>
-              )}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label={email ?? 'User menu'}
+          className="flex h-9 items-center gap-inline rounded-md px-inline text-foreground hover:bg-accent"
+        >
+          <Avatar size="sm" fallback={initials(email)} alt={email ?? undefined} />
+          <span className="hidden text-body font-medium sm:inline">{email}</span>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-[224px]">
+        <div className="px-inline pb-tight pt-inline">
+          <div className="text-body font-medium">{email}</div>
+          {role && (
+            <div className="mt-stack flex items-center gap-stack text-caption capitalize text-muted-foreground">
+              <UserRound className="size-3" />
+              {role}
             </div>
-            <div className="my-stack h-px bg-border" />
-            <p className="px-inline py-stack text-label text-muted-foreground">Theme</p>
-            <button
-              onClick={() => onThemeChange('light')}
-              className="flex w-full items-center gap-inline rounded-sm px-inline py-tight text-small hover:bg-accent [&_svg]:size-4"
-            >
-              <Sun /> Light {theme === 'light' && <Check className="ml-auto size-3.5" />}
-            </button>
-            <button
-              onClick={() => onThemeChange('dark')}
-              className="flex w-full items-center gap-inline rounded-sm px-inline py-tight text-small hover:bg-accent [&_svg]:size-4"
-            >
-              <Moon /> Dark {theme === 'dark' && <Check className="ml-auto size-3.5" />}
-            </button>
-            <div className="my-stack h-px bg-border" />
-            <button
-              onClick={onSignOut}
-              className="flex w-full items-center gap-inline rounded-sm px-inline py-tight text-small text-destructive hover:bg-accent [&_svg]:size-4"
-            >
-              <LogOut /> Sign out
-            </button>
-          </div>
-        </>
-      )}
-    </div>
+          )}
+        </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel>Theme</DropdownMenuLabel>
+        <DropdownMenuCheckboxItem
+          checked={theme === 'light'}
+          onCheckedChange={() => onThemeChange('light')}
+        >
+          <Sun /> Light
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          checked={theme === 'dark'}
+          onCheckedChange={() => onThemeChange('dark')}
+        >
+          <Moon /> Dark
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onSelect={onSignOut}
+          className="text-destructive focus:text-destructive"
+        >
+          <LogOut /> Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

@@ -1,4 +1,4 @@
-import { Switch } from '@latha/ui'
+import { Label, Switch } from '@latha/ui'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 
@@ -12,10 +12,7 @@ export function BooleanField({
 }: FieldControlProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label
-        htmlFor={id}
-        className="flex items-center gap-2.5 text-sm font-medium text-foreground"
-      >
+      <Label htmlFor={id} className="flex items-center gap-2.5 font-medium">
         <Switch
           id={id}
           checked={Boolean(value)}
@@ -23,7 +20,7 @@ export function BooleanField({
           onBlur={onBlur}
         />
         {field.meta?.label ?? humanize(field.name)}
-      </label>
+      </Label>
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   )
