@@ -1,11 +1,9 @@
-import { Field as FieldWrap, Textarea } from '@latha/ui'
+import { Field as FieldWrap } from '@latha/ui'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
+import { LexicalEditor } from './lexical/LexicalEditor.js'
+import type { LexicalExtension } from './lexical/registry.js'
 
-/**
- * Phase 3 richtext renderer — a plain multiline textarea. A real rich-text
- * editor can be swapped in later without touching the registry contract.
- */
 export function RichTextField({
   field,
   id,
@@ -14,6 +12,10 @@ export function RichTextField({
   onBlur,
   error,
 }: FieldControlProps) {
+  const lexicalConfig = (field as Record<string, unknown>).lexicalConfig as
+    | LexicalExtension
+    | undefined
+
   return (
     <FieldWrap
       htmlFor={id}
@@ -22,12 +24,12 @@ export function RichTextField({
       description={field.meta?.description}
       error={error}
     >
-      <Textarea
+      <LexicalEditor
         id={id}
         value={typeof value === 'string' ? value : ''}
-        placeholder={field.meta?.placeholder}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
         onBlur={onBlur}
+        lexicalConfig={lexicalConfig}
       />
     </FieldWrap>
   )

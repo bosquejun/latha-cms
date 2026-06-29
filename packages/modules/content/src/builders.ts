@@ -1,12 +1,18 @@
 /**
  * Field builders provided by @latha/content.
  *
- * `taxonomy()` lives here because the taxonomy field type is owned by this
- * module — it is registered in ContentModule.onInit and its builder belongs
+ * `taxonomy()` and `blocks()` live here because those field types are owned by
+ * this module — registered in ContentModule.onInit and their builders belong
  * alongside that registration, not in core.
  */
 
-import type { FieldMeta, PhantomMeta } from '@latha/core'
+import type { FieldMeta, PhantomMeta, FieldsRecord } from '@latha/core'
+import { stampFields } from '@latha/core'
+import type { Field } from '@latha/core'
+
+/* -------------------------------------------------------------------------- */
+/*  taxonomy                                                                   */
+/* -------------------------------------------------------------------------- */
 
 interface TaxonomyOpts {
   to: string
@@ -36,4 +42,59 @@ export function taxonomy<const O extends TaxonomyOpts>(
   opts: O,
 ): TaxonomyBuilt<O> {
   return { ...opts, type: 'taxonomy' } as TaxonomyBuilt<O>
+}
+
+/* -------------------------------------------------------------------------- */
+/*  blocks                                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * What the developer writes when defining a block type.
+ * `fields` is a FieldsRecord (name → builder result, no `name` key yet).
+ */
+export interface BlockInput {
+  type: string
+  label: string
+  fields: FieldsRecord
+}
+
+/**
+ * The processed form stored in the field config.
+ * `fields` has been stamped — each entry is a full Field with `name` included.
+ */
+export interface BlockDefinition {
+  type: string
+  label: string
+  fields: Field[]
+}
+
+interface BlocksOpts {
+  blocks: BlockInput[]
+  required?: boolean
+  meta?: FieldMeta
+}
+
+type BlocksBuilt<O extends BlocksOpts> = {
+  type: 'blocks'
+  blocks: BlockDefinition[]
+  required?: boolean
+  meta?: FieldMeta
+} & PhantomMeta<Array<Record<string, unknown>>, IsPresent<O>>
+
+/**
+ * A composable page-builder field: an ordered array of typed block objects.
+ * Pass `blocks` from `@latha/content` (heroBlock, ctaBlock, etc.) or define
+ * your own inline.
+ */
+export function blocks<const O extends BlocksOpts>(opts: O): BlocksBuilt<O> {
+  const { blocks: blockInputs, ...rest } = opts
+  return {
+    ...rest,
+    type: 'blocks',
+    blocks: blockInputs.map((b) => ({
+      type: b.type,
+      label: b.label,
+      fields: stampFields(b.fields),
+    })),
+  } as BlocksBuilt<O>
 }

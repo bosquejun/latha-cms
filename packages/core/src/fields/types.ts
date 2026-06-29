@@ -20,13 +20,33 @@
 
 import type { BaseFieldConfig } from './registry.js'
 
+/**
+ * Open extensibility seam for richtext field Lexical configuration.
+ *
+ * Admin-SDK (or any package that owns a Lexical implementation) augments this
+ * interface with concrete Lexical types. Core defines it empty so the `richtext`
+ * field config can carry `lexicalConfig` without depending on Lexical itself.
+ *
+ * ```ts
+ * // in @latha/admin-sdk
+ * declare module '@latha/core' {
+ *   interface RichTextExtensions {
+ *     nodes?: Klass<LexicalNode>[]
+ *     plugins?: ReactNode[]
+ *     theme?: EditorThemeClasses
+ *   }
+ * }
+ * ```
+ */
+export interface RichTextExtensions {}
+
 export interface FieldTypeMap {
   text: BaseFieldConfig & { type: 'text'; minLength?: number; maxLength?: number }
   number: BaseFieldConfig & { type: 'number'; min?: number; max?: number; integer?: boolean }
   boolean: BaseFieldConfig & { type: 'boolean' }
   date: BaseFieldConfig & { type: 'date' }
   select: BaseFieldConfig & { type: 'select'; options: string[]; many?: boolean }
-  richtext: BaseFieldConfig & { type: 'richtext' }
+  richtext: BaseFieldConfig & { type: 'richtext'; lexicalConfig?: RichTextExtensions }
   relationship: BaseFieldConfig & { type: 'relationship'; to: string; many?: boolean }
   group: BaseFieldConfig & { type: 'group'; fields: FieldFromMap[] }
   array: BaseFieldConfig & { type: 'array'; fields: FieldFromMap[] }

@@ -6,12 +6,13 @@
  * so the registry, migration, and operations layers pick them up without any
  * content-specific plumbing.
  *
- * `onInit` registers the `taxonomy` field type with the kernel's field registry,
- * since that type is owned by this module.
+ * `onInit` registers the `taxonomy` and `blocks` field types with the kernel's
+ * field registry, since those types are owned by this module.
  */
 
 import { z } from 'zod'
 import { type Module, type Entity, type LathaInstance } from '@latha/core'
+import type { BlockDefinition } from './builders.js'
 
 export interface ContentModuleConfig {
   entities: Entity[]
@@ -32,6 +33,36 @@ export function ContentModule(config: ContentModuleConfig): Module {
         }),
         buildDataSchema: (config) =>
           (config.many as boolean | undefined) ? z.array(z.string()) : z.string(),
+      })
+
+      cms.registerFieldType({
+        configSchema: z.object({
+          type: z.literal('blocks'),
+          blocks: z.array(
+            z.object({
+              type: z.string(),
+              label: z.string(),
+              fields: z.array(z.record(z.unknown())),
+            }),
+          ),
+        }),
+        buildDataSchema: (config, registry) => {
+          const defs = config.blocks as BlockDefinition[]
+          if (!defs || defs.length === 0) {
+            return z.array(z.object({ type: z.string() }))
+          }
+          type DiscrimOption = z.ZodObject<{ type: z.ZodTypeAny } & z.ZodRawShape>
+          const variants = defs.map((def) => {
+            const bodySchema = registry.buildDocumentSchema(
+              def.fields as Array<Record<string, unknown>>,
+            )
+            return z
+              .object({ type: z.literal(def.type) })
+              .merge(bodySchema) as unknown as DiscrimOption
+          })
+          const [first, ...rest] = variants as [DiscrimOption, ...DiscrimOption[]]
+          return z.array(z.discriminatedUnion('type', [first, ...rest]))
+        },
       })
     },
   }

@@ -35,6 +35,7 @@ import type {
   NumberField,
   RelationshipField,
   RichTextField,
+  RichTextExtensions,
   SelectField,
   TextField,
 } from '../fields/types.js'
@@ -234,10 +235,12 @@ export function select<const O extends SelectOpts>(
   })
 }
 
+type RichTextOpts = CommonOpts & { defaultValue?: string; lexicalConfig?: RichTextExtensions }
+
 /** Rich text (HTML/markdown) — stored as a string. */
-export function richtext<
-  const O extends CommonOpts & { defaultValue?: string } = {},
->(opts?: O): Built<RichTextField, string, IsPresent<O>> {
+export function richtext<const O extends RichTextOpts = {}>(
+  opts?: O,
+): Built<RichTextField, string, IsPresent<O>> {
   return withMeta<RichTextField, string, IsPresent<O>>({
     type: 'richtext',
     ...opts,
