@@ -43,10 +43,22 @@ export { taxonomy, blocks, type BlockInput, type BlockDefinition } from './build
 
 // Built-in block definitions for common page sections.
 export {
-  heroBlock,
-  ctaBlock,
+  // Content
   richTextBlock,
   imageBlock,
+  videoBlock,
+  embedBlock,
+  columnsBlock,
+  spacerBlock,
+  // Marketing
+  heroBlock,
+  ctaBlock,
+  bannerBlock,
+  featuresBlock,
+  statsBlock,
+  testimonialBlock,
+  faqBlock,
+  galleryBlock,
 } from './built-in-blocks.js'
 
 export { ContentModule } from './module.js'
