@@ -10,19 +10,41 @@ import { HeadingNode, QuoteNode } from '@lexical/rich-text'
 import { ListNode, ListItemNode } from '@lexical/list'
 import { LinkNode, AutoLinkNode } from '@lexical/link'
 import type { EditorState } from 'lexical'
+import { Fragment } from 'react'
 import { InitialValuePlugin } from './InitialValuePlugin.js'
 import { ToolbarPlugin } from './ToolbarPlugin.js'
+import { getGlobalLexicalExtensions, type LexicalExtension } from './registry.js'
 
-const NODES = [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, AutoLinkNode]
+const BUILT_IN_NODES = [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, AutoLinkNode]
 
 interface LexicalEditorProps {
   id?: string
   value: string
   onChange: (value: string) => void
   onBlur: () => void
+  lexicalConfig?: LexicalExtension
 }
 
-export function LexicalEditor({ id, value, onChange, onBlur }: LexicalEditorProps) {
+export function LexicalEditor({ id, value, onChange, onBlur, lexicalConfig }: LexicalEditorProps) {
+  const globalExts = getGlobalLexicalExtensions()
+
+  const allNodes = [
+    ...BUILT_IN_NODES,
+    ...globalExts.flatMap((e) => e.nodes ?? []),
+    ...(lexicalConfig?.nodes ?? []),
+  ]
+
+  const allPlugins = [
+    ...globalExts.flatMap((e) => e.plugins ?? []),
+    ...(lexicalConfig?.plugins ?? []),
+  ]
+
+  const mergedTheme = Object.assign(
+    {},
+    ...globalExts.map((e) => e.theme ?? {}),
+    lexicalConfig?.theme ?? {},
+  )
+
   function handleChange(editorState: EditorState) {
     onChange(JSON.stringify(editorState.toJSON()))
   }
@@ -31,8 +53,8 @@ export function LexicalEditor({ id, value, onChange, onBlur }: LexicalEditorProp
     <LexicalComposer
       initialConfig={{
         namespace: id ?? 'richtext-editor',
-        nodes: NODES,
-        theme: {},
+        nodes: allNodes,
+        theme: mergedTheme,
         onError(error: Error) {
           console.error('[Lexical]', error)
         },
@@ -62,6 +84,9 @@ export function LexicalEditor({ id, value, onChange, onBlur }: LexicalEditorProp
         <LinkPlugin />
         <InitialValuePlugin value={value} />
         <OnChangePlugin onChange={handleChange} ignoreSelectionChange={true} />
+        {allPlugins.map((plugin, i) => (
+          <Fragment key={i}>{plugin}</Fragment>
+        ))}
       </div>
     </LexicalComposer>
   )

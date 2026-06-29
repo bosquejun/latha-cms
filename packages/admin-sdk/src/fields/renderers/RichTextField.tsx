@@ -2,6 +2,7 @@ import { Field as FieldWrap } from '@latha/ui'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 import { LexicalEditor } from './lexical/LexicalEditor.js'
+import type { LexicalExtension } from './lexical/registry.js'
 
 export function RichTextField({
   field,
@@ -11,6 +12,10 @@ export function RichTextField({
   onBlur,
   error,
 }: FieldControlProps) {
+  const lexicalConfig = (field as Record<string, unknown>).lexicalConfig as
+    | LexicalExtension
+    | undefined
+
   return (
     <FieldWrap
       htmlFor={id}
@@ -24,6 +29,7 @@ export function RichTextField({
         value={typeof value === 'string' ? value : ''}
         onChange={onChange}
         onBlur={onBlur}
+        lexicalConfig={lexicalConfig}
       />
     </FieldWrap>
   )

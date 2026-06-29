@@ -89,6 +89,12 @@ export {
 // Client surface — typed RPC client, React provider/hooks, RPC contract types
 export * from './client/index.js'
 
+// Lexical extensibility — register global nodes/plugins/theme for richtext fields
+export {
+  registerLexicalExtension,
+  type LexicalExtension,
+} from './fields/renderers/lexical/registry.js'
+
 // Views
 export {
   CollectionList,
