@@ -4,8 +4,9 @@
  * Given a list of fields it builds a TanStack Form, renders each field through
  * the renderer registry, and validates with the Zod schema compiled from the
  * same field definitions (`buildZodSchema`) — the single validation layer.
- * Fields marked `admin.sidebar` move to the 1/3 sidebar; the rest fill the 2/3
- * main column.
+ * Fields marked `field.meta?.sidebar` move to the 1/3 right panel; the rest
+ * fill the main column. A sticky action bar floats below the topbar so Save
+ * is always reachable regardless of form length.
  */
 
 import { useForm } from '@tanstack/react-form'
@@ -155,41 +156,82 @@ export function EntityForm({
         void form.handleSubmit()
       }}
     >
+      {/* ── Sticky action bar ───────────────────────────────────────────────
+          Stays pinned just below the fixed topbar so Save is always visible
+          no matter how long the form is. Uses bg-background/95 + backdrop-blur
+          so content scrolling underneath reads clearly.
+      ──────────────────────────────────────────────────────────────────────── */}
+      <div className="sticky top-(--header-height) z-10 mb-page-gap -mx-6 flex items-center gap-3 border-b border-border bg-background/95 px-6 py-2.5 backdrop-blur-sm">
+        <div className="flex min-w-0 items-center gap-2">
+          {formError ? (
+            <span className="text-sm text-destructive">{formError}</span>
+          ) : (
+            <form.Subscribe selector={(s) => s.isDirty}>
+              {(isDirty) =>
+                isDirty ? (
+                  <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <span className="inline-block h-2 w-2 rounded-full bg-warning" />
+                    Unsaved changes
+                  </span>
+                ) : null
+              }
+            </form.Subscribe>
+          )}
+        </div>
+
+        <div className="ml-auto flex shrink-0 items-center gap-inline">
+          {onCancel && (
+            <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+          <form.Subscribe selector={(s) => s.isSubmitting}>
+            {(isSubmitting) => (
+              <Button type="submit" size="sm" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving…' : submitLabel}
+              </Button>
+            )}
+          </form.Subscribe>
+        </div>
+      </div>
+
       <PageLayout
         right={
           hasSidebar ? (
             <aside className="flex flex-col gap-form">
-              <Slot zone="form.sidebar.before" entity={entity} recordId={recordId} className="flex flex-col gap-form" />
+              <Slot
+                zone="form.sidebar.before"
+                entity={entity}
+                recordId={recordId}
+                className="flex flex-col gap-form"
+              />
               {sidebarFields.map(renderField)}
-              <Slot zone="form.sidebar.after" entity={entity} recordId={recordId} className="flex flex-col gap-form" />
+              <Slot
+                zone="form.sidebar.after"
+                entity={entity}
+                recordId={recordId}
+                className="flex flex-col gap-form"
+              />
             </aside>
           ) : undefined
         }
       >
         <div className="flex flex-col gap-form">
-          <Slot zone="form.before" entity={entity} recordId={recordId} className="flex flex-col gap-form" />
+          <Slot
+            zone="form.before"
+            entity={entity}
+            recordId={recordId}
+            className="flex flex-col gap-form"
+          />
           {mainFields.map(renderField)}
-          <Slot zone="form.after" entity={entity} recordId={recordId} className="flex flex-col gap-form" />
+          <Slot
+            zone="form.after"
+            entity={entity}
+            recordId={recordId}
+            className="flex flex-col gap-form"
+          />
         </div>
       </PageLayout>
-
-      <div className="mt-section flex items-center gap-inline">
-        <form.Subscribe selector={(s) => s.isSubmitting}>
-          {(isSubmitting) => (
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving…' : submitLabel}
-            </Button>
-          )}
-        </form.Subscribe>
-        {onCancel && (
-          <Button type="button" variant="ghost" onClick={onCancel}>
-            Cancel
-          </Button>
-        )}
-        {formError && (
-          <span className="text-sm text-destructive">{formError}</span>
-        )}
-      </div>
     </form>
   )
 }

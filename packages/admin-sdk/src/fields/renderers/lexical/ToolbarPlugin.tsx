@@ -25,6 +25,7 @@ import { $findMatchingParent } from '@lexical/utils'
 import { Button, Separator } from '@latha/ui'
 import {
   Bold,
+  Code,
   Heading2,
   Heading3,
   Heading4,
@@ -44,6 +45,7 @@ export function ToolbarPlugin() {
   const [isItalic, setIsItalic] = useState(false)
   const [isUnderline, setIsUnderline] = useState(false)
   const [isStrikethrough, setIsStrikethrough] = useState(false)
+  const [isCode, setIsCode] = useState(false)
   const [blockType, setBlockType] = useState<string>('paragraph')
 
   useEffect(() => {
@@ -56,6 +58,7 @@ export function ToolbarPlugin() {
         setIsItalic(selection.hasFormat('italic'))
         setIsUnderline(selection.hasFormat('underline'))
         setIsStrikethrough(selection.hasFormat('strikethrough'))
+        setIsCode(selection.hasFormat('code'))
 
         const anchorNode = selection.anchor.getNode()
         const element =
@@ -108,13 +111,14 @@ export function ToolbarPlugin() {
 
   return (
     <div className="flex flex-wrap items-center gap-0.5 border-b border-input px-2 py-1.5">
+      {/* History */}
       <Button
         type="button"
         size="icon"
         variant="ghost"
         className="h-7 w-7"
         onClick={() => editor.dispatchCommand(UNDO_COMMAND, undefined)}
-        title="Undo"
+        title="Undo (⌘Z)"
       >
         <Undo2 className="h-3.5 w-3.5" />
       </Button>
@@ -124,20 +128,21 @@ export function ToolbarPlugin() {
         variant="ghost"
         className="h-7 w-7"
         onClick={() => editor.dispatchCommand(REDO_COMMAND, undefined)}
-        title="Redo"
+        title="Redo (⌘⇧Z)"
       >
         <Redo2 className="h-3.5 w-3.5" />
       </Button>
 
       <Separator orientation="vertical" className="mx-1 h-5" />
 
+      {/* Inline formatting */}
       <Button
         type="button"
         size="icon"
         variant={isBold ? 'secondary' : 'ghost'}
         className="h-7 w-7"
         onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold')}
-        title="Bold"
+        title="Bold (⌘B)"
       >
         <Bold className="h-3.5 w-3.5" />
       </Button>
@@ -147,7 +152,7 @@ export function ToolbarPlugin() {
         variant={isItalic ? 'secondary' : 'ghost'}
         className="h-7 w-7"
         onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic')}
-        title="Italic"
+        title="Italic (⌘I)"
       >
         <Italic className="h-3.5 w-3.5" />
       </Button>
@@ -157,7 +162,7 @@ export function ToolbarPlugin() {
         variant={isUnderline ? 'secondary' : 'ghost'}
         className="h-7 w-7"
         onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline')}
-        title="Underline"
+        title="Underline (⌘U)"
       >
         <Underline className="h-3.5 w-3.5" />
       </Button>
@@ -167,13 +172,24 @@ export function ToolbarPlugin() {
         variant={isStrikethrough ? 'secondary' : 'ghost'}
         className="h-7 w-7"
         onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough')}
-        title="Strikethrough"
+        title="Strikethrough (⌘⇧X)"
       >
         <Strikethrough className="h-3.5 w-3.5" />
+      </Button>
+      <Button
+        type="button"
+        size="icon"
+        variant={isCode ? 'secondary' : 'ghost'}
+        className="h-7 w-7"
+        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code')}
+        title="Inline code (⌘E)"
+      >
+        <Code className="h-3.5 w-3.5" />
       </Button>
 
       <Separator orientation="vertical" className="mx-1 h-5" />
 
+      {/* Block types */}
       <Button
         type="button"
         size="icon"
@@ -210,13 +226,14 @@ export function ToolbarPlugin() {
         variant={blockType === 'quote' ? 'secondary' : 'ghost'}
         className="h-7 w-7"
         onClick={formatQuote}
-        title="Quote"
+        title="Blockquote"
       >
         <Quote className="h-3.5 w-3.5" />
       </Button>
 
       <Separator orientation="vertical" className="mx-1 h-5" />
 
+      {/* Lists */}
       <Button
         type="button"
         size="icon"
@@ -229,7 +246,7 @@ export function ToolbarPlugin() {
             editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)
           }
         }}
-        title="Bullet List"
+        title="Bullet list"
       >
         <List className="h-3.5 w-3.5" />
       </Button>
@@ -245,7 +262,7 @@ export function ToolbarPlugin() {
             editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)
           }
         }}
-        title="Numbered List"
+        title="Numbered list"
       >
         <ListOrdered className="h-3.5 w-3.5" />
       </Button>
