@@ -1,4 +1,4 @@
-import { Badge, Button, Card, CardContent, CardHeader, Separator, cn } from '@latha/ui'
+import { Badge, Button, Card, CardContent, Separator, cn } from '@latha/ui'
 import { ChevronDown, ChevronUp, GripVertical, Layers, Plus, Trash2, X } from 'lucide-react'
 import type { Field } from '@latha/core'
 import { useState } from 'react'
@@ -185,8 +185,8 @@ export function BlocksField({
             const preview = textPreview(def, item)
 
             return (
-              <Card key={index} className="overflow-hidden">
-                <CardHeader className="flex-row items-center gap-2 border-b bg-muted/20 px-3 py-2">
+              <Card key={index} className="overflow-hidden py-0 gap-0">
+                <div className="flex items-center gap-2 border-b border-border bg-muted/20 px-3 py-2">
                   {/* Drag handle (visual only) */}
                   <GripVertical
                     className="h-4 w-4 shrink-0 cursor-grab text-muted-foreground/40"
@@ -263,7 +263,7 @@ export function BlocksField({
                       />
                     </Button>
                   </div>
-                </CardHeader>
+                </div>
 
                 {!isCollapsed && (
                   <CardContent className="flex flex-col gap-form pt-form">
