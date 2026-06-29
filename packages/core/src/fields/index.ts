@@ -7,5 +7,21 @@ export {
   fieldRegistry,
   registerFieldType,
 } from './registry.js'
-export type { FieldTypeMap, FieldFromMap, FieldTypeKey } from './types.js'
+export type {
+  FieldTypeMap,
+  FieldFromMap,
+  FieldTypeKey,
+  Field,
+  FieldType,
+  TextField,
+  NumberField,
+  BooleanField,
+  DateField,
+  SelectField,
+  RichTextField,
+  MediaField,
+  RelationshipField,
+  GroupField,
+  ArrayField,
+} from './types.js'
 // builtins.ts is a side-effect module — imported once in bootstrap/index.ts

@@ -24,12 +24,12 @@
  * operations all keep consuming the same runtime shape.
  */
 
+import type { FieldMeta } from '../fields/meta.js'
 import type {
   ArrayField,
   BooleanField,
   DateField,
   Field,
-  FieldMeta,
   FieldType,
   GroupField,
   NumberField,
@@ -37,7 +37,7 @@ import type {
   RichTextField,
   SelectField,
   TextField,
-} from '../types/field.js'
+} from '../fields/types.js'
 
 /* -------------------------------------------------------------------------- */
 /*  Phantom carriers + inference                                              */

@@ -8,7 +8,7 @@
  */
 
 import { z } from 'zod'
-import type { Field } from '../types/field.js'
+import type { Field } from '../fields/types.js'
 import { fieldRegistry } from '../fields/registry.js'
 
 /**

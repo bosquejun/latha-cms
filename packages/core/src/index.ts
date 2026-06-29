@@ -43,7 +43,7 @@ export { runHooks, runHookEvent } from './hooks/engine.js'
 // Registry
 export { ModuleRegistry } from './registry/index.js'
 
-// Field type registry (extensibility seam for modules)
+// Field type registry + canonical field types (extensibility seam for modules)
 export {
   type FieldMeta,
   type FieldTypeEntry,
@@ -55,6 +55,20 @@ export {
   type FieldTypeMap,
   type FieldFromMap,
   type FieldTypeKey,
+  // Canonical aliases — widen as modules augment FieldTypeMap
+  type Field,
+  type FieldType,
+  // Convenience aliases for built-in field config types
+  type TextField,
+  type NumberField,
+  type BooleanField,
+  type DateField,
+  type SelectField,
+  type RichTextField,
+  type MediaField,
+  type RelationshipField,
+  type GroupField,
+  type ArrayField,
 } from './fields/index.js'
 
 // Bootstrap

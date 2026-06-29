@@ -46,15 +46,17 @@ function columnKindForField(field: Field): ColumnKind {
     case 'boolean':
       return 'boolean'
     case 'select':
-      return field.many ? 'json' : 'text'
     case 'relationship':
-    case 'taxonomy':
       return field.many ? 'json' : 'text'
     case 'group':
     case 'array':
       return 'json'
-    default:
-      return 'text'
+    default: {
+      // Module-registered types (e.g. taxonomy) are handled generically:
+      // multi-value fields are stored as JSON, single-value as TEXT.
+      const ext = field as unknown as Record<string, unknown>
+      return ext.many ? 'json' : 'text'
+    }
   }
 }
 

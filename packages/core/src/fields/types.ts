@@ -40,4 +40,29 @@ export type FieldFromMap = FieldTypeMap[keyof FieldTypeMap]
 /** Union of all registered field type discriminants. */
 export type FieldTypeKey = keyof FieldTypeMap
 
+/**
+ * Canonical `Field` alias — widens as modules augment `FieldTypeMap`.
+ * Use this wherever the old `Field` union was used.
+ */
+export type Field = FieldFromMap
+
+/**
+ * Canonical `FieldType` alias — the union of all registered type discriminants.
+ * Widens as modules augment `FieldTypeMap`.
+ */
+export type FieldType = FieldTypeKey
+
+// Convenience aliases for specific built-in field config types.
+// These exist so internal code (builders, renderers) can keep descriptive names.
+export type TextField = FieldTypeMap['text']
+export type NumberField = FieldTypeMap['number']
+export type BooleanField = FieldTypeMap['boolean']
+export type DateField = FieldTypeMap['date']
+export type SelectField = FieldTypeMap['select']
+export type RichTextField = FieldTypeMap['richtext']
+export type MediaField = FieldTypeMap['media']
+export type RelationshipField = FieldTypeMap['relationship']
+export type GroupField = FieldTypeMap['group']
+export type ArrayField = FieldTypeMap['array']
+
 export type { BaseFieldConfig }

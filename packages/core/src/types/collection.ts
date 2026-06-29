@@ -7,7 +7,7 @@
  */
 
 import type { EntityAccess, Operation } from './access.js'
-import type { Field } from './field.js'
+import type { Field } from '../fields/types.js'
 import type { EntityHooks } from './hook.js'
 
 export type EntityKind = 'collection' | 'document' | 'taxonomy'
