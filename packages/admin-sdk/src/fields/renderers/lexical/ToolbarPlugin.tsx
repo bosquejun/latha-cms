@@ -27,6 +27,7 @@ import {
   Bold,
   Heading2,
   Heading3,
+  Heading4,
   Italic,
   List,
   ListOrdered,
@@ -79,7 +80,7 @@ export function ToolbarPlugin() {
   }, [editor])
 
   const formatHeading = useCallback(
-    (tag: 'h2' | 'h3') => {
+    (tag: 'h2' | 'h3' | 'h4') => {
       editor.update(() => {
         const selection = $getSelection()
         if (!$isRangeSelection(selection)) return
@@ -192,6 +193,16 @@ export function ToolbarPlugin() {
         title="Heading 3"
       >
         <Heading3 className="h-3.5 w-3.5" />
+      </Button>
+      <Button
+        type="button"
+        size="icon"
+        variant={blockType === 'h4' ? 'secondary' : 'ghost'}
+        className="h-7 w-7"
+        onClick={() => formatHeading('h4')}
+        title="Heading 4"
+      >
+        <Heading4 className="h-3.5 w-3.5" />
       </Button>
       <Button
         type="button"
