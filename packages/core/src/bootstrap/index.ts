@@ -8,6 +8,7 @@
  * runs `onInit` → `migrate` → `onReady`, and exposes entity lookups.
  */
 
+import '../fields/builtins.js'
 import { ModuleRegistry } from '../registry/index.js'
 import type { Entity } from '../types/collection.js'
 import type { Guard } from '../types/guard.js'

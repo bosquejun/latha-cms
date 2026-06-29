@@ -44,6 +44,20 @@ export { runHooks, runHookEvent } from './hooks/engine.js'
 // Registry
 export { ModuleRegistry } from './registry/index.js'
 
+// Field type registry (extensibility seam for modules)
+export {
+  type FieldMeta,
+  type FieldTypeEntry,
+  FieldRegistry,
+  baseFieldConfigSchema,
+  type BaseFieldConfig,
+  fieldRegistry,
+  registerFieldType,
+  type FieldTypeMap,
+  type FieldFromMap,
+  type FieldTypeKey,
+} from './fields/index.js'
+
 // Bootstrap
 export { defineConfig, bootstrapLatha } from './bootstrap/index.js'
 
