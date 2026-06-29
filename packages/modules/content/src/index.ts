@@ -3,6 +3,15 @@
  * entity factories, plus the config-driven content API.
  */
 
+import type { BaseFieldConfig } from '@latha/core'
+
+// Augment core's FieldTypeMap so consumers get taxonomy field types automatically.
+declare module '@latha/core' {
+  interface FieldTypeMap {
+    taxonomy: BaseFieldConfig & { type: 'taxonomy'; to: string; many?: boolean }
+  }
+}
+
 export { Collection, Document, Taxonomy } from './entities.js'
 export type {
   CollectionConfig,

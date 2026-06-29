@@ -27,6 +27,8 @@ export interface FieldTypeMap {
   date: BaseFieldConfig & { type: 'date' }
   select: BaseFieldConfig & { type: 'select'; options: string[]; many?: boolean }
   richtext: BaseFieldConfig & { type: 'richtext' }
+  /** Temporary: moves to @latha/media when that module exists. */
+  media: BaseFieldConfig & { type: 'media' }
   relationship: BaseFieldConfig & { type: 'relationship'; to: string; many?: boolean }
   group: BaseFieldConfig & { type: 'group'; fields: FieldFromMap[] }
   array: BaseFieldConfig & { type: 'array'; fields: FieldFromMap[] }

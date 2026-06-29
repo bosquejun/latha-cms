@@ -78,6 +78,12 @@ registerFieldType({
     (config.many as boolean | undefined) ? z.array(z.string()) : z.string(),
 })
 
+// Temporary: media belongs to @latha/media once that module exists.
+registerFieldType({
+  configSchema: z.object({ type: z.literal('media') }),
+  buildDataSchema: () => z.string(),
+})
+
 registerFieldType({
   configSchema: z.object({
     type: z.literal('group'),
