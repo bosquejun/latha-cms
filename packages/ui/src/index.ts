@@ -54,6 +54,10 @@ export {
   TableCaption,
 } from './components/ui/table.js'
 
+// Toast (Sonner)
+export { Toaster } from './components/ui/sonner.js'
+export { toast } from 'sonner'
+
 // Feedback & status primitives
 export { Skeleton } from './components/ui/skeleton.js'
 export { Spinner, spinnerVariants, type SpinnerProps } from './components/ui/spinner.js'
