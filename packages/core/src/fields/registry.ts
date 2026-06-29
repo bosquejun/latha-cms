@@ -43,7 +43,13 @@ export class FieldRegistry {
     for (const field of fields) {
       const type = field.type as string
       const entry = this.entries.get(type)
-      if (!entry) throw new Error(`Unknown field type "${type}". Did the owning module register it?`)
+      // Module-owned field types (e.g. 'blocks', 'taxonomy') are only registered
+      // server-side via onInit. On the client, fall back to z.unknown() so the
+      // form renders; real validation always runs on the server.
+      if (!entry) {
+        shape[field.name as string] = z.unknown()
+        continue
+      }
 
       let schema = entry.buildDataSchema(field, this)
 
