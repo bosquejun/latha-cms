@@ -93,6 +93,9 @@ export const baseFieldConfigSchema = z.object({
       placeholder: z.string().optional(),
       hidden: z.boolean().optional(),
       sidebar: z.boolean().optional(),
+      prefix: z.string().optional(),
+      suffix: z.string().optional(),
+      inputType: z.string().optional(),
     })
     .optional(),
 })

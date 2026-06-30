@@ -10,4 +10,10 @@ export interface FieldMeta {
   hidden?: boolean
   /** Render this field in the form sidebar rather than the main area. */
   sidebar?: boolean
+  /** Left add-on text shown inside the input border (e.g. 'https://'). */
+  prefix?: string
+  /** Right add-on text shown inside the input border (e.g. '.com'). */
+  suffix?: string
+  /** Native <input> type forwarded to the element (e.g. 'url', 'email', 'tel'). */
+  inputType?: string
 }

@@ -5,6 +5,7 @@
  * (topbar ends, sidebar top/bottom, main before/after) to extensions.
  */
 import { useState, type ComponentType, type ReactNode } from 'react'
+import { Toaster } from '@latha/ui'
 import { Sidebar, type SidebarSection, type SidebarLinkProps } from './Sidebar.js'
 import { Topbar } from './Topbar.js'
 import { MobileDrawer } from './MobileDrawer.js'
@@ -76,6 +77,7 @@ export function AdminShell({
           </div>
         </main>
       </div>
+      <Toaster />
     </div>
   )
 }

@@ -11,7 +11,7 @@
 
 import { useForm } from '@tanstack/react-form'
 import { buildZodSchema, type Field } from '@latha/core'
-import { Button } from '@latha/ui'
+import { Button, toast } from '@latha/ui'
 import { useId, useMemo, useState } from 'react'
 import { getFieldRenderer } from '../fields/registry.js'
 import { Slot } from '../extensions/Slot.js'
@@ -91,7 +91,6 @@ export function EntityForm({
     [fields, initialValues],
   )
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [formError, setFormError] = useState<string | null>(null)
 
   const form = useForm({
     defaultValues: defaults,
@@ -110,11 +109,10 @@ export function EntityForm({
         return
       }
       setErrors({})
-      setFormError(null)
       try {
         await onSubmit(cleaned)
       } catch (err) {
-        setFormError(err instanceof Error ? err.message : 'Something went wrong.')
+        toast.error(err instanceof Error ? err.message : 'Something went wrong.')
       }
     },
   })
@@ -163,20 +161,16 @@ export function EntityForm({
       ──────────────────────────────────────────────────────────────────────── */}
       <div className="sticky top-(--header-height) z-10 mb-page-gap -mx-6 flex items-center gap-3 border-b border-border bg-background/95 px-6 py-2.5 backdrop-blur-sm">
         <div className="flex min-w-0 items-center gap-2">
-          {formError ? (
-            <span className="text-sm text-destructive">{formError}</span>
-          ) : (
-            <form.Subscribe selector={(s) => s.isDirty}>
-              {(isDirty) =>
-                isDirty ? (
-                  <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <span className="inline-block h-2 w-2 rounded-full bg-warning" />
-                    Unsaved changes
-                  </span>
-                ) : null
-              }
-            </form.Subscribe>
-          )}
+          <form.Subscribe selector={(s) => s.isDirty}>
+            {(isDirty) =>
+              isDirty ? (
+                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <span className="inline-block h-2 w-2 rounded-full bg-warning" />
+                  Unsaved changes
+                </span>
+              ) : null
+            }
+          </form.Subscribe>
         </div>
 
         <div className="ml-auto flex shrink-0 items-center gap-inline">

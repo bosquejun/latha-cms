@@ -9,6 +9,12 @@
 import {
   Badge,
   Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   StatusBadge,
   Table,
   TBody,
@@ -17,7 +23,7 @@ import {
   THead,
   TR,
 } from '@latha/ui'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { humanize } from '../schema.js'
 import type { AdminEntity } from '../schema.js'
 
@@ -70,11 +76,17 @@ export function CollectionList({
   onDelete,
   busy,
 }: CollectionListProps) {
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const columns = resolveColumns(entity)
   const titleCol = entity.useAsTitle ?? columns[0]
   const selectCols = new Set(
     entity.fields.filter((f) => f.type === 'select').map((f) => f.name),
   )
+
+  const pendingRow = rows.find((r) => r.id === pendingDeleteId)
+  const pendingLabel = pendingRow
+    ? String(pendingRow[titleCol ?? 'id'] ?? pendingRow.id)
+    : ''
 
   if (rows.length === 0) {
     return (
@@ -85,47 +97,80 @@ export function CollectionList({
   }
 
   return (
-    <Table>
-      <THead>
-        <TR>
-          {columns.map((col) => (
-            <TH key={col}>{humanize(col)}</TH>
-          ))}
-          <TH className="w-0 text-right">Actions</TH>
-        </TR>
-      </THead>
-      <TBody>
-        {rows.map((row) => (
-          <TR key={row.id}>
+    <>
+      <Table>
+        <THead>
+          <TR>
             {columns.map((col) => (
-              <TD key={col}>
-                {col === titleCol ? (
-                  <a
-                    href={getEditHref(row.id)}
-                    className="font-medium text-foreground hover:underline"
+              <TH key={col}>{humanize(col)}</TH>
+            ))}
+            <TH className="w-0 text-right">Actions</TH>
+          </TR>
+        </THead>
+        <TBody>
+          {rows.map((row) => (
+            <TR key={row.id}>
+              {columns.map((col) => (
+                <TD key={col}>
+                  {col === titleCol ? (
+                    <a
+                      href={getEditHref(row.id)}
+                      className="font-medium text-foreground hover:underline"
+                    >
+                      {renderCell(row[col], selectCols.has(col))}
+                    </a>
+                  ) : (
+                    renderCell(row[col], selectCols.has(col))
+                  )}
+                </TD>
+              ))}
+              <TD className="text-right">
+                {onDelete && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={busy}
+                    onClick={() => setPendingDeleteId(row.id)}
                   >
-                    {renderCell(row[col], selectCols.has(col))}
-                  </a>
-                ) : (
-                  renderCell(row[col], selectCols.has(col))
+                    Delete
+                  </Button>
                 )}
               </TD>
-            ))}
-            <TD className="text-right">
-              {onDelete && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  disabled={busy}
-                  onClick={() => onDelete(row.id)}
-                >
-                  Delete
-                </Button>
-              )}
-            </TD>
-          </TR>
-        ))}
-      </TBody>
-    </Table>
+            </TR>
+          ))}
+        </TBody>
+      </Table>
+
+      <Dialog
+        open={pendingDeleteId !== null}
+        onOpenChange={(open) => { if (!open) setPendingDeleteId(null) }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete "{pendingLabel}"?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPendingDeleteId(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={busy}
+              onClick={() => {
+                if (pendingDeleteId) {
+                  onDelete?.(pendingDeleteId)
+                  setPendingDeleteId(null)
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
