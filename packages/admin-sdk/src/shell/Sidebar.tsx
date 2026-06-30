@@ -9,7 +9,8 @@
  */
 
 import { useState, type ComponentType, type ReactNode } from 'react'
-import { ChevronDownIcon, HomeIcon } from 'lucide-animated'
+import { LayoutDashboard } from 'lucide-react'
+import { ChevronDownIcon } from 'lucide-animated'
 import { cn } from '@latha/ui'
 import { Slot } from '../extensions/Slot.js'
 
@@ -148,7 +149,7 @@ export function Sidebar({
       <div className="flex flex-1 flex-col gap-stack">
         {showDashboard
           ? renderLink(
-              { key: '__dashboard', href: homeHref, label: 'Dashboard', icon: HomeIcon },
+              { key: '__dashboard', href: homeHref, label: 'Dashboard', icon: LayoutDashboard },
               currentPath === homeHref,
             )
           : null}

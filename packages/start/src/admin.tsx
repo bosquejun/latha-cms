@@ -48,15 +48,12 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import {
-  FileTextIcon,
-  FileStackIcon,
   FolderOpenIcon,
-  FolderTreeIcon,
   SettingsIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from 'lucide-animated'
-import type { SidebarIcon } from '@latha/admin-sdk'
+import { KIND_ICON, type SidebarIcon } from '@latha/admin-sdk'
 import { RelationshipField } from './fields/RelationshipField.js'
 
 // Register the client-aware relationship renderer into the SDK registry so
@@ -135,13 +132,6 @@ function parseRoute(
   return { view: 'notfound' }
 }
 
-// Animated icons used in the sidebar nav.
-const KIND_ICON: Record<NavItem['kind'], SidebarIcon> = {
-  collection: FileTextIcon,
-  document: FileStackIcon,
-  taxonomy: FolderTreeIcon,
-}
-
 // Static lucide-react icons for non-sidebar UI (dashboard cards, empty states).
 const KIND_ICON_STATIC: Record<NavItem['kind'], LucideIcon> = {
   collection: FileText,
@@ -214,7 +204,7 @@ function buildSidebar(nav: NavSection[], extras: ExtraEntry[]): SidebarSection[]
       key: item.slug,
       href: item.href,
       label: item.label,
-      icon: KIND_ICON[item.kind] ?? FileTextIcon,
+      icon: KIND_ICON[item.kind],
       order: item.order ?? 0,
     }))
     if (section.label) {
