@@ -94,5 +94,7 @@ export function mergeExtensions(sources: AdminExtensions[]): AdminExtensions {
       sources.flatMap((s) => s.nav ?? []),
       (n) => n.href,
     ),
+    // Later source wins per key (the app overrides module defaults).
+    kindIcons: Object.assign({}, ...sources.map((s) => s.kindIcons ?? {})),
   }
 }

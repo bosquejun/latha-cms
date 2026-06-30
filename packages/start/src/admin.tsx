@@ -43,14 +43,17 @@ import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent } fro
 import {
   Plus,
   FileText,
-  Files,
-  Folder,
   FolderTree,
   Settings,
-  ChevronLeft,
-  ChevronRight,
   type LucideIcon,
 } from 'lucide-react'
+import {
+  FolderOpenIcon,
+  SettingsIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from 'lucide-animated'
+import type { SidebarIcon } from '@latha/admin-sdk'
 import { RelationshipField } from './fields/RelationshipField.js'
 
 // Register the client-aware relationship renderer into the SDK registry so
@@ -129,12 +132,6 @@ function parseRoute(
   return { view: 'notfound' }
 }
 
-const KIND_ICON: Record<NavItem['kind'], LucideIcon> = {
-  collection: FileText,
-  document: Files,
-  taxonomy: FolderTree,
-}
-
 // Default ordering: ungrouped items sit at the top (no heading), named groups
 // sit below. Any entry overrides these via its own `order`.
 const ORDER_UNGROUPED = -100
@@ -175,7 +172,7 @@ interface ExtraEntry {
  * Lower sorts first. Groups merge by label; ungrouped items each become their
  * own headless entry so they can be positioned freely among the groups.
  */
-function buildSidebar(nav: NavSection[], extras: ExtraEntry[]): SidebarSection[] {
+function buildSidebar(nav: NavSection[], extras: ExtraEntry[], kindIcons: Partial<Record<string, SidebarIcon>>): SidebarSection[] {
   const groups = new Map<string, RawSection>()
   const singles: RawSection[] = []
 
@@ -200,7 +197,7 @@ function buildSidebar(nav: NavSection[], extras: ExtraEntry[]): SidebarSection[]
       key: item.slug,
       href: item.href,
       label: item.label,
-      icon: KIND_ICON[item.kind] ?? FileText,
+      icon: kindIcons[item.kind],
       order: item.order ?? 0,
     }))
     if (section.label) {
@@ -237,7 +234,7 @@ function buildSidebar(nav: NavSection[], extras: ExtraEntry[]): SidebarSection[]
     collapsible: section.collapsible,
     defaultCollapsed: section.defaultCollapsed,
     // A collapsible group renders as a menu row, so give it a leading folder icon.
-    icon: section.collapsible ? Folder : undefined,
+    icon: section.collapsible ? FolderOpenIcon : undefined,
     items: section.items,
   }))
 }
@@ -309,8 +306,8 @@ export function LathaAdmin() {
   const mainNav = navSections.filter((section) => section.area !== 'settings')
   const settingsNav = navSections.filter((section) => section.area === 'settings')
 
-  const mainSections = buildSidebar(mainNav, mainExtras(extensions, basePath))
-  const settingsSections = buildSidebar(settingsNav, settingsExtras(extensions, basePath))
+  const mainSections = buildSidebar(mainNav, mainExtras(extensions, basePath), extensions.kindIcons)
+  const settingsSections = buildSidebar(settingsNav, settingsExtras(extensions, basePath), extensions.kindIcons)
 
   // The settings area swaps the whole sidebar; the path under `/admin/settings`
   // decides which sidebar shows. The footer button lands on the first settings
@@ -360,10 +357,10 @@ function SettingsNavButton({ href }: { href: string }) {
         className="flex items-center justify-between gap-2.5 rounded-md border border-transparent px-3 py-1.5 text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent/60 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground"
       >
         <span className="flex items-center gap-2.5">
-          <Settings />
+          <SettingsIcon />
           Settings
         </span>
-        <ChevronRight />
+        <ChevronRightIcon />
       </Link>
     </div>
   )
@@ -376,7 +373,7 @@ function SettingsBackHeader({ basePath }: { basePath: string }) {
       to={basePath}
       className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-semibold text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground"
     >
-      <ChevronLeft />
+      <ChevronLeftIcon />
       Settings
     </Link>
   )
@@ -427,7 +424,7 @@ const SPAN_CLASS: Record<number, string> = {
 
 function Dashboard({ nav }: { nav: NavSection[] }) {
   const { client } = useLatha()
-  const { dashboardWidgets } = useExtensions()
+  const { dashboardWidgets, kindIcons } = useExtensions()
   const items = nav.flatMap((section) => section.items)
   return (
     <>
@@ -438,7 +435,7 @@ function Dashboard({ nav }: { nav: NavSection[] }) {
       />
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {items.map((item) => {
-          const Icon = KIND_ICON[item.kind] ?? FileText
+          const Icon = kindIcons[item.kind]
           return (
             <Link key={item.slug} to={item.href}>
               <Card className="gap-0 p-0 transition-colors hover:border-foreground/20">
@@ -446,7 +443,7 @@ function Dashboard({ nav }: { nav: NavSection[] }) {
                   <span className="text-small font-medium text-muted-foreground">
                     {item.label}
                   </span>
-                  <Icon className="size-4 text-muted-foreground" />
+                  {Icon ? <Icon className="size-4 text-muted-foreground" /> : null}
                 </div>
                 <StatCount client={client} item={item} />
               </Card>
@@ -838,7 +835,7 @@ function SettingsCard({
   Icon,
 }: {
   page: SettingsPageExtension
-  Icon: typeof Settings
+  Icon: LucideIcon
 }) {
   const { basePath } = useLatha()
   return (

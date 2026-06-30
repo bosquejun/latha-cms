@@ -9,13 +9,13 @@
  */
 
 import { useState, type ComponentType, type ReactNode } from 'react'
-import {
-  ChevronDown,
-  LayoutDashboard,
-  type LucideIcon,
-} from 'lucide-react'
+import { LayoutDashboard } from 'lucide-react'
+import { ChevronDownIcon } from 'lucide-animated'
 import { cn } from '@latha/ui'
 import { Slot } from '../extensions/Slot.js'
+
+/** Accepts both plain lucide-react icons and lucide-animated icons. */
+export type SidebarIcon = ComponentType<{ className?: string }>
 
 export interface SidebarLinkProps {
   href: string
@@ -29,7 +29,7 @@ export interface SidebarItem {
   key: string
   href: string
   label: string
-  icon?: LucideIcon
+  icon?: SidebarIcon
   /** Render as a plain `<a>` opening a new tab (skips the router Link). */
   external?: boolean
 }
@@ -49,7 +49,7 @@ export interface SidebarSection {
   /** Start collapsed (only when `collapsible`). Default false. */
   defaultCollapsed?: boolean
   /** Leading icon for a collapsible group's menu row. */
-  icon?: LucideIcon
+  icon?: SidebarIcon
 }
 
 export interface SidebarProps {
@@ -224,7 +224,7 @@ function CollapsibleGroup({
           {Icon ? <Icon /> : null}
           {section.label}
         </span>
-        <ChevronDown
+        <ChevronDownIcon
           className={cn('transition-transform', !open && '-rotate-90')}
         />
       </button>

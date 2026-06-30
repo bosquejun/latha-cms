@@ -14,6 +14,7 @@ import type { ComponentType } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import type { AdminZone, WidgetContext } from './zones.js'
 import type { FieldRenderer } from '../fields/types.js'
+import type { SidebarIcon } from '../shell/Sidebar.js'
 
 /** A widget is any component that accepts the zone `WidgetContext`. */
 export type WidgetComponent = ComponentType<WidgetContext>
@@ -113,6 +114,8 @@ export interface AdminExtensions {
   settings?: SettingsPageExtension[]
   fields?: FieldRendererExtension[]
   nav?: NavItemExtension[]
+  /** Per-entity-kind sidebar icons. Keys are entity kind strings (e.g. `collection`). */
+  kindIcons?: Partial<Record<string, SidebarIcon>>
 }
 
 // ── Identity helpers ────────────────────────────────────────────────────────
