@@ -14,6 +14,7 @@ import type {
   SettingsPageExtension,
   WidgetExtension,
 } from './types.js'
+import type { SidebarIcon } from '../shell/Sidebar.js'
 
 export interface ExtensionRegistry {
   /** Widgets registered for a zone, in render order. */
@@ -32,6 +33,8 @@ export interface ExtensionRegistry {
   pageFor(path: string): PageExtension | undefined
   /** Resolve a settings page by its mount path. */
   settingsFor(path: string): SettingsPageExtension | undefined
+  /** Icons for entity kinds contributed by modules/apps (e.g. collection → FileTextIcon). */
+  readonly kindIcons: Partial<Record<string, SidebarIcon>>
   /** True when nothing has been registered (lets hosts skip extension chrome). */
   readonly isEmpty: boolean
 }
@@ -80,6 +83,7 @@ export function createExtensionRegistry(
     settings,
     fields,
     nav,
+    kindIcons: ext.kindIcons ?? {},
     pageFor: (path) => pageByPath.get(normalize(path)),
     settingsFor: (path) => settingsByPath.get(normalize(path)),
     isEmpty,

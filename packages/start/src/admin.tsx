@@ -53,7 +53,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from 'lucide-animated'
-import { KIND_ICON, type SidebarIcon } from '@latha/admin-sdk'
+import type { SidebarIcon } from '@latha/admin-sdk'
 import { RelationshipField } from './fields/RelationshipField.js'
 
 // Register the client-aware relationship renderer into the SDK registry so
@@ -132,13 +132,6 @@ function parseRoute(
   return { view: 'notfound' }
 }
 
-// Static lucide-react icons for non-sidebar UI (dashboard cards, empty states).
-const KIND_ICON_STATIC: Record<NavItem['kind'], LucideIcon> = {
-  collection: FileText,
-  document: FileText,
-  taxonomy: FolderTree,
-}
-
 // Default ordering: ungrouped items sit at the top (no heading), named groups
 // sit below. Any entry overrides these via its own `order`.
 const ORDER_UNGROUPED = -100
@@ -179,7 +172,7 @@ interface ExtraEntry {
  * Lower sorts first. Groups merge by label; ungrouped items each become their
  * own headless entry so they can be positioned freely among the groups.
  */
-function buildSidebar(nav: NavSection[], extras: ExtraEntry[]): SidebarSection[] {
+function buildSidebar(nav: NavSection[], extras: ExtraEntry[], kindIcons: Partial<Record<string, SidebarIcon>>): SidebarSection[] {
   const groups = new Map<string, RawSection>()
   const singles: RawSection[] = []
 
@@ -204,7 +197,7 @@ function buildSidebar(nav: NavSection[], extras: ExtraEntry[]): SidebarSection[]
       key: item.slug,
       href: item.href,
       label: item.label,
-      icon: KIND_ICON[item.kind],
+      icon: kindIcons[item.kind],
       order: item.order ?? 0,
     }))
     if (section.label) {
@@ -313,8 +306,8 @@ export function LathaAdmin() {
   const mainNav = navSections.filter((section) => section.area !== 'settings')
   const settingsNav = navSections.filter((section) => section.area === 'settings')
 
-  const mainSections = buildSidebar(mainNav, mainExtras(extensions, basePath))
-  const settingsSections = buildSidebar(settingsNav, settingsExtras(extensions, basePath))
+  const mainSections = buildSidebar(mainNav, mainExtras(extensions, basePath), extensions.kindIcons)
+  const settingsSections = buildSidebar(settingsNav, settingsExtras(extensions, basePath), extensions.kindIcons)
 
   // The settings area swaps the whole sidebar; the path under `/admin/settings`
   // decides which sidebar shows. The footer button lands on the first settings
@@ -431,7 +424,7 @@ const SPAN_CLASS: Record<number, string> = {
 
 function Dashboard({ nav }: { nav: NavSection[] }) {
   const { client } = useLatha()
-  const { dashboardWidgets } = useExtensions()
+  const { dashboardWidgets, kindIcons } = useExtensions()
   const items = nav.flatMap((section) => section.items)
   return (
     <>
@@ -442,7 +435,7 @@ function Dashboard({ nav }: { nav: NavSection[] }) {
       />
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {items.map((item) => {
-          const Icon = KIND_ICON_STATIC[item.kind] ?? FileText
+          const Icon = kindIcons[item.kind]
           return (
             <Link key={item.slug} to={item.href}>
               <Card className="gap-0 p-0 transition-colors hover:border-foreground/20">
@@ -450,7 +443,7 @@ function Dashboard({ nav }: { nav: NavSection[] }) {
                   <span className="text-small font-medium text-muted-foreground">
                     {item.label}
                   </span>
-                  <Icon className="size-4 text-muted-foreground" />
+                  {Icon ? <Icon className="size-4 text-muted-foreground" /> : null}
                 </div>
                 <StatCount client={client} item={item} />
               </Card>

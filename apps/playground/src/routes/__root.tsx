@@ -8,8 +8,18 @@ import {
 } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { LathaProvider } from '@latha/start'
-import { adminExtensions } from 'virtual:latha/admin-extensions'
+import { mergeExtensions } from '@latha/admin-sdk'
+import { adminExtensions as baseExtensions } from 'virtual:latha/admin-extensions'
+import { FileTextIcon, FileStackIcon, FolderTreeIcon } from 'lucide-animated'
 import appCss from '../styles.css?url'
+
+// Content-module entity kinds → animated sidebar icons. Lives here (not in
+// admin-sdk or start) because icon choices are an app-level concern: this app
+// uses @latha/content and picks the icons it wants for each kind.
+const adminExtensions = mergeExtensions([
+  baseExtensions,
+  { kindIcons: { collection: FileTextIcon, document: FileStackIcon, taxonomy: FolderTreeIcon } },
+])
 
 export const Route = createRootRoute({
   head: () => ({

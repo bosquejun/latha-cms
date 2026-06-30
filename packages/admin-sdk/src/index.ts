@@ -35,7 +35,6 @@ export { useTheme, type Theme } from './shell/useTheme.js'
 export { UserMenu, type UserMenuProps } from './shell/UserMenu.js'
 export { PageHeader, type PageHeaderProps } from './shell/PageHeader.js'
 export { EmptyState, type EmptyStateProps } from './shell/EmptyState.js'
-export { KIND_ICON } from './shell/kindIcon.js'
 export { PageLayout, type PageLayoutProps } from './shell/PageLayout.js'
 export { WidgetLayout, type WidgetLayoutProps } from './shell/WidgetLayout.js'
 
