@@ -40,7 +40,13 @@ import {
   type NavSection,
 } from '@latha/admin-sdk'
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@latha/ui'
-import { Plus } from 'lucide-react'
+import {
+  Plus,
+  FileText,
+  FolderTree,
+  Settings,
+  type LucideIcon,
+} from 'lucide-react'
 import {
   FileTextIcon,
   FileStackIcon,
@@ -129,10 +135,18 @@ function parseRoute(
   return { view: 'notfound' }
 }
 
+// Animated icons used in the sidebar nav.
 const KIND_ICON: Record<NavItem['kind'], SidebarIcon> = {
   collection: FileTextIcon,
   document: FileStackIcon,
   taxonomy: FolderTreeIcon,
+}
+
+// Static lucide-react icons for non-sidebar UI (dashboard cards, empty states).
+const KIND_ICON_STATIC: Record<NavItem['kind'], LucideIcon> = {
+  collection: FileText,
+  document: FileText,
+  taxonomy: FolderTree,
 }
 
 // Default ordering: ungrouped items sit at the top (no heading), named groups
@@ -158,7 +172,7 @@ interface ExtraEntry {
   key: string
   href: string
   label: string
-  icon?: SidebarIcon
+  icon?: LucideIcon
   external?: boolean
   /** Group heading; omit for a free-floating ungrouped entry. */
   group?: string
@@ -273,7 +287,7 @@ function settingsExtras(ext: ExtensionRegistry, basePath: string): ExtraEntry[] 
     key: `settings:${page.path}`,
     href: `${basePath}/settings/${page.path}`,
     label: page.label,
-    icon: page.icon ?? SettingsIcon,
+    icon: page.icon ?? Settings,
     order: page.order,
   }))
 }
@@ -438,7 +452,7 @@ function Dashboard({ nav }: { nav: NavSection[] }) {
       />
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {items.map((item) => {
-          const Icon = KIND_ICON[item.kind] ?? FileTextIcon
+          const Icon = KIND_ICON_STATIC[item.kind] ?? FileText
           return (
             <Link key={item.slug} to={item.href}>
               <Card className="gap-0 p-0 transition-colors hover:border-foreground/20">
@@ -521,7 +535,7 @@ function ListView({ slug, base }: { slug: string; base: string }) {
       />
       {list.length === 0 ? (
         <EmptyState
-          icon={FileTextIcon}
+          icon={FileText}
           title={`No ${entity.data.label.toLowerCase()} yet`}
           description={`Create your first to start managing ${entity.data.label.toLowerCase()}.`}
           action={
@@ -662,7 +676,7 @@ function TaxonomyListView({ slug, base }: { slug: string; base: string }) {
       />
       {list.length === 0 ? (
         <EmptyState
-          icon={FolderTreeIcon}
+          icon={FolderTree}
           title={`No ${entity.data.label.toLowerCase()} yet`}
           description={`Create your first term to start managing ${entity.data.label.toLowerCase()}.`}
           action={
@@ -822,7 +836,7 @@ function SettingsView({
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {pages.map((p) => {
-            const Icon = p.icon ?? SettingsIcon
+            const Icon = p.icon ?? Settings
             return (
               <SettingsCard key={p.path} page={p} Icon={Icon} />
             )
@@ -838,7 +852,7 @@ function SettingsCard({
   Icon,
 }: {
   page: SettingsPageExtension
-  Icon: SidebarIcon
+  Icon: LucideIcon
 }) {
   const { basePath } = useLatha()
   return (

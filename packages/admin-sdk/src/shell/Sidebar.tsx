@@ -14,7 +14,7 @@ import { cn } from '@latha/ui'
 import { Slot } from '../extensions/Slot.js'
 
 /** Accepts both plain lucide-react icons and lucide-animated icons. */
-export type SidebarIcon = ComponentType<{ className?: string; size?: number; animateOnHover?: boolean }>
+export type SidebarIcon = ComponentType<{ className?: string }>
 
 export interface SidebarLinkProps {
   href: string

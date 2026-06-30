@@ -11,6 +11,7 @@
  */
 
 import type { ComponentType } from 'react'
+import type { LucideIcon } from 'lucide-react'
 import type { AdminZone, WidgetContext } from './zones.js'
 import type { FieldRenderer } from '../fields/types.js'
 
@@ -45,7 +46,7 @@ export interface PageConfig {
   /** Sidebar label. */
   label: string
   /** Sidebar icon. */
-  icon?: ComponentType<{ className?: string }>
+  icon?: LucideIcon
   /** Sidebar group heading. Default `Extensions`. */
   group?: string
   /** Routable but hidden from the sidebar. */
@@ -74,7 +75,7 @@ export interface SettingsPageConfig {
   path: string
   label: string
   description?: string
-  icon?: ComponentType<{ className?: string }>
+  icon?: LucideIcon
   order?: number
 }
 
@@ -96,7 +97,7 @@ export interface FieldRendererExtension extends FieldRendererConfig {
 export interface NavItemExtension {
   label: string
   href: string
-  icon?: ComponentType<{ className?: string }>
+  icon?: LucideIcon
   /** Sidebar group heading. Default `Extensions`. */
   group?: string
   /** Open in a new tab. */

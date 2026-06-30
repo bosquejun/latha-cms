@@ -1,8 +1,9 @@
 /** EmptyState — dashed-card empty state for zero-row lists / unbacked screens. */
-import type { ComponentType, ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import type { LucideIcon } from 'lucide-react'
 
 export interface EmptyStateProps {
-  icon: ComponentType<{ className?: string }>
+  icon: LucideIcon
   title: string
   description?: string
   action?: ReactNode
