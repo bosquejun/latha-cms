@@ -12,9 +12,9 @@ export interface LathaInstance {
   config: ResolvedConfig
   db: DBAdapter
   /** Flat list of every entity contributed by every module. */
-  entities: Entity[]
+  entities: Entity<any>[]
   /** Resolve a single entity by slug. */
-  getEntity(slug: string): Entity | undefined
+  getEntity(slug: string): Entity<any> | undefined
   /** Modules in resolved (topologically sorted) order. */
   modules: Module[]
   /**
@@ -74,7 +74,7 @@ export interface Module {
   onInit?: (cms: LathaInstance) => void | Promise<void>
   onReady?: (cms: LathaInstance) => void | Promise<void>
   routes?: ModuleRoutes
-  entities?: Entity[]
+  entities?: Entity<any>[]
   capabilities?: string[]
   adminPages?: AdminPage[]
   /** Admin-UI metadata for this module (sidebar grouping). */

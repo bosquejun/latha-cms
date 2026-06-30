@@ -15,15 +15,20 @@
 import {
   stampFields,
   text,
-  type Collection,
+  type Entity,
   type EntityAccess,
   type EntityAdminConfig,
   type EntityHooks,
-  type Document,
   type FieldsRecord,
   type InferDoc,
-  type Taxonomy,
 } from '@latha/core'
+
+/** Many records, standard CRUD list — `cardinality: 'many'`. */
+export type Collection<TDoc = Record<string, unknown>> = Entity<TDoc> & { cardinality: 'many' }
+/** A single-instance singleton, no list view — `cardinality: 'single'`. */
+export type Document<TDoc = Record<string, unknown>> = Entity<TDoc> & { cardinality: 'single' }
+/** Hierarchical or flat grouping — `cardinality: 'many'`. */
+export type Taxonomy = Entity & { cardinality: 'many' }
 
 export interface CollectionConfig<TDoc = Record<string, unknown>> {
   slug: string
@@ -40,6 +45,7 @@ export function Collection<TFields extends FieldsRecord>(
   const { fields, ...rest } = input
   return {
     kind: 'collection',
+    cardinality: 'many',
     timestamps: true,
     actions: ['read', 'create', 'update', 'delete'],
     ...rest,
@@ -49,7 +55,7 @@ export function Collection<TFields extends FieldsRecord>(
 
 export interface DocumentConfig<TDoc = Record<string, unknown>> {
   slug: string
-  admin?: Document<TDoc>['admin']
+  admin?: Omit<EntityAdminConfig, 'useAsTitle' | 'defaultColumns'>
   access?: EntityAccess<TDoc>
   hooks?: EntityHooks<TDoc>
   timestamps?: boolean
@@ -62,6 +68,7 @@ export function Document<TFields extends FieldsRecord>(
   const { fields, ...rest } = input
   return {
     kind: 'document',
+    cardinality: 'single',
     timestamps: true,
     actions: ['read', 'update'],
     ...rest,
@@ -94,8 +101,10 @@ export function Taxonomy(input: TaxonomyInput): Taxonomy {
 
   return {
     kind: 'taxonomy',
+    cardinality: 'many',
     slug: input.slug,
     hierarchical: input.hierarchical,
+    timestamps: true,
     admin: input.admin,
     actions: ['read', 'create', 'update', 'delete'],
     fields: stampFields({ ...implicit, ...(input.fields ?? {}) }),

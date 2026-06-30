@@ -47,11 +47,8 @@ export interface DBAdapter {
   ): Promise<Doc>
   delete(collection: string, id: string): Promise<void>
 
-  /**
-   * Reconcile the database schema with the given entity definitions
-   * (collections, document singletons, and taxonomies).
-   */
-  migrate(entities: Entity[]): Promise<void>
+  /** Reconcile the database schema with the given entity definitions. */
+  migrate(entities: Entity<any>[]): Promise<void>
 }
 
 export interface StorageAdapter {

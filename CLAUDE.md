@@ -62,7 +62,9 @@ The kernel does **not** know about:
 - Any specific entity kinds (Collection, Document, Taxonomy — these are `@latha/content` concerns)
 - Any concrete module (auth, users, content, media)
 
-The three entity kinds (`Collection`, `Document`, `Taxonomy`) are defined in core because the kernel must handle them uniformly in the registry and operations layer. But the factories (`Collection()`, `Document()`, `Taxonomy()`) and all business logic around them live in `@latha/content`.
+Core's only entity vocabulary is **structural**: every `Entity` has a `cardinality` (`'many'` — standard CRUD list — or `'single'` — one record, no list view) and an optional `hierarchical` flag (a self-referential parent field, for `'many'` entities that support nesting). That's the entirety of what the registry, operations layer, and storage migration need to handle every entity uniformly — they never branch on what a module *calls* the entity, only on its cardinality.
+
+`Entity` also carries one opaque passthrough field, `kind?: string`, that the kernel never reads or branches on — the same contract as a field's `meta` bag. Modules stamp it for their own admin/routing layer to read (e.g. `@latha/content`'s `Collection()`/`Document()`/`Taxonomy()` factories stamp `'collection'`/`'document'`/`'taxonomy'`). `@latha/content` owns `Collection`/`Document`/`Taxonomy` as public vocabulary — they are type aliases over `Entity<TDoc>` narrowed by `cardinality`, not separate interfaces in core. `@latha/admin-sdk` and `@latha/start` derive their own local `'collection' | 'document' | 'taxonomy'` display vocabulary from the opaque `kind` tag (falling back to a cardinality-derived guess when a module leaves it unset) — that vocabulary lives in those packages, never imported from core.
 
 ---
 
@@ -175,17 +177,11 @@ Ask: "Would a minimal CMS with only users and no content need this?" If yes → 
 
 ## Active Refactor: Zod-First Field Registry
 
-**Status: Planned** (next major work item — security & architecture hardening from the June 2026 audit is complete)
+**Status: Complete**
 
-The field type system is being migrated from TypeScript-first (TS interfaces → Zod) to Zod-first (Zod schemas → inferred TS types). See the plan in `docs/refactor-zod-first-fields.md`.
+The field type system has been migrated from TypeScript-first (TS interfaces → Zod) to Zod-first (Zod schemas → inferred TS types). `types/field.ts` and the `schema/builder.ts` switch are gone; `packages/core/src/fields/` (`registry.ts`, `builtins.ts`, `meta.ts`, `types.ts`) is the only mechanism — all field types, including core's 9 built-ins, come from registered `configSchema`/`buildDataSchema` pairs, and `taxonomy()`/`media()` are registered by their owning modules' `onInit`.
 
-Key checkpoints:
-- `types/field.ts` will be deleted. All field types come from Zod schemas.
-- `schema/builder.ts` switch will be deleted. Document schema building uses the registry.
-- `taxonomy()` and `media()` field builders move to their owning modules.
-- Core registers only its 9 built-in field types at startup.
-
-Do not add new field types to `types/field.ts` or new cases to `schema/builder.ts`. Use the registry once it lands.
+Do not add new field types outside the registry (`registerFieldType`) — there is no `types/field.ts` or `schema/builder.ts` switch to fall back to.
 
 ---
 

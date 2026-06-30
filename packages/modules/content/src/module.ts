@@ -15,7 +15,7 @@ import { type Module, type Entity, type LathaInstance } from '@latha/core'
 import type { BlockDefinition } from './builders.js'
 
 export interface ContentModuleConfig {
-  entities: Entity[]
+  entities: Entity<any>[]
 }
 
 export function ContentModule(config: ContentModuleConfig): Module {

@@ -40,6 +40,7 @@ export function UsersModule(config: UsersModuleConfig = {}): Module {
     entities: [
       {
         kind: 'collection',
+        cardinality: 'many',
         slug: USERS_SLUG,
         admin: {
           // Lives in the settings sidebar (behind the Settings button) rather
