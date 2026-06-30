@@ -11,11 +11,11 @@
  */
 
 import { z } from 'zod'
-import { type Module, type Entity, type LathaInstance } from '@latha/core'
+import { type Module, type AnyEntity, type LathaInstance } from '@latha/core'
 import type { BlockDefinition } from './builders.js'
 
 export interface ContentModuleConfig {
-  entities: Entity<any>[]
+  entities: AnyEntity[]
 }
 
 export function ContentModule(config: ContentModuleConfig): Module {

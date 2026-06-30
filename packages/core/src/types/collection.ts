@@ -66,6 +66,22 @@ export interface Entity<TDoc = Record<string, unknown>> {
   kind?: string
 }
 
+/**
+ * An `Entity` with its document shape erased, for contexts that hold many
+ * entities of mutually unrelated `TDoc`s side by side — the module registry,
+ * `LathaInstance.entities`, `DBAdapter.migrate()`. `EntityAccess`/`EntityHooks`
+ * use `TDoc` in both parameter and return position, so `Entity<TDoc>` is
+ * invariant in `TDoc`: there is no subtype relationship between
+ * `Entity<Specific>` and `Entity<Record<string, unknown>>` in either
+ * direction. TypeScript has no existential-type syntax for "an Entity for
+ * some TDoc I don't need to know," so `AnyEntity` names that erasure
+ * explicitly rather than leaving bare `any` scattered at every call site.
+ * Code that only reads structural fields (`cardinality`, `fields`, `kind`,
+ * …) and never calls `access`/`hooks` with a concrete value can keep using
+ * plain `Entity` (defaulting `TDoc` to `Record<string, unknown>`).
+ */
+export type AnyEntity = Entity<any>
+
 /** Narrowing helpers. */
 export function isMany(e: Entity): e is Entity & { cardinality: 'many' } {
   return e.cardinality === 'many'
