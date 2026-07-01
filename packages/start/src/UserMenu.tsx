@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@latha/ui'
 import { LogOut, Moon, Sun, UserRound } from 'lucide-react'
-import type { Theme } from './useTheme.js'
+import type { Theme } from '@latha/admin-sdk'
 
 export interface UserMenuProps {
   email: string | null

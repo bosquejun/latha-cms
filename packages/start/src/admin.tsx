@@ -19,7 +19,6 @@ import {
   EmptyState,
   PageHeader,
   Slot,
-  UserMenu,
   useExtensions,
   useTheme,
   type AdminEntity,
@@ -54,6 +53,7 @@ import {
   ChevronRightIcon,
 } from 'lucide-animated'
 import type { SidebarIcon } from '@latha/admin-sdk'
+import { UserMenu } from './UserMenu.js'
 import { RelationshipField } from './fields/RelationshipField.js'
 
 // Register the client-aware relationship renderer into the SDK registry so
