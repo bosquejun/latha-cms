@@ -12,6 +12,7 @@ import type { Entity } from '@latha/core'
 
 const posts = {
   kind: 'collection',
+  cardinality: 'many',
   slug: 'posts',
   fields: [
     { name: 'title', type: 'text', required: true },

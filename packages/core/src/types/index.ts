@@ -1,6 +1,6 @@
 export * from './access.js'
 export * from './adapter.js'
-export * from './collection.js'
+export * from './entity.js'
 export * from './config.js'
 export * from './guard.js'
 export * from './hook.js'

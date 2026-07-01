@@ -103,22 +103,22 @@ export function createContentApi(options: ContentApiOptions): ContentApi {
 
     async listTerms(slug) {
       return (
-        await operations.findTerms(await ctx(), slug, {
+        await operations.find(await ctx(), slug, {
           sort: [{ field: 'name', direction: 'asc' }],
         })
       ).map(asDoc)
     },
     async createTerm(slug, data) {
-      return asDoc(await operations.createTerm(await ctx(), slug, data))
+      return asDoc(await operations.create(await ctx(), slug, data))
     },
     async updateTerm(slug, id, data) {
-      return asDoc(await operations.updateTerm(await ctx(), slug, id, data))
+      return asDoc(await operations.update(await ctx(), slug, id, data))
     },
     async removeTerm(slug, id) {
-      await operations.destroyTerm(await ctx(), slug, id)
+      await operations.destroy(await ctx(), slug, id)
     },
     async tree(slug) {
-      const docs = await operations.findTerms(await ctx(), slug, {
+      const docs = await operations.find(await ctx(), slug, {
         sort: [{ field: 'name', direction: 'asc' }],
       })
       const terms = docs.map(asDoc)

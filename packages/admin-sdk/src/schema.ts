@@ -9,6 +9,13 @@
 
 import type { Entity, Field } from '@latha/core'
 
+/**
+ * Admin-sdk's own vocabulary for entity flavors. Core has no concept of these
+ * — it only knows `cardinality`/`hierarchical`. Modules tag their entities
+ * with the opaque `entity.kind` string (see `Entity.kind` in `@latha/core`);
+ * `kindOf` below reads that tag, falling back to a cardinality-derived guess
+ * for entities that don't set it.
+ */
 export type EntityKind = 'collection' | 'document' | 'taxonomy'
 
 export interface AdminEntity {
@@ -35,25 +42,28 @@ export function humanize(input: string): string {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1)
 }
 
-function fieldsOf(entity: Entity): Field[] {
-  if (entity.kind === 'taxonomy') return entity.fields ?? []
-  return entity.fields
+function kindOf(entity: Entity): EntityKind {
+  if (entity.kind === 'collection' || entity.kind === 'document' || entity.kind === 'taxonomy') {
+    return entity.kind
+  }
+  return entity.cardinality === 'single' ? 'document' : 'collection'
 }
 
 function labelOf(entity: Entity): string {
   const labels = entity.admin?.labels
-  if (entity.kind === 'document') return labels?.singular ?? humanize(entity.slug)
+  if (kindOf(entity) === 'document') return labels?.singular ?? humanize(entity.slug)
   return labels?.plural ?? humanize(entity.slug)
 }
 
 export function describeEntity(entity: Entity): AdminEntity {
+  const kind = kindOf(entity)
   const base: AdminEntity = {
     slug: entity.slug,
-    kind: entity.kind,
+    kind,
     label: labelOf(entity),
-    fields: fieldsOf(entity),
+    fields: entity.fields,
   }
-  if (entity.kind === 'collection') {
+  if (kind === 'collection') {
     base.useAsTitle = entity.admin?.useAsTitle
     base.defaultColumns = entity.admin?.defaultColumns
   }
@@ -84,10 +94,13 @@ export function buildNav(
 ): AdminNavItem[] {
   return entities
     .filter((e) => !e.admin?.hidden)
-    .map((entity) => ({
-      slug: entity.slug,
-      kind: entity.kind,
-      label: labelOf(entity),
-      href: hrefFor(entity, basePath),
-    }))
+    .map((entity) => {
+      const kind = kindOf(entity)
+      return {
+        slug: entity.slug,
+        kind,
+        label: labelOf(entity),
+        href: hrefFor({ slug: entity.slug, kind }, basePath),
+      }
+    })
 }

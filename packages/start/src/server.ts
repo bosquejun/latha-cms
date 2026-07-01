@@ -14,7 +14,6 @@ import {
   evaluateAccess,
   type Entity,
   type EntityAccess,
-  type Field,
   type LathaInstance,
   type Module,
   type ResolvedConfig,
@@ -39,6 +38,7 @@ import { getRuntime } from './runtime.js'
 import { humanize } from '@latha/admin-sdk'
 import type {
   EntityDescriptor,
+  EntityKind,
   LathaRpcInput,
   NavItem,
   NavSection,
@@ -86,21 +86,31 @@ const LathaRpcInputSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('logout') }),
 ])
 
-function fieldsOf(entity: Entity): Field[] {
-  return entity.kind === 'taxonomy' ? (entity.fields ?? []) : entity.fields
+/**
+ * Core's `entity.kind` is an opaque passthrough tag (see `@latha/content`'s
+ * `Collection`/`Document`/`Taxonomy` factories) — the kernel never reads or
+ * constrains it. `kindOf` resolves it into this module's local `EntityKind`
+ * vocabulary, falling back to a cardinality-derived guess for entities that
+ * don't set it.
+ */
+function kindOf(entity: Entity): EntityKind {
+  if (entity.kind === 'collection' || entity.kind === 'document' || entity.kind === 'taxonomy') {
+    return entity.kind
+  }
+  return entity.cardinality === 'single' ? 'document' : 'collection'
 }
 
 function labelOf(entity: Entity): string {
   const labels = entity.admin?.labels
-  if (entity.kind === 'document') return labels?.singular ?? humanize(entity.slug)
+  if (kindOf(entity) === 'document') return labels?.singular ?? humanize(entity.slug)
   return labels?.plural ?? humanize(entity.slug)
 }
 
-const SEGMENT = {
+const SEGMENT: Record<EntityKind, string> = {
   collection: 'content',
   document: 'documents',
   taxonomy: 'taxonomy',
-} as const
+}
 
 /**
  * Whether `principal` may read `entity` (drives nav visibility). Mirrors the
@@ -153,11 +163,12 @@ async function navOf(
     // Keep main and settings sections distinct even if they share a label.
     const sectionKey = `${area} ${label}`
 
+    const kind = kindOf(entity)
     const item: NavItem = {
       slug: entity.slug,
-      kind: entity.kind,
+      kind,
       label: labelOf(entity),
-      href: `${routeBase}/${SEGMENT[entity.kind]}/${entity.slug}`,
+      href: `${routeBase}/${SEGMENT[kind]}/${entity.slug}`,
       order: entity.admin?.order,
     }
 
@@ -190,13 +201,14 @@ async function navOf(
 }
 
 function describe(entity: Entity): EntityDescriptor {
+  const kind = kindOf(entity)
   const base: EntityDescriptor = {
     slug: entity.slug,
-    kind: entity.kind,
+    kind,
     label: labelOf(entity),
-    fields: fieldsOf(entity) as unknown as EntityDescriptor['fields'],
+    fields: entity.fields as unknown as EntityDescriptor['fields'],
   }
-  if (entity.kind === 'collection') {
+  if (kind === 'collection') {
     base.useAsTitle = entity.admin?.useAsTitle
     base.defaultColumns = entity.admin?.defaultColumns
   }

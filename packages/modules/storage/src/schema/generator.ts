@@ -75,16 +75,15 @@ function sqlTypeForKind(kind: ColumnKind): ColumnPlan['sqlType'] {
 }
 
 /**
- * Build a table plan from any entity. Collections, document singletons, and
- * taxonomies are all stored as tables; the only difference is the field set
- * (taxonomies carry their implicit `name`/`slug`/`parent` fields, populated by
- * the `Taxonomy()` factory) and the default timestamp behavior.
+ * Build a table plan from any entity. Every entity — singleton or list,
+ * hierarchical or not — is stored as a table; the generator only needs its
+ * field set and timestamp setting, both already fully resolved by the
+ * entity's factory.
  */
 export function buildTablePlan(entity: Entity): TablePlan {
-  const fields: Field[] = entity.kind === 'taxonomy' ? entity.fields ?? [] : entity.fields
-  const timestamps = entity.kind === 'taxonomy' ? true : entity.timestamps !== false
+  const timestamps = entity.timestamps !== false
 
-  const columns: ColumnPlan[] = fields.map((field) => {
+  const columns: ColumnPlan[] = entity.fields.map((field) => {
     const kind = columnKindForField(field)
     return {
       name: field.name,

@@ -12,7 +12,7 @@
  */
 
 import type { Operation } from './access.js'
-import type { EntityKind } from './collection.js'
+import type { Cardinality } from './entity.js'
 import type { LathaInstance } from './config.js'
 
 export interface GuardContext {
@@ -22,8 +22,8 @@ export interface GuardContext {
   operation: Operation
   /** Slug of the entity being acted upon. */
   slug: string
-  /** Kind of the entity being acted upon. */
-  kind: EntityKind
+  /** Structural cardinality of the entity being acted upon. */
+  cardinality: Cardinality
   /** The caller principal, opaque to the kernel. `null` for anonymous. */
   principal: unknown
   /** Inbound data for create/update operations. */

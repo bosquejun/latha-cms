@@ -3,7 +3,7 @@
  * kernel is tied to a specific vendor.
  */
 
-import type { Entity } from './collection.js'
+import type { AnyEntity } from './entity.js'
 
 /** A JSON-serializable value — the wire shape of any persisted field. */
 export type JsonValue =
@@ -47,11 +47,8 @@ export interface DBAdapter {
   ): Promise<Doc>
   delete(collection: string, id: string): Promise<void>
 
-  /**
-   * Reconcile the database schema with the given entity definitions
-   * (collections, document singletons, and taxonomies).
-   */
-  migrate(entities: Entity[]): Promise<void>
+  /** Reconcile the database schema with the given entity definitions. */
+  migrate(entities: AnyEntity[]): Promise<void>
 }
 
 export interface StorageAdapter {
