@@ -62,8 +62,12 @@ function Button({
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     >
-      {loading && <Spinner size={size === 'lg' ? 'lg' : size === 'sm' ? 'sm' : 'default'} />}
-      {children}
+      {asChild ? children : (
+        <>
+          {loading && <Spinner size={size === 'lg' ? 'lg' : size === 'sm' ? 'sm' : 'default'} />}
+          {children}
+        </>
+      )}
     </Comp>
   )
 }
