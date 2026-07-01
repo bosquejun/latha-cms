@@ -41,7 +41,6 @@ import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent } fro
 import {
   Plus,
   FileText,
-  FolderTree,
   Settings,
   type LucideIcon,
 } from 'lucide-react'
@@ -71,31 +70,24 @@ const asEntity = (d: EntityDescriptor) => d as unknown as AdminEntity
 
 type Route =
   | { view: 'dashboard' }
-  | { view: 'list'; slug: string }
-  | { view: 'create'; slug: string }
-  | { view: 'edit'; slug: string; id: string }
+  | { view: 'list'; slug: string; segment: string }
+  | { view: 'create'; slug: string; segment: string }
+  | { view: 'edit'; slug: string; id: string; segment: string }
   | { view: 'document'; slug: string }
-  | { view: 'taxonomy-list'; slug: string }
-  | { view: 'taxonomy-create'; slug: string }
-  | { view: 'taxonomy-edit'; slug: string; id: string }
   | { view: 'page'; page: PageExtension; params: string[] }
   | { view: 'settings'; page?: SettingsPageExtension; params: string[] }
   | { view: 'notfound' }
 
-/** Parse an entity route (`content/<slug>[/new|/<id>]`, `documents/<slug>`, or `taxonomy/<slug>[/new|/<id>]`). */
+/** Parse an entity route — handles any URL segment (`content`, `taxonomy`, etc.). */
 function parseEntitySegs(seg: string[]): Route | null {
-  if (seg[0] === 'content' && seg[1]) {
-    if (seg[2] === 'new') return { view: 'create', slug: seg[1] }
-    if (seg[2]) return { view: 'edit', slug: seg[1], id: seg[2] }
-    return { view: 'list', slug: seg[1] }
-  }
-  if (seg[0] === 'documents' && seg[1]) return { view: 'document', slug: seg[1] }
-  if (seg[0] === 'taxonomy' && seg[1]) {
-    if (seg[2] === 'new') return { view: 'taxonomy-create', slug: seg[1] }
-    if (seg[2]) return { view: 'taxonomy-edit', slug: seg[1], id: seg[2] }
-    return { view: 'taxonomy-list', slug: seg[1] }
-  }
-  return null
+  const segment = seg[0]
+  const slug = seg[1]
+  if (!segment || !slug) return null
+  if (segment === 'documents') return { view: 'document', slug }
+  // Any other non-settings segment is a many-cardinality entity under its URL segment.
+  if (seg[2] === 'new') return { view: 'create', slug, segment }
+  if (seg[2]) return { view: 'edit', slug, id: seg[2], segment }
+  return { view: 'list', slug, segment }
 }
 
 function parseRoute(
@@ -109,9 +101,7 @@ function parseRoute(
   const seg = rest.split('/').filter(Boolean)
   if (seg.length === 0) return { view: 'dashboard' }
 
-  const entity = parseEntitySegs(seg)
-  if (entity) return entity
-
+  // Settings area is a reserved segment — check before entity routing.
   if (seg[0] === 'settings') {
     const sub = seg.slice(1)
     // Entities living in the settings area (`/admin/settings/content/users`).
@@ -124,9 +114,14 @@ function parseRoute(
     return { view: 'notfound' }
   }
 
-  // Custom pages mount on their first path segment.
+  // Custom pages are registered by slug — check before entity routing so a
+  // page at path `foo` doesn't get swallowed as an entity segment.
   const page = ext.pageFor(seg[0] ?? '')
   if (page) return { view: 'page', page, params: seg.slice(1) }
+
+  // Everything else: entity routes (`<segment>/<slug>[/new|/<id>]`).
+  const entity = parseEntitySegs(seg)
+  if (entity) return entity
 
   return { view: 'notfound' }
 }
@@ -392,19 +387,13 @@ function AdminView({
     case 'dashboard':
       return <Dashboard nav={nav} />
     case 'list':
-      return <ListView slug={route.slug} base={routeBase} />
+      return <ListView slug={route.slug} base={routeBase} segment={route.segment} />
     case 'create':
-      return <CreateView slug={route.slug} base={routeBase} />
+      return <CreateView slug={route.slug} base={routeBase} segment={route.segment} />
     case 'edit':
-      return <EditView slug={route.slug} id={route.id} base={routeBase} />
+      return <EditView slug={route.slug} id={route.id} base={routeBase} segment={route.segment} />
     case 'document':
       return <DocumentView slug={route.slug} />
-    case 'taxonomy-list':
-      return <TaxonomyListView slug={route.slug} base={routeBase} />
-    case 'taxonomy-create':
-      return <TaxonomyCreateView slug={route.slug} base={routeBase} />
-    case 'taxonomy-edit':
-      return <TaxonomyEditView slug={route.slug} id={route.id} base={routeBase} />
     case 'page':
       return <route.page.Component path={route.page.path} params={route.params} />
     case 'settings':
@@ -469,15 +458,12 @@ function DashboardWidget({ widget }: { widget: DashboardWidgetExtension }) {
 function StatCount({ client, item }: { client: ReturnType<typeof useLatha>['client']; item: NavItem }) {
   const count = useAsync(
     () => {
-      if (item.kind === 'collection' || item.kind === 'taxonomy') return client.list(item.slug)
+      if (item.cardinality === 'many') return client.list(item.slug)
       return Promise.resolve([])
     },
-    [item.slug, item.kind],
+    [item.slug, item.cardinality],
   )
-  const value =
-    item.kind === 'collection' || item.kind === 'taxonomy'
-      ? (count.data?.length ?? '—')
-      : '—'
+  const value = item.cardinality === 'many' ? (count.data?.length ?? '—') : '—'
   return (
     <div className="px-4 pb-4 pt-1.5 text-3xl font-semibold tracking-[-0.02em]">
       {count.loading ? '·' : value}
@@ -485,7 +471,7 @@ function StatCount({ client, item }: { client: ReturnType<typeof useLatha>['clie
   )
 }
 
-function ListView({ slug, base }: { slug: string; base: string }) {
+function ListView({ slug, base, segment }: { slug: string; base: string; segment: string }) {
   const { client } = useLatha()
   const can = useCan()
   const entity = useAsync(() => client.entity(slug), [slug])
@@ -494,11 +480,12 @@ function ListView({ slug, base }: { slug: string; base: string }) {
   if (entity.loading || rows.loading)
     return <p className="text-small text-muted-foreground">Loading…</p>
   if (!entity.data)
-    return <p className="text-small text-muted-foreground">Unknown collection.</p>
+    return <p className="text-small text-muted-foreground">Entity not found.</p>
 
   const canCreate = can(`${slug}:create`)
   const canDelete = can(`${slug}:delete`)
   const list = rows.data ?? []
+  const newHref = `${base}/${segment}/${slug}/new`
   return (
     <>
       <Slot zone="list.before" entity={entity.data} data={{ rows: list }} />
@@ -507,7 +494,7 @@ function ListView({ slug, base }: { slug: string; base: string }) {
         actions={
           canCreate ? (
             <Button asChild size="sm">
-              <Link to={`${base}/content/${slug}/new`}>
+              <Link to={newHref}>
                 <Plus /> New
               </Link>
             </Button>
@@ -522,7 +509,7 @@ function ListView({ slug, base }: { slug: string; base: string }) {
           action={
             canCreate ? (
               <Button asChild size="sm" className="mt-1">
-                <Link to={`${base}/content/${slug}/new`}>
+                <Link to={newHref}>
                   <Plus /> New
                 </Link>
               </Button>
@@ -534,7 +521,7 @@ function ListView({ slug, base }: { slug: string; base: string }) {
           <EntityList
             entity={asEntity(entity.data)}
             rows={list}
-            getEditHref={(id) => `${base}/content/${slug}/${id}`}
+            getEditHref={(id) => `${base}/${segment}/${slug}/${id}`}
             onDelete={
               canDelete
                 ? async (id) => {
@@ -552,22 +539,19 @@ function ListView({ slug, base }: { slug: string; base: string }) {
   )
 }
 
-function CreateView({ slug, base }: { slug: string; base: string }) {
+function CreateView({ slug, base, segment }: { slug: string; base: string; segment: string }) {
   const { client } = useLatha()
   const navigate = useNavigate()
   const entity = useAsync(() => client.entity(slug), [slug])
 
   if (entity.loading) return <p className="text-small text-muted-foreground">Loading…</p>
-  if (!entity.data) return <p className="text-small text-muted-foreground">Unknown collection.</p>
+  if (!entity.data) return <p className="text-small text-muted-foreground">Entity not found.</p>
 
-  const toList = () => navigate({ to: `${base}/content/${slug}` })
+  const toList = () => navigate({ to: `${base}/${segment}/${slug}` })
 
   return (
     <>
-      <PageHeader
-        title={`New ${entity.data.label.toLowerCase()}`}
-        description="Draft a new record for this collection."
-      />
+      <PageHeader title={`New ${entity.data.label.toLowerCase()}`} />
       <EntityForm
         fields={asEntity(entity.data).fields}
         submitLabel={`Create ${entity.data.label}`}
@@ -582,7 +566,7 @@ function CreateView({ slug, base }: { slug: string; base: string }) {
   )
 }
 
-function EditView({ slug, id, base }: { slug: string; id: string; base: string }) {
+function EditView({ slug, id, base, segment }: { slug: string; id: string; base: string; segment: string }) {
   const { client } = useLatha()
   const can = useCan()
   const navigate = useNavigate()
@@ -590,10 +574,10 @@ function EditView({ slug, id, base }: { slug: string; id: string; base: string }
   const doc = useAsync(() => client.get(slug, id), [slug, id])
 
   if (entity.loading || doc.loading) return <p className="text-small text-muted-foreground">Loading…</p>
-  if (!entity.data) return <p className="text-small text-muted-foreground">Unknown collection.</p>
-  if (!doc.data) return <p className="text-small text-muted-foreground">Record not found.</p>
+  if (!entity.data) return <p className="text-small text-muted-foreground">Entity not found.</p>
+  if (!doc.data) return <p className="text-small text-muted-foreground">Not found.</p>
 
-  const toList = () => navigate({ to: `${base}/content/${slug}` })
+  const toList = () => navigate({ to: `${base}/${segment}/${slug}` })
 
   return (
     <>
@@ -631,158 +615,13 @@ function EditView({ slug, id, base }: { slug: string; id: string; base: string }
   )
 }
 
-function TaxonomyListView({ slug, base }: { slug: string; base: string }) {
-  const { client } = useLatha()
-  const can = useCan()
-  const entity = useAsync(() => client.entity(slug), [slug])
-  const rows = useAsync(() => client.list(slug), [slug])
-
-  if (entity.loading || rows.loading)
-    return <p className="text-small text-muted-foreground">Loading…</p>
-  if (!entity.data)
-    return <p className="text-small text-muted-foreground">Unknown taxonomy.</p>
-
-  const canCreate = can(`${slug}:create`)
-  const canDelete = can(`${slug}:delete`)
-  const list = rows.data ?? []
-  return (
-    <>
-      <PageHeader
-        title={entity.data.label}
-        actions={
-          canCreate ? (
-            <Button asChild size="sm">
-              <Link to={`${base}/taxonomy/${slug}/new`}>
-                <Plus /> New
-              </Link>
-            </Button>
-          ) : undefined
-        }
-      />
-      {list.length === 0 ? (
-        <EmptyState
-          icon={FolderTree}
-          title={`No ${entity.data.label.toLowerCase()} yet`}
-          description={`Create your first term to start managing ${entity.data.label.toLowerCase()}.`}
-          action={
-            canCreate ? (
-              <Button asChild size="sm" className="mt-1">
-                <Link to={`${base}/taxonomy/${slug}/new`}>
-                  <Plus /> New
-                </Link>
-              </Button>
-            ) : undefined
-          }
-        />
-      ) : (
-        <Card className="overflow-hidden p-0">
-          <EntityList
-            entity={asEntity(entity.data)}
-            rows={list}
-            getEditHref={(id) => `${base}/taxonomy/${slug}/${id}`}
-            onDelete={
-              canDelete
-                ? async (id) => {
-                    if (!window.confirm('Delete this term? This cannot be undone.')) return
-                    await client.remove(slug, id)
-                    rows.reload()
-                  }
-                : undefined
-            }
-          />
-        </Card>
-      )}
-    </>
-  )
-}
-
-function TaxonomyCreateView({ slug, base }: { slug: string; base: string }) {
-  const { client } = useLatha()
-  const navigate = useNavigate()
-  const entity = useAsync(() => client.entity(slug), [slug])
-
-  if (entity.loading) return <p className="text-small text-muted-foreground">Loading…</p>
-  if (!entity.data) return <p className="text-small text-muted-foreground">Unknown taxonomy.</p>
-
-  const toList = () => navigate({ to: `${base}/taxonomy/${slug}` })
-
-  return (
-    <>
-      <PageHeader
-        title={`New ${entity.data.label.toLowerCase()}`}
-        description="Create a new term for this taxonomy."
-      />
-      <EntityForm
-        fields={asEntity(entity.data).fields}
-        submitLabel={`Create ${entity.data.label}`}
-        entity={asEntity(entity.data)}
-        onSubmit={async (values) => {
-          await client.create(slug, values)
-          await toList()
-        }}
-        onCancel={toList}
-      />
-    </>
-  )
-}
-
-function TaxonomyEditView({ slug, id, base }: { slug: string; id: string; base: string }) {
-  const { client } = useLatha()
-  const can = useCan()
-  const navigate = useNavigate()
-  const entity = useAsync(() => client.entity(slug), [slug])
-  const term = useAsync(() => client.get(slug, id), [slug, id])
-
-  if (entity.loading || term.loading)
-    return <p className="text-small text-muted-foreground">Loading…</p>
-  if (!entity.data) return <p className="text-small text-muted-foreground">Unknown taxonomy.</p>
-  if (!term.data) return <p className="text-small text-muted-foreground">Term not found.</p>
-
-  const toList = () => navigate({ to: `${base}/taxonomy/${slug}` })
-
-  return (
-    <>
-      <PageHeader
-        title={`Edit ${entity.data.label.toLowerCase()}`}
-        actions={
-          can(`${slug}:delete`) ? (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={async () => {
-                if (!window.confirm('Delete this term? This cannot be undone.')) return
-                await client.remove(slug, id)
-                await toList()
-              }}
-            >
-              Delete
-            </Button>
-          ) : undefined
-        }
-      />
-      <EntityForm
-        fields={asEntity(entity.data).fields}
-        submitLabel="Save changes"
-        initialValues={term.data}
-        recordId={id}
-        entity={asEntity(entity.data)}
-        onSubmit={async (values) => {
-          await client.update(slug, id, values)
-          await toList()
-        }}
-        onCancel={toList}
-      />
-    </>
-  )
-}
-
 function DocumentView({ slug }: { slug: string }) {
   const { client } = useLatha()
   const entity = useAsync(() => client.entity(slug), [slug])
   const value = useAsync(() => client.getGlobal(slug), [slug])
 
   if (entity.loading || value.loading) return <p className="text-small text-muted-foreground">Loading…</p>
-  if (!entity.data) return <p className="text-small text-muted-foreground">Unknown document.</p>
+  if (!entity.data) return <p className="text-small text-muted-foreground">Entity not found.</p>
 
   return (
     <>

@@ -163,6 +163,7 @@ async function navOf(
     const item: NavItem = {
       slug: entity.slug,
       kind,
+      cardinality: entity.cardinality,
       label: labelOf(entity),
       href: `${routeBase}/${SEGMENT[kind]}/${entity.slug}`,
       order: entity.admin?.order,
