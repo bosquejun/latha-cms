@@ -32,9 +32,9 @@ export const ADMIN_ZONES = [
   'form.sidebar.before',
   'form.sidebar.after',
 
-  // Document singleton view (entity-scoped).
-  'document.before',
-  'document.after',
+  // Global (single-cardinality) entity view (entity-scoped).
+  'global.before',
+  'global.after',
 ] as const
 
 export type AdminZone = (typeof ADMIN_ZONES)[number]

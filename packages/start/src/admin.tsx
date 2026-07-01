@@ -73,18 +73,24 @@ type Route =
   | { view: 'list'; slug: string; segment: string }
   | { view: 'create'; slug: string; segment: string }
   | { view: 'edit'; slug: string; id: string; segment: string }
-  | { view: 'document'; slug: string }
+  | { view: 'global'; slug: string }
   | { view: 'page'; page: PageExtension; params: string[] }
   | { view: 'settings'; page?: SettingsPageExtension; params: string[] }
   | { view: 'notfound' }
 
-/** Parse an entity route — handles any URL segment (`content`, `taxonomy`, etc.). */
-function parseEntitySegs(seg: string[]): Route | null {
+/**
+ * Parse an entity route — handles any URL segment (`content`, `taxonomy`, etc.).
+ * Single-cardinality entities are detected via the cardinality map derived from
+ * nav data, not by comparing against a hardcoded segment name.
+ */
+function parseEntitySegs(
+  seg: string[],
+  cardinalities: Map<string, 'many' | 'single'>,
+): Route | null {
   const segment = seg[0]
   const slug = seg[1]
   if (!segment || !slug) return null
-  if (segment === 'documents') return { view: 'document', slug }
-  // Any other non-settings segment is a many-cardinality entity under its URL segment.
+  if (cardinalities.get(slug) === 'single') return { view: 'global', slug }
   if (seg[2] === 'new') return { view: 'create', slug, segment }
   if (seg[2]) return { view: 'edit', slug, id: seg[2], segment }
   return { view: 'list', slug, segment }
@@ -94,7 +100,13 @@ function parseRoute(
   pathname: string,
   basePath: string,
   ext: ExtensionRegistry,
+  navSections: NavSection[],
 ): Route {
+  const cardinalities = new Map<string, 'many' | 'single'>()
+  for (const section of navSections) {
+    for (const item of section.items) cardinalities.set(item.slug, item.cardinality)
+  }
+
   const rest = pathname.startsWith(basePath)
     ? pathname.slice(basePath.length)
     : pathname
@@ -105,7 +117,7 @@ function parseRoute(
   if (seg[0] === 'settings') {
     const sub = seg.slice(1)
     // Entities living in the settings area (`/admin/settings/content/users`).
-    const settingsEntity = parseEntitySegs(sub)
+    const settingsEntity = parseEntitySegs(sub, cardinalities)
     if (settingsEntity) return settingsEntity
     const settingsSlug = sub[0]
     if (!settingsSlug) return { view: 'settings', params: [] }
@@ -120,7 +132,7 @@ function parseRoute(
   if (page) return { view: 'page', page, params: seg.slice(1) }
 
   // Everything else: entity routes (`<segment>/<slug>[/new|/<id>]`).
-  const entity = parseEntitySegs(seg)
+  const entity = parseEntitySegs(seg, cardinalities)
   if (entity) return entity
 
   return { view: 'notfound' }
@@ -295,8 +307,8 @@ export function LathaAdmin() {
   if (session.loading || nav.loading) return <Centered>Loading…</Centered>
   if (!session.data) return <Centered>Redirecting…</Centered>
 
-  const route = parseRoute(pathname, basePath, extensions)
   const navSections = nav.data ?? []
+  const route = parseRoute(pathname, basePath, extensions, navSections)
   const mainNav = navSections.filter((section) => section.area !== 'settings')
   const settingsNav = navSections.filter((section) => section.area === 'settings')
 
@@ -392,8 +404,8 @@ function AdminView({
       return <CreateView slug={route.slug} base={routeBase} segment={route.segment} />
     case 'edit':
       return <EditView slug={route.slug} id={route.id} base={routeBase} segment={route.segment} />
-    case 'document':
-      return <DocumentView slug={route.slug} />
+    case 'global':
+      return <GlobalView slug={route.slug} />
     case 'page':
       return <route.page.Component path={route.page.path} params={route.params} />
     case 'settings':
@@ -615,7 +627,7 @@ function EditView({ slug, id, base, segment }: { slug: string; id: string; base:
   )
 }
 
-function DocumentView({ slug }: { slug: string }) {
+function GlobalView({ slug }: { slug: string }) {
   const { client } = useLatha()
   const entity = useAsync(() => client.entity(slug), [slug])
   const value = useAsync(() => client.getGlobal(slug), [slug])
@@ -625,7 +637,7 @@ function DocumentView({ slug }: { slug: string }) {
 
   return (
     <>
-      <Slot zone="document.before" entity={entity.data} />
+      <Slot zone="global.before" entity={entity.data} />
       <PageHeader title={entity.data.label} />
       <EntityForm
         fields={asEntity(entity.data).fields}
@@ -637,7 +649,7 @@ function DocumentView({ slug }: { slug: string }) {
           value.reload()
         }}
       />
-      <Slot zone="document.after" entity={entity.data} />
+      <Slot zone="global.after" entity={entity.data} />
     </>
   )
 }
