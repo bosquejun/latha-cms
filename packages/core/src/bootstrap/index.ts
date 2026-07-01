@@ -12,7 +12,7 @@ import '../fields/builtins.js'
 import { fieldRegistry } from '../fields/registry.js'
 import type { FieldTypeEntry } from '../fields/registry.js'
 import { ModuleRegistry } from '../registry/index.js'
-import type { Entity } from '../types/collection.js'
+import type { Entity } from '../types/entity.js'
 import type { Guard } from '../types/guard.js'
 import type {
   LathaInstance,

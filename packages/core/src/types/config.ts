@@ -3,7 +3,7 @@
  */
 
 import type { DBAdapter } from './adapter.js'
-import type { AnyEntity } from './collection.js'
+import type { AnyEntity } from './entity.js'
 import type { Guard } from './guard.js'
 import type { FieldTypeEntry } from '../fields/registry.js'
 

@@ -3,7 +3,7 @@
  * kernel is tied to a specific vendor.
  */
 
-import type { AnyEntity } from './collection.js'
+import type { AnyEntity } from './entity.js'
 
 /** A JSON-serializable value — the wire shape of any persisted field. */
 export type JsonValue =

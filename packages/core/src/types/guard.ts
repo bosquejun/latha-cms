@@ -12,7 +12,7 @@
  */
 
 import type { Operation } from './access.js'
-import type { Cardinality } from './collection.js'
+import type { Cardinality } from './entity.js'
 import type { LathaInstance } from './config.js'
 
 export interface GuardContext {

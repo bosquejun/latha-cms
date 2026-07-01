@@ -7,7 +7,7 @@
  */
 
 import type { Module } from '../types/config.js'
-import type { Entity } from '../types/collection.js'
+import type { Entity } from '../types/entity.js'
 
 export class ModuleRegistry {
   private readonly modules = new Map<string, Module>()
