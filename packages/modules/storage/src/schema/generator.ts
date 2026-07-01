@@ -1,8 +1,8 @@
 /**
- * Schema generator — Collection[] → SQLite table plans.
+ * Schema generator — Entity[] → SQLite table plans.
  *
- * LathaCMS collections are dynamic, so rather than a static Drizzle schema we
- * derive a `TablePlan` per collection describing its columns and how to
+ * LathaCMS entities are dynamic, so rather than a static Drizzle schema we
+ * derive a `TablePlan` per entity describing its columns and how to
  * (de)serialize each one. The Turso adapter uses these plans to emit
  * `CREATE TABLE` statements and to marshal values to/from SQLite.
  *
@@ -13,6 +13,7 @@
  *   group | array | *(many)                                                  → TEXT (JSON)
  */
 
+import { buildZodSchema } from '@latha/core'
 import type { Entity, Field } from '@latha/core'
 
 export type ColumnKind = 'text' | 'integer' | 'real' | 'boolean' | 'json'
@@ -34,6 +35,55 @@ export interface TablePlan {
   timestamps: boolean
 }
 
+/** Structural view of a Zod schema node — just enough to classify storage shape. */
+interface ZodNode {
+  _def?: {
+    typeName?: string
+    innerType?: ZodNode
+    schema?: ZodNode
+  }
+}
+
+/**
+ * Classify a field's registered data schema (built by the field registry from
+ * the type's `buildDataSchema`) into a column kind. Wrapper types
+ * (optional / nullable / default / effects) are unwrapped first. Returns `null`
+ * when the schema doesn't pin down a storage shape — e.g. `z.unknown()`, which
+ * the registry substitutes for types not registered in this runtime.
+ */
+function columnKindFromDataSchema(node: ZodNode | undefined): ColumnKind | null {
+  let def = node?._def
+  while (
+    def &&
+    (def.typeName === 'ZodOptional' ||
+      def.typeName === 'ZodNullable' ||
+      def.typeName === 'ZodDefault' ||
+      def.typeName === 'ZodEffects')
+  ) {
+    def = (def.innerType ?? def.schema)?._def
+  }
+  switch (def?.typeName) {
+    case 'ZodArray':
+    case 'ZodObject':
+    case 'ZodRecord':
+    case 'ZodTuple':
+    case 'ZodUnion':
+    case 'ZodDiscriminatedUnion':
+      return 'json'
+    case 'ZodNumber':
+      return 'real'
+    case 'ZodBoolean':
+      return 'boolean'
+    case 'ZodString':
+    case 'ZodEnum':
+    case 'ZodLiteral':
+    case 'ZodDate':
+      return 'text'
+    default:
+      return null
+  }
+}
+
 function columnKindForField(field: Field): ColumnKind {
   switch (field.type) {
     case 'text':
@@ -51,11 +101,14 @@ function columnKindForField(field: Field): ColumnKind {
     case 'array':
       return 'json'
     default: {
-      // Module-registered types are handled generically.
-      // Multi-value and always-JSON types (e.g. blocks) store as JSON;
-      // single-value types store as TEXT.
-      const ext = field as unknown as Record<string, unknown>
-      if (ext.type === 'blocks') return 'json'
+      // Module-registered types: derive the column shape from the data schema
+      // the type registered — the same Zod source of truth validation uses
+      // (modules register in `onInit`, which runs before `migrate`).
+      const ext = field as unknown as Record<string, unknown> & { name: string }
+      const shape = buildZodSchema([ext]).shape
+      const derived = columnKindFromDataSchema(shape[ext.name] as ZodNode)
+      if (derived) return derived
+      // Type not registered in this runtime — fall back to the `many` convention.
       return ext.many ? 'json' : 'text'
     }
   }
