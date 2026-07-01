@@ -70,17 +70,13 @@ function authOptions(): AuthOptions {
 const LathaRpcInputSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('nav') }),
   z.object({ action: z.literal('entity'), slug: z.string() }),
-  z.object({ action: z.literal('list'), collection: z.string() }),
-  z.object({ action: z.literal('get'), collection: z.string(), id: z.string() }),
-  z.object({ action: z.literal('create'), collection: z.string(), data: z.record(z.unknown()) }),
-  z.object({ action: z.literal('update'), collection: z.string(), id: z.string(), data: z.record(z.unknown()) }),
-  z.object({ action: z.literal('remove'), collection: z.string(), id: z.string() }),
+  z.object({ action: z.literal('list'), slug: z.string() }),
+  z.object({ action: z.literal('get'), slug: z.string(), id: z.string() }),
+  z.object({ action: z.literal('create'), slug: z.string(), data: z.record(z.unknown()) }),
+  z.object({ action: z.literal('update'), slug: z.string(), id: z.string(), data: z.record(z.unknown()) }),
+  z.object({ action: z.literal('remove'), slug: z.string(), id: z.string() }),
   z.object({ action: z.literal('getGlobal'), slug: z.string() }),
   z.object({ action: z.literal('saveGlobal'), slug: z.string(), data: z.record(z.unknown()) }),
-  z.object({ action: z.literal('listTerms'), slug: z.string() }),
-  z.object({ action: z.literal('createTerm'), slug: z.string(), data: z.record(z.unknown()) }),
-  z.object({ action: z.literal('updateTerm'), slug: z.string(), id: z.string(), data: z.record(z.unknown()) }),
-  z.object({ action: z.literal('removeTerm'), slug: z.string(), id: z.string() }),
   z.object({ action: z.literal('currentUser') }),
   z.object({ action: z.literal('login'), email: z.string(), password: z.string() }),
   z.object({ action: z.literal('logout') }),
@@ -307,30 +303,20 @@ export async function handleLathaRequest(
       return entity ? describe(entity) : null
     }
     case 'list':
-      return api.list(input.collection)
+      return api.list(input.slug)
     case 'get':
-      return api.findOne(input.collection, input.id)
+      return api.findOne(input.slug, input.id)
     case 'create':
-      return api.create(input.collection, input.data)
+      return api.create(input.slug, input.data)
     case 'update':
-      return api.update(input.collection, input.id, input.data)
+      return api.update(input.slug, input.id, input.data)
     case 'remove':
-      await api.remove(input.collection, input.id)
+      await api.remove(input.slug, input.id)
       return { id: input.id }
     case 'getGlobal':
       return api.getGlobal(input.slug)
     case 'saveGlobal':
       return api.saveGlobal(input.slug, input.data)
-
-    case 'listTerms':
-      return api.listTerms(input.slug)
-    case 'createTerm':
-      return api.createTerm(input.slug, input.data)
-    case 'updateTerm':
-      return api.updateTerm(input.slug, input.id, input.data)
-    case 'removeTerm':
-      await api.removeTerm(input.slug, input.id)
-      return { id: input.id }
 
     case 'currentUser':
       return sessionUser ? toSessionUser(sessionUser) : null

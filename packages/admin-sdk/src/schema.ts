@@ -29,13 +29,6 @@ export interface AdminEntity {
   defaultColumns?: string[]
 }
 
-export interface AdminNavItem {
-  slug: string
-  kind: EntityKind
-  label: string
-  href: string
-}
-
 /** Turn a slug or field name into a human label: `site_name` → `Site name`. */
 export function humanize(input: string): string {
   const spaced = input.replace(/[_-]+/g, ' ').trim()
@@ -72,35 +65,4 @@ export function describeEntity(entity: Entity): AdminEntity {
 
 export function describeEntities(entities: Entity[]): AdminEntity[] {
   return entities.map(describeEntity)
-}
-
-const SEGMENT: Record<EntityKind, string> = {
-  collection: 'content',
-  document: 'documents',
-  taxonomy: 'taxonomy',
-}
-
-export function hrefFor(
-  entity: Pick<AdminEntity, 'slug' | 'kind'>,
-  basePath = '/admin',
-): string {
-  return `${basePath}/${SEGMENT[entity.kind]}/${entity.slug}`
-}
-
-/** Build sidebar nav items from the registry's entities. */
-export function buildNav(
-  entities: Entity[],
-  basePath = '/admin',
-): AdminNavItem[] {
-  return entities
-    .filter((e) => !e.admin?.hidden)
-    .map((entity) => {
-      const kind = kindOf(entity)
-      return {
-        slug: entity.slug,
-        kind,
-        label: labelOf(entity),
-        href: hrefFor({ slug: entity.slug, kind }, basePath),
-      }
-    })
 }

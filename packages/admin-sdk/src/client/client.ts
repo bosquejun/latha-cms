@@ -24,21 +24,13 @@ import type {
 export interface LathaClient {
   nav(): Promise<NavSection[]>
   entity(slug: string): Promise<EntityDescriptor | null>
-  list(collection: string): Promise<JsonDoc[]>
-  get(collection: string, id: string): Promise<JsonDoc | null>
-  create(collection: string, data: Record<string, unknown>): Promise<JsonDoc>
-  update(
-    collection: string,
-    id: string,
-    data: Record<string, unknown>,
-  ): Promise<JsonDoc>
-  remove(collection: string, id: string): Promise<{ id: string }>
+  list(slug: string): Promise<JsonDoc[]>
+  get(slug: string, id: string): Promise<JsonDoc | null>
+  create(slug: string, data: Record<string, unknown>): Promise<JsonDoc>
+  update(slug: string, id: string, data: Record<string, unknown>): Promise<JsonDoc>
+  remove(slug: string, id: string): Promise<{ id: string }>
   getGlobal(slug: string): Promise<JsonDoc | null>
   saveGlobal(slug: string, data: Record<string, unknown>): Promise<JsonDoc>
-  listTerms(slug: string): Promise<JsonDoc[]>
-  createTerm(slug: string, data: Record<string, unknown>): Promise<JsonDoc>
-  updateTerm(slug: string, id: string, data: Record<string, unknown>): Promise<JsonDoc>
-  removeTerm(slug: string, id: string): Promise<{ id: string }>
   currentUser(): Promise<SessionUser | null>
   login(
     email: string,
@@ -91,23 +83,14 @@ export function createLathaClient(
   return {
     nav: () => call<NavSection[]>({ action: 'nav' }),
     entity: (slug) => call<EntityDescriptor | null>({ action: 'entity', slug }),
-    list: (collection) => call<JsonDoc[]>({ action: 'list', collection }),
-    get: (collection, id) => call<JsonDoc | null>({ action: 'get', collection, id }),
-    create: (collection, data) =>
-      call<JsonDoc>({ action: 'create', collection, data }),
-    update: (collection, id, data) =>
-      call<JsonDoc>({ action: 'update', collection, id, data }),
-    remove: (collection, id) =>
-      call<{ id: string }>({ action: 'remove', collection, id }),
+    list: (slug) => call<JsonDoc[]>({ action: 'list', slug }),
+    get: (slug, id) => call<JsonDoc | null>({ action: 'get', slug, id }),
+    create: (slug, data) => call<JsonDoc>({ action: 'create', slug, data }),
+    update: (slug, id, data) => call<JsonDoc>({ action: 'update', slug, id, data }),
+    remove: (slug, id) => call<{ id: string }>({ action: 'remove', slug, id }),
     getGlobal: (slug) => call<JsonDoc | null>({ action: 'getGlobal', slug }),
     saveGlobal: (slug, data) =>
       call<JsonDoc>({ action: 'saveGlobal', slug, data }),
-    listTerms: (slug) => call<JsonDoc[]>({ action: 'listTerms', slug }),
-    createTerm: (slug, data) => call<JsonDoc>({ action: 'createTerm', slug, data }),
-    updateTerm: (slug, id, data) =>
-      call<JsonDoc>({ action: 'updateTerm', slug, id, data }),
-    removeTerm: (slug, id) =>
-      call<{ id: string }>({ action: 'removeTerm', slug, id }),
     currentUser: () => call<SessionUser | null>({ action: 'currentUser' }),
     login: (email, password) =>
       call<{ ok: boolean; user: SessionUser | null }>({

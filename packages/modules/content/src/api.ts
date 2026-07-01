@@ -58,10 +58,7 @@ export interface ContentApi {
   getGlobal(slug: string): Promise<JsonDoc | null>
   saveGlobal(slug: string, data: unknown): Promise<JsonDoc>
 
-  listTerms(slug: string): Promise<JsonDoc[]>
-  createTerm(slug: string, data: unknown): Promise<JsonDoc>
-  updateTerm(slug: string, id: string, data: unknown): Promise<JsonDoc>
-  removeTerm(slug: string, id: string): Promise<void>
+  /** Build a parent–child tree from a hierarchical taxonomy entity. */
   tree(slug: string): Promise<JsonTermNode[]>
 }
 
@@ -101,22 +98,6 @@ export function createContentApi(options: ContentApiOptions): ContentApi {
       return asDoc(await operations.saveGlobal(await ctx(), slug, data))
     },
 
-    async listTerms(slug) {
-      return (
-        await operations.find(await ctx(), slug, {
-          sort: [{ field: 'name', direction: 'asc' }],
-        })
-      ).map(asDoc)
-    },
-    async createTerm(slug, data) {
-      return asDoc(await operations.create(await ctx(), slug, data))
-    },
-    async updateTerm(slug, id, data) {
-      return asDoc(await operations.update(await ctx(), slug, id, data))
-    },
-    async removeTerm(slug, id) {
-      await operations.destroy(await ctx(), slug, id)
-    },
     async tree(slug) {
       const docs = await operations.find(await ctx(), slug, {
         sort: [{ field: 'name', direction: 'asc' }],

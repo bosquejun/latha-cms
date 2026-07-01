@@ -11,11 +11,8 @@
 export {
   describeEntity,
   describeEntities,
-  buildNav,
-  hrefFor,
   humanize,
   type AdminEntity,
-  type AdminNavItem,
   type EntityKind,
 } from './schema.js'
 
@@ -32,7 +29,6 @@ export {
 export { MobileDrawer, type MobileDrawerProps } from './shell/MobileDrawer.js'
 export { Topbar, type TopbarProps } from './shell/Topbar.js'
 export { useTheme, type Theme } from './shell/useTheme.js'
-export { UserMenu, type UserMenuProps } from './shell/UserMenu.js'
 export { PageHeader, type PageHeaderProps } from './shell/PageHeader.js'
 export { EmptyState, type EmptyStateProps } from './shell/EmptyState.js'
 export { PageLayout, type PageLayoutProps } from './shell/PageLayout.js'
@@ -98,13 +94,8 @@ export {
 
 // Views
 export {
-  CollectionList,
-  type CollectionListProps,
-  type CollectionRow,
-} from './views/CollectionList.js'
-export {
-  CollectionForm,
-  type CollectionFormProps,
-} from './views/CollectionForm.js'
-export { DocumentForm, type DocumentFormProps } from './views/DocumentForm.js'
+  EntityList,
+  type EntityListProps,
+  type EntityRow,
+} from './views/EntityList.js'
 export { EntityForm, type EntityFormProps } from './views/EntityForm.js'

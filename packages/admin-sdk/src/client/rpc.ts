@@ -11,22 +11,13 @@ import type { JsonValue } from '@latha/core'
 export type LathaRpcInput =
   | { action: 'nav' }
   | { action: 'entity'; slug: string }
-  | { action: 'list'; collection: string }
-  | { action: 'get'; collection: string; id: string }
-  | { action: 'create'; collection: string; data: Record<string, unknown> }
-  | {
-      action: 'update'
-      collection: string
-      id: string
-      data: Record<string, unknown>
-    }
-  | { action: 'remove'; collection: string; id: string }
+  | { action: 'list'; slug: string }
+  | { action: 'get'; slug: string; id: string }
+  | { action: 'create'; slug: string; data: Record<string, unknown> }
+  | { action: 'update'; slug: string; id: string; data: Record<string, unknown> }
+  | { action: 'remove'; slug: string; id: string }
   | { action: 'getGlobal'; slug: string }
   | { action: 'saveGlobal'; slug: string; data: Record<string, unknown> }
-  | { action: 'listTerms'; slug: string }
-  | { action: 'createTerm'; slug: string; data: Record<string, unknown> }
-  | { action: 'updateTerm'; slug: string; id: string; data: Record<string, unknown> }
-  | { action: 'removeTerm'; slug: string; id: string }
   | { action: 'currentUser' }
   | { action: 'login'; email: string; password: string }
   | { action: 'logout' }
@@ -46,7 +37,8 @@ export interface SessionUser {
 
 export interface NavItem {
   slug: string
-  kind: 'collection' | 'document' | 'taxonomy'
+  /** Opaque entity kind tag stamped by the module (e.g. 'collection', 'document', 'taxonomy'). */
+  kind: string
   label: string
   href: string
   /** Sort order within the section (lower first). */
@@ -72,7 +64,8 @@ export interface NavSection {
 /** Serializable entity descriptor used to render lists/forms. */
 export interface EntityDescriptor {
   slug: string
-  kind: 'collection' | 'document' | 'taxonomy'
+  /** Opaque entity kind tag stamped by the module (e.g. 'collection', 'document', 'taxonomy'). */
+  kind: string
   label: string
   fields: JsonValue
   useAsTitle?: string
