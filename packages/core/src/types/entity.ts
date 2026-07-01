@@ -38,6 +38,14 @@ export interface EntityAdminConfig {
   group?: string
   /** Sort order within its sidebar section (lower first). Default 0. */
   order?: number
+  /**
+   * URL segment used to build admin hrefs for this entity's list/edit views
+   * (e.g. `'content'` → `/admin/content/<slug>`, `'taxonomy'` →
+   * `/admin/taxonomy/<slug>`, `'documents'` → `/admin/documents/<slug>`).
+   * The kernel never reads this — it is an opaque passthrough for the admin
+   * routing layer, the same contract as `kind` and field `meta`.
+   */
+  segment?: string
 }
 
 export interface Entity<TDoc = Record<string, unknown>> {

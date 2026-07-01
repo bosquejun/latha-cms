@@ -49,6 +49,7 @@ export function Collection<TFields extends FieldsRecord>(
     timestamps: true,
     actions: ['read', 'create', 'update', 'delete'],
     ...rest,
+    admin: { segment: 'content', ...rest.admin },
     fields: stampFields(fields),
   }
 }
@@ -72,6 +73,7 @@ export function Document<TFields extends FieldsRecord>(
     timestamps: true,
     actions: ['read', 'update'],
     ...rest,
+    admin: { segment: 'documents', ...rest.admin },
     fields: stampFields(fields),
   }
 }
@@ -105,7 +107,7 @@ export function Taxonomy(input: TaxonomyInput): Taxonomy {
     slug: input.slug,
     hierarchical: input.hierarchical,
     timestamps: true,
-    admin: input.admin,
+    admin: { segment: 'taxonomy', ...input.admin },
     actions: ['read', 'create', 'update', 'delete'],
     fields: stampFields({ ...implicit, ...(input.fields ?? {}) }),
   }

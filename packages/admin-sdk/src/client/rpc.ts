@@ -39,6 +39,8 @@ export interface NavItem {
   slug: string
   /** Opaque entity kind tag stamped by the module (e.g. 'collection', 'document', 'taxonomy'). */
   kind: string
+  /** Structural cardinality from core: 'many' for list entities, 'single' for singletons. */
+  cardinality: 'many' | 'single'
   label: string
   href: string
   /** Sort order within the section (lower first). */

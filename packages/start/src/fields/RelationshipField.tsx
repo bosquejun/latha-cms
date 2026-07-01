@@ -3,7 +3,7 @@
  *
  * `@latha/admin-sdk` field renderers are framework-agnostic and receive only
  * value/onChange — they can't fetch data. A relationship needs the target
- * collection's records to offer as options, so this renderer lives in
+ * entity's records to offer as options, so this renderer lives in
  * `@latha/start` where it can use the RPC client. It's registered into the SDK
  * renderer registry (see `admin.tsx`), so any `relationship` field — including
  * any `many` relationship field — gets a real picker.

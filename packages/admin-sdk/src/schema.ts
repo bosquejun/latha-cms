@@ -44,23 +44,19 @@ function kindOf(entity: Entity): EntityKind {
 
 function labelOf(entity: Entity): string {
   const labels = entity.admin?.labels
-  if (kindOf(entity) === 'document') return labels?.singular ?? humanize(entity.slug)
+  if (entity.cardinality === 'single') return labels?.singular ?? humanize(entity.slug)
   return labels?.plural ?? humanize(entity.slug)
 }
 
 export function describeEntity(entity: Entity): AdminEntity {
-  const kind = kindOf(entity)
-  const base: AdminEntity = {
+  return {
     slug: entity.slug,
-    kind,
+    kind: kindOf(entity),
     label: labelOf(entity),
     fields: entity.fields,
+    useAsTitle: entity.admin?.useAsTitle,
+    defaultColumns: entity.admin?.defaultColumns,
   }
-  if (kind === 'collection') {
-    base.useAsTitle = entity.admin?.useAsTitle
-    base.defaultColumns = entity.admin?.defaultColumns
-  }
-  return base
 }
 
 export function describeEntities(entities: Entity[]): AdminEntity[] {
