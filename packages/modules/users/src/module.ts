@@ -39,7 +39,6 @@ export function UsersModule(config: UsersModuleConfig = {}): Module {
     capabilities: ['users'],
     entities: [
       {
-        kind: 'collection',
         cardinality: 'many',
         slug: USERS_SLUG,
         admin: {
