@@ -77,10 +77,6 @@ const LathaRpcInputSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('remove'), collection: z.string(), id: z.string() }),
   z.object({ action: z.literal('getGlobal'), slug: z.string() }),
   z.object({ action: z.literal('saveGlobal'), slug: z.string(), data: z.record(z.unknown()) }),
-  z.object({ action: z.literal('listTerms'), slug: z.string() }),
-  z.object({ action: z.literal('createTerm'), slug: z.string(), data: z.record(z.unknown()) }),
-  z.object({ action: z.literal('updateTerm'), slug: z.string(), id: z.string(), data: z.record(z.unknown()) }),
-  z.object({ action: z.literal('removeTerm'), slug: z.string(), id: z.string() }),
   z.object({ action: z.literal('currentUser') }),
   z.object({ action: z.literal('login'), email: z.string(), password: z.string() }),
   z.object({ action: z.literal('logout') }),
@@ -321,16 +317,6 @@ export async function handleLathaRequest(
       return api.getGlobal(input.slug)
     case 'saveGlobal':
       return api.saveGlobal(input.slug, input.data)
-
-    case 'listTerms':
-      return api.listTerms(input.slug)
-    case 'createTerm':
-      return api.createTerm(input.slug, input.data)
-    case 'updateTerm':
-      return api.updateTerm(input.slug, input.id, input.data)
-    case 'removeTerm':
-      await api.removeTerm(input.slug, input.id)
-      return { id: input.id }
 
     case 'currentUser':
       return sessionUser ? toSessionUser(sessionUser) : null

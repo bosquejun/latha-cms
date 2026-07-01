@@ -23,10 +23,6 @@ export type LathaRpcInput =
   | { action: 'remove'; collection: string; id: string }
   | { action: 'getGlobal'; slug: string }
   | { action: 'saveGlobal'; slug: string; data: Record<string, unknown> }
-  | { action: 'listTerms'; slug: string }
-  | { action: 'createTerm'; slug: string; data: Record<string, unknown> }
-  | { action: 'updateTerm'; slug: string; id: string; data: Record<string, unknown> }
-  | { action: 'removeTerm'; slug: string; id: string }
   | { action: 'currentUser' }
   | { action: 'login'; email: string; password: string }
   | { action: 'logout' }

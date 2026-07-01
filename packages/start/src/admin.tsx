@@ -470,8 +470,7 @@ function DashboardWidget({ widget }: { widget: DashboardWidgetExtension }) {
 function StatCount({ client, item }: { client: ReturnType<typeof useLatha>['client']; item: NavItem }) {
   const count = useAsync(
     () => {
-      if (item.kind === 'collection') return client.list(item.slug)
-      if (item.kind === 'taxonomy') return client.listTerms(item.slug)
+      if (item.kind === 'collection' || item.kind === 'taxonomy') return client.list(item.slug)
       return Promise.resolve([])
     },
     [item.slug, item.kind],
@@ -633,7 +632,7 @@ function TaxonomyListView({ slug, base }: { slug: string; base: string }) {
   const { client } = useLatha()
   const can = useCan()
   const entity = useAsync(() => client.entity(slug), [slug])
-  const rows = useAsync(() => client.listTerms(slug), [slug])
+  const rows = useAsync(() => client.list(slug), [slug])
 
   if (entity.loading || rows.loading)
     return <p className="text-small text-muted-foreground">Loading…</p>
@@ -682,7 +681,7 @@ function TaxonomyListView({ slug, base }: { slug: string; base: string }) {
               canDelete
                 ? async (id) => {
                     if (!window.confirm('Delete this term? This cannot be undone.')) return
-                    await client.removeTerm(slug, id)
+                    await client.remove(slug, id)
                     rows.reload()
                   }
                 : undefined
@@ -713,7 +712,7 @@ function TaxonomyCreateView({ slug, base }: { slug: string; base: string }) {
       <CollectionForm
         entity={asEntity(entity.data)}
         onSubmit={async (values) => {
-          await client.createTerm(slug, values)
+          await client.create(slug, values)
           await toList()
         }}
         onCancel={toList}
@@ -727,14 +726,12 @@ function TaxonomyEditView({ slug, id, base }: { slug: string; id: string; base: 
   const can = useCan()
   const navigate = useNavigate()
   const entity = useAsync(() => client.entity(slug), [slug])
-  const terms = useAsync(() => client.listTerms(slug), [slug])
+  const term = useAsync(() => client.get(slug, id), [slug, id])
 
-  if (entity.loading || terms.loading)
+  if (entity.loading || term.loading)
     return <p className="text-small text-muted-foreground">Loading…</p>
   if (!entity.data) return <p className="text-small text-muted-foreground">Unknown taxonomy.</p>
-
-  const term = terms.data?.find((t) => t.id === id) ?? null
-  if (!term) return <p className="text-small text-muted-foreground">Term not found.</p>
+  if (!term.data) return <p className="text-small text-muted-foreground">Term not found.</p>
 
   const toList = () => navigate({ to: `${base}/taxonomy/${slug}` })
 
@@ -749,7 +746,7 @@ function TaxonomyEditView({ slug, id, base }: { slug: string; id: string; base: 
               size="sm"
               onClick={async () => {
                 if (!window.confirm('Delete this term? This cannot be undone.')) return
-                await client.removeTerm(slug, id)
+                await client.remove(slug, id)
                 await toList()
               }}
             >
@@ -760,10 +757,10 @@ function TaxonomyEditView({ slug, id, base }: { slug: string; id: string; base: 
       />
       <CollectionForm
         entity={asEntity(entity.data)}
-        initialValues={term}
+        initialValues={term.data}
         recordId={id}
         onSubmit={async (values) => {
-          await client.updateTerm(slug, id, values)
+          await client.update(slug, id, values)
           await toList()
         }}
         onCancel={toList}
