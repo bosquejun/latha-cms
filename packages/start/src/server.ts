@@ -16,9 +16,9 @@ import {
   type EntityAccess,
   type LathaInstance,
   type Module,
+  type OperationContext,
   type ResolvedConfig,
 } from '@latha/core'
-import { createContentApi } from '@latha/content'
 import {
   authenticate,
   createSessionToken,
@@ -46,6 +46,11 @@ import type {
 
 // Avoid a hard @types/node dependency for one env var.
 declare const process: { env: Record<string, string | undefined> }
+
+/** Force a value to its JSON-serializable form via a structural round-trip. */
+function toJson<T>(v: T): T {
+  return JSON.parse(JSON.stringify(v)) as T
+}
 
 /** Dev fallback — set `AUTH_SECRET` in production. */
 export const DEV_SECRET = 'latha-dev-secret-change-me'
@@ -269,11 +274,7 @@ export async function handleLathaRequest(
     throw new AccessDeniedError('read', 'admin')
   }
 
-  const api = createContentApi({
-    getLatha: () => Promise.resolve(latha),
-    getPrincipal: () => Promise.resolve(principal),
-    enforce: true,
-  })
+  const opCtx: OperationContext = { cms: latha, principal, context: { enforce: true } }
 
   switch (input.action) {
     case 'nav':
@@ -283,20 +284,24 @@ export async function handleLathaRequest(
       return entity ? describe(entity) : null
     }
     case 'list':
-      return api.list(input.slug)
-    case 'get':
-      return api.findOne(input.slug, input.id)
+      return (await operations.find(opCtx, input.slug)).map(toJson)
+    case 'get': {
+      const doc = await operations.findOne(opCtx, input.slug, input.id)
+      return doc ? toJson(doc) : null
+    }
     case 'create':
-      return api.create(input.slug, input.data)
+      return toJson(await operations.create(opCtx, input.slug, input.data))
     case 'update':
-      return api.update(input.slug, input.id, input.data)
+      return toJson(await operations.update(opCtx, input.slug, input.id, input.data))
     case 'remove':
-      await api.remove(input.slug, input.id)
+      await operations.destroy(opCtx, input.slug, input.id)
       return { id: input.id }
-    case 'getGlobal':
-      return api.getGlobal(input.slug)
+    case 'getGlobal': {
+      const doc = await operations.findGlobal(opCtx, input.slug)
+      return doc ? toJson(doc) : null
+    }
     case 'saveGlobal':
-      return api.saveGlobal(input.slug, input.data)
+      return toJson(await operations.saveGlobal(opCtx, input.slug, input.data))
 
     case 'currentUser':
       return sessionUser ? toSessionUser(sessionUser) : null

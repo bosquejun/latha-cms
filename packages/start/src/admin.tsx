@@ -37,7 +37,7 @@ import {
   type NavItem,
   type NavSection,
 } from '@latha/admin-sdk'
-import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@latha/ui'
+import { Button, Card, CardHeader, CardTitle, CardDescription } from '@latha/ui'
 import {
   Plus,
   FileText,
