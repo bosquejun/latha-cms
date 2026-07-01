@@ -94,13 +94,8 @@ export {
 
 // Views
 export {
-  CollectionList,
-  type CollectionListProps,
-  type CollectionRow,
-} from './views/CollectionList.js'
-export {
-  CollectionForm,
-  type CollectionFormProps,
-} from './views/CollectionForm.js'
-export { DocumentForm, type DocumentFormProps } from './views/DocumentForm.js'
+  EntityList,
+  type EntityListProps,
+  type EntityRow,
+} from './views/EntityList.js'
 export { EntityForm, type EntityFormProps } from './views/EntityForm.js'

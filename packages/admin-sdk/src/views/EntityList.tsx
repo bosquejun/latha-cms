@@ -1,5 +1,5 @@
 /**
- * CollectionList — the auto-generated table view for a collection.
+ * EntityList — the auto-generated table view for a many-cardinality entity.
  *
  * Columns derive from `defaultColumns` (falling back to the title field plus
  * the first couple of fields). Routing stays in the app: the caller supplies
@@ -27,14 +27,14 @@ import { useState, type ReactNode } from 'react'
 import { humanize } from '../schema.js'
 import type { AdminEntity } from '../schema.js'
 
-export interface CollectionRow {
+export interface EntityRow {
   id: string
   [key: string]: unknown
 }
 
-export interface CollectionListProps {
+export interface EntityListProps {
   entity: AdminEntity
-  rows: CollectionRow[]
+  rows: EntityRow[]
   getEditHref: (id: string) => string
   onDelete?: (id: string) => void
   busy?: boolean
@@ -69,13 +69,13 @@ function renderCell(value: unknown, isSelect: boolean): ReactNode {
   return String(value)
 }
 
-export function CollectionList({
+export function EntityList({
   entity,
   rows,
   getEditHref,
   onDelete,
   busy,
-}: CollectionListProps) {
+}: EntityListProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const columns = resolveColumns(entity)
   const titleCol = entity.useAsTitle ?? columns[0]

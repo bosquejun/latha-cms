@@ -13,9 +13,8 @@ import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import {
   AdminShell,
-  CollectionForm,
-  CollectionList,
-  DocumentForm,
+  EntityList,
+  EntityForm,
   EmptyState,
   PageHeader,
   Slot,
@@ -532,7 +531,7 @@ function ListView({ slug, base }: { slug: string; base: string }) {
         />
       ) : (
         <Card className="overflow-hidden p-0">
-          <CollectionList
+          <EntityList
             entity={asEntity(entity.data)}
             rows={list}
             getEditHref={(id) => `${base}/content/${slug}/${id}`}
@@ -569,7 +568,9 @@ function CreateView({ slug, base }: { slug: string; base: string }) {
         title={`New ${entity.data.label.toLowerCase()}`}
         description="Draft a new record for this collection."
       />
-      <CollectionForm
+      <EntityForm
+        fields={asEntity(entity.data).fields}
+        submitLabel={`Create ${entity.data.label}`}
         entity={asEntity(entity.data)}
         onSubmit={async (values) => {
           await client.create(slug, values)
@@ -614,10 +615,12 @@ function EditView({ slug, id, base }: { slug: string; id: string; base: string }
           ) : undefined
         }
       />
-      <CollectionForm
-        entity={asEntity(entity.data)}
+      <EntityForm
+        fields={asEntity(entity.data).fields}
+        submitLabel="Save changes"
         initialValues={doc.data}
         recordId={id}
+        entity={asEntity(entity.data)}
         onSubmit={async (values) => {
           await client.update(slug, id, values)
           await toList()
@@ -673,7 +676,7 @@ function TaxonomyListView({ slug, base }: { slug: string; base: string }) {
         />
       ) : (
         <Card className="overflow-hidden p-0">
-          <CollectionList
+          <EntityList
             entity={asEntity(entity.data)}
             rows={list}
             getEditHref={(id) => `${base}/taxonomy/${slug}/${id}`}
@@ -709,7 +712,9 @@ function TaxonomyCreateView({ slug, base }: { slug: string; base: string }) {
         title={`New ${entity.data.label.toLowerCase()}`}
         description="Create a new term for this taxonomy."
       />
-      <CollectionForm
+      <EntityForm
+        fields={asEntity(entity.data).fields}
+        submitLabel={`Create ${entity.data.label}`}
         entity={asEntity(entity.data)}
         onSubmit={async (values) => {
           await client.create(slug, values)
@@ -755,10 +760,12 @@ function TaxonomyEditView({ slug, id, base }: { slug: string; id: string; base: 
           ) : undefined
         }
       />
-      <CollectionForm
-        entity={asEntity(entity.data)}
+      <EntityForm
+        fields={asEntity(entity.data).fields}
+        submitLabel="Save changes"
         initialValues={term.data}
         recordId={id}
+        entity={asEntity(entity.data)}
         onSubmit={async (values) => {
           await client.update(slug, id, values)
           await toList()
@@ -781,9 +788,11 @@ function DocumentView({ slug }: { slug: string }) {
     <>
       <Slot zone="document.before" entity={entity.data} />
       <PageHeader title={entity.data.label} />
-      <DocumentForm
+      <EntityForm
+        fields={asEntity(entity.data).fields}
+        submitLabel="Save"
+        initialValues={value.data ?? undefined}
         entity={asEntity(entity.data)}
-        value={value.data ?? null}
         onSubmit={async (values) => {
           await client.saveGlobal(slug, values)
           value.reload()
