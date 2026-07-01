@@ -11,11 +11,8 @@
 export {
   describeEntity,
   describeEntities,
-  buildNav,
-  hrefFor,
   humanize,
   type AdminEntity,
-  type AdminNavItem,
   type EntityKind,
 } from './schema.js'
 
