@@ -36,16 +36,16 @@ export interface DBAdapter {
   /** Tear down the connection. */
   disconnect?(): Promise<void>
 
-  find(collection: string, query?: Query): Promise<Doc[]>
-  findOne(collection: string, id: string): Promise<Doc | null>
-  count(collection: string, query?: Query): Promise<number>
-  create(collection: string, data: Record<string, unknown>): Promise<Doc>
+  find(slug: string, query?: Query): Promise<Doc[]>
+  findOne(slug: string, id: string): Promise<Doc | null>
+  count(slug: string, query?: Query): Promise<number>
+  create(slug: string, data: Record<string, unknown>): Promise<Doc>
   update(
-    collection: string,
+    slug: string,
     id: string,
     data: Record<string, unknown>,
   ): Promise<Doc>
-  delete(collection: string, id: string): Promise<void>
+  delete(slug: string, id: string): Promise<void>
 
   /** Reconcile the database schema with the given entity definitions. */
   migrate(entities: AnyEntity[]): Promise<void>

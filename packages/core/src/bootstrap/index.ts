@@ -88,7 +88,7 @@ class Latha implements LathaInstance {
     // 5. Plugin onInit.
     for (const plugin of this.config.plugins) await plugin.onInit?.(this)
 
-    // 6. Migrate schema for every entity (collections, documents, taxonomies).
+    // 6. Migrate schema for every entity.
     await this.db.migrate(this.entities)
 
     // 7. onReady (resolved order).

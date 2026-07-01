@@ -14,7 +14,7 @@
  *
  * Auth does NOT depend on the users module. By default it reads identities from
  * the `users` collection (which `@latha/users` provides), but you can point it
- * at another collection via `usersSlug`, or supply a custom `subjectStore`
+ * at another entity via `usersSlug`, or supply a custom `subjectStore`
  * (e.g. an external IdP) — so auth can run standalone.
  */
 
@@ -25,7 +25,7 @@ import { createRbacGuard } from './rbac/guard.js'
 import { syncCatalog, getCatalog } from './rbac/catalog.js'
 import { defaultRoles, seedRoles, type RoleSeed } from './rbac/seed.js'
 import {
-  collectionSubjectStore,
+  entitySubjectStore,
   setSubjectStore,
   DEFAULT_USERS_SLUG,
   type SubjectStore,
@@ -45,7 +45,7 @@ export interface AuthModuleConfig {
    */
   roles?: RoleSeed[]
   /**
-   * Collection the default subject store reads identities from. Defaults to
+   * Entity slug the default subject store reads identities from. Defaults to
    * `users`. Ignored when `subjectStore` is provided.
    */
   usersSlug?: string
@@ -67,13 +67,13 @@ export function AuthModule(config: AuthModuleConfig): Module {
     admin: { nav: { area: 'settings', label: 'Access', order: 90 }, ui: '@latha/auth/admin' },
 
     onInit(latha) {
-      // Register the identity source (custom, a configured collection, or the
+      // Register the identity source (custom, a configured entity, or the
       // default `users` collection).
       setSubjectStore(
         latha,
         config.subjectStore
           ? config.subjectStore(latha)
-          : collectionSubjectStore(latha, config.usersSlug),
+          : entitySubjectStore(latha, config.usersSlug),
       )
       // Plug RBAC into the kernel's generic authorization seam.
       latha.registerGuard(createRbacGuard())
@@ -85,7 +85,7 @@ export function AuthModule(config: AuthModuleConfig): Module {
       const catalog = await syncCatalog(latha)
       // Protect the identity store from default editor/viewer grants. When a
       // custom subjectStore is supplied we don't know the slug (it may not be a
-      // CMS collection), so nothing extra is withheld; the app can pass `roles`
+      // CMS entity), so nothing extra is withheld; the app can pass `roles`
       // explicitly if it needs to protect additional scopes.
       const identitySlugs = config.subjectStore
         ? []

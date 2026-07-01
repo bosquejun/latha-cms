@@ -74,8 +74,7 @@ function resolveSingle(cms: LathaInstance, slug: string): Entity & { cardinality
 }
 
 // ---------------------------------------------------------------------------
-// List operations — every `cardinality: 'many'` entity (collections and
-// taxonomies alike) goes through these.
+// List operations — every `cardinality: 'many'` entity goes through these.
 // ---------------------------------------------------------------------------
 
 export async function find(

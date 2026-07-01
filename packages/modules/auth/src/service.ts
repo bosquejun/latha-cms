@@ -12,10 +12,8 @@ import type { AuthUser } from './types.js'
 import { verifyPassword } from './crypto.js'
 import { verifySessionToken } from './session.js'
 import { resolveUserPermissions } from './rbac/resolve.js'
-import { getSubjectStore, DEFAULT_USERS_SLUG } from './subject-store.js'
+import { getSubjectStore } from './subject-store.js'
 
-/** @deprecated The subject collection is configurable; this is only the default. */
-export const USERS_SLUG = DEFAULT_USERS_SLUG
 export const DEFAULT_COOKIE_NAME = 'latha_session'
 
 export interface AuthOptions {
