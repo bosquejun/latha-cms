@@ -7,7 +7,7 @@
  * ```ts
  * fields: {
  *   title:  text({ required: true }),
- *   status: select({ options: ['draft', 'published'], defaultValue: 'draft' }),
+ *   status: select({ options: z.enum(['draft', 'published']), defaultValue: 'draft' }),
  *   views:  number({ integer: true, defaultValue: 0 }),
  * }
  * ```
@@ -24,6 +24,7 @@
  * operations all keep consuming the same runtime shape.
  */
 
+import type { z } from 'zod'
 import type { FieldMeta } from '../fields/meta.js'
 import type {
   ArrayField,
@@ -151,10 +152,13 @@ type BooleanOpts = CommonOpts & { defaultValue?: boolean }
 
 type DateOpts = CommonOpts & { defaultValue?: Date | string }
 
-type SelectOpts = CommonOpts & {
-  options: readonly string[]
+// Zod-first: `options` is a `z.enum(...)` instance — the single source of
+// truth for the choice set. The builder normalizes it to the literal
+// `string[]` the kernel/wire config carries (see `select()` below).
+type SelectOpts<T extends z.ZodEnum = z.ZodEnum> = CommonOpts & {
+  options: T
   many?: boolean
-  defaultValue?: string
+  defaultValue?: z.infer<T> | readonly z.infer<T>[]
 }
 
 type StringRefOpts = CommonOpts & {
@@ -167,9 +171,9 @@ type GroupOpts = CommonOpts & { fields: FieldsRecord; defaultValue?: never }
 
 type ArrayOpts = CommonOpts & { fields: FieldsRecord; defaultValue?: never }
 
-type SelectOut<O extends SelectOpts> = O extends { many: true }
-  ? O['options'][number][]
-  : O['options'][number]
+type SelectOut<T extends z.ZodEnum, O> = O extends { many: true }
+  ? z.infer<T>[]
+  : z.infer<T>
 
 type RefOut<O extends StringRefOpts> = O extends { many: true }
   ? string[]
@@ -222,16 +226,22 @@ export function date<const O extends DateOpts = {}>(
   return withMeta<DateField, Date, IsPresent<O>>({ type: 'date', ...opts })
 }
 
-/** Enumerated choice. `many: true` stores an array of the chosen options. */
-export function select<const O extends SelectOpts>(
-  opts: O,
-): Built<SelectField, SelectOut<O>, IsPresent<O>> {
-  return withMeta<SelectField, SelectOut<O>, IsPresent<O>>({
-    ...opts,
+/**
+ * Enumerated choice. `options` takes a `z.enum(...)`; `defaultValue` is
+ * checked against the enum's values. `many: true` stores an array of the
+ * chosen options.
+ */
+export function select<T extends z.ZodEnum, const O extends SelectOpts<T>>(
+  opts: O & { options: T },
+): Built<SelectField, SelectOut<T, O>, IsPresent<O>> {
+  const { options, ...rest } = opts
+  return withMeta<SelectField, SelectOut<T, O>, IsPresent<O>>({
+    ...rest,
     type: 'select',
-    // Builder opts keep `options` readonly to preserve the literal union for
-    // inference; the runtime field stores a mutable copy.
-    options: [...opts.options],
+    // Normalize Zod in → JSON out: the canonical field config (what the
+    // registry validates and `describe()` ships to the admin client) carries
+    // the literal values, not the ZodEnum instance.
+    options: [...options.options] as string[],
   })
 }
 

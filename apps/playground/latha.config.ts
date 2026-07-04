@@ -6,7 +6,7 @@
  * points; see `src/`.
  */
 
-import { defineConfig } from '@latha/core'
+import { defineConfig, z } from '@latha/core'
 import { tursoAdapter } from '@latha/storage'
 import {
   Collection,
@@ -91,7 +91,7 @@ export default defineConfig({
             content: richtext(),
             featuredImage: media({ meta: { label: 'Featured Image', sidebar: true } }),
             status: select({
-              options: ['draft', 'published'],
+              options: z.enum(['draft', 'published']),
               defaultValue: 'draft',
               meta: { sidebar: true },
             }),
@@ -108,7 +108,7 @@ export default defineConfig({
             title: text({ required: true }),
             slug: text({ unique: true }),
             status: select({
-              options: ['draft', 'published'],
+              options: z.enum(['draft', 'published']),
               defaultValue: 'draft',
               meta: { sidebar: true },
             }),

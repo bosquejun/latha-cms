@@ -32,6 +32,7 @@ export type {
 // Field builders + inference, re-exported so configs can import everything
 // they need from `@latha/content`.
 export {
+  z,
   text,
   number,
   boolean,

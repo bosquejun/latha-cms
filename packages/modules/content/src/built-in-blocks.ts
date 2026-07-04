@@ -11,7 +11,7 @@
  * ```
  */
 
-import { text, richtext, select, array } from '@latha/core'
+import { z, text, richtext, select, array } from '@latha/core'
 import type { BlockInput } from './builders.js'
 
 /* -------------------------------------------------------------------------- */
@@ -70,7 +70,7 @@ export const spacerBlock: BlockInput = {
   label: 'Spacer',
   fields: {
     size: select({
-      options: ['sm', 'md', 'lg', 'xl'],
+      options: z.enum(['sm', 'md', 'lg', 'xl']),
       defaultValue: 'md',
       meta: { label: 'Size' },
     }),
@@ -103,7 +103,7 @@ export const ctaBlock: BlockInput = {
     buttonLabel: text({ meta: { label: 'Button Label' } }),
     buttonHref: text({ meta: { label: 'Button URL', placeholder: 'https://…' } }),
     variant: select({
-      options: ['default', 'muted', 'dark'],
+      options: z.enum(['default', 'muted', 'dark']),
       defaultValue: 'default',
       meta: { label: 'Style' },
     }),
@@ -118,7 +118,7 @@ export const bannerBlock: BlockInput = {
     linkLabel: text({ meta: { label: 'Link Label' } }),
     linkHref: text({ meta: { label: 'Link URL', placeholder: 'https://…' } }),
     variant: select({
-      options: ['info', 'success', 'warning', 'promo'],
+      options: z.enum(['info', 'success', 'warning', 'promo']),
       defaultValue: 'info',
       meta: { label: 'Style' },
     }),
@@ -132,7 +132,7 @@ export const featuresBlock: BlockInput = {
     heading: text({ meta: { label: 'Heading' } }),
     subheading: text({ meta: { label: 'Subheading' } }),
     layout: select({
-      options: ['grid', 'list'],
+      options: z.enum(['grid', 'list']),
       defaultValue: 'grid',
       meta: { label: 'Layout' },
     }),
@@ -196,7 +196,7 @@ export const galleryBlock: BlockInput = {
   fields: {
     heading: text({ meta: { label: 'Heading' } }),
     layout: select({
-      options: ['grid', 'masonry', 'carousel'],
+      options: z.enum(['grid', 'masonry', 'carousel']),
       defaultValue: 'grid',
       meta: { label: 'Layout' },
     }),
