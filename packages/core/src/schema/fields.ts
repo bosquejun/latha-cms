@@ -7,7 +7,7 @@
  * ```ts
  * fields: {
  *   title:  text({ required: true }),
- *   status: select({ options: ['draft', 'published'], defaultValue: 'draft' }),
+ *   status: select({ options: z.enum(['draft', 'published']), defaultValue: 'draft' }),
  *   views:  number({ integer: true, defaultValue: 0 }),
  * }
  * ```
@@ -24,6 +24,8 @@
  * operations all keep consuming the same runtime shape.
  */
 
+import type { z } from 'zod'
+import { kDataSchema } from '../fields/registry.js'
 import type { FieldMeta } from '../fields/meta.js'
 import type {
   ArrayField,
@@ -134,27 +136,31 @@ interface CommonOpts {
   meta?: FieldMeta
 }
 
-type TextOpts = CommonOpts & {
-  minLength?: number
-  maxLength?: number
-  defaultValue?: string
-}
+// text/number/date accept either literal constraints or a full Zod `schema`
+// (mutually exclusive). The live schema is attached under the `kDataSchema`
+// symbol — server-memory only, never serialized — and wins over the literal
+// config in `buildDocumentSchema`. See `kDataSchema` in fields/registry.ts.
+type TextOpts = CommonOpts & { defaultValue?: string } & (
+    | { minLength?: number; maxLength?: number; schema?: never }
+    | { schema: z.ZodType<string>; minLength?: never; maxLength?: never }
+  )
 
-type NumberOpts = CommonOpts & {
-  min?: number
-  max?: number
-  integer?: boolean
-  defaultValue?: number
-}
+type NumberOpts = CommonOpts & { defaultValue?: number } & (
+    | { min?: number; max?: number; integer?: boolean; schema?: never }
+    | { schema: z.ZodType<number>; min?: never; max?: never; integer?: never }
+  )
 
 type BooleanOpts = CommonOpts & { defaultValue?: boolean }
 
-type DateOpts = CommonOpts & { defaultValue?: Date | string }
+type DateOpts = CommonOpts & { defaultValue?: Date | string; schema?: z.ZodType<Date> }
 
-type SelectOpts = CommonOpts & {
-  options: readonly string[]
+// Zod-first: `options` is a `z.enum(...)` instance — the single source of
+// truth for the choice set. The builder normalizes it to the literal
+// `string[]` the kernel/wire config carries (see `select()` below).
+type SelectOpts<T extends z.ZodEnum = z.ZodEnum> = CommonOpts & {
+  options: T
   many?: boolean
-  defaultValue?: string
+  defaultValue?: z.infer<T> | readonly z.infer<T>[]
 }
 
 type StringRefOpts = CommonOpts & {
@@ -167,9 +173,9 @@ type GroupOpts = CommonOpts & { fields: FieldsRecord; defaultValue?: never }
 
 type ArrayOpts = CommonOpts & { fields: FieldsRecord; defaultValue?: never }
 
-type SelectOut<O extends SelectOpts> = O extends { many: true }
-  ? O['options'][number][]
-  : O['options'][number]
+type SelectOut<T extends z.ZodEnum, O> = O extends { many: true }
+  ? z.infer<T>[]
+  : z.infer<T>
 
 type RefOut<O extends StringRefOpts> = O extends { many: true }
   ? string[]
@@ -191,18 +197,41 @@ function withMeta<TField extends Field, TOut, TPresent extends boolean>(
   return config
 }
 
-/** Plain text — a single-line string field. */
+/**
+ * Attach a live data schema under the `kDataSchema` symbol. Symbol keys
+ * survive the `stampFields` spread but are dropped by `JSON.stringify`, so
+ * the schema never leaves server memory.
+ */
+function withDataSchema<C>(config: C, schema: z.ZodType | undefined): C {
+  if (schema !== undefined) {
+    ;(config as Record<symbol, unknown>)[kDataSchema] = schema
+  }
+  return config
+}
+
+/**
+ * Plain text — a single-line string field. Pass `schema` (e.g. `z.email()`,
+ * `z.string().regex(...)`) for constraints the literal options can't express.
+ */
 export function text<const O extends TextOpts = {}>(
   opts?: O,
 ): Built<TextField, string, IsPresent<O>> {
-  return withMeta<TextField, string, IsPresent<O>>({ type: 'text', ...opts })
+  const { schema, ...rest } = opts ?? ({} as O)
+  return withDataSchema(
+    withMeta<TextField, string, IsPresent<O>>({ type: 'text', ...rest }),
+    schema,
+  )
 }
 
-/** Numeric field — optionally integer-constrained and bounded. */
+/** Numeric field — optionally integer-constrained and bounded, or a full `schema`. */
 export function number<const O extends NumberOpts = {}>(
   opts?: O,
 ): Built<NumberField, number, IsPresent<O>> {
-  return withMeta<NumberField, number, IsPresent<O>>({ type: 'number', ...opts })
+  const { schema, ...rest } = opts ?? ({} as O)
+  return withDataSchema(
+    withMeta<NumberField, number, IsPresent<O>>({ type: 'number', ...rest }),
+    schema,
+  )
 }
 
 /** Boolean toggle. */
@@ -219,19 +248,29 @@ export function boolean<const O extends BooleanOpts = {}>(
 export function date<const O extends DateOpts = {}>(
   opts?: O,
 ): Built<DateField, Date, IsPresent<O>> {
-  return withMeta<DateField, Date, IsPresent<O>>({ type: 'date', ...opts })
+  const { schema, ...rest } = opts ?? ({} as O)
+  return withDataSchema(
+    withMeta<DateField, Date, IsPresent<O>>({ type: 'date', ...rest }),
+    schema,
+  )
 }
 
-/** Enumerated choice. `many: true` stores an array of the chosen options. */
-export function select<const O extends SelectOpts>(
-  opts: O,
-): Built<SelectField, SelectOut<O>, IsPresent<O>> {
-  return withMeta<SelectField, SelectOut<O>, IsPresent<O>>({
-    ...opts,
+/**
+ * Enumerated choice. `options` takes a `z.enum(...)`; `defaultValue` is
+ * checked against the enum's values. `many: true` stores an array of the
+ * chosen options.
+ */
+export function select<T extends z.ZodEnum, const O extends SelectOpts<T>>(
+  opts: O & { options: T },
+): Built<SelectField, SelectOut<T, O>, IsPresent<O>> {
+  const { options, ...rest } = opts
+  return withMeta<SelectField, SelectOut<T, O>, IsPresent<O>>({
+    ...rest,
     type: 'select',
-    // Builder opts keep `options` readonly to preserve the literal union for
-    // inference; the runtime field stores a mutable copy.
-    options: [...opts.options],
+    // Normalize Zod in → JSON out: the canonical field config (what the
+    // registry validates and `describe()` ships to the admin client) carries
+    // the literal values, not the ZodEnum instance.
+    options: [...options.options] as string[],
   })
 }
 

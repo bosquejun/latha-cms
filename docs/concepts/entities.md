@@ -54,7 +54,7 @@ Collection({
   },
   fields: {                            // a record of field builders
     title:  text({ required: true }),
-    status: select({ options: ['draft', 'published'] }),
+    status: select({ options: z.enum(['draft', 'published']) }),
   },
 })
 ```

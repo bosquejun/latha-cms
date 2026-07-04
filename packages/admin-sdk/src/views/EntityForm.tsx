@@ -1,28 +1,37 @@
 /**
  * EntityForm — the auto-generated form engine.
  *
- * Given a list of fields it builds a TanStack Form, renders each field through
- * the renderer registry, and validates with the Zod schema compiled from the
- * same field definitions (`buildZodSchema`) — the single validation layer.
+ * Given a list of fields it builds a react-hook-form instance validated by
+ * the Zod schema compiled from the same field definitions (`buildFormSchema`:
+ * the registry-built document schema plus any `jsonSchema` refinements the
+ * server shipped) via `@hookform/resolvers`' zodResolver — the single
+ * validation layer, running on blur and on every change after a failed
+ * submit. Each field renders through the renderer registry behind an RHF
+ * `<Controller>`, so renderers stay form-library-agnostic.
  * Fields marked `field.meta?.sidebar` move to the 1/3 right panel; the rest
  * fill the main column. A sticky action bar floats below the topbar so Save
  * is always reachable regardless of form length.
  */
 
-import { useForm } from '@tanstack/react-form'
-import { buildZodSchema, type Field } from '@latha/core'
+import { useMemo } from 'react'
+import { Controller, useForm, type Resolver } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import type { Field } from '@latha/core'
 import { Button, toast } from '@latha/ui'
-import { useId, useMemo, useState } from 'react'
+import { useId } from 'react'
+import { buildFormSchema } from '../fields/formSchema.js'
 import { getFieldRenderer } from '../fields/registry.js'
 import { Slot } from '../extensions/Slot.js'
 import { useExtensions } from '../extensions/context.js'
 import { PageLayout } from '../shell/PageLayout.js'
 
+type FormValues = Record<string, unknown>
+
 export interface EntityFormProps {
   fields: Field[]
-  initialValues?: Record<string, unknown>
+  initialValues?: FormValues
   submitLabel?: string
-  onSubmit: (values: Record<string, unknown>) => Promise<void> | void
+  onSubmit: (values: FormValues) => Promise<void> | void
   onCancel?: () => void
   /** Entity descriptor, forwarded to `form.*` zone widgets as context. */
   entity?: unknown
@@ -47,11 +56,8 @@ function defaultForField(field: Field): unknown {
   }
 }
 
-function buildDefaults(
-  fields: Field[],
-  initial: Record<string, unknown> | undefined,
-): Record<string, unknown> {
-  const values: Record<string, unknown> = {}
+function buildDefaults(fields: Field[], initial: FormValues | undefined): FormValues {
+  const values: FormValues = {}
   for (const field of fields) {
     values[field.name] = initial?.[field.name] ?? defaultForField(field)
   }
@@ -59,11 +65,8 @@ function buildDefaults(
 }
 
 /** Drop empty optional values so the schema can apply defaults / optionality. */
-function cleanValues(
-  fields: Field[],
-  values: Record<string, unknown>,
-): Record<string, unknown> {
-  const out: Record<string, unknown> = {}
+function cleanValues(fields: Field[], values: FormValues): FormValues {
+  const out: FormValues = {}
   for (const field of fields) {
     const value = values[field.name]
     if (value === '' || (typeof value === 'number' && Number.isNaN(value))) {
@@ -85,36 +88,37 @@ export function EntityForm({
   recordId,
 }: EntityFormProps) {
   const idPrefix = useId()
-  const schema = useMemo(() => buildZodSchema(fields), [fields])
   const defaults = useMemo(
     () => buildDefaults(fields, initialValues),
     [fields, initialValues],
   )
-  const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const form = useForm({
+  // zodResolver validates the *cleaned* values (empty optionals dropped, as
+  // the schema expects) and, on success, hands the parsed output — defaults
+  // applied, dates coerced — to onSubmit.
+  const resolver = useMemo<Resolver<FormValues>>(() => {
+    const schema = buildFormSchema(fields)
+    const base = zodResolver(schema as never) as unknown as Resolver<FormValues>
+    return (values, context, options) =>
+      base(cleanValues(fields, values), context, options)
+  }, [fields])
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isDirty, isSubmitting },
+  } = useForm<FormValues>({
     defaultValues: defaults,
-    onSubmit: async ({ value }) => {
-      const cleaned = cleanValues(fields, value)
-      const result = schema.safeParse(cleaned)
-      if (!result.success) {
-        const fieldErrors: Record<string, string> = {}
-        for (const issue of result.error.issues) {
-          const key = issue.path[0]
-          if (key != null && !(String(key) in fieldErrors)) {
-            fieldErrors[String(key)] = issue.message
-          }
-        }
-        setErrors(fieldErrors)
-        return
-      }
-      setErrors({})
-      try {
-        await onSubmit(cleaned)
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Something went wrong.')
-      }
-    },
+    resolver,
+    mode: 'onBlur',
+  })
+
+  const submit = handleSubmit(async (values) => {
+    try {
+      await onSubmit(values)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Something went wrong.')
+    }
   })
 
   const mainFields = fields.filter((f) => !f.meta?.sidebar && !f.meta?.hidden)
@@ -129,18 +133,21 @@ export function EntityForm({
     const Renderer = getFieldRenderer(field.type)
     const id = `${idPrefix}-${field.name}`
     return (
-      <form.Field key={field.name} name={field.name}>
-        {(api) => (
+      <Controller
+        key={field.name}
+        control={control}
+        name={field.name}
+        render={({ field: rhf, fieldState }) => (
           <Renderer
             field={field}
             id={id}
-            value={api.state.value}
-            onChange={(v) => api.handleChange(v as never)}
-            onBlur={api.handleBlur}
-            error={errors[field.name]}
+            value={rhf.value}
+            onChange={rhf.onChange}
+            onBlur={rhf.onBlur}
+            error={fieldState.error?.message}
           />
         )}
-      </form.Field>
+      />
     )
   }
 
@@ -151,7 +158,7 @@ export function EntityForm({
       onSubmit={(e) => {
         e.preventDefault()
         e.stopPropagation()
-        void form.handleSubmit()
+        void submit()
       }}
     >
       {/* ── Sticky action bar ───────────────────────────────────────────────
@@ -161,16 +168,12 @@ export function EntityForm({
       ──────────────────────────────────────────────────────────────────────── */}
       <div className="sticky top-(--header-height) z-10 mb-page-gap -mx-6 flex items-center gap-3 border-b border-border bg-background/95 px-6 py-2.5 backdrop-blur-sm">
         <div className="flex min-w-0 items-center gap-2">
-          <form.Subscribe selector={(s) => s.isDirty}>
-            {(isDirty) =>
-              isDirty ? (
-                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <span className="inline-block h-2 w-2 rounded-full bg-warning" />
-                  Unsaved changes
-                </span>
-              ) : null
-            }
-          </form.Subscribe>
+          {isDirty ? (
+            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <span className="inline-block h-2 w-2 rounded-full bg-warning" />
+              Unsaved changes
+            </span>
+          ) : null}
         </div>
 
         <div className="ml-auto flex shrink-0 items-center gap-inline">
@@ -179,13 +182,9 @@ export function EntityForm({
               Cancel
             </Button>
           )}
-          <form.Subscribe selector={(s) => s.isSubmitting}>
-            {(isSubmitting) => (
-              <Button type="submit" size="sm" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving…' : submitLabel}
-              </Button>
-            )}
-          </form.Subscribe>
+          <Button type="submit" size="sm" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving…' : submitLabel}
+          </Button>
         </div>
       </div>
 

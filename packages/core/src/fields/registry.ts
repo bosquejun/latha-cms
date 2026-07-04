@@ -1,5 +1,22 @@
 import { z } from 'zod'
 
+/**
+ * Symbol key under which a field builder may stash a live Zod schema for the
+ * field's stored value (the `schema` escape hatch on `text()`/`number()`/
+ * `date()`). Symbol keys survive the `{ name, ...def }` spread in
+ * `stampFields` but are invisible to `JSON.stringify`, so the live schema is
+ * server-memory only — it never crosses the RPC wire. `buildDocumentSchema`
+ * prefers it over the registered type's `buildDataSchema`, and
+ * `@latha/start`'s `describe()` converts it to JSON Schema for the client.
+ */
+export const kDataSchema: unique symbol = Symbol('latha.kDataSchema')
+
+/** Read a field config's live data schema, if a builder attached one. */
+export function liveDataSchema(field: Record<string, unknown>): z.ZodType | undefined {
+  const live = (field as Record<symbol, unknown>)[kDataSchema]
+  return live instanceof z.ZodType ? live : undefined
+}
+
 export interface FieldTypeEntry {
   /**
    * Zod schema for the field definition object itself.
@@ -14,7 +31,7 @@ export interface FieldTypeEntry {
    * The registry is provided so recursive types (group, array) can call
    * `registry.buildDocumentSchema`.
    */
-  buildDataSchema: (config: Record<string, unknown>, registry: FieldRegistry) => z.ZodTypeAny
+  buildDataSchema: (config: Record<string, unknown>, registry: FieldRegistry) => z.ZodType
 }
 
 export class FieldRegistry {
@@ -22,7 +39,7 @@ export class FieldRegistry {
 
   register(entry: FieldTypeEntry): void {
     const typeLiteral = entry.configSchema.shape.type
-    const type = typeLiteral._def.value as string
+    const type = typeLiteral.value
     if (this.entries.has(type)) {
       throw new Error(`Field type "${type}" is already registered.`)
     }
@@ -38,20 +55,23 @@ export class FieldRegistry {
    * This is the single validation layer for all CMS operations.
    */
   buildDocumentSchema(fields: Array<Record<string, unknown>>): z.ZodObject<z.ZodRawShape> {
-    const shape: z.ZodRawShape = {}
+    // v4's ZodRawShape is Readonly — build in a mutable record, pass to z.object.
+    const shape: Record<string, z.ZodType> = {}
 
     for (const field of fields) {
       const type = field.type as string
       const entry = this.entries.get(type)
+      // A live schema attached by a builder (the `schema` escape hatch) wins
+      // over the registered type's buildDataSchema — it can carry refinements
+      // the literal config can't express.
+      const live = liveDataSchema(field)
       // Module-owned field types (e.g. 'blocks', 'taxonomy') are only registered
       // server-side via onInit. On the client, fall back to z.unknown() so the
-      // form renders; real validation always runs on the server.
-      if (!entry) {
-        shape[field.name as string] = z.unknown()
-        continue
-      }
-
-      let schema = entry.buildDataSchema(field, this)
+      // form renders; real validation always runs on the server. The fallback
+      // still goes through the default/optional layering below — v4 object
+      // keys are non-optional even for z.unknown(), so skipping it would
+      // reject absent optional fields.
+      let schema = live ?? (entry ? entry.buildDataSchema(field, this) : z.unknown())
 
       const defaultValue = field.defaultValue
       if (defaultValue !== undefined) {
@@ -70,13 +90,13 @@ export class FieldRegistry {
    * Build a discriminated union of all registered field config schemas,
    * merged with the base field schema. Used to validate raw field definitions.
    */
-  buildFieldConfigUnion(): z.ZodTypeAny {
-    const schemas = [...this.entries.values()].map((entry) =>
-      baseFieldConfigSchema.merge(entry.configSchema),
-    ) as unknown as [z.ZodDiscriminatedUnionOption<'type'>, ...z.ZodDiscriminatedUnionOption<'type'>[]]
+  buildFieldConfigUnion(): z.ZodType {
+    const [first, ...rest] = [...this.entries.values()].map((entry) =>
+      baseFieldConfigSchema.extend(entry.configSchema.shape),
+    )
 
-    if (schemas.length === 0) throw new Error('No field types registered.')
-    return z.discriminatedUnion('type', schemas)
+    if (first === undefined) throw new Error('No field types registered.')
+    return z.discriminatedUnion('type', [first, ...rest])
   }
 }
 

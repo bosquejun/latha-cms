@@ -9,7 +9,7 @@
  * reachable in a given build — not a runtime branch inside one bundle.
  */
 
-import { defineConfig, type DBAdapter, type ResolvedConfig, type StorageAdapter } from '@latha/core'
+import { defineConfig, z, type DBAdapter, type ResolvedConfig, type StorageAdapter } from '@latha/core'
 import {
   Collection,
   ContentModule,
@@ -83,10 +83,13 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
             fields: {
               title: text({ required: true }),
               slug: text({ unique: true }),
+              // Zod-first escape hatch: full schema validation server-side,
+              // mirrored to the admin form via jsonSchema.
+              contactEmail: text({ schema: z.email(), meta: { label: 'Contact Email' } }),
               content: richtext(),
               featuredImage: media({ meta: { label: 'Featured Image', sidebar: true } }),
               status: select({
-                options: ['draft', 'published'],
+                options: z.enum(['draft', 'published']),
                 defaultValue: 'draft',
                 meta: { sidebar: true },
               }),
@@ -103,7 +106,7 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
               title: text({ required: true }),
               slug: text({ unique: true }),
               status: select({
-                options: ['draft', 'published'],
+                options: z.enum(['draft', 'published']),
                 defaultValue: 'draft',
                 meta: { sidebar: true },
               }),

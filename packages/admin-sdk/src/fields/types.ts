@@ -3,8 +3,8 @@
  *
  * Renderers are deliberately decoupled from any form library: they receive a
  * value + change/blur callbacks and the field definition. The form view adapts
- * its form state (TanStack Form) to this contract, so renderers stay simple and
- * independently testable.
+ * its form state (react-hook-form, via Controller) to this contract, so
+ * renderers stay simple and independently testable.
  */
 
 import type { Field } from '@latha/core'

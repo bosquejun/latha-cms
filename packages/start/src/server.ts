@@ -11,6 +11,8 @@ import { getCookie, setCookie } from '@tanstack/react-start/server'
 import {
   operations,
   evaluateAccess,
+  liveDataSchema,
+  z,
   type Entity,
   type EntityAccess,
   type LathaInstance,
@@ -165,12 +167,28 @@ async function navOf(
   return out
 }
 
+/**
+ * Fields carrying a live Zod schema (the builders' `schema` escape hatch) get
+ * a `jsonSchema` companion on the wire via `z.toJSONSchema` — the client
+ * reads it for form hints and pre-validation. The live schema itself sits
+ * under a symbol key, which `JSON.stringify` drops, so it never leaves the
+ * server; constraints JSON Schema can't express degrade to server-only
+ * validation (`unrepresentable: 'any'`).
+ */
+function describeFields(fields: Entity['fields']): Entity['fields'] {
+  return fields.map((field) => {
+    const live = liveDataSchema(field as unknown as Record<string, unknown>)
+    if (!live) return field
+    return { ...field, jsonSchema: z.toJSONSchema(live, { unrepresentable: 'any' }) }
+  }) as Entity['fields']
+}
+
 function describe(entity: Entity): EntityDescriptor {
   return {
     slug: entity.slug,
     kind: entity.kind ?? (entity.cardinality === 'single' ? 'document' : 'collection'),
     label: labelOf(entity),
-    fields: entity.fields as unknown as EntityDescriptor['fields'],
+    fields: describeFields(entity.fields) as unknown as EntityDescriptor['fields'],
     useAsTitle: entity.admin?.useAsTitle,
     defaultColumns: entity.admin?.defaultColumns,
   }

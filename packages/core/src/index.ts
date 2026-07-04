@@ -67,7 +67,13 @@ export {
   type ArrayField,
   buildZodSchema,
   type InferFields,
+  kDataSchema,
+  liveDataSchema,
 } from './fields/index.js'
+
+// Zod — re-exported so configs and modules share core's instance and don't
+// need their own `zod` import line (field options are Zod-first: z.enum, …).
+export { z } from 'zod'
 
 // Bootstrap
 export { defineConfig, bootstrapLatha } from './bootstrap/index.js'

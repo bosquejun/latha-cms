@@ -1,5 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { z } from 'zod'
 import { fieldRegistry, type FieldTypeEntry, type LathaInstance, type StorageAdapter } from '@latha/core'
 import { MediaModule } from './module.js'
 import { MEDIA_SLUG } from './entities.js'
@@ -37,7 +38,6 @@ test('MediaModule.onInit registers the storage adapter and the media field type'
   assert.ok(fieldRegistry.has('media'))
   const built = fieldRegistry.buildDocumentSchema([{ name: 'cover', type: 'media', required: true }])
   const cover = built.shape.cover
-  assert.ok(cover)
-  assert.equal(cover._def.typeName, 'ZodString')
+  assert.ok(cover instanceof z.ZodString)
   assert.equal(cover.safeParse('doc-id').success, true)
 })
