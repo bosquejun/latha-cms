@@ -20,6 +20,7 @@ import type { Field } from '@latha/core'
 import { Button, toast } from '@latha/ui'
 import { useId } from 'react'
 import { buildFormSchema } from '../fields/formSchema.js'
+import { FormValuesProvider, type FormValuesStore } from '../fields/form-values.js'
 import { getFieldRenderer } from '../fields/registry.js'
 import { Slot } from '../extensions/Slot.js'
 import { useExtensions } from '../extensions/context.js'
@@ -106,12 +107,28 @@ export function EntityForm({
   const {
     control,
     handleSubmit,
+    watch,
+    getValues,
     formState: { isDirty, isSubmitting },
   } = useForm<FormValues>({
     defaultValues: defaults,
     resolver,
     mode: 'onBlur',
   })
+
+  // Adapt the RHF instance into the library-agnostic FormValuesStore so
+  // renderers can watch sibling fields via useFieldValue without ever
+  // touching react-hook-form.
+  const valuesStore = useMemo<FormValuesStore>(
+    () => ({
+      getValues,
+      subscribe: (listener) => {
+        const subscription = watch(listener)
+        return () => subscription.unsubscribe()
+      },
+    }),
+    [watch, getValues],
+  )
 
   const submit = handleSubmit(async (values) => {
     try {
@@ -154,77 +171,79 @@ export function EntityForm({
   const hasSidebar = sidebarFields.length > 0 || hasSidebarSlots
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        void submit()
-      }}
-    >
-      {/* ── Sticky action bar ───────────────────────────────────────────────
-          Stays pinned just below the fixed topbar so Save is always visible
-          no matter how long the form is. Uses bg-background/95 + backdrop-blur
-          so content scrolling underneath reads clearly.
-      ──────────────────────────────────────────────────────────────────────── */}
-      <div className="sticky top-(--header-height) z-10 mb-page-gap -mx-6 flex items-center gap-3 border-b border-border bg-background/95 px-6 py-2.5 backdrop-blur-sm">
-        <div className="flex min-w-0 items-center gap-2">
-          {isDirty ? (
-            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <span className="inline-block h-2 w-2 rounded-full bg-warning" />
-              Unsaved changes
-            </span>
-          ) : null}
-        </div>
-
-        <div className="ml-auto flex shrink-0 items-center gap-inline">
-          {onCancel && (
-            <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-              Cancel
-            </Button>
-          )}
-          <Button type="submit" size="sm" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving…' : submitLabel}
-          </Button>
-        </div>
-      </div>
-
-      <PageLayout
-        right={
-          hasSidebar ? (
-            <aside className="flex flex-col gap-form">
-              <Slot
-                zone="form.sidebar.before"
-                entity={entity}
-                recordId={recordId}
-                className="flex flex-col gap-form"
-              />
-              {sidebarFields.map(renderField)}
-              <Slot
-                zone="form.sidebar.after"
-                entity={entity}
-                recordId={recordId}
-                className="flex flex-col gap-form"
-              />
-            </aside>
-          ) : undefined
-        }
+    <FormValuesProvider store={valuesStore}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          void submit()
+        }}
       >
-        <div className="flex flex-col gap-form">
-          <Slot
-            zone="form.before"
-            entity={entity}
-            recordId={recordId}
-            className="flex flex-col gap-form"
-          />
-          {mainFields.map(renderField)}
-          <Slot
-            zone="form.after"
-            entity={entity}
-            recordId={recordId}
-            className="flex flex-col gap-form"
-          />
+        {/* ── Sticky action bar ───────────────────────────────────────────────
+            Stays pinned just below the fixed topbar so Save is always visible
+            no matter how long the form is. Uses bg-background/95 + backdrop-blur
+            so content scrolling underneath reads clearly.
+        ──────────────────────────────────────────────────────────────────────── */}
+        <div className="sticky top-(--header-height) z-10 mb-page-gap -mx-6 flex items-center gap-3 border-b border-border bg-background/95 px-6 py-2.5 backdrop-blur-sm">
+          <div className="flex min-w-0 items-center gap-2">
+            {isDirty ? (
+              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <span className="inline-block h-2 w-2 rounded-full bg-warning" />
+                Unsaved changes
+              </span>
+            ) : null}
+          </div>
+
+          <div className="ml-auto flex shrink-0 items-center gap-inline">
+            {onCancel && (
+              <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+                Cancel
+              </Button>
+            )}
+            <Button type="submit" size="sm" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving…' : submitLabel}
+            </Button>
+          </div>
         </div>
-      </PageLayout>
-    </form>
+
+        <PageLayout
+          right={
+            hasSidebar ? (
+              <aside className="flex flex-col gap-form">
+                <Slot
+                  zone="form.sidebar.before"
+                  entity={entity}
+                  recordId={recordId}
+                  className="flex flex-col gap-form"
+                />
+                {sidebarFields.map(renderField)}
+                <Slot
+                  zone="form.sidebar.after"
+                  entity={entity}
+                  recordId={recordId}
+                  className="flex flex-col gap-form"
+                />
+              </aside>
+            ) : undefined
+          }
+        >
+          <div className="flex flex-col gap-form">
+            <Slot
+              zone="form.before"
+              entity={entity}
+              recordId={recordId}
+              className="flex flex-col gap-form"
+            />
+            {mainFields.map(renderField)}
+            <Slot
+              zone="form.after"
+              entity={entity}
+              recordId={recordId}
+              className="flex flex-col gap-form"
+            />
+          </div>
+        </PageLayout>
+      </form>
+    </FormValuesProvider>
   )
 }
