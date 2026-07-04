@@ -8,6 +8,6 @@
     "composite": false,
     "types": ["vite/client"]
   },
-  "include": ["src", "latha.config.ts", "vite.config.ts"],
+  "include": ["src", "latha.config.ts", "latha.config.base.ts", "latha.config.vercel.ts", "vite.config.ts"],
   "exclude": ["node_modules", "dist", ".output"]
 }
