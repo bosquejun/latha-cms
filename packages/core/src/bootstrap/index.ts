@@ -12,6 +12,7 @@ import '../fields/builtins.js'
 import { fieldRegistry } from '../fields/registry.js'
 import type { FieldTypeEntry } from '../fields/registry.js'
 import { ModuleRegistry } from '../registry/index.js'
+import type { StorageAdapter } from '../types/adapter.js'
 import type { Entity } from '../types/entity.js'
 import type { Guard } from '../types/guard.js'
 import type {
@@ -45,6 +46,7 @@ export function defineConfig(config: LathaConfig): ResolvedConfig {
 class Latha implements LathaInstance {
   readonly config: ResolvedConfig
   readonly db: ResolvedConfig['db']
+  storage?: StorageAdapter
   modules: Module[] = []
   entities: Entity[] = []
   guards: Guard[] = []
@@ -68,6 +70,10 @@ class Latha implements LathaInstance {
 
   registerFieldType(entry: FieldTypeEntry): void {
     fieldRegistry.register(entry)
+  }
+
+  registerStorageAdapter(adapter: StorageAdapter): void {
+    this.storage = adapter
   }
 
   async boot(): Promise<this> {

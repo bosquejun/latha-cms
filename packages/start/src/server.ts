@@ -207,6 +207,23 @@ async function getCachedPublicPrincipal(latha: LathaInstance): Promise<PublicPri
 }
 
 /**
+ * Resolve the caller for an incoming request: the actual logged-in user (for
+ * `currentUser` / login redirects) and the effective principal for
+ * enforcement — the user, or the synthetic Public principal for anonymous
+ * requests. Public never holds `admin:access`, so callers still get blocked
+ * by an admin gate downstream. Shared by the RPC dispatcher and the upload
+ * dispatcher so both transports authenticate identically.
+ */
+export async function resolvePrincipal(
+  latha: LathaInstance,
+): Promise<{ sessionUser: AuthUser | null; principal: AuthUser | PublicPrincipal }> {
+  const sessionUser = await currentAuthUser(latha)
+  const principal: AuthUser | PublicPrincipal =
+    sessionUser ?? (await getCachedPublicPrincipal(latha))
+  return { sessionUser, principal }
+}
+
+/**
  * Dispatch one RPC request and coerce the result to a JSON-serializable value.
  *
  * This is the default handler body for the app's single server function. Import
@@ -240,13 +257,7 @@ export async function handleLathaRequest(
   const latha = await getRuntime(config)
   const basePath = config.adminPath || '/admin'
 
-  // The actual logged-in user (drives `currentUser` + login redirect), and the
-  // effective principal for enforcement: the user, or the synthetic Public
-  // principal for anonymous requests. Public never holds `admin:access`, so the
-  // admin gate below still blocks anonymous callers.
-  const sessionUser = await currentAuthUser(latha)
-  const principal: AuthUser | PublicPrincipal =
-    sessionUser ?? (await getCachedPublicPrincipal(latha))
+  const { sessionUser, principal } = await resolvePrincipal(latha)
 
   // Top-level gate: every action except login/logout/currentUser requires a
   // principal that can access the admin surface.

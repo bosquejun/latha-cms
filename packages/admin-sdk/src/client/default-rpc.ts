@@ -13,6 +13,13 @@ import type { LathaRpcInput } from './rpc.js'
 /** Where the framework's RPC server route is mounted. */
 export const DEFAULT_RPC_PATH = '/__latha/rpc'
 
+/**
+ * Where the framework's file-upload server route is mounted. Binary payloads
+ * can't go through the JSON-only RPC route, so uploads (see `@latha/media`)
+ * get their own dedicated multipart endpoint.
+ */
+export const DEFAULT_UPLOAD_PATH = '/__latha/upload'
+
 /** Identity validator that pins a custom server function's input to `LathaRpcInput`. */
 export function lathaRpcValidator(data: LathaRpcInput): LathaRpcInput {
   return data

@@ -2,7 +2,7 @@
  * Top-level configuration and module/plugin contracts.
  */
 
-import type { DBAdapter } from './adapter.js'
+import type { DBAdapter, StorageAdapter } from './adapter.js'
 import type { AnyEntity } from './entity.js'
 import type { Guard } from './guard.js'
 import type { FieldTypeEntry } from '../fields/registry.js'
@@ -11,6 +11,8 @@ import type { FieldTypeEntry } from '../fields/registry.js'
 export interface LathaInstance {
   config: ResolvedConfig
   db: DBAdapter
+  /** Optional blob/file storage adapter — set when a module (e.g. `@latha/media`) needs one. */
+  storage?: StorageAdapter
   /** Flat list of every entity contributed by every module. */
   entities: AnyEntity[]
   /** Resolve a single entity by slug. */
@@ -26,6 +28,13 @@ export interface LathaInstance {
   registerGuard(guard: Guard): void
   /** Register a field type with the field registry (typically from a module's `onInit`). */
   registerFieldType(entry: FieldTypeEntry): void
+  /**
+   * Register the blob/file storage adapter (typically from a module's
+   * `onInit`, e.g. `@latha/media`). Core has no opinion on storage — this is
+   * a generic extension seam, the same shape as `registerGuard`/
+   * `registerFieldType`, not a config concept core itself needs.
+   */
+  registerStorageAdapter(adapter: StorageAdapter): void
   ready: boolean
 }
 

@@ -11,7 +11,7 @@
  * or `{ endpoint }` to point at a different path.
  */
 
-import { DEFAULT_RPC_PATH } from './default-rpc.js'
+import { DEFAULT_RPC_PATH, DEFAULT_UPLOAD_PATH } from './default-rpc.js'
 import type {
   EntityDescriptor,
   JsonDoc,
@@ -37,6 +37,8 @@ export interface LathaClient {
     password: string,
   ): Promise<{ ok: boolean; user: SessionUser | null }>
   logout(): Promise<{ ok: true }>
+  /** Upload a file via the dedicated multipart route (not the JSON RPC path). */
+  upload(file: File, extra?: Record<string, string>): Promise<JsonDoc>
 }
 
 /** Options for the default (fetch-based) client transport. */
@@ -59,6 +61,22 @@ async function fetchRpc<T>(endpoint: string, data: LathaRpcInput): Promise<T> {
     throw new Error(`Latha RPC request failed (${res.status} ${res.statusText})`)
   }
   return res.json() as Promise<T>
+}
+
+/** POST a file (+ extra fields) to the upload endpoint as multipart form data. */
+async function fetchUpload(
+  endpoint: string,
+  file: File,
+  extra?: Record<string, string>,
+): Promise<JsonDoc> {
+  const form = new FormData()
+  form.append('file', file)
+  for (const [k, v] of Object.entries(extra ?? {})) form.append(k, v)
+  const res = await fetch(endpoint, { method: 'POST', credentials: 'same-origin', body: form })
+  if (!res.ok) {
+    throw new Error(`Latha upload failed (${res.status} ${res.statusText})`)
+  }
+  return res.json() as Promise<JsonDoc>
 }
 
 /**
@@ -99,5 +117,13 @@ export function createLathaClient(
         password,
       }),
     logout: () => call<{ ok: true }>({ action: 'logout' }),
+    upload: (file, extra) => {
+      if (serverFn) {
+        throw new Error(
+          'client.upload() requires the default fetch transport (no custom serverFn support yet).',
+        )
+      }
+      return fetchUpload(DEFAULT_UPLOAD_PATH, file, extra)
+    },
   }
 }

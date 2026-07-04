@@ -15,6 +15,7 @@ import type { LucideIcon } from 'lucide-react'
 import type { AdminZone, WidgetContext } from './zones.js'
 import type { FieldRenderer } from '../fields/types.js'
 import type { SidebarIcon } from '../shell/Sidebar.js'
+import type { EntityListProps } from '../views/EntityList.js'
 
 /** A widget is any component that accepts the zone `WidgetContext`. */
 export type WidgetComponent = ComponentType<WidgetContext>
@@ -94,6 +95,18 @@ export interface FieldRendererExtension extends FieldRendererConfig {
   renderer: FieldRenderer
 }
 
+/** A full replacement for the generic list view of one entity. */
+export type EntityListComponent = ComponentType<EntityListProps>
+
+export interface EntityListConfig {
+  /** The entity slug this list view replaces `<EntityList>` for (e.g. `media`). */
+  slug: string
+}
+
+export interface EntityListRendererExtension extends EntityListConfig {
+  Component: EntityListComponent
+}
+
 /** A plain sidebar link (internal route or external URL) with no page body. */
 export interface NavItemExtension {
   label: string
@@ -113,6 +126,8 @@ export interface AdminExtensions {
   dashboardWidgets?: DashboardWidgetExtension[]
   settings?: SettingsPageExtension[]
   fields?: FieldRendererExtension[]
+  /** Full list-view replacements, keyed by entity slug. */
+  lists?: EntityListRendererExtension[]
   nav?: NavItemExtension[]
   /** Per-entity-kind sidebar icons. Keys are entity kind strings (e.g. `collection`). */
   kindIcons?: Partial<Record<string, SidebarIcon>>
@@ -151,5 +166,10 @@ export function defineSettingsConfig(config: SettingsPageConfig): SettingsPageCo
 
 /** Declare a field-renderer file's config (convention mode). */
 export function defineFieldConfig(config: FieldRendererConfig): FieldRendererConfig {
+  return config
+}
+
+/** Declare an entity-list-renderer file's config (convention mode). */
+export function defineEntityListConfig(config: EntityListConfig): EntityListConfig {
   return config
 }

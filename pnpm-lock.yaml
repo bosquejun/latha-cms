@@ -38,6 +38,9 @@ importers:
       '@latha/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@latha/media':
+        specifier: workspace:*
+        version: link:../../packages/modules/media
       '@latha/start':
         specifier: workspace:*
         version: link:../../packages/start
@@ -167,6 +170,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@types/node':
+        specifier: ^22.10.0
+        version: 22.20.0
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -213,6 +219,40 @@ importers:
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
+
+  packages/modules/media:
+    dependencies:
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@latha/admin-sdk':
+        specifier: workspace:*
+        version: link:../../admin-sdk
+      '@latha/core':
+        specifier: workspace:*
+        version: link:../../core
+      '@latha/start':
+        specifier: workspace:*
+        version: link:../../start
+      '@latha/ui':
+        specifier: workspace:*
+        version: link:../../ui
+      '@types/node':
+        specifier: ^22.10.0
+        version: 22.20.0
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.17
+      react:
+        specifier: ^19.0.0
+        version: 19.2.7
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vite:
+        specifier: ^7.0.0
+        version: 7.3.5(@types/node@22.20.0)(jiti@2.7.0)(lightningcss@1.32.0)
 
   packages/modules/storage:
     dependencies:

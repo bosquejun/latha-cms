@@ -15,6 +15,7 @@
     "@latha/auth": "workspace:*",
     "@latha/content": "workspace:*",
     "@latha/core": "workspace:*",
+    "@latha/media": "workspace:*",
     "@latha/start": "workspace:*",
     "@latha/storage": "workspace:*",
     "@latha/ui": "workspace:*",

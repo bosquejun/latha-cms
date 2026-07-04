@@ -17,6 +17,7 @@ export {
   defineDashboardWidgetConfig,
   defineSettingsConfig,
   defineFieldConfig,
+  defineEntityListConfig,
   type AdminExtensions,
   type WidgetComponent,
   type WidgetConfig,
@@ -30,6 +31,9 @@ export {
   type SettingsPageExtension,
   type FieldRendererConfig,
   type FieldRendererExtension,
+  type EntityListComponent,
+  type EntityListConfig,
+  type EntityListRendererExtension,
   type NavItemExtension,
 } from './types.js'
 
