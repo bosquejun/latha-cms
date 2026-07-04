@@ -44,19 +44,19 @@ export const relationshipFieldConfigSchema = z.object({
   many: z.boolean().optional(),
 })
 
-// `fields` is validated loosely at runtime (`z.record(z.unknown())`): the
+// `fields` is validated loosely at runtime (`z.record(z.string(), z.unknown())`): the
 // field registry is open/extensible, so a fully faithful recursive schema of
 // "any registered field type" can't be expressed statically here. The
 // `FieldTypeMap` entries for `group`/`array` in `types.ts` override this one
 // property back to `Field[]` for compile-time ergonomics.
 export const groupFieldConfigSchema = z.object({
   type: z.literal('group'),
-  fields: z.array(z.record(z.unknown())),
+  fields: z.array(z.record(z.string(), z.unknown())),
 })
 
 export const arrayFieldConfigSchema = z.object({
   type: z.literal('array'),
-  fields: z.array(z.record(z.unknown())),
+  fields: z.array(z.record(z.string(), z.unknown())),
 })
 
 registerFieldType({
@@ -94,7 +94,7 @@ registerFieldType({
   buildDataSchema: (config) => {
     const options = config.options as string[]
     const [first, ...rest] = options
-    const base: z.ZodTypeAny =
+    const base: z.ZodType =
       first === undefined ? z.string() : z.enum([first, ...rest] as [string, ...string[]])
     return (config.many as boolean | undefined) ? z.array(base) : base
   },

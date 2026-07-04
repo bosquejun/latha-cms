@@ -36,7 +36,7 @@ export const blocksFieldConfigSchema = z.object({
     z.object({
       type: z.string(),
       label: z.string(),
-      fields: z.array(z.record(z.unknown())),
+      fields: z.array(z.record(z.string(), z.unknown())),
     }),
   ),
 })
@@ -61,16 +61,14 @@ export function ContentModule(config: ContentModuleConfig): Module {
           if (!defs || defs.length === 0) {
             return z.array(z.object({ type: z.string() }))
           }
-          type DiscrimOption = z.ZodObject<{ type: z.ZodTypeAny } & z.ZodRawShape>
           const variants = defs.map((def) => {
             const bodySchema = registry.buildDocumentSchema(
               def.fields as Array<Record<string, unknown>>,
             )
-            return z
-              .object({ type: z.literal(def.type) })
-              .merge(bodySchema) as unknown as DiscrimOption
+            return z.object({ type: z.literal(def.type), ...bodySchema.shape })
           })
-          const [first, ...rest] = variants as [DiscrimOption, ...DiscrimOption[]]
+          const [first, ...rest] = variants
+          if (first === undefined) return z.array(z.object({ type: z.string() }))
           return z.array(z.discriminatedUnion('type', [first, ...rest]))
         },
       })

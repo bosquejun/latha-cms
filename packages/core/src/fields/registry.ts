@@ -14,7 +14,7 @@ export interface FieldTypeEntry {
    * The registry is provided so recursive types (group, array) can call
    * `registry.buildDocumentSchema`.
    */
-  buildDataSchema: (config: Record<string, unknown>, registry: FieldRegistry) => z.ZodTypeAny
+  buildDataSchema: (config: Record<string, unknown>, registry: FieldRegistry) => z.ZodType
 }
 
 export class FieldRegistry {
@@ -22,7 +22,7 @@ export class FieldRegistry {
 
   register(entry: FieldTypeEntry): void {
     const typeLiteral = entry.configSchema.shape.type
-    const type = typeLiteral._def.value as string
+    const type = typeLiteral.value
     if (this.entries.has(type)) {
       throw new Error(`Field type "${type}" is already registered.`)
     }
@@ -38,7 +38,8 @@ export class FieldRegistry {
    * This is the single validation layer for all CMS operations.
    */
   buildDocumentSchema(fields: Array<Record<string, unknown>>): z.ZodObject<z.ZodRawShape> {
-    const shape: z.ZodRawShape = {}
+    // v4's ZodRawShape is Readonly — build in a mutable record, pass to z.object.
+    const shape: Record<string, z.ZodType> = {}
 
     for (const field of fields) {
       const type = field.type as string
@@ -70,13 +71,13 @@ export class FieldRegistry {
    * Build a discriminated union of all registered field config schemas,
    * merged with the base field schema. Used to validate raw field definitions.
    */
-  buildFieldConfigUnion(): z.ZodTypeAny {
-    const schemas = [...this.entries.values()].map((entry) =>
-      baseFieldConfigSchema.merge(entry.configSchema),
-    ) as unknown as [z.ZodDiscriminatedUnionOption<'type'>, ...z.ZodDiscriminatedUnionOption<'type'>[]]
+  buildFieldConfigUnion(): z.ZodType {
+    const [first, ...rest] = [...this.entries.values()].map((entry) =>
+      baseFieldConfigSchema.extend(entry.configSchema.shape),
+    )
 
-    if (schemas.length === 0) throw new Error('No field types registered.')
-    return z.discriminatedUnion('type', schemas)
+    if (first === undefined) throw new Error('No field types registered.')
+    return z.discriminatedUnion('type', [first, ...rest])
   }
 }
 
