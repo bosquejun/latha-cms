@@ -2,7 +2,7 @@
  * Top-level configuration and module/plugin contracts.
  */
 
-import type { DBAdapter } from './adapter.js'
+import type { DBAdapter, StorageAdapter } from './adapter.js'
 import type { AnyEntity } from './entity.js'
 import type { Guard } from './guard.js'
 import type { FieldTypeEntry } from '../fields/registry.js'
@@ -11,6 +11,8 @@ import type { FieldTypeEntry } from '../fields/registry.js'
 export interface LathaInstance {
   config: ResolvedConfig
   db: DBAdapter
+  /** Optional blob/file storage adapter — set when a module (e.g. `@latha/media`) needs one. */
+  storage?: StorageAdapter
   /** Flat list of every entity contributed by every module. */
   entities: AnyEntity[]
   /** Resolve a single entity by slug. */
@@ -89,6 +91,12 @@ export interface Plugin {
 
 export interface LathaConfig {
   db: DBAdapter
+  /**
+   * Optional blob/file storage backend. Required by any module that stores
+   * files (e.g. `@latha/media`) — omit if none are configured. Wired straight
+   * through to `LathaInstance.storage`, same as `db`.
+   */
+  storage?: StorageAdapter
   modules: Module[]
   plugins?: Plugin[]
   /** Base path the admin UI is mounted under. Defaults to `/admin`. */

@@ -18,12 +18,13 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --test"
+    "test": "tsc -p tsconfig.json && node --test dist/"
   },
   "dependencies": {
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/node": "^22.10.0",
     "typescript": "^5.7.2"
   }
 }

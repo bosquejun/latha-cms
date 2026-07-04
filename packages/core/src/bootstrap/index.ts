@@ -45,6 +45,7 @@ export function defineConfig(config: LathaConfig): ResolvedConfig {
 class Latha implements LathaInstance {
   readonly config: ResolvedConfig
   readonly db: ResolvedConfig['db']
+  readonly storage: ResolvedConfig['storage']
   modules: Module[] = []
   entities: Entity[] = []
   guards: Guard[] = []
@@ -56,6 +57,7 @@ class Latha implements LathaInstance {
   constructor(config: ResolvedConfig) {
     this.config = config
     this.db = config.db
+    this.storage = config.storage
   }
 
   getEntity(slug: string): Entity | undefined {
