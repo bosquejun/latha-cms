@@ -10,4 +10,5 @@ import { collectAdminExtensions, type AdminExtensions } from '@latha/admin-sdk'
 
 export const adminExtensions: AdminExtensions = collectAdminExtensions({
   fields: import.meta.glob('./fields/**/*.{tsx,jsx,ts,js}', { eager: true }),
+  lists: import.meta.glob('./lists/**/*.{tsx,jsx,ts,js}', { eager: true }),
 })

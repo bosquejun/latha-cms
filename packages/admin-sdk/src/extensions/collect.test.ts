@@ -37,3 +37,23 @@ test('mergeExtensions concatenates distinct keys', () => {
   ])
   assert.equal(merged.fields?.length, 2)
 })
+
+test('collectAdminExtensions assembles a list-view override from glob maps', () => {
+  const ext = collectAdminExtensions({
+    lists: {
+      '/a/lists/media.tsx': { default: Comp, config: { slug: 'media' } },
+      '/a/lists/skip.tsx': { default: Comp }, // no config -> dropped
+    },
+  })
+  assert.equal(ext.lists?.length, 1)
+  assert.equal(ext.lists?.at(0)?.slug, 'media')
+  assert.equal(ext.lists?.at(0)?.Component, Comp)
+})
+
+test('mergeExtensions lets later sources override a list-view by slug', () => {
+  const moduleExt = { lists: [{ slug: 'media', Component: Comp }] }
+  const appExt = { lists: [{ slug: 'media', Component: Comp }] }
+  const merged = mergeExtensions([moduleExt, appExt])
+  assert.equal(merged.lists?.length, 1)
+  assert.equal(merged.lists?.at(0)?.Component, appExt.lists[0]!.Component)
+})

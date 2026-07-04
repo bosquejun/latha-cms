@@ -486,6 +486,7 @@ function StatCount({ client, item }: { client: ReturnType<typeof useLatha>['clie
 function ListView({ slug, base, segment }: { slug: string; base: string; segment: string }) {
   const { client } = useLatha()
   const can = useCan()
+  const ext = useExtensions()
   const entity = useAsync(() => client.entity(slug), [slug])
   const rows = useAsync(() => client.list(slug), [slug])
 
@@ -498,6 +499,9 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
   const canDelete = can(`${slug}:delete`)
   const list = rows.data ?? []
   const newHref = `${base}/${segment}/${slug}/new`
+  // A module may register a full list-view replacement for this slug (e.g.
+  // @latha/media's thumbnail grid) — falls back to the generic table.
+  const ListComponent = ext.listRendererFor(slug)?.Component ?? EntityList
   return (
     <>
       <Slot zone="list.before" entity={entity.data} data={{ rows: list }} />
@@ -530,7 +534,7 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
         />
       ) : (
         <Card className="overflow-hidden p-0">
-          <EntityList
+          <ListComponent
             entity={asEntity(entity.data)}
             rows={list}
             getEditHref={(id) => `${base}/${segment}/${slug}/${id}`}
@@ -696,7 +700,9 @@ function SettingsCard({
 }) {
   const { basePath } = useLatha()
   return (
-    <Link to={`${basePath}/settings/${page.path}`}>
+    // A plain <a>, not the typed <Link>: `page.path` is a runtime value from
+    // extension config, not one of the router's statically-known routes.
+    <a href={`${basePath}/settings/${page.path}`}>
       <Card className="transition-colors hover:border-foreground/20">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -706,6 +712,6 @@ function SettingsCard({
           {page.description && <CardDescription>{page.description}</CardDescription>}
         </CardHeader>
       </Card>
-    </Link>
+    </a>
   )
 }

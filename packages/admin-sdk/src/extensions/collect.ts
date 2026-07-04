@@ -8,6 +8,7 @@
 import type {
   AdminExtensions,
   DashboardWidgetExtension,
+  EntityListRendererExtension,
   FieldRendererExtension,
   PageExtension,
   SettingsPageExtension,
@@ -22,6 +23,7 @@ export interface AdminGlobs {
   dashboard?: GlobMap
   settings?: GlobMap
   fields?: GlobMap
+  lists?: GlobMap
 }
 
 const entries = (map: GlobMap = {}) =>
@@ -53,12 +55,17 @@ export function collectAdminExtensions(globs: AdminGlobs): AdminExtensions {
     .filter(({ mod }) => mod && mod.default && cfg(mod).type)
     .map(({ mod }) => ({ type: cfg(mod).type, renderer: mod.default })) as FieldRendererExtension[]
 
+  const lists = entries(globs.lists)
+    .filter(({ mod }) => mod && mod.default && cfg(mod).slug)
+    .map(({ mod }) => ({ slug: cfg(mod).slug, Component: mod.default })) as EntityListRendererExtension[]
+
   return {
     widgets: widgets.length ? widgets : undefined,
     pages: pages.length ? pages : undefined,
     dashboardWidgets: dashboardWidgets.length ? dashboardWidgets : undefined,
     settings: settings.length ? settings : undefined,
     fields: fields.length ? fields : undefined,
+    lists: lists.length ? lists : undefined,
   }
 }
 
@@ -89,6 +96,10 @@ export function mergeExtensions(sources: AdminExtensions[]): AdminExtensions {
     fields: dedupeBy(
       sources.flatMap((s) => s.fields ?? []),
       (f) => f.type,
+    ),
+    lists: dedupeBy(
+      sources.flatMap((s) => s.lists ?? []),
+      (l) => l.slug,
     ),
     nav: dedupeBy(
       sources.flatMap((s) => s.nav ?? []),
