@@ -1,15 +1,15 @@
 /**
- * latha.config.base.ts — everything except the DB adapter.
+ * latha.config.base.ts — everything except the DB and storage adapters.
  *
  * Split out so the two environment-specific entrypoints (`latha.config.ts`
  * for local dev, `latha.config.vercel.ts` for Vercel) can each pass their own
- * `DBAdapter` without duplicating the rest of the app's schema/modules/seed.
- * `vite.config.ts` picks which entrypoint to build against, so only one
- * adapter's module graph (and its dependencies) is ever reachable in a given
- * build — not a runtime branch inside one bundle.
+ * `DBAdapter`/`StorageAdapter` without duplicating the rest of the app's
+ * schema/modules/seed. `vite.config.ts` picks which entrypoint to build
+ * against, so only one pair's module graph (and its dependencies) is ever
+ * reachable in a given build — not a runtime branch inside one bundle.
  */
 
-import { defineConfig, type DBAdapter, type ResolvedConfig } from '@latha/core'
+import { defineConfig, type DBAdapter, type ResolvedConfig, type StorageAdapter } from '@latha/core'
 import {
   Collection,
   ContentModule,
@@ -30,9 +30,9 @@ import { UsersModule } from '@latha/users'
 import { AuthModule } from '@latha/auth'
 import { countUsers, createUser } from '@latha/users'
 import { hashPassword, getRoleByName } from '@latha/auth'
-import { localDiskStorage, media, MediaModule } from '@latha/media'
+import { media, MediaModule } from '@latha/media'
 
-export function buildConfig(db: DBAdapter): ResolvedConfig {
+export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedConfig {
   return defineConfig({
     db,
 
@@ -43,12 +43,7 @@ export function buildConfig(db: DBAdapter): ResolvedConfig {
       // and syncs the scope/permission catalog from the entities below.
       AuthModule({ secret: process.env.AUTH_SECRET ?? 'latha-dev-secret-change-me' }),
 
-      // Dev-only local-disk adapter — writes into public/uploads so Vite serves
-      // the files back with no extra routing. Production deploys should
-      // configure an R2/S3-compatible adapter instead (not built yet).
-      MediaModule({
-        storage: localDiskStorage({ dir: './public/uploads', publicPath: '/uploads' }),
-      }),
+      MediaModule({ storage }),
 
       ContentModule({
         entities: [
