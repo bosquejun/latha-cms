@@ -5,7 +5,7 @@
  */
 
 export { createLathaClient, type LathaClient, type LathaClientOptions } from './client.js'
-export { lathaRpcValidator, DEFAULT_RPC_PATH } from './default-rpc.js'
+export { lathaRpcValidator, DEFAULT_RPC_PATH, DEFAULT_UPLOAD_PATH } from './default-rpc.js'
 export {
   LathaProvider,
   useLatha,
