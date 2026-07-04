@@ -1,14 +1,18 @@
 /**
  * Compile-time field type map — the extensibility seam.
  *
- * Core registers its 9 built-in field types here. Modules that add their own
- * field types augment this interface in their own module declaration files:
+ * Core registers its 9 built-in field types here, one entry per schema
+ * registered in `builtins.ts` — each entry is `BaseFieldConfig & z.infer<typeof
+ * xConfigSchema>`, so the registered Zod schema is the single source of truth
+ * for both runtime validation and the compile-time type. Modules that add
+ * their own field types follow the same pattern in their own module
+ * declaration files:
  *
  * ```ts
  * // @latha/content (taxonomy field)
  * declare module '@latha/core' {
  *   interface FieldTypeMap {
- *     taxonomy: BaseFieldConfig & { type: 'taxonomy'; to: string; many?: boolean }
+ *     taxonomy: BaseFieldConfig & z.infer<typeof taxonomyFieldConfigSchema>
  *   }
  * }
  * ```
@@ -18,7 +22,19 @@
  * field types without any changes to core.
  */
 
+import type { z } from 'zod'
 import type { BaseFieldConfig } from './registry.js'
+import type {
+  arrayFieldConfigSchema,
+  booleanFieldConfigSchema,
+  dateFieldConfigSchema,
+  groupFieldConfigSchema,
+  numberFieldConfigSchema,
+  relationshipFieldConfigSchema,
+  richtextFieldConfigSchema,
+  selectFieldConfigSchema,
+  textFieldConfigSchema,
+} from './builtins.js'
 
 /**
  * Open extensibility seam for richtext field Lexical configuration.
@@ -41,15 +57,23 @@ import type { BaseFieldConfig } from './registry.js'
 export interface RichTextExtensions {}
 
 export interface FieldTypeMap {
-  text: BaseFieldConfig & { type: 'text'; minLength?: number; maxLength?: number }
-  number: BaseFieldConfig & { type: 'number'; min?: number; max?: number; integer?: boolean }
-  boolean: BaseFieldConfig & { type: 'boolean' }
-  date: BaseFieldConfig & { type: 'date' }
-  select: BaseFieldConfig & { type: 'select'; options: string[]; many?: boolean }
-  richtext: BaseFieldConfig & { type: 'richtext'; lexicalConfig?: RichTextExtensions }
-  relationship: BaseFieldConfig & { type: 'relationship'; to: string; many?: boolean }
-  group: BaseFieldConfig & { type: 'group'; fields: FieldFromMap[] }
-  array: BaseFieldConfig & { type: 'array'; fields: FieldFromMap[] }
+  text: BaseFieldConfig & z.infer<typeof textFieldConfigSchema>
+  number: BaseFieldConfig & z.infer<typeof numberFieldConfigSchema>
+  boolean: BaseFieldConfig & z.infer<typeof booleanFieldConfigSchema>
+  date: BaseFieldConfig & z.infer<typeof dateFieldConfigSchema>
+  select: BaseFieldConfig & z.infer<typeof selectFieldConfigSchema>
+  // `lexicalConfig` isn't part of the runtime-validated schema — it's a
+  // type-only passthrough for the open `RichTextExtensions` seam (see above).
+  richtext: BaseFieldConfig &
+    z.infer<typeof richtextFieldConfigSchema> & { lexicalConfig?: RichTextExtensions }
+  relationship: BaseFieldConfig & z.infer<typeof relationshipFieldConfigSchema>
+  // `fields` is loosely typed in the runtime schema (open/extensible field
+  // registry — see builtins.ts); narrowed back to `Field[]` here for
+  // compile-time ergonomics.
+  group: BaseFieldConfig &
+    Omit<z.infer<typeof groupFieldConfigSchema>, 'fields'> & { fields: FieldFromMap[] }
+  array: BaseFieldConfig &
+    Omit<z.infer<typeof arrayFieldConfigSchema>, 'fields'> & { fields: FieldFromMap[] }
 }
 
 /** Union of all registered field config types (core + any module augmentations). */

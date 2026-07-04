@@ -1,7 +1,7 @@
 /**
  * Access evaluator.
  *
- * Given a collection's access map and a context, decide whether an operation
+ * Given an entity's access map and a context, decide whether an operation
  * is permitted. The default policy is deny-by-default for writes and
  * allow-by-default for reads is intentionally NOT used: when no access
  * function is declared for an operation, the operation is allowed. Modules
@@ -17,8 +17,8 @@ import type {
 
 export class AccessDeniedError extends Error {
   readonly operation: Operation
-  constructor(operation: Operation, collection: string) {
-    super(`Access denied: cannot ${operation} on "${collection}".`)
+  constructor(operation: Operation, slug: string) {
+    super(`Access denied: cannot ${operation} on "${slug}".`)
     this.name = 'AccessDeniedError'
     this.operation = operation
   }
@@ -39,8 +39,8 @@ export async function evaluateAccess(
 export async function assertAccess(
   access: EntityAccess | undefined,
   ctx: AccessContext,
-  collection: string,
+  slug: string,
 ): Promise<void> {
   const allowed = await evaluateAccess(access, ctx)
-  if (!allowed) throw new AccessDeniedError(ctx.operation, collection)
+  if (!allowed) throw new AccessDeniedError(ctx.operation, slug)
 }

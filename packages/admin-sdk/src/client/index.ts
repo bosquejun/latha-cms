@@ -15,12 +15,13 @@ export {
   type LathaContextValue,
 } from './context.js'
 export { useAsync, type AsyncState } from './hooks.js'
-export type {
-  LathaRpcInput,
-  LathaServerFn,
-  JsonDoc,
-  SessionUser,
-  NavItem,
-  NavSection,
-  EntityDescriptor,
+export {
+  LathaRpcInputSchema,
+  type LathaRpcInput,
+  type LathaServerFn,
+  type JsonDoc,
+  type SessionUser,
+  type NavItem,
+  type NavSection,
+  type EntityDescriptor,
 } from './rpc.js'

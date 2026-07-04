@@ -7,7 +7,6 @@
  * server-function handler — never statically from client-reachable code.
  */
 
-import { z } from 'zod'
 import { getCookie, setCookie } from '@tanstack/react-start/server'
 import {
   operations,
@@ -35,7 +34,7 @@ import {
 import { AccessDeniedError } from '@latha/core'
 import type { JsonValue } from '@latha/core'
 import { getRuntime } from './runtime.js'
-import { humanize } from '@latha/admin-sdk'
+import { humanize, LathaRpcInputSchema } from '@latha/admin-sdk'
 import type {
   EntityDescriptor,
   LathaRpcInput,
@@ -66,25 +65,6 @@ function authOptions(): AuthOptions {
     sessionTtlSeconds: DEFAULT_SESSION_TTL_SECONDS,
   }
 }
-
-/**
- * Zod schema that mirrors `LathaRpcInput`. Validates the raw JSON body before
- * it reaches the switch — prevents runtime errors from malformed payloads.
- */
-const LathaRpcInputSchema = z.discriminatedUnion('action', [
-  z.object({ action: z.literal('nav') }),
-  z.object({ action: z.literal('entity'), slug: z.string() }),
-  z.object({ action: z.literal('list'), slug: z.string() }),
-  z.object({ action: z.literal('get'), slug: z.string(), id: z.string() }),
-  z.object({ action: z.literal('create'), slug: z.string(), data: z.record(z.unknown()) }),
-  z.object({ action: z.literal('update'), slug: z.string(), id: z.string(), data: z.record(z.unknown()) }),
-  z.object({ action: z.literal('remove'), slug: z.string(), id: z.string() }),
-  z.object({ action: z.literal('getGlobal'), slug: z.string() }),
-  z.object({ action: z.literal('saveGlobal'), slug: z.string(), data: z.record(z.unknown()) }),
-  z.object({ action: z.literal('currentUser') }),
-  z.object({ action: z.literal('login'), email: z.string(), password: z.string() }),
-  z.object({ action: z.literal('logout') }),
-])
 
 function labelOf(entity: Entity): string {
   const labels = entity.admin?.labels

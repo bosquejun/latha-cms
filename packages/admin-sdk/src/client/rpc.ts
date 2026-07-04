@@ -3,24 +3,38 @@
  *
  * The whole admin surface is driven by a single server function so the
  * consuming app only has to declare one endpoint. This file is client-safe
- * (types + no server imports) and is shared by both ends.
+ * (no server imports) and is shared by both ends.
+ *
+ * `LathaRpcInputSchema` is the single source of truth for the RPC input
+ * shape: `LathaRpcInput` is inferred from it, and the server dispatcher
+ * (`@latha/start`) validates raw request bodies against this same schema
+ * before dispatch — no hand-mirrored type/schema pair to drift apart.
  */
 
+import { z } from 'zod'
 import type { JsonValue } from '@latha/core'
 
-export type LathaRpcInput =
-  | { action: 'nav' }
-  | { action: 'entity'; slug: string }
-  | { action: 'list'; slug: string }
-  | { action: 'get'; slug: string; id: string }
-  | { action: 'create'; slug: string; data: Record<string, unknown> }
-  | { action: 'update'; slug: string; id: string; data: Record<string, unknown> }
-  | { action: 'remove'; slug: string; id: string }
-  | { action: 'getGlobal'; slug: string }
-  | { action: 'saveGlobal'; slug: string; data: Record<string, unknown> }
-  | { action: 'currentUser' }
-  | { action: 'login'; email: string; password: string }
-  | { action: 'logout' }
+export const LathaRpcInputSchema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('nav') }),
+  z.object({ action: z.literal('entity'), slug: z.string() }),
+  z.object({ action: z.literal('list'), slug: z.string() }),
+  z.object({ action: z.literal('get'), slug: z.string(), id: z.string() }),
+  z.object({ action: z.literal('create'), slug: z.string(), data: z.record(z.unknown()) }),
+  z.object({
+    action: z.literal('update'),
+    slug: z.string(),
+    id: z.string(),
+    data: z.record(z.unknown()),
+  }),
+  z.object({ action: z.literal('remove'), slug: z.string(), id: z.string() }),
+  z.object({ action: z.literal('getGlobal'), slug: z.string() }),
+  z.object({ action: z.literal('saveGlobal'), slug: z.string(), data: z.record(z.unknown()) }),
+  z.object({ action: z.literal('currentUser') }),
+  z.object({ action: z.literal('login'), email: z.string(), password: z.string() }),
+  z.object({ action: z.literal('logout') }),
+])
+
+export type LathaRpcInput = z.infer<typeof LathaRpcInputSchema>
 
 /** A document as it crosses the wire — always JSON-serializable. */
 export type JsonDoc = { id: string } & Record<string, JsonValue>

@@ -3,14 +3,22 @@
  * entity factories, plus the config-driven content API.
  */
 
+import type { z } from 'zod'
 import type { BaseFieldConfig } from '@latha/core'
 import type { BlockDefinition } from './builders.js'
+import type { blocksFieldConfigSchema, taxonomyFieldConfigSchema } from './module.js'
 
-// Augment core's FieldTypeMap so consumers get the content-module field types.
+// Augment core's FieldTypeMap so consumers get the content-module field
+// types. Each entry derives from the Zod schema registered in `module.ts` via
+// `z.infer`, so the schema stays the single source of truth for both runtime
+// validation and this compile-time type.
 declare module '@latha/core' {
   interface FieldTypeMap {
-    taxonomy: BaseFieldConfig & { type: 'taxonomy'; to: string; many?: boolean }
-    blocks: BaseFieldConfig & { type: 'blocks'; blocks: BlockDefinition[] }
+    taxonomy: BaseFieldConfig & z.infer<typeof taxonomyFieldConfigSchema>
+    // `blocks` is loosely typed in the runtime schema (see module.ts);
+    // narrowed back to `BlockDefinition[]` here for compile-time ergonomics.
+    blocks: BaseFieldConfig &
+      Omit<z.infer<typeof blocksFieldConfigSchema>, 'blocks'> & { blocks: BlockDefinition[] }
   }
 }
 

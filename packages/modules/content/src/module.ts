@@ -18,6 +18,29 @@ export interface ContentModuleConfig {
   entities: AnyEntity[]
 }
 
+// Exported so `index.ts` can derive the `FieldTypeMap` augmentation via
+// `z.infer` instead of hand-duplicating the shape.
+export const taxonomyFieldConfigSchema = z.object({
+  type: z.literal('taxonomy'),
+  to: z.string(),
+  many: z.boolean().optional(),
+})
+
+// `blocks` is validated loosely at runtime (`fields: z.array(z.record(...))`):
+// the field registry is open/extensible, so a fully faithful schema can't be
+// expressed statically here. The `FieldTypeMap` augmentation in `index.ts`
+// overrides `blocks` back to `BlockDefinition[]` for compile-time ergonomics.
+export const blocksFieldConfigSchema = z.object({
+  type: z.literal('blocks'),
+  blocks: z.array(
+    z.object({
+      type: z.string(),
+      label: z.string(),
+      fields: z.array(z.record(z.unknown())),
+    }),
+  ),
+})
+
 export function ContentModule(config: ContentModuleConfig): Module {
   return {
     name: 'content',
@@ -26,26 +49,13 @@ export function ContentModule(config: ContentModuleConfig): Module {
     entities: config.entities,
     onInit(cms: LathaInstance) {
       cms.registerFieldType({
-        configSchema: z.object({
-          type: z.literal('taxonomy'),
-          to: z.string(),
-          many: z.boolean().optional(),
-        }),
+        configSchema: taxonomyFieldConfigSchema,
         buildDataSchema: (config) =>
           (config.many as boolean | undefined) ? z.array(z.string()) : z.string(),
       })
 
       cms.registerFieldType({
-        configSchema: z.object({
-          type: z.literal('blocks'),
-          blocks: z.array(
-            z.object({
-              type: z.string(),
-              label: z.string(),
-              fields: z.array(z.record(z.unknown())),
-            }),
-          ),
-        }),
+        configSchema: blocksFieldConfigSchema,
         buildDataSchema: (config, registry) => {
           const defs = config.blocks as BlockDefinition[]
           if (!defs || defs.length === 0) {
