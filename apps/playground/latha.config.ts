@@ -7,7 +7,7 @@
  */
 
 import { defineConfig } from '@latha/core'
-import { tursoAdapter } from '@latha/storage'
+import { postgresAdapter } from '@latha/storage'
 import {
   Collection,
   ContentModule,
@@ -31,9 +31,15 @@ import { hashPassword, getRoleByName } from '@latha/auth'
 import { localDiskStorage, media, MediaModule } from '@latha/media'
 
 export default defineConfig({
-  db: tursoAdapter({
-    url: process.env.TURSO_DATABASE_URL ?? 'file:local.db',
-    authToken: process.env.TURSO_AUTH_TOKEN,
+  // Postgres over @libsql/client (Turso): the `postgres` driver is pure
+  // JS/TCP with zero native dependencies, so it doesn't hit the
+  // native-binding-in-a-serverless-bundle problem @libsql/client has on
+  // Vercel. Works against a self-hosted Postgres or Supabase — for Supabase
+  // on Vercel, use the *pooled* connection string (`prepare: false` below is
+  // required for pgBouncer's transaction mode).
+  db: postgresAdapter({
+    url: process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/latha',
+    prepare: false,
   }),
 
   modules: [
