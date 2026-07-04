@@ -8,6 +8,8 @@ export {
   registerFieldType,
   buildZodSchema,
   type InferFields,
+  kDataSchema,
+  liveDataSchema,
 } from './registry.js'
 export type {
   FieldTypeMap,

@@ -67,6 +67,8 @@ export {
   type ArrayField,
   buildZodSchema,
   type InferFields,
+  kDataSchema,
+  liveDataSchema,
 } from './fields/index.js'
 
 // Zod — re-exported so configs and modules share core's instance and don't

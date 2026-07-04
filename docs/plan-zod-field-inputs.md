@@ -1,6 +1,9 @@
 # Plan: Zod Instances as Field Builder Inputs
 
-**Status: Proposed** — prerequisite: workspace-wide upgrade to Zod 4 (Phase 0).
+**Status: Complete** — Phase 0 (Zod 4 upgrade), Phase 1 (`select` takes
+`z.enum`), and Phase 2 (`schema` escape hatch + `jsonSchema` descriptors)
+are all implemented. Tests live in
+`packages/core/src/fields/escape-hatch.test.ts`.
 
 ## The Question
 

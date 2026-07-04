@@ -25,6 +25,7 @@
  */
 
 import type { z } from 'zod'
+import { kDataSchema } from '../fields/registry.js'
 import type { FieldMeta } from '../fields/meta.js'
 import type {
   ArrayField,
@@ -135,22 +136,23 @@ interface CommonOpts {
   meta?: FieldMeta
 }
 
-type TextOpts = CommonOpts & {
-  minLength?: number
-  maxLength?: number
-  defaultValue?: string
-}
+// text/number/date accept either literal constraints or a full Zod `schema`
+// (mutually exclusive). The live schema is attached under the `kDataSchema`
+// symbol — server-memory only, never serialized — and wins over the literal
+// config in `buildDocumentSchema`. See `kDataSchema` in fields/registry.ts.
+type TextOpts = CommonOpts & { defaultValue?: string } & (
+    | { minLength?: number; maxLength?: number; schema?: never }
+    | { schema: z.ZodType<string>; minLength?: never; maxLength?: never }
+  )
 
-type NumberOpts = CommonOpts & {
-  min?: number
-  max?: number
-  integer?: boolean
-  defaultValue?: number
-}
+type NumberOpts = CommonOpts & { defaultValue?: number } & (
+    | { min?: number; max?: number; integer?: boolean; schema?: never }
+    | { schema: z.ZodType<number>; min?: never; max?: never; integer?: never }
+  )
 
 type BooleanOpts = CommonOpts & { defaultValue?: boolean }
 
-type DateOpts = CommonOpts & { defaultValue?: Date | string }
+type DateOpts = CommonOpts & { defaultValue?: Date | string; schema?: z.ZodType<Date> }
 
 // Zod-first: `options` is a `z.enum(...)` instance — the single source of
 // truth for the choice set. The builder normalizes it to the literal
@@ -195,18 +197,41 @@ function withMeta<TField extends Field, TOut, TPresent extends boolean>(
   return config
 }
 
-/** Plain text — a single-line string field. */
+/**
+ * Attach a live data schema under the `kDataSchema` symbol. Symbol keys
+ * survive the `stampFields` spread but are dropped by `JSON.stringify`, so
+ * the schema never leaves server memory.
+ */
+function withDataSchema<C>(config: C, schema: z.ZodType | undefined): C {
+  if (schema !== undefined) {
+    ;(config as Record<symbol, unknown>)[kDataSchema] = schema
+  }
+  return config
+}
+
+/**
+ * Plain text — a single-line string field. Pass `schema` (e.g. `z.email()`,
+ * `z.string().regex(...)`) for constraints the literal options can't express.
+ */
 export function text<const O extends TextOpts = {}>(
   opts?: O,
 ): Built<TextField, string, IsPresent<O>> {
-  return withMeta<TextField, string, IsPresent<O>>({ type: 'text', ...opts })
+  const { schema, ...rest } = opts ?? ({} as O)
+  return withDataSchema(
+    withMeta<TextField, string, IsPresent<O>>({ type: 'text', ...rest }),
+    schema,
+  )
 }
 
-/** Numeric field — optionally integer-constrained and bounded. */
+/** Numeric field — optionally integer-constrained and bounded, or a full `schema`. */
 export function number<const O extends NumberOpts = {}>(
   opts?: O,
 ): Built<NumberField, number, IsPresent<O>> {
-  return withMeta<NumberField, number, IsPresent<O>>({ type: 'number', ...opts })
+  const { schema, ...rest } = opts ?? ({} as O)
+  return withDataSchema(
+    withMeta<NumberField, number, IsPresent<O>>({ type: 'number', ...rest }),
+    schema,
+  )
 }
 
 /** Boolean toggle. */
@@ -223,7 +248,11 @@ export function boolean<const O extends BooleanOpts = {}>(
 export function date<const O extends DateOpts = {}>(
   opts?: O,
 ): Built<DateField, Date, IsPresent<O>> {
-  return withMeta<DateField, Date, IsPresent<O>>({ type: 'date', ...opts })
+  const { schema, ...rest } = opts ?? ({} as O)
+  return withDataSchema(
+    withMeta<DateField, Date, IsPresent<O>>({ type: 'date', ...rest }),
+    schema,
+  )
 }
 
 /**

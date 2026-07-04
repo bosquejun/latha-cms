@@ -1,5 +1,22 @@
 import { z } from 'zod'
 
+/**
+ * Symbol key under which a field builder may stash a live Zod schema for the
+ * field's stored value (the `schema` escape hatch on `text()`/`number()`/
+ * `date()`). Symbol keys survive the `{ name, ...def }` spread in
+ * `stampFields` but are invisible to `JSON.stringify`, so the live schema is
+ * server-memory only — it never crosses the RPC wire. `buildDocumentSchema`
+ * prefers it over the registered type's `buildDataSchema`, and
+ * `@latha/start`'s `describe()` converts it to JSON Schema for the client.
+ */
+export const kDataSchema: unique symbol = Symbol('latha.kDataSchema')
+
+/** Read a field config's live data schema, if a builder attached one. */
+export function liveDataSchema(field: Record<string, unknown>): z.ZodType | undefined {
+  const live = (field as Record<symbol, unknown>)[kDataSchema]
+  return live instanceof z.ZodType ? live : undefined
+}
+
 export interface FieldTypeEntry {
   /**
    * Zod schema for the field definition object itself.
@@ -44,15 +61,19 @@ export class FieldRegistry {
     for (const field of fields) {
       const type = field.type as string
       const entry = this.entries.get(type)
+      // A live schema attached by a builder (the `schema` escape hatch) wins
+      // over the registered type's buildDataSchema — it can carry refinements
+      // the literal config can't express.
+      const live = liveDataSchema(field)
       // Module-owned field types (e.g. 'blocks', 'taxonomy') are only registered
       // server-side via onInit. On the client, fall back to z.unknown() so the
       // form renders; real validation always runs on the server.
-      if (!entry) {
+      if (!entry && !live) {
         shape[field.name as string] = z.unknown()
         continue
       }
 
-      let schema = entry.buildDataSchema(field, this)
+      let schema = live ?? entry!.buildDataSchema(field, this)
 
       const defaultValue = field.defaultValue
       if (defaultValue !== undefined) {
