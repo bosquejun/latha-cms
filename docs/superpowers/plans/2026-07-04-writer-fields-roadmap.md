@@ -52,13 +52,18 @@ system primitives" boundary.
 ### Phase 0 — Media module foundation *(next up)*
 New `@latha/media` package: `media` entity (`Collection`, cardinality
 `many`), a `media` field type (`{ type: 'media' }` → stores the media doc id,
-same shape as `taxonomy`/`relationship`), a `StorageAdapter` contract
-(separate from `@latha/storage`'s `DBAdapter` — that package is relational
-metadata only, no blob storage today) with a local-disk implementation, an
-upload transport (binary can't go through the JSON-only `/__latha/rpc` route
-as-is — needs a small dedicated file route or base64-through-RPC as a
-stopgap), and `@latha/media/admin` (upload dropzone + picker field renderer,
-library list view). Unblocks every field below that needs an image.
+same shape as `taxonomy`/`relationship`; a dedicated type rather than reusing
+`relationship({ to: 'media' })` so `@latha/media/admin` can register its own
+dropzone/picker renderer without teaching the generic `RelationshipField` about
+media), a `StorageAdapter` contract (separate from `@latha/storage`'s
+`DBAdapter` — that package is relational metadata only, no blob storage
+today) with a local-disk implementation, and a **dedicated upload file
+route** (`/__latha/upload`, alongside the existing `/__latha/rpc` in
+`packages/start/src/routes/rpc.ts`) rather than base64-through-RPC — binary
+through JSON bloats payloads ~33% and complicates request-size limits for
+what's a core part of this flow. `@latha/media/admin` ships the upload
+dropzone + picker field renderer and the library list view. Unblocks every
+field below that needs an image.
 
 ### Phase 1 — Article content model
 Extend the `posts` `Collection` in `apps/playground/latha.config.ts`:
@@ -111,8 +116,10 @@ Phase 5 (related/series/i18n) — after Phase 1
 
 ## Open risks to flag before Phase 0's task plan is written
 
-- **Upload transport**: `/__latha/rpc` (`packages/start/src/routes/rpc.ts`) is
-  JSON-only today. Decide file-route-vs-base64 in Phase 0's own plan, not here.
+- **Upload transport**: settled — a dedicated `/__latha/upload` file route,
+  same dynamic-import-the-config pattern as `/__latha/rpc`, not
+  base64-through-RPC. Still need to decide auth/access-check reuse (it must
+  run the same guard/RBAC check as a normal `media.create` RPC call would).
 - **Storage adapter scope**: local-disk only for Phase 0; S3-compatible adapter
   is a fast-follow, not a blocker for the field type or admin UI existing.
 - **Phase 4** genuinely needs a design doc (`docs/superpowers/specs/`) before
