@@ -17,6 +17,9 @@ routeTree.gen.ts
 *.sqlite3
 local.db*
 
+# locally-uploaded dev media (local-disk StorageAdapter)
+apps/*/public/uploads/
+
 # env
 .env
 .env.*

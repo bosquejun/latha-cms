@@ -28,6 +28,7 @@ import { UsersModule } from '@latha/users'
 import { AuthModule } from '@latha/auth'
 import { countUsers, createUser } from '@latha/users'
 import { hashPassword, getRoleByName } from '@latha/auth'
+import { localDiskStorage, media, MediaModule } from '@latha/media'
 
 export default defineConfig({
   db: tursoAdapter({
@@ -35,12 +36,19 @@ export default defineConfig({
     authToken: process.env.TURSO_AUTH_TOKEN,
   }),
 
+  // Dev-only local-disk adapter — writes into public/uploads so Vite serves
+  // the files back with no extra routing. Production deploys should
+  // configure an R2/S3-compatible adapter instead (not built yet).
+  storage: localDiskStorage({ dir: './public/uploads', publicPath: '/uploads' }),
+
   modules: [
     UsersModule(),
 
     // AuthModule owns RBAC: it seeds the admin/editor/viewer roles on first run
     // and syncs the scope/permission catalog from the entities below.
     AuthModule({ secret: process.env.AUTH_SECRET ?? 'latha-dev-secret-change-me' }),
+
+    MediaModule(),
 
     ContentModule({
       entities: [
@@ -81,6 +89,7 @@ export default defineConfig({
             title: text({ required: true }),
             slug: text({ unique: true }),
             content: richtext(),
+            featuredImage: media({ meta: { label: 'Featured Image', sidebar: true } }),
             status: select({
               options: ['draft', 'published'],
               defaultValue: 'draft',

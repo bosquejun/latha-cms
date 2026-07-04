@@ -36,6 +36,11 @@
       "types": "./dist/routes/rpc.d.ts",
       "development": "./src/routes/rpc.ts",
       "import": "./dist/routes/rpc.js"
+    },
+    "./routes/upload": {
+      "types": "./dist/routes/upload.d.ts",
+      "development": "./src/routes/upload.ts",
+      "import": "./dist/routes/upload.js"
     }
   },
   "main": "./dist/index.js",
