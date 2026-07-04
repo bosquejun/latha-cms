@@ -1,6 +1,6 @@
 # Plan: Zod Instances as Field Builder Inputs
 
-**Status: Proposed**
+**Status: Proposed** — prerequisite: workspace-wide upgrade to Zod 4 (Phase 0).
 
 ## The Question
 
@@ -99,15 +99,16 @@ dependency line.
 ### Tier 1 — `select`: `options` is a `ZodEnum` (this refactor's core)
 
 ```ts
-// schema/fields.ts
-type SelectOpts<T extends z.ZodEnum<[string, ...string[]]>> = CommonOpts & {
+// schema/fields.ts — Zod 4: ZodEnum is generic over an entries record,
+// not a string tuple, so constrain on the bare class and use z.infer.
+type SelectOpts<T extends z.ZodEnum> = CommonOpts & {
   options: T
   many?: boolean
   defaultValue?: z.infer<T> | z.infer<T>[]
 }
 
 export function select<
-  T extends z.ZodEnum<[string, ...string[]]>,
+  T extends z.ZodEnum,
   const O extends SelectOpts<T>,
 >(opts: O & { options: T }): Built<SelectField, SelectOut<T, O>, IsPresent<O>> {
   return withMeta({
@@ -118,10 +119,13 @@ export function select<
   })
 }
 
-type SelectOut<T extends z.ZodEnum<any>, O> = O extends { many: true }
+type SelectOut<T extends z.ZodEnum, O> = O extends { many: true }
   ? z.infer<T>[]
   : z.infer<T>
 ```
+
+`ZodEnum.options` still exists in Zod 4 and returns the values array, so the
+normalization line is version-stable.
 
 Everything downstream is untouched: `selectFieldConfigSchema` keeps
 `options: z.array(z.string())`, the registry's `buildDataSchema` keeps
@@ -135,19 +139,23 @@ For `text` / `number` / `date`, allow a full Zod schema in place of the
 constraint bag:
 
 ```ts
-email: text({ schema: z.string().email(), required: true })
+email: text({ schema: z.email(), required: true })
 price: number({ schema: z.number().positive().multipleOf(0.01) })
 ```
 
 Mechanics:
 
-- **Literal mirror for the wire.** The builder introspects the instance
-  (zod 3 getters: `ZodString.minLength/.maxLength`,
-  `ZodNumber.minValue/.maxValue/.isInt`) and writes the recoverable bounds
-  into the literal config so the admin UI and client-side pre-validation keep
-  working. Constraints with no literal mirror (regex, `.email()`, custom
-  `.refine`) simply don't reach the client — consistent with the existing
-  contract in `registry.ts`: *"real validation always runs on the server."*
+- **JSON Schema mirror for the wire (`z.toJSONSchema`).** Instead of
+  hand-introspecting bounds getter-by-getter, the server runs Zod 4's
+  first-class `z.toJSONSchema(schema)` and ships the result on the field
+  descriptor as `jsonSchema`. That captures everything JSON Schema can
+  express — min/max, patterns, `format: 'email'`, `multipleOf` — with zero
+  bespoke introspection code to maintain. The admin client reads it for form
+  hints and lightweight pre-validation. Constraints JSON Schema can't carry
+  (custom `.refine`/`.transform` — Zod skips or errors on these depending on
+  the `unrepresentable` option; use `'any'` to degrade gracefully) simply
+  don't reach the client — consistent with the existing contract in
+  `registry.ts`: *"real validation always runs on the server."*
 
 - **Symbol-keyed live channel, server-only.** The builder stashes the
   original instance under a symbol key
@@ -182,6 +190,33 @@ not the registry.
 
 ## Migration Steps
 
+### Phase 0 — upgrade the workspace to Zod 4 (prerequisite, own commit)
+
+The workspace currently pins `zod ^3.24.1` everywhere except
+`@latha/content`, which already pins `^3.25.76` — a latent dual-instance
+hazard (two zod copies break `instanceof` checks and schema identity).
+Phase 0 unifies every package on one latest `zod ^4.x` pin: `@latha/core`,
+`@latha/admin-sdk`, `@latha/content`, `@latha/media`, `apps/playground`.
+
+Known v4 breakages in this codebase (from an audit of current usage):
+
+| Site | v3 idiom | v4 replacement |
+|---|---|---|
+| `core/src/fields/registry.ts:25` | `typeLiteral._def.value` | public `.value` getter on `ZodLiteral` |
+| `core/src/fields/registry.ts:75`, `content/src/module.ts:71` | `.merge(other)` | `.extend(other.shape)` (merge is removed) |
+| `registry.ts:17,73`, `builtins.ts:97`, `content/src/module.ts:64` | `z.ZodTypeAny` | `z.ZodType` |
+| `builtins.ts:54,59`, `admin-sdk/src/client/rpc.ts`, `content/src/module.ts:39` | `z.record(z.unknown())` | `z.record(z.string(), z.unknown())` (key schema required) |
+| `registry.ts:76` | `ZodDiscriminatedUnionOption<'type'>` cast | type removed; v4's looser `discriminatedUnion` typing should drop the cast entirely |
+| `media/src/module.test.ts:41` | `cover._def.typeName === 'ZodString'` | `cover instanceof z.ZodString` |
+
+Also sweep for error-customization params (`required_error`, `errorMap`,
+`message`) → unified `error` param, and deprecated string formats
+(`z.string().email()` → `z.email()`).
+
+Acceptance: single zod version in the lockfile;
+`pnpm --filter @latha/core build && pnpm -r typecheck` green; existing field
+registry tests pass unchanged.
+
 ### Phase 1 — `select` takes `z.enum` (single commit, `refactor(core)` + call sites)
 
 1. `packages/core/src/schema/fields.ts` — retype `SelectOpts`/`SelectOut`,
@@ -200,15 +235,18 @@ not the registry.
 
 1. `kDataSchema` symbol in `fields/registry.ts`; `buildDocumentSchema`
    prefers it.
-2. Builder support + literal-mirror introspection in `text`/`number`/`date`.
-3. Tests: symbol survives `stampFields`; `describe()` output is clean JSON;
-   server validation applies the refinement; client falls back to mirror.
+2. Builder support in `text`/`number`/`date`; server derives the descriptor's
+   `jsonSchema` via `z.toJSONSchema(schema, { unrepresentable: 'any' })`.
+3. Tests: symbol survives `stampFields`; `describe()` output is clean JSON
+   (live schema stripped, `jsonSchema` present); server validation applies
+   the refinement; client renders hints from `jsonSchema`.
 
 ### Non-goals
 
-- Replacing the `Field` wire format with Zod or JSON Schema. If we later
-  upgrade to zod 4, `z.toJSONSchema()` could replace the hand-rolled literal
-  mirror in Tier 2 — worth revisiting then, not now (core pins `zod ^3.24.1`).
+- Replacing the `Field` wire format wholesale with JSON Schema. Tier 2 adds
+  `jsonSchema` as a *supplement* on fields that carry a live schema; the
+  literal config remains the canonical wire shape that renderers and the
+  storage generator consume.
 - Accepting raw Zod objects in the *non-builder* field definition path. The
   plain-object `Field` shape stays literal; builders are the only sugar
   layer.
