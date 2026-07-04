@@ -44,6 +44,18 @@ test('schema escape hatch: defaultValue and optionality still apply on top', () 
   assert.equal(schema.safeParse({ note: 'toolong' }).success, false)
 })
 
+test('unregistered field types fall back to optional z.unknown (client-side)', () => {
+  // Module-owned types (blocks, taxonomy, media) are absent from the client
+  // registry. Absent optional fields must not fail validation — regression
+  // check for zod 4, where object keys are non-optional even for unknown().
+  const schema = buildZodSchema([
+    { name: 'content', type: 'blocks', blocks: [] },
+    { name: 'cover', type: 'media', required: true },
+  ])
+  assert.equal(schema.safeParse({ cover: 'id' }).success, true)
+  assert.equal(schema.safeParse({}).success, false, 'required unknown-type field still enforced')
+})
+
 test('kDataSchema ignores non-Zod values', () => {
   const field: Record<string | symbol, unknown> = { name: 'x', type: 'text' }
   field[kDataSchema] = 'not a schema'

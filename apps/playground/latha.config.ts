@@ -88,6 +88,9 @@ export default defineConfig({
           fields: {
             title: text({ required: true }),
             slug: text({ unique: true }),
+            // Zod-first escape hatch: full schema validation server-side,
+            // mirrored to the admin form via jsonSchema.
+            contactEmail: text({ schema: z.email(), meta: { label: 'Contact Email' } }),
             content: richtext(),
             featuredImage: media({ meta: { label: 'Featured Image', sidebar: true } }),
             status: select({

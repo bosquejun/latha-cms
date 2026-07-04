@@ -67,13 +67,11 @@ export class FieldRegistry {
       const live = liveDataSchema(field)
       // Module-owned field types (e.g. 'blocks', 'taxonomy') are only registered
       // server-side via onInit. On the client, fall back to z.unknown() so the
-      // form renders; real validation always runs on the server.
-      if (!entry && !live) {
-        shape[field.name as string] = z.unknown()
-        continue
-      }
-
-      let schema = live ?? entry!.buildDataSchema(field, this)
+      // form renders; real validation always runs on the server. The fallback
+      // still goes through the default/optional layering below — v4 object
+      // keys are non-optional even for z.unknown(), so skipping it would
+      // reject absent optional fields.
+      let schema = live ?? (entry ? entry.buildDataSchema(field, this) : z.unknown())
 
       const defaultValue = field.defaultValue
       if (defaultValue !== undefined) {

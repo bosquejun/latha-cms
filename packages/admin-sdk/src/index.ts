@@ -42,6 +42,9 @@ export {
   type FieldControlProps,
 } from './fields/registry.js'
 
+// Client-side form validation schema (registry schema + jsonSchema mirrors)
+export { buildFormSchema, zodFromJsonSchema } from './fields/formSchema.js'
+
 // Extension system — injection zones, registry, <Slot>, define* helpers
 export {
   ADMIN_ZONES,
