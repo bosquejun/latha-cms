@@ -597,24 +597,7 @@ function EditView({ slug, id, base, segment }: { slug: string; id: string; base:
 
   return (
     <>
-      <PageHeader
-        title={`Edit ${entity.data.label.toLowerCase()}`}
-        actions={
-          can(`${slug}:delete`) ? (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={async () => {
-                if (!window.confirm('Delete this record? This cannot be undone.')) return
-                await client.remove(slug, id)
-                await toList()
-              }}
-            >
-              Delete
-            </Button>
-          ) : undefined
-        }
-      />
+      <PageHeader title={`Edit ${entity.data.label.toLowerCase()}`} />
       <EntityForm
         fields={asEntity(entity.data).fields}
         submitLabel="Save changes"
@@ -626,6 +609,15 @@ function EditView({ slug, id, base, segment }: { slug: string; id: string; base:
           await toList()
         }}
         onCancel={toList}
+        onDelete={
+          can(`${slug}:delete`)
+            ? async () => {
+                if (!window.confirm('Delete this record? This cannot be undone.')) return
+                await client.remove(slug, id)
+                await toList()
+              }
+            : undefined
+        }
       />
     </>
   )

@@ -76,6 +76,13 @@ export interface EntityFormProps {
   submitLabel?: string
   onSubmit: (values: FormValues) => Promise<void> | void
   onCancel?: () => void
+  /**
+   * Destructive action for the record (edit view). When provided, a subtle
+   * Delete button appears in the toolbar, separated from Cancel/Save. The
+   * caller owns confirmation and navigation; omit it to hide the button (e.g.
+   * on create, or when the user lacks delete permission).
+   */
+  onDelete?: () => Promise<void> | void
   /** Entity descriptor, forwarded to `form.*` zone widgets as context. */
   entity?: unknown
   /** Record id on edit, forwarded to `form.*` zone widgets as context. */
@@ -127,6 +134,7 @@ export function EntityForm({
   submitLabel = 'Save',
   onSubmit,
   onCancel,
+  onDelete,
   entity,
   recordId,
 }: EntityFormProps) {
@@ -261,6 +269,20 @@ export function EntityForm({
           ) : null}
 
           <div className="ml-auto flex shrink-0 items-center gap-inline">
+            {onDelete && (
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => void onDelete()}
+                >
+                  Delete
+                </Button>
+                <div className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
+              </>
+            )}
             {isDirty ? (
               <span className="mr-1 flex items-center gap-1.5 text-sm text-muted-foreground">
                 <span className="inline-block h-2 w-2 rounded-full bg-warning" />
@@ -272,7 +294,14 @@ export function EntityForm({
                 Cancel
               </Button>
             )}
-            <Button type="submit" size="sm" disabled={isSubmitting}>
+            {/* On an existing record (edit view, `recordId` set) there's nothing
+                to save until something changes, so Save stays disabled while the
+                form is pristine. Create/singleton forms keep Save always enabled. */}
+            <Button
+              type="submit"
+              size="sm"
+              disabled={isSubmitting || (recordId != null && !isDirty)}
+            >
               {isSubmitting ? 'Saving…' : submitLabel}
             </Button>
           </div>
