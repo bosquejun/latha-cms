@@ -1,19 +1,30 @@
-/** Per-field rendering hints. The kernel carries this opaquely; only the admin layer reads it. */
-export interface FieldMeta {
+import { z } from 'zod'
+
+/**
+ * Per-field rendering hints. The kernel carries this opaquely; only the admin
+ * layer reads it. Zod-first: the schema is the source of truth and `FieldMeta`
+ * is inferred from it (CLAUDE.md rule). `baseFieldConfigSchema` in `registry.ts`
+ * reuses this schema so the two never diverge.
+ */
+export const fieldMetaSchema = z.object({
   /** Human-friendly label; defaults to a humanized field name. */
-  label?: string
+  label: z.string().optional(),
   /** Helper text shown beneath the input. */
-  description?: string
+  description: z.string().optional(),
   /** Placeholder for text-like inputs. */
-  placeholder?: string
+  placeholder: z.string().optional(),
   /** Hide the field from the admin UI entirely (still persisted). */
-  hidden?: boolean
+  hidden: z.boolean().optional(),
   /** Render this field in the form sidebar rather than the main area. */
-  sidebar?: boolean
+  sidebar: z.boolean().optional(),
   /** Left add-on text shown inside the input border (e.g. 'https://'). */
-  prefix?: string
+  prefix: z.string().optional(),
   /** Right add-on text shown inside the input border (e.g. '.com'). */
-  suffix?: string
+  suffix: z.string().optional(),
   /** Native <input> type forwarded to the element (e.g. 'url', 'email', 'tel'). */
-  inputType?: string
-}
+  inputType: z.string().optional(),
+  /** Render a text field as a multi-line `<textarea>` instead of an `<input>`. */
+  multiline: z.boolean().optional(),
+})
+
+export type FieldMeta = z.infer<typeof fieldMetaSchema>

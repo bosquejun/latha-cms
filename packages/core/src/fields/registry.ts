@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { fieldMetaSchema } from './meta.js'
 
 /**
  * Symbol key under which a field builder may stash a live Zod schema for the
@@ -106,18 +107,7 @@ export const baseFieldConfigSchema = z.object({
   required: z.boolean().optional(),
   unique: z.boolean().optional(),
   defaultValue: z.unknown().optional(),
-  meta: z
-    .object({
-      label: z.string().optional(),
-      description: z.string().optional(),
-      placeholder: z.string().optional(),
-      hidden: z.boolean().optional(),
-      sidebar: z.boolean().optional(),
-      prefix: z.string().optional(),
-      suffix: z.string().optional(),
-      inputType: z.string().optional(),
-    })
-    .optional(),
+  meta: fieldMetaSchema.optional(),
 })
 
 export type BaseFieldConfig = z.infer<typeof baseFieldConfigSchema>
