@@ -10,13 +10,35 @@
  * it re-normalizes and uniquifies (-2, -3…) on save.
  */
 import { useEffect, useState } from 'react'
-import { Button, Field as FieldWrap, Input } from '@latha/ui'
+import { Button, Field as FieldWrap, Input, InputAddon, InputGroup } from '@latha/ui'
 import { type FieldControlProps, humanize, useFieldValue } from '@latha/admin-sdk'
 import { useLatha, useAsync, type JsonDoc } from '@latha/start'
 import { slugifyPath } from '../../slugify.js'
 import { renderTokenValue, type SlugToken } from '../../template.js'
 
 export const config = { type: 'slug' }
+
+/**
+ * Refresh glyph for the regenerate button. Inlined (rather than pulling in an
+ * icon dependency) so the slug plugin stays dependency-light; the Button sizes
+ * it to `size-4` via its own `[&_svg]` rule.
+ */
+function RegenerateIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+      <path d="M21 3v5h-5" />
+    </svg>
+  )
+}
 
 /** Lenient while-typing normalizer: keeps trailing `-`/`/` so typing flows. */
 function liveNormalize(input: string): string {
@@ -96,10 +118,14 @@ export default function SlugField({ field, id, value, onChange, onBlur, error }:
       description={field.meta?.description}
       error={error}
     >
-      <div className="flex items-center gap-2">
+      {/* The regenerate button lives inside the field border as a trailing
+          add-on (InputGroup owns the border + focus ring; the Input drops its
+          own), so it reads as one connected control instead of a detached
+          button floating beside the input. */}
+      <InputGroup>
         <Input
           id={id}
-          className="font-mono"
+          className="border-0 font-mono shadow-none focus-visible:ring-0"
           placeholder={field.meta?.placeholder}
           value={current}
           onChange={(e) => {
@@ -112,19 +138,23 @@ export default function SlugField({ field, id, value, onChange, onBlur, error }:
             onBlur()
           }}
         />
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          title="Regenerate from template"
-          onClick={() => {
-            setLocked(false)
-            onChange(preview === '' ? undefined : preview)
-          }}
-        >
-          ↻
-        </Button>
-      </div>
+        <InputAddon>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground"
+            title="Regenerate from template"
+            aria-label="Regenerate slug from template"
+            onClick={() => {
+              setLocked(false)
+              onChange(preview === '' ? undefined : preview)
+            }}
+          >
+            <RegenerateIcon />
+          </Button>
+        </InputAddon>
+      </InputGroup>
     </FieldWrap>
   )
 }
