@@ -10,9 +10,10 @@ import { HeadingNode, QuoteNode } from '@lexical/rich-text'
 import { ListNode, ListItemNode } from '@lexical/list'
 import { LinkNode, AutoLinkNode } from '@lexical/link'
 import type { EditorState } from 'lexical'
-import { Fragment } from 'react'
+import { Fragment, useRef } from 'react'
 import { InitialValuePlugin } from './InitialValuePlugin.js'
 import { ImageNode } from './ImageNode.js'
+import { FloatingLinkEditorPlugin } from './FloatingLinkEditorPlugin.js'
 import { ToolbarPlugin } from './ToolbarPlugin.js'
 import { getGlobalLexicalExtensions, type LexicalExtension } from './registry.js'
 
@@ -42,6 +43,7 @@ interface LexicalEditorProps {
 }
 
 export function LexicalEditor({ id, value, onChange, onBlur, lexicalConfig }: LexicalEditorProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const globalExts = getGlobalLexicalExtensions()
 
   const allNodes = [
@@ -77,7 +79,7 @@ export function LexicalEditor({ id, value, onChange, onBlur, lexicalConfig }: Le
         },
       }}
     >
-      <div className="rounded-md border border-input bg-background text-sm">
+      <div ref={containerRef} className="relative rounded-md border border-input bg-background text-sm">
         <ToolbarPlugin />
         <div className="relative px-3 py-2">
           <RichTextPlugin
@@ -99,6 +101,7 @@ export function LexicalEditor({ id, value, onChange, onBlur, lexicalConfig }: Le
         <HistoryPlugin />
         <ListPlugin />
         <LinkPlugin />
+        <FloatingLinkEditorPlugin anchorRef={containerRef} />
         <InitialValuePlugin value={value} />
         <OnChangePlugin onChange={handleChange} ignoreSelectionChange={true} />
         {allPlugins.map((plugin, i) => (
