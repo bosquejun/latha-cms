@@ -2,16 +2,6 @@ import { cn, Field as FieldWrap, Select, statusVariant, type BadgeVariant } from
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 
-/** Active-segment classes per semantic status variant (badge palette). */
-const ACTIVE_BY_VARIANT: Record<BadgeVariant, string> = {
-  success: 'bg-success/15 text-success shadow-xs',
-  warning: 'bg-warning/20 text-warning-foreground shadow-xs',
-  destructive: 'bg-destructive/15 text-destructive shadow-xs',
-  secondary: 'bg-background text-foreground shadow-xs',
-  default: 'bg-background text-foreground shadow-xs',
-  outline: 'bg-background text-foreground shadow-xs',
-}
-
 /** Status dot color per semantic variant. */
 const DOT_BY_VARIANT: Record<BadgeVariant, string> = {
   success: 'bg-success',
@@ -26,8 +16,9 @@ const DOT_BY_VARIANT: Record<BadgeVariant, string> = {
  * A small, always-set enum (≤ 4 options and either required or defaulted, e.g.
  * a draft/published status) renders as a full-width segmented control rather
  * than a dropdown — one tap to switch, all choices visible. When the options
- * are recognized statuses, each segment carries its semantic badge color (a
- * colored dot, and the active segment tinted green/amber/red), so the control
+ * are recognized statuses, each segment carries a colored status dot (amber
+ * draft, green published, red failed…) while the active segment keeps the
+ * neutral pill background, so the control
  * reads as a status badge you can toggle. Larger sets, or optional selects that
  * need a "none" state, keep the dropdown (which owns the `—` placeholder /
  * clearing a segmented control can't express).
@@ -80,7 +71,7 @@ export function SelectField({
                 className={cn(
                   'inline-flex h-7 flex-1 items-center justify-center gap-1.5 rounded-sm px-3 text-sm font-medium transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
                   active
-                    ? ACTIVE_BY_VARIANT[variant]
+                    ? 'bg-background text-foreground shadow-xs'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
