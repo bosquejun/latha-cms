@@ -52,7 +52,7 @@ function resolveColumns(entity: AdminEntity): string[] {
   return head
 }
 
-function renderCell(value: unknown, isSelect: boolean): ReactNode {
+function renderCell(value: unknown, fieldType?: string): ReactNode {
   if (value == null || value === '')
     return <span className="text-muted-foreground">—</span>
   if (typeof value === 'boolean')
@@ -60,8 +60,13 @@ function renderCell(value: unknown, isSelect: boolean): ReactNode {
       <Badge variant={value ? 'default' : 'secondary'}>{String(value)}</Badge>
     )
   // Select / status values render as a color-coded status pill.
-  if (isSelect && typeof value === 'string')
+  if (fieldType === 'select' && typeof value === 'string')
     return <StatusBadge status={value} />
+  // Dates are stored as ISO strings — show a locale date, not the raw timestamp.
+  if (fieldType === 'date' && (typeof value === 'string' || value instanceof Date)) {
+    const d = new Date(value)
+    if (!Number.isNaN(d.getTime())) return d.toLocaleDateString()
+  }
   if (typeof value === 'object')
     return (
       <code className="font-mono text-xs">{JSON.stringify(value)}</code>
@@ -79,9 +84,7 @@ export function EntityList({
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const columns = resolveColumns(entity)
   const titleCol = entity.useAsTitle ?? columns[0]
-  const selectCols = new Set(
-    entity.fields.filter((f) => f.type === 'select').map((f) => f.name),
-  )
+  const colType = new Map(entity.fields.map((f) => [f.name, f.type]))
 
   const pendingRow = rows.find((r) => r.id === pendingDeleteId)
   const pendingLabel = pendingRow
@@ -117,10 +120,10 @@ export function EntityList({
                       href={getEditHref(row.id)}
                       className="font-medium text-foreground hover:underline"
                     >
-                      {renderCell(row[col], selectCols.has(col))}
+                      {renderCell(row[col], colType.get(col))}
                     </a>
                   ) : (
-                    renderCell(row[col], selectCols.has(col))
+                    renderCell(row[col], colType.get(col))
                   )}
                 </TD>
               ))}

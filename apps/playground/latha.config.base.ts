@@ -9,7 +9,7 @@
  * reachable in a given build — not a runtime branch inside one bundle.
  */
 
-import { defineConfig, z, type DBAdapter, type ResolvedConfig, type StorageAdapter } from '@latha/core'
+import { defineConfig, operations, z, type DBAdapter, type ResolvedConfig, type StorageAdapter } from '@latha/core'
 import {
   Collection,
   ContentModule,
@@ -21,9 +21,13 @@ import {
   richTextBlock,
   imageBlock,
   featuresBlock,
+  date,
+  group,
   number,
+  relationship,
   richtext,
   select,
+  taxonomy,
   text,
 } from '@latha/content'
 import { UsersModule } from '@latha/users'
@@ -65,7 +69,7 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
 
           Collection({
             slug: 'posts',
-            admin: { order: 10, useAsTitle: 'title', defaultColumns: ['title', 'status'] },
+            admin: { order: 10, useAsTitle: 'title', defaultColumns: ['title', 'status', 'publishedAt'] },
             // No explicit `access` block: the admin surface is governed by RBAC
             // (deny-by-default + the posts:* permissions). To expose public,
             // headless reads, add e.g. `access: { read: () => true }` — explicit
@@ -73,21 +77,37 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
             fields: {
               title: text({ required: true }),
               slug: slug({ from: '{title}' }),
+              excerpt: text({ meta: { multiline: true, description: 'Short summary shown in listings.' } }),
               // Zod-first escape hatch: full schema validation server-side,
               // mirrored to the admin form via jsonSchema.
               contactEmail: text({ schema: z.email(), meta: { label: 'Contact Email' } }),
               content: richtext(),
               featuredImage: media({ meta: { label: 'Featured Image', sidebar: true } }),
+              category: taxonomy({ to: 'categories', meta: { sidebar: true } }),
+              tags: taxonomy({ to: 'tags', many: true, meta: { sidebar: true } }),
+              author: relationship({ to: 'users', meta: { sidebar: true } }),
+              publishedAt: date({ meta: { sidebar: true, label: 'Published At' } }),
               status: select({
                 options: z.enum(['draft', 'published']),
                 defaultValue: 'draft',
                 meta: { sidebar: true },
               }),
               views: number({ integer: true, defaultValue: 0 }),
+              seo: group({
+                fields: {
+                  metaTitle: text({ meta: { label: 'Meta Title' } }),
+                  metaDescription: text({ meta: { label: 'Meta Description', multiline: true } }),
+                  ogImage: media({ meta: { label: 'OG Image' } }),
+                },
+                meta: { label: 'SEO', description: 'Search & social metadata.' },
+              }),
             },
           }),
 
           Taxonomy({ slug: 'categories', hierarchical: true, admin: { order: 20 } }),
+
+          // Flat taxonomy (no parent) — the posts `tags` field references it.
+          Taxonomy({ slug: 'tags', admin: { order: 25 } }),
 
           Collection({
             slug: 'pages',
@@ -121,6 +141,31 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
           passwordHash: await hashPassword(process.env.ADMIN_PASSWORD ?? 'password'),
         })
         console.log('[latha] seeded admin: admin@latha.dev / password')
+      }
+
+      // Seed a few taxonomy terms so the category/tags pickers have options.
+      // A system principal bypasses RBAC guards, matching how users are seeded.
+      const sys = { cms: latha, principal: { id: '__system__', permissions: ['*'] } }
+
+      if ((await latha.db.count('categories')) === 0) {
+        const eng = await operations.create(sys, 'categories', {
+          name: 'Engineering',
+          slug: 'engineering',
+        })
+        await operations.create(sys, 'categories', {
+          name: 'Frameworks',
+          slug: 'frameworks',
+          parent: eng.id,
+        })
+        await operations.create(sys, 'categories', { name: 'Design', slug: 'design' })
+        console.log('[latha] seeded categories')
+      }
+
+      if ((await latha.db.count('tags')) === 0) {
+        for (const name of ['nextjs', 'cms', 'release']) {
+          await operations.create(sys, 'tags', { name, slug: name })
+        }
+        console.log('[latha] seeded tags')
       }
     },
   })

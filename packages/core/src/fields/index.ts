@@ -1,4 +1,4 @@
-export type { FieldMeta } from './meta.js'
+export { fieldMetaSchema, type FieldMeta } from './meta.js'
 export {
   type FieldTypeEntry,
   FieldRegistry,

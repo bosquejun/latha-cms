@@ -43,6 +43,7 @@ export { ModuleRegistry } from './registry/index.js'
 // Field type registry + canonical field types (extensibility seam for modules)
 export {
   type FieldMeta,
+  fieldMetaSchema,
   type FieldTypeEntry,
   FieldRegistry,
   baseFieldConfigSchema,

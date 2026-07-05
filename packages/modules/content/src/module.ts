@@ -45,7 +45,7 @@ export function ContentModule(config: ContentModuleConfig): Module {
   return {
     name: 'content',
     capabilities: ['content'],
-    admin: { nav: { label: 'Content', order: 10, collapsible: true } },
+    admin: { nav: { label: 'Content', order: 10, collapsible: true }, ui: '@latha/content/admin' },
     entities: config.entities,
     onInit(cms: LathaInstance) {
       cms.registerFieldType({
