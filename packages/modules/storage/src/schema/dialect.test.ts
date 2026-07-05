@@ -11,7 +11,6 @@ import { toPg, rowToDocPg } from './pg-marshal.js'
 import type { Entity } from '@latha/core'
 
 const posts = {
-  kind: 'collection',
   cardinality: 'many',
   slug: 'posts',
   fields: [

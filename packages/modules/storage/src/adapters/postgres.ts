@@ -7,13 +7,13 @@
  * `prepare: false` (pgBouncer in transaction mode can't reuse prepared
  * statements).
  *
- * Like the Turso adapter, collections are dynamic: we keep a `TablePlan` per
- * collection (built during `migrate`) and use it to render DDL, marshal values,
+ * Like the Turso adapter, entities are dynamic: we keep a `TablePlan` per
+ * entity (built during `migrate`) and use it to render DDL, marshal values,
  * and build SQL. Identifiers are interpolated as quoted names; values are bound
  * as `$1..$n` parameters via `sql.unsafe(text, args)`.
  *
  * Schema note: `migrate()` only issues `CREATE TABLE IF NOT EXISTS` — it does
- * not ALTER existing tables. Adding a field to an existing collection therefore
+ * not ALTER existing tables. Adding a field to an existing entity therefore
  * needs a fresh table/schema. This matches the Turso adapter's behaviour.
  */
 
@@ -74,11 +74,11 @@ class PostgresAdapter implements DBAdapter {
     }
   }
 
-  private plan(collection: string): TablePlan {
-    const plan = this.plans.get(collection)
+  private plan(slug: string): TablePlan {
+    const plan = this.plans.get(slug)
     if (!plan) {
       throw new Error(
-        `No table plan for "${collection}". Was migrate() run for this collection?`,
+        `No table plan for "${slug}". Was migrate() run for this entity?`,
       )
     }
     return plan
@@ -92,15 +92,15 @@ class PostgresAdapter implements DBAdapter {
     return rows as unknown as Record<string, unknown>[]
   }
 
-  async find(collection: string, query: Query = {}): Promise<Doc[]> {
-    const plan = this.plan(collection)
+  async find(slug: string, query: Query = {}): Promise<Doc[]> {
+    const plan = this.plan(slug)
     const { sql, args } = buildSelect(plan, query)
     const rows = await this.query(sql, args)
     return rows.map((row) => rowToDocPg(plan, row) as Doc)
   }
 
-  async findOne(collection: string, id: string): Promise<Doc | null> {
-    const plan = this.plan(collection)
+  async findOne(slug: string, id: string): Promise<Doc | null> {
+    const plan = this.plan(slug)
     const rows = await this.query(
       `SELECT * FROM "${plan.table}" WHERE "id" = $1 LIMIT 1`,
       [id],
@@ -110,8 +110,8 @@ class PostgresAdapter implements DBAdapter {
     return rowToDocPg(plan, row) as Doc
   }
 
-  async count(collection: string, query: Query = {}): Promise<number> {
-    const plan = this.plan(collection)
+  async count(slug: string, query: Query = {}): Promise<number> {
+    const plan = this.plan(slug)
     const { whereSql, args } = buildWhere(plan, query.where)
     const rows = await this.query(
       `SELECT COUNT(*)::int AS count FROM "${plan.table}"${whereSql}`,
@@ -121,10 +121,10 @@ class PostgresAdapter implements DBAdapter {
   }
 
   async create(
-    collection: string,
+    slug: string,
     data: Record<string, unknown>,
   ): Promise<Doc> {
-    const plan = this.plan(collection)
+    const plan = this.plan(slug)
     const now = new Date().toISOString()
     const id = typeof data.id === 'string' ? data.id : newId()
 
@@ -152,16 +152,16 @@ class PostgresAdapter implements DBAdapter {
       args,
     )
     const created = rows[0]
-    if (!created) throw new Error(`Failed to read back created "${collection}".`)
+    if (!created) throw new Error(`Failed to read back created "${slug}".`)
     return rowToDocPg(plan, created) as Doc
   }
 
   async update(
-    collection: string,
+    slug: string,
     id: string,
     data: Record<string, unknown>,
   ): Promise<Doc> {
-    const plan = this.plan(collection)
+    const plan = this.plan(slug)
 
     const sets: string[] = []
     const args: PgValue[] = []
@@ -178,8 +178,8 @@ class PostgresAdapter implements DBAdapter {
     }
 
     if (sets.length === 0) {
-      const existing = await this.findOne(collection, id)
-      if (!existing) throw new Error(`Document "${collection}/${id}" not found.`)
+      const existing = await this.findOne(slug, id)
+      if (!existing) throw new Error(`Record "${slug}/${id}" not found.`)
       return existing
     }
 
@@ -189,12 +189,12 @@ class PostgresAdapter implements DBAdapter {
       args,
     )
     const updated = rows[0]
-    if (!updated) throw new Error(`Document "${collection}/${id}" not found.`)
+    if (!updated) throw new Error(`Record "${slug}/${id}" not found.`)
     return rowToDocPg(plan, updated) as Doc
   }
 
-  async delete(collection: string, id: string): Promise<void> {
-    const plan = this.plan(collection)
+  async delete(slug: string, id: string): Promise<void> {
+    const plan = this.plan(slug)
     await this.query(`DELETE FROM "${plan.table}" WHERE "id" = $1`, [id])
   }
 }

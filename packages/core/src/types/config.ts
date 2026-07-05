@@ -20,8 +20,8 @@ export interface LathaInstance {
   /** Modules in resolved (topologically sorted) order. */
   modules: Module[]
   /**
-   * Registered authorization guards, run for every operation after a
-   * collection's own `access` predicate. The kernel never interprets them.
+   * Registered authorization guards, run for every operation after an
+   * entity's own `access` predicate. The kernel never interprets them.
    */
   guards: Guard[]
   /** Register an authorization guard (typically from a module's `onInit`). */

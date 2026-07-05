@@ -5,8 +5,8 @@
  * supports local `file:` URLs — so the same adapter runs in production
  * (Turso) and in local dev / tests (a SQLite file or `:memory:`).
  *
- * Collections are dynamic, so we keep a `TablePlan` per collection (built
- * during `migrate`) and use it to marshal values and build SQL.
+ * Entities are dynamic, so we keep a `TablePlan` per entity (built during
+ * `migrate`) and use it to marshal values and build SQL.
  */
 
 import { createClient, type Client } from '@libsql/client'
@@ -57,18 +57,18 @@ class TursoAdapter implements DBAdapter {
     }
   }
 
-  private plan(collection: string): TablePlan {
-    const plan = this.plans.get(collection)
+  private plan(slug: string): TablePlan {
+    const plan = this.plans.get(slug)
     if (!plan) {
       throw new Error(
-        `No table plan for "${collection}". Was migrate() run for this collection?`,
+        `No table plan for "${slug}". Was migrate() run for this entity?`,
       )
     }
     return plan
   }
 
-  async find(collection: string, query: Query = {}): Promise<Doc[]> {
-    const plan = this.plan(collection)
+  async find(slug: string, query: Query = {}): Promise<Doc[]> {
+    const plan = this.plan(slug)
     const { sql, args } = buildSelect(plan, query)
     const result = await this.client.execute({ sql, args })
     return result.rows.map(
@@ -76,8 +76,8 @@ class TursoAdapter implements DBAdapter {
     )
   }
 
-  async findOne(collection: string, id: string): Promise<Doc | null> {
-    const plan = this.plan(collection)
+  async findOne(slug: string, id: string): Promise<Doc | null> {
+    const plan = this.plan(slug)
     const result = await this.client.execute({
       sql: `SELECT * FROM "${plan.table}" WHERE "id" = ? LIMIT 1`,
       args: [id],
@@ -87,8 +87,8 @@ class TursoAdapter implements DBAdapter {
     return rowToDoc(plan, row as unknown as Record<string, SqlValue>) as Doc
   }
 
-  async count(collection: string, query: Query = {}): Promise<number> {
-    const plan = this.plan(collection)
+  async count(slug: string, query: Query = {}): Promise<number> {
+    const plan = this.plan(slug)
     const { whereSql, args } = buildWhere(plan, query.where)
     const result = await this.client.execute({
       sql: `SELECT COUNT(*) as count FROM "${plan.table}"${whereSql}`,
@@ -98,10 +98,10 @@ class TursoAdapter implements DBAdapter {
   }
 
   async create(
-    collection: string,
+    slug: string,
     data: Record<string, unknown>,
   ): Promise<Doc> {
-    const plan = this.plan(collection)
+    const plan = this.plan(slug)
     const now = new Date().toISOString()
     const id = typeof data.id === 'string' ? data.id : newId()
 
@@ -127,17 +127,17 @@ class TursoAdapter implements DBAdapter {
       args,
     })
 
-    const created = await this.findOne(collection, id)
-    if (!created) throw new Error(`Failed to read back created "${collection}".`)
+    const created = await this.findOne(slug, id)
+    if (!created) throw new Error(`Failed to read back created "${slug}".`)
     return created
   }
 
   async update(
-    collection: string,
+    slug: string,
     id: string,
     data: Record<string, unknown>,
   ): Promise<Doc> {
-    const plan = this.plan(collection)
+    const plan = this.plan(slug)
 
     const sets: string[] = []
     const args: SqlValue[] = []
@@ -161,13 +161,13 @@ class TursoAdapter implements DBAdapter {
       })
     }
 
-    const updated = await this.findOne(collection, id)
-    if (!updated) throw new Error(`Document "${collection}/${id}" not found.`)
+    const updated = await this.findOne(slug, id)
+    if (!updated) throw new Error(`Record "${slug}/${id}" not found.`)
     return updated
   }
 
-  async delete(collection: string, id: string): Promise<void> {
-    const plan = this.plan(collection)
+  async delete(slug: string, id: string): Promise<void> {
+    const plan = this.plan(slug)
     await this.client.execute({
       sql: `DELETE FROM "${plan.table}" WHERE "id" = ?`,
       args: [id],

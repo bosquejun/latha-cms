@@ -1,9 +1,9 @@
 /**
  * Entity factories — `Collection()`, `Document()`, `Taxonomy()`.
  *
- * These are thin, typed constructors that stamp the discriminant `kind` onto a
- * config object so the kernel registry and storage layer can treat entities
- * uniformly. Fields are declared as a record of builder calls (`text()`,
+ * These are thin, typed constructors that stamp the structural `cardinality`
+ * the kernel needs — plus the opaque `kind` tag the admin layer displays —
+ * onto a config object. Fields are declared as a record of builder calls (`text()`,
  * `select()`, …); the factory infers the document type from them — which then
  * types the `access` and `hooks` callbacks — and stamps each record key as the
  * field's `name`, producing the `Field[]` the rest of the system consumes.

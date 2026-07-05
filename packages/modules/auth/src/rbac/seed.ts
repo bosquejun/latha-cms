@@ -44,7 +44,7 @@ const AUTH_SENSITIVE = new Set(['roles', 'scopes', 'permissions', 'admin', '*'])
  *
  * `extraSensitive` lists additional scope slugs to withhold from the default
  * editor/viewer grants — typically the identity-store slug, passed by the
- * module so that whatever collection is configured as the user store is
+ * module so that whatever entity is configured as the user store is
  * automatically protected without hardcoding a slug here.
  */
 export function defaultRoles(catalog: RbacCatalog, extraSensitive: string[] = []): RoleSeed[] {

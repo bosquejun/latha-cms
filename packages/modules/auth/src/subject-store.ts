@@ -3,8 +3,8 @@
  *
  * Auth does not depend on the users module: it resolves credentials and
  * sessions through a `SubjectStore`. The default store is backed by a CMS
- * collection (the `users` collection by default), but an app can point it at a
- * different collection (`AuthModule({ usersSlug })`) or supply a wholly custom
+ * entity (the `users` collection by default), but an app can point it at a
+ * different entity (`AuthModule({ usersSlug })`) or supply a wholly custom
  * store (`AuthModule({ subjectStore })`) — e.g. an external identity provider —
  * so `@latha/auth` can run without `@latha/users` at all.
  *
@@ -15,7 +15,7 @@
 import { operations } from '@latha/core'
 import type { LathaInstance } from '@latha/core'
 
-/** The default collection a subject store reads from. */
+/** The default entity slug a subject store reads from. */
 export const DEFAULT_USERS_SLUG = 'users'
 
 /**
@@ -37,25 +37,25 @@ export interface SubjectStore {
 }
 
 // Run lookups as the system principal (superadmin) so auth's own reads are
-// never blocked by the RBAC guard or per-collection access predicates.
+// never blocked by the RBAC guard or per-entity access predicates.
 const systemCtx = (latha: LathaInstance) => ({
   cms: latha,
   principal: { id: '__system__', permissions: ['*'] },
 })
 
 /**
- * A `SubjectStore` backed by a CMS collection. The collection must carry
- * `email`, `passwordHash`, and (for RBAC) `roles` fields — exactly what
- * `@latha/users` contributes.
+ * A `SubjectStore` backed by a CMS entity. The entity must carry `email`,
+ * `passwordHash`, and (for RBAC) `roles` fields — exactly what `@latha/users`
+ * contributes.
  */
-export function collectionSubjectStore(
+export function entitySubjectStore(
   latha: LathaInstance,
   slug: string = DEFAULT_USERS_SLUG,
 ): SubjectStore {
   const ensure = () => {
     if (!latha.getEntity(slug)) {
       throw new Error(
-        `Auth subject store: no "${slug}" collection. Install @latha/users, ` +
+        `Auth subject store: no "${slug}" entity. Install @latha/users, ` +
           `set AuthModule({ usersSlug }), or pass a custom AuthModule({ subjectStore }).`,
       )
     }
@@ -84,9 +84,9 @@ export function setSubjectStore(latha: LathaInstance, store: SubjectStore): void
 }
 
 /**
- * The subject store for an instance. Falls back to a default collection store
+ * The subject store for an instance. Falls back to a default entity store
  * over the `users` collection if none was registered.
  */
 export function getSubjectStore(latha: LathaInstance): SubjectStore {
-  return stores.get(latha) ?? collectionSubjectStore(latha)
+  return stores.get(latha) ?? entitySubjectStore(latha)
 }

@@ -2,7 +2,7 @@
  * Authorization guards — the kernel's generic authorization seam.
  *
  * A guard is a function the kernel runs for every operation, in registration
- * order, *after* a collection's own `access` predicate. Any guard may throw to
+ * order, *after* an entity's own `access` predicate. Any guard may throw to
  * deny the operation. The kernel never interprets the principal or the guard's
  * intent — it only runs the chain. This is how cross-cutting authorization
  * (e.g. RBAC in `@latha/auth`) plugs in without the kernel knowing anything

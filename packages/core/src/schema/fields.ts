@@ -1,7 +1,7 @@
 /**
  * Function-based field builders + document type inference.
  *
- * Instead of writing field definitions as plain objects, collections declare
+ * Instead of writing field definitions as plain objects, entities declare
  * their fields as a record of builder calls:
  *
  * ```ts
@@ -76,7 +76,7 @@ export interface AnyFieldDef extends PhantomMeta<unknown, boolean> {
   readonly meta?: FieldMeta
 }
 
-/** A collection/group/array field set: name → builder result. */
+/** An entity/group/array field set: name → builder result. */
 export type FieldsRecord = Record<string, AnyFieldDef>
 
 type OutputOf<D> = D extends PhantomMeta<infer T, boolean> ? T : never
@@ -286,7 +286,7 @@ export function richtext<const O extends RichTextOpts = {}>(
   })
 }
 
-/** Relationship to another collection. `many: true` stores an array of ids. */
+/** Relationship to another entity. `many: true` stores an array of ids. */
 export function relationship<const O extends StringRefOpts>(
   opts: O,
 ): Built<RelationshipField, RefOut<O>, IsPresent<O>> {

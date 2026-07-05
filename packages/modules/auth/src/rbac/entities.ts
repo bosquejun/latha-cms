@@ -24,7 +24,6 @@ const ACCESS_GROUP = 'Access'
 
 /** Editable: a named bundle of permissions assigned to users. */
 export const rolesEntity: Entity = {
-  kind: 'collection',
   cardinality: 'many',
   slug: ROLES_SLUG,
   actions: ['read', 'create', 'update', 'delete'],
@@ -68,7 +67,6 @@ export const rolesEntity: Entity = {
 
 /** Catalog: a resource that can be acted upon (one per entity). */
 export const scopesEntity: Entity = {
-  kind: 'collection',
   cardinality: 'many',
   slug: SCOPES_SLUG,
   actions: ['read'],
@@ -91,7 +89,6 @@ export const scopesEntity: Entity = {
 
 /** Catalog: a grantable `<scope>:<action>` permission. */
 export const permissionsEntity: Entity = {
-  kind: 'collection',
   cardinality: 'many',
   slug: PERMISSIONS_SLUG,
   actions: ['read'],

@@ -13,7 +13,7 @@ export type { AuthUser, AuthAdapter } from './types.js'
 
 // Pluggable identity source — lets auth run without @latha/users.
 export {
-  collectionSubjectStore,
+  entitySubjectStore,
   getSubjectStore,
   setSubjectStore,
   DEFAULT_USERS_SLUG,
@@ -37,7 +37,6 @@ export {
   findUserByEmail,
   toAuthUser,
   parseCookies,
-  USERS_SLUG,
   DEFAULT_COOKIE_NAME,
   type AuthOptions,
 } from './service.js'
