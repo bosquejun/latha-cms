@@ -45,6 +45,13 @@ export {
 // Client-side form validation schema (registry schema + jsonSchema mirrors)
 export { buildFormSchema, zodFromJsonSchema } from './fields/formSchema.js'
 
+// Sibling-field form state for renderers (e.g. a slug input following title)
+export {
+  FormValuesProvider,
+  useFieldValue,
+  type FormValuesStore,
+} from './fields/form-values.js'
+
 // Extension system — injection zones, registry, <Slot>, define* helpers
 export {
   ADMIN_ZONES,

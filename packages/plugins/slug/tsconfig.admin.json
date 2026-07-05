@@ -1,0 +1,23 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "composite": true
+  },
+  "references": [
+    { "path": "../../core" },
+    { "path": "../../admin-sdk" }
+  ],
+  "include": [
+    "src/admin/**/*.ts",
+    "src/admin/**/*.tsx",
+    "src/slugify.ts",
+    "src/template.ts"
+  ],
+  "exclude": ["dist", "node_modules"]
+}

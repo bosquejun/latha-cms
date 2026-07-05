@@ -1,0 +1,55 @@
+{
+  "name": "@latha/slug",
+  "version": "0.0.0",
+  "description": "LathaCMS slug plugin — template-based slug field with uniqueness and admin UX.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "development": "./src/index.ts",
+      "import": "./dist/index.js"
+    },
+    "./admin": {
+      "types": "./dist/admin/index.d.ts",
+      "development": "./src/admin/index.ts",
+      "import": "./dist/admin/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.admin.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.admin.json --noEmit",
+    "test": "tsc -p tsconfig.json && node --test dist/"
+  },
+  "peerDependencies": {
+    "@latha/core": "workspace:*",
+    "@latha/admin-sdk": "workspace:*",
+    "@latha/start": "workspace:*",
+    "@latha/ui": "workspace:*",
+    "react": "^18 || ^19"
+  },
+  "peerDependenciesMeta": {
+    "@latha/admin-sdk": { "optional": true },
+    "@latha/start": { "optional": true },
+    "@latha/ui": { "optional": true },
+    "react": { "optional": true }
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@latha/core": "workspace:*",
+    "@latha/admin-sdk": "workspace:*",
+    "@latha/start": "workspace:*",
+    "@latha/ui": "workspace:*",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
+    "typescript": "^5.7.2",
+    "vite": "^7.0.0"
+  }
+}

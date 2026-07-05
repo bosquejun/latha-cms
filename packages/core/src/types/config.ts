@@ -90,10 +90,23 @@ export interface Module {
   admin?: ModuleAdminConfig
 }
 
+export interface PluginAdminConfig {
+  /**
+   * Bare import specifier for this plugin's admin-UI barrel (e.g.
+   * '@latha/slug/admin'). Same contract as `ModuleAdminConfig.ui`: the Start
+   * Vite plugin statically imports and merges it into the admin extension
+   * registry at build time. A serializable string — never a component. Omit
+   * for backend-only plugins.
+   */
+  ui?: string
+}
+
 export interface Plugin {
   name: string
   extendConfig?: (config: LathaConfig) => LathaConfig
   onInit?: (cms: LathaInstance) => void | Promise<void>
+  /** Admin-UI metadata for this plugin (extension barrel). */
+  admin?: PluginAdminConfig
 }
 
 export interface LathaConfig {

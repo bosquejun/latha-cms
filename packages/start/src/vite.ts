@@ -257,21 +257,23 @@ function lathaDevSourcePlugin(): VitePluginLike {
 const VIRTUAL_ID = 'virtual:latha/admin-extensions'
 const RESOLVED_ID = '\0' + VIRTUAL_ID
 
-interface ModuleLike { admin?: { ui?: string } }
+interface AdminUiCarrier { admin?: { ui?: string } }
 
 /**
- * Load the app's `latha.config` and read each module's `admin.ui` specifier.
- * Reads static descriptor strings only — never bootstraps an instance. `load`
- * is Vite's SSR module loader (`server.ssrLoadModule`) at serve time, or a
- * direct `import()` wrapper at build time.
+ * Load the app's `latha.config` and read each module's and plugin's `admin.ui`
+ * specifier. Reads static descriptor strings only — never bootstraps an
+ * instance. `load` is Vite's SSR module loader (`server.ssrLoadModule`) at
+ * serve time, or a direct `import()` wrapper at build time.
  */
 export async function readModuleUiSpecifiers(
   load: (id: string) => Promise<unknown>,
   configPath: string,
 ): Promise<string[]> {
-  const mod = (await load(configPath)) as { default?: { modules?: ModuleLike[] } }
+  const mod = (await load(configPath)) as {
+    default?: { modules?: AdminUiCarrier[]; plugins?: AdminUiCarrier[] }
+  }
   const seen = new Set<string>()
-  for (const m of mod.default?.modules ?? []) {
+  for (const m of [...(mod.default?.modules ?? []), ...(mod.default?.plugins ?? [])]) {
     const ui = m.admin?.ui
     if (ui) seen.add(ui)
   }

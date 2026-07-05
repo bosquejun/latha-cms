@@ -18,6 +18,21 @@ test('readModuleUiSpecifiers extracts and de-dupes module admin.ui strings', asy
   assert.deepEqual(specs, ['@latha/auth/admin'])
 })
 
+test('readModuleUiSpecifiers collects plugin admin.ui strings, de-duped against modules', async () => {
+  const fakeLoad = async () => ({
+    default: {
+      modules: [{ name: 'media', admin: { ui: '@latha/media/admin' } }],
+      plugins: [
+        { name: 'slug', admin: { ui: '@latha/slug/admin' } },
+        { name: 'slug2', admin: { ui: '@latha/media/admin' } }, // dup of a module's
+        { name: 'bare' }, // no admin
+      ],
+    },
+  })
+  const specs = await readModuleUiSpecifiers(fakeLoad, 'virtual:latha/config')
+  assert.deepEqual(specs, ['@latha/media/admin', '@latha/slug/admin'])
+})
+
 test('buildModuleSource imports each specifier and merges with the app glob', () => {
   const src = buildModuleSource('/src/admin', ['@latha/auth/admin'])
   assert.match(src, /from ["']@latha\/auth\/admin["']/)
