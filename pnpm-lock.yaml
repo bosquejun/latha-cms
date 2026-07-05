@@ -43,6 +43,9 @@ importers:
       '@latha/media':
         specifier: workspace:*
         version: link:../../packages/modules/media
+      '@latha/slug':
+        specifier: workspace:*
+        version: link:../../packages/plugins/slug
       '@latha/start':
         specifier: workspace:*
         version: link:../../packages/start

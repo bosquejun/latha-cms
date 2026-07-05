@@ -31,10 +31,15 @@ import { AuthModule } from '@latha/auth'
 import { countUsers, createUser } from '@latha/users'
 import { hashPassword, getRoleByName } from '@latha/auth'
 import { media, MediaModule } from '@latha/media'
+import { slug, slugPlugin } from '@latha/slug'
 
 export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedConfig {
   return defineConfig({
     db,
+
+    // slugPlugin wires generation + uniqueness hooks into every entity below
+    // that carries a slug() field (posts, pages).
+    plugins: [slugPlugin()],
 
     modules: [
       UsersModule(),
@@ -65,24 +70,9 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
             // (deny-by-default + the posts:* permissions). To expose public,
             // headless reads, add e.g. `access: { read: () => true }` — explicit
             // predicates always override the RBAC default for that operation.
-            hooks: {
-              beforeCreate: [
-                ({ data }) => {
-                  const title = String(data.title ?? '')
-                  const slug =
-                    (data.slug as string | undefined) ??
-                    title
-                      .toLowerCase()
-                      .trim()
-                      .replace(/[^a-z0-9]+/g, '-')
-                      .replace(/^-+|-+$/g, '')
-                  return { ...data, slug }
-                },
-              ],
-            },
             fields: {
               title: text({ required: true }),
-              slug: text({ unique: true }),
+              slug: slug({ from: '{title}' }),
               // Zod-first escape hatch: full schema validation server-side,
               // mirrored to the admin form via jsonSchema.
               contactEmail: text({ schema: z.email(), meta: { label: 'Contact Email' } }),
@@ -104,7 +94,7 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
             admin: { order: 15, useAsTitle: 'title', defaultColumns: ['title', 'status'] },
             fields: {
               title: text({ required: true }),
-              slug: text({ unique: true }),
+              slug: slug({ from: '{title}' }),
               status: select({
                 options: z.enum(['draft', 'published']),
                 defaultValue: 'draft',
