@@ -74,14 +74,26 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
             // (deny-by-default + the posts:* permissions). To expose public,
             // headless reads, add e.g. `access: { read: () => true }` — explicit
             // predicates always override the RBAC default for that operation.
+            // Main-column fields are split into tabs via `meta.group`: a
+            // "Content" tab for the body, an "SEO & Meta" tab for metadata.
+            // Sidebar fields (`meta.sidebar`) stay in the sidebar regardless.
             fields: {
-              title: text({ required: true }),
-              slug: slug({ from: '{title}' }),
-              excerpt: text({ meta: { multiline: true, description: 'Short summary shown in listings.' } }),
+              title: text({ required: true, meta: { group: 'Content' } }),
+              slug: slug({ from: '{title}', meta: { group: 'Content' } }),
+              excerpt: text({ meta: { group: 'Content', multiline: true, description: 'Short summary shown in listings.' } }),
+              content: richtext({ meta: { group: 'Content' } }),
               // Zod-first escape hatch: full schema validation server-side,
               // mirrored to the admin form via jsonSchema.
-              contactEmail: text({ schema: z.email(), meta: { label: 'Contact Email' } }),
-              content: richtext(),
+              contactEmail: text({ schema: z.email(), meta: { group: 'SEO & Meta', label: 'Contact Email' } }),
+              views: number({ integer: true, defaultValue: 0, meta: { group: 'SEO & Meta' } }),
+              seo: group({
+                fields: {
+                  metaTitle: text({ meta: { label: 'Meta Title' } }),
+                  metaDescription: text({ meta: { label: 'Meta Description', multiline: true } }),
+                  ogImage: media({ meta: { label: 'OG Image' } }),
+                },
+                meta: { group: 'SEO & Meta', label: 'SEO', description: 'Search & social metadata.' },
+              }),
               featuredImage: media({ meta: { label: 'Featured Image', sidebar: true } }),
               category: taxonomy({ to: 'categories', meta: { sidebar: true } }),
               tags: taxonomy({ to: 'tags', many: true, meta: { sidebar: true } }),
@@ -91,15 +103,6 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
                 options: z.enum(['draft', 'published']),
                 defaultValue: 'draft',
                 meta: { sidebar: true },
-              }),
-              views: number({ integer: true, defaultValue: 0 }),
-              seo: group({
-                fields: {
-                  metaTitle: text({ meta: { label: 'Meta Title' } }),
-                  metaDescription: text({ meta: { label: 'Meta Description', multiline: true } }),
-                  ogImage: media({ meta: { label: 'OG Image' } }),
-                },
-                meta: { label: 'SEO', description: 'Search & social metadata.' },
               }),
             },
           }),
