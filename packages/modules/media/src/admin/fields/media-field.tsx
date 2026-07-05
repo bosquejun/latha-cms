@@ -138,41 +138,44 @@ export default function MediaField({ field, id, value, onChange, onBlur, error }
           <Spinner className="size-4" /> Loading…
         </div>
       ) : url ? (
-        <div className="flex items-center gap-3 rounded-md border border-input bg-background p-2">
+        <div className="flex flex-col gap-2 rounded-md border border-input bg-background p-2">
+          {/* Preview spans the full field width; the actions sit below it. */}
           {isImage ? (
             <img
               src={url}
               alt={typeof meta?.alt === 'string' ? meta.alt : (filename ?? '')}
-              className="size-14 shrink-0 rounded-md border border-border object-cover"
+              className="aspect-video w-full rounded-md border border-border bg-muted object-cover"
             />
           ) : (
-            <div className="flex size-14 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-muted-foreground">
-              <FileIcon className="size-6" />
+            <div className="flex aspect-video w-full items-center justify-center rounded-md border border-border bg-muted text-muted-foreground">
+              <FileIcon className="size-8" />
             </div>
           )}
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-small font-medium" title={filename}>
-              {filename ?? 'Uploaded file'}
-            </p>
-            {subtitle && <p className="text-caption text-muted-foreground">{subtitle}</p>}
-          </div>
-          <div className="flex shrink-0 items-center gap-inline">
-            <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={openPicker}>
-              {busy ? <Spinner className="size-4" /> : 'Replace'}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-              disabled={busy}
-              onClick={() => {
-                setUploaded(null)
-                onChange(undefined)
-              }}
-            >
-              Remove
-            </Button>
+          <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1 px-1">
+              <p className="truncate text-small font-medium" title={filename}>
+                {filename ?? 'Uploaded file'}
+              </p>
+              {subtitle && <p className="text-caption text-muted-foreground">{subtitle}</p>}
+            </div>
+            <div className="flex shrink-0 items-center gap-inline">
+              <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={openPicker}>
+                {busy ? <Spinner className="size-4" /> : 'Replace'}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                disabled={busy}
+                onClick={() => {
+                  setUploaded(null)
+                  onChange(undefined)
+                }}
+              >
+                Remove
+              </Button>
+            </div>
           </div>
         </div>
       ) : (
