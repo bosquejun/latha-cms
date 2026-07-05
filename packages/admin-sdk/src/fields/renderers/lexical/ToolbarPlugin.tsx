@@ -1,5 +1,5 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import {
   $createParagraphNode,
   $getSelection,
@@ -21,15 +21,18 @@ import {
   INSERT_UNORDERED_LIST_COMMAND,
   REMOVE_LIST_COMMAND,
 } from '@lexical/list'
-import { $findMatchingParent } from '@lexical/utils'
-import { Button, Separator } from '@latha/ui'
+import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link'
+import { $findMatchingParent, $insertNodeToNearestRoot } from '@lexical/utils'
+import { Button, Separator, Spinner, toast } from '@latha/ui'
 import {
   Bold,
   Code,
   Heading2,
   Heading3,
   Heading4,
+  ImagePlus,
   Italic,
+  Link2,
   List,
   ListOrdered,
   Quote,
@@ -38,14 +41,28 @@ import {
   Underline,
   Undo2,
 } from 'lucide-react'
+import { useLatha } from '../../../client/index.js'
+import { $createImageNode } from './ImageNode.js'
+
+/** Prefix a bare host (`example.com`) with https:// so links resolve. */
+function normalizeUrl(url: string): string {
+  const trimmed = url.trim()
+  if (trimmed === '') return ''
+  if (/^(https?:|mailto:|tel:|#|\/)/i.test(trimmed)) return trimmed
+  return `https://${trimmed}`
+}
 
 export function ToolbarPlugin() {
   const [editor] = useLexicalComposerContext()
+  const { client } = useLatha()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [isBold, setIsBold] = useState(false)
   const [isItalic, setIsItalic] = useState(false)
   const [isUnderline, setIsUnderline] = useState(false)
   const [isStrikethrough, setIsStrikethrough] = useState(false)
   const [isCode, setIsCode] = useState(false)
+  const [isLink, setIsLink] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [blockType, setBlockType] = useState<string>('paragraph')
 
   useEffect(() => {
@@ -59,6 +76,9 @@ export function ToolbarPlugin() {
         setIsUnderline(selection.hasFormat('underline'))
         setIsStrikethrough(selection.hasFormat('strikethrough'))
         setIsCode(selection.hasFormat('code'))
+
+        const node = selection.anchor.getNode()
+        setIsLink($isLinkNode(node) || $isLinkNode(node.getParent()))
 
         const anchorNode = selection.anchor.getNode()
         const element =
@@ -108,6 +128,35 @@ export function ToolbarPlugin() {
       }
     })
   }, [editor, blockType])
+
+  const toggleLink = useCallback(() => {
+    if (isLink) {
+      editor.dispatchCommand(TOGGLE_LINK_COMMAND, null)
+      return
+    }
+    const url = normalizeUrl(window.prompt('Link URL') ?? '')
+    if (url) editor.dispatchCommand(TOGGLE_LINK_COMMAND, url)
+  }, [editor, isLink])
+
+  const insertImage = useCallback(
+    async (file: File) => {
+      setUploading(true)
+      try {
+        const doc = await client.upload(file)
+        const src = typeof doc.url === 'string' ? doc.url : ''
+        if (!src) throw new Error('Upload returned no URL.')
+        const alt = typeof doc.filename === 'string' ? doc.filename : ''
+        editor.update(() => {
+          $insertNodeToNearestRoot($createImageNode(src, alt))
+        })
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Image upload failed.')
+      } finally {
+        setUploading(false)
+      }
+    },
+    [client, editor],
+  )
 
   return (
     <div className="flex flex-wrap items-center gap-0.5 border-b border-input px-2 py-1.5">
@@ -266,6 +315,46 @@ export function ToolbarPlugin() {
       >
         <ListOrdered className="h-3.5 w-3.5" />
       </Button>
+
+      <Separator orientation="vertical" className="mx-1 h-5" />
+
+      {/* Link & media */}
+      <Button
+        type="button"
+        size="icon"
+        variant={isLink ? 'secondary' : 'ghost'}
+        className="h-7 w-7"
+        onClick={toggleLink}
+        title={isLink ? 'Remove link' : 'Add link'}
+      >
+        <Link2 className="h-3.5 w-3.5" />
+      </Button>
+      <Button
+        type="button"
+        size="icon"
+        variant="ghost"
+        className="h-7 w-7"
+        disabled={uploading}
+        onClick={() => fileInputRef.current?.click()}
+        title="Insert image"
+      >
+        {uploading ? (
+          <Spinner className="size-3.5" />
+        ) : (
+          <ImagePlus className="h-3.5 w-3.5" />
+        )}
+      </Button>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file) void insertImage(file)
+          e.target.value = ''
+        }}
+      />
     </div>
   )
 }

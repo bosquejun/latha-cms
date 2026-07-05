@@ -12,10 +12,26 @@ import { LinkNode, AutoLinkNode } from '@lexical/link'
 import type { EditorState } from 'lexical'
 import { Fragment } from 'react'
 import { InitialValuePlugin } from './InitialValuePlugin.js'
+import { ImageNode } from './ImageNode.js'
 import { ToolbarPlugin } from './ToolbarPlugin.js'
 import { getGlobalLexicalExtensions, type LexicalExtension } from './registry.js'
 
-const BUILT_IN_NODES = [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, AutoLinkNode]
+const BUILT_IN_NODES = [
+  HeadingNode,
+  QuoteNode,
+  ListNode,
+  ListItemNode,
+  LinkNode,
+  AutoLinkNode,
+  ImageNode,
+]
+
+// Base theme classes for nodes that need styling the browser doesn't give for
+// free inside a contentEditable — notably links. Module/field themes merge on
+// top (and win) via the Object.assign order below.
+const BASE_THEME = {
+  link: 'text-primary underline underline-offset-2 cursor-pointer',
+}
 
 interface LexicalEditorProps {
   id?: string
@@ -41,6 +57,7 @@ export function LexicalEditor({ id, value, onChange, onBlur, lexicalConfig }: Le
 
   const mergedTheme = Object.assign(
     {},
+    BASE_THEME,
     ...globalExts.map((e) => e.theme ?? {}),
     lexicalConfig?.theme ?? {},
   )
