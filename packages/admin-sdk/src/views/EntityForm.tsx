@@ -9,16 +9,19 @@
  * submit. Each field renders through the renderer registry behind an RHF
  * `<Controller>`, so renderers stay form-library-agnostic.
  * Fields marked `field.meta?.sidebar` move to the 1/3 right panel; the rest
- * fill the main column. A sticky action bar floats below the topbar so Save
- * is always reachable regardless of form length.
+ * fill the main column. A sticky toolbar floats below the topbar so the
+ * section tabs, the unsaved-changes status, and Save stay reachable
+ * regardless of form length.
  *
  * When any main-column field carries a `field.meta?.group`, the main column
  * splits into tabs — one per distinct group, in the order groups first appear,
- * with ungrouped fields collected into a leading "General" tab. All tab panels
- * stay mounted (inactive ones hidden) so react-hook-form never unregisters a
- * field just because its tab isn't visible, and each tab shows a badge counting
- * its fields with validation errors so problems on a hidden tab stay visible.
- * With no groups declared the main column renders flat, exactly as before.
+ * with ungrouped fields collected into a leading "General" tab. The tab strip
+ * lives on the left of the sticky toolbar (status + actions sit on the right);
+ * each panel renders in the main column below. All tab panels stay mounted
+ * (inactive ones hidden) so react-hook-form never unregisters a field just
+ * because its tab isn't visible, and each tab shows a badge counting its fields
+ * with validation errors so problems on a hidden tab stay visible. With no
+ * groups declared the main column renders flat, exactly as before.
  */
 
 import { useMemo, useState } from 'react'
@@ -225,22 +228,45 @@ export function EntityForm({
           void submit()
         }}
       >
-        {/* ── Sticky action bar ───────────────────────────────────────────────
-            Stays pinned just below the fixed topbar so Save is always visible
-            no matter how long the form is. Uses bg-background/95 + backdrop-blur
-            so content scrolling underneath reads clearly.
+        {/* ── Sticky toolbar ──────────────────────────────────────────────────
+            Pinned just below the fixed topbar so it's always reachable no
+            matter how long the form is. One row does double duty: the section
+            tabs sit on the left (filling what was otherwise dead space), and
+            the unsaved-changes status + actions sit on the right. Uses
+            bg-background/95 + backdrop-blur so content scrolling underneath
+            reads clearly.
         ──────────────────────────────────────────────────────────────────────── */}
         <div className="sticky top-(--header-height) z-10 mb-page-gap -mx-6 flex items-center gap-3 border-b border-border bg-background/95 px-6 py-2.5 backdrop-blur-sm">
-          <div className="flex min-w-0 items-center gap-2">
+          {tabbed ? (
+            <Tabs
+              items={groups.map((group) => {
+                const errorCount = group.fields.filter((f) => errors[f.name]).length
+                return {
+                  value: group.key,
+                  label: (
+                    <span className="flex items-center gap-1.5">
+                      {group.label}
+                      {errorCount > 0 && (
+                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                          {errorCount}
+                        </span>
+                      )}
+                    </span>
+                  ),
+                }
+              })}
+              value={active}
+              onValueChange={setActiveTab}
+            />
+          ) : null}
+
+          <div className="ml-auto flex shrink-0 items-center gap-inline">
             {isDirty ? (
-              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <span className="mr-1 flex items-center gap-1.5 text-sm text-muted-foreground">
                 <span className="inline-block h-2 w-2 rounded-full bg-warning" />
                 Unsaved changes
               </span>
             ) : null}
-          </div>
-
-          <div className="ml-auto flex shrink-0 items-center gap-inline">
             {onCancel && (
               <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
                 Cancel
@@ -280,32 +306,12 @@ export function EntityForm({
               recordId={recordId}
               className="flex flex-col gap-form"
             />
-            {tabbed ? (
-              <>
-                <Tabs
-                  items={groups.map((group) => {
-                    const errorCount = group.fields.filter((f) => errors[f.name]).length
-                    return {
-                      value: group.key,
-                      label: (
-                        <span className="flex items-center gap-1.5">
-                          {group.label}
-                          {errorCount > 0 && (
-                            <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
-                              {errorCount}
-                            </span>
-                          )}
-                        </span>
-                      ),
-                    }
-                  })}
-                  value={active}
-                  onValueChange={setActiveTab}
-                  className="self-start"
-                />
-                {groups.map((group) => (
-                  // Panels stay mounted (inactive ones hidden) so react-hook-form
-                  // keeps every field registered and validated across tabs.
+            {tabbed
+              ? groups.map((group) => (
+                  // The tab strip lives in the sticky toolbar; here we render one
+                  // panel per group. Panels stay mounted (inactive ones hidden) so
+                  // react-hook-form keeps every field registered and validated
+                  // across tabs.
                   <div
                     key={group.key}
                     role="tabpanel"
@@ -314,11 +320,8 @@ export function EntityForm({
                   >
                     {group.fields.map(renderField)}
                   </div>
-                ))}
-              </>
-            ) : (
-              mainFields.map(renderField)
-            )}
+                ))
+              : mainFields.map(renderField)}
             <Slot
               zone="form.after"
               entity={entity}
