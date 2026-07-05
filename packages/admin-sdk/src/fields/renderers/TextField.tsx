@@ -1,4 +1,4 @@
-import { Field as FieldWrap, Input, InputAddon, InputGroup } from '@latha/ui'
+import { Field as FieldWrap, Input, InputAddon, InputGroup, Textarea } from '@latha/ui'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 
@@ -12,9 +12,19 @@ export function TextField({
 }: FieldControlProps) {
   const prefix = field.meta?.prefix
   const suffix = field.meta?.suffix
-  const hasAddon = prefix != null || suffix != null
+  // Multiline swaps the input for a textarea; prefix/suffix add-ons don't apply.
+  const hasAddon = !field.meta?.multiline && (prefix != null || suffix != null)
 
-  const input = (
+  const control = field.meta?.multiline ? (
+    <Textarea
+      id={id}
+      value={typeof value === 'string' ? value : ''}
+      placeholder={field.meta?.placeholder}
+      rows={4}
+      onChange={(e) => onChange(e.target.value)}
+      onBlur={onBlur}
+    />
+  ) : (
     <Input
       id={id}
       type={field.meta?.inputType ?? 'text'}
@@ -37,11 +47,11 @@ export function TextField({
       {hasAddon ? (
         <InputGroup>
           {prefix != null && <InputAddon>{prefix}</InputAddon>}
-          {input}
+          {control}
           {suffix != null && <InputAddon>{suffix}</InputAddon>}
         </InputGroup>
       ) : (
-        input
+        control
       )}
     </FieldWrap>
   )
