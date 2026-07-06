@@ -243,14 +243,18 @@ export function EntityForm({
             the unsaved-changes status + actions sit on the right. Uses
             bg-background/95 + backdrop-blur so content scrolling underneath
             reads clearly. `bleed-x` + `px-(--container-px)` track the page
-            gutter (which shrinks on mobile) instead of hardcoding 24px, and
-            flex-wrap lets the actions drop to a second row on narrow screens
-            while the tab strip scrolls within the first.
+            gutter (which shrinks on mobile) instead of hardcoding 24px.
+
+            On phones the row splits into two tidy stacked rows: actions
+            first (right-aligned, matching the mobile app-bar convention),
+            then the tabs stretched into a full-width segmented control that
+            sits directly above the panels it switches. From `sm` up both
+            share one row — tabs left, actions right.
         ──────────────────────────────────────────────────────────────────────── */}
-        <div className="bleed-x sticky top-(--header-height) z-10 mb-page-gap flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border bg-background/95 px-(--container-px) py-2.5 backdrop-blur-sm">
+        <div className="bleed-x sticky top-(--header-height) z-10 mb-page-gap flex flex-wrap items-center gap-x-3 gap-y-2.5 border-b border-border bg-background/95 px-(--container-px) py-2.5 backdrop-blur-sm max-sm:-mt-2 max-sm:py-2">
           {tabbed ? (
             <Tabs
-              className="max-w-full"
+              className="max-w-full max-sm:order-last max-sm:w-full max-sm:[&>button]:flex-1 max-sm:[&>button]:justify-center"
               items={groups.map((group) => {
                 const errorCount = group.fields.filter((f) => errors[f.name]).length
                 return {
@@ -272,7 +276,7 @@ export function EntityForm({
             />
           ) : null}
 
-          <div className="ml-auto flex shrink-0 items-center gap-inline">
+          <div className="ml-auto flex shrink-0 items-center gap-inline max-sm:w-full max-sm:justify-end">
             {onDelete && (
               <>
                 <Button
