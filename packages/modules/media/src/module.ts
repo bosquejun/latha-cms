@@ -5,6 +5,17 @@ import { buildMediaEntity } from './entities.js'
 export interface MediaModuleConfig {
   /** Where uploaded files are stored (e.g. `localDiskStorage()`, an R2/S3 adapter). */
   storage: StorageAdapter
+  /**
+   * Maximum upload size in bytes, enforced server-side before any bytes reach
+   * storage. Defaults to 20 MiB.
+   */
+  maxFileSize?: number
+  /**
+   * MIME types accepted for upload — exact (`application/pdf`) or wildcard
+   * (`image/*`). Defaults to images, video, audio, and PDFs. Note this checks
+   * the declared content type, not the bytes.
+   */
+  allowedMimeTypes?: string[]
 }
 
 export function MediaModule(config: MediaModuleConfig): Module {
@@ -12,7 +23,12 @@ export function MediaModule(config: MediaModuleConfig): Module {
     name: 'media',
     capabilities: ['media'],
     admin: { nav: { label: 'Media', order: 25 }, ui: '@latha/media/admin' },
-    entities: [buildMediaEntity()],
+    entities: [
+      buildMediaEntity({
+        maxFileSize: config.maxFileSize,
+        allowedMimeTypes: config.allowedMimeTypes,
+      }),
+    ],
     onInit(cms: LathaInstance) {
       cms.registerStorageAdapter(config.storage)
       cms.registerFieldType({

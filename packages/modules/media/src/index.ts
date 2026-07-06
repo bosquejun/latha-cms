@@ -15,4 +15,11 @@ export { localDiskStorage, type LocalDiskStorageOptions } from './storage/local-
 export { s3Storage, type S3StorageOptions } from './storage/s3.js'
 export { media } from './builders.js'
 export { MediaModule, type MediaModuleConfig } from './module.js'
-export { MEDIA_SLUG, buildMediaEntity } from './entities.js'
+export {
+  MEDIA_SLUG,
+  buildMediaEntity,
+  DEFAULT_MAX_FILE_SIZE,
+  DEFAULT_ALLOWED_MIME_TYPES,
+  type MediaEntity,
+  type UploadPolicy,
+} from './entities.js'
