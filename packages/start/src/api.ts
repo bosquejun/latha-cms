@@ -154,6 +154,24 @@ function parseWhere(
   return Object.keys(where).length > 0 ? where : undefined
 }
 
+/** Combine caller filters with the entity's delivery constraint (constraint wins). */
+function mergeWhere(
+  callerWhere: Record<string, unknown> | undefined,
+  constraint: Record<string, unknown> | undefined,
+): Record<string, unknown> | undefined {
+  if (!constraint) return callerWhere
+  return { ...callerWhere, ...constraint }
+}
+
+/** Whether a fetched document satisfies the entity's delivery constraint. */
+function matchesConstraint(
+  doc: Record<string, unknown>,
+  constraint: Record<string, unknown> | undefined,
+): boolean {
+  if (!constraint) return true
+  return Object.entries(constraint).every(([key, value]) => doc[key] === value)
+}
+
 function parseBoundedInt(
   raw: string | null,
   fallback: number,
@@ -235,18 +253,26 @@ export async function handleDeliveryRequest(
     context: { enforce: true },
   }
   const hidden = hiddenFieldNames(entity)
+  // The entity's delivery constraint (e.g. `{ status: 'published' }` from a
+  // drafts-enabled collection). Applied to every read on this surface — the
+  // admin RPC is the place that sees drafts.
+  const constraint = entity.api?.where
 
   try {
     if (entity.cardinality === 'single') {
       if (id !== undefined) return json(404, { error: 'Not found.' }, cors)
       const doc = await operations.findGlobal(opCtx, slug)
-      if (!doc) return json(404, { error: 'Not found.' }, cors)
+      if (!doc || !matchesConstraint(doc, constraint)) {
+        return json(404, { error: 'Not found.' }, cors)
+      }
       return json(200, projectDoc(hidden, doc), cors)
     }
 
     if (id !== undefined) {
       const doc = await operations.findOne(opCtx, slug, id)
-      if (!doc) return json(404, { error: 'Not found.' }, cors)
+      if (!doc || !matchesConstraint(doc, constraint)) {
+        return json(404, { error: 'Not found.' }, cors)
+      }
       return json(200, projectDoc(hidden, doc), cors)
     }
 
@@ -256,7 +282,8 @@ export async function handleDeliveryRequest(
       limit,
       offset,
       sort: parseSort(entity, url.searchParams.get('sort')),
-      where: parseWhere(entity, url.searchParams),
+      // The constraint spreads last: a caller's where[] can never widen it.
+      where: mergeWhere(parseWhere(entity, url.searchParams), constraint),
     }
     const [docs, total] = await Promise.all([
       operations.find(opCtx, slug, query),

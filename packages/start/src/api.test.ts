@@ -77,11 +77,23 @@ const postsEntity: Entity = {
   }),
 }
 
+// Drafts-style entity: the delivery constraint every public read is scoped to.
+const articlesEntity: Entity = {
+  cardinality: 'many',
+  slug: 'articles',
+  actions: ['read', 'create', 'update', 'delete'],
+  api: { where: { status: 'published' } },
+  fields: stampFields({
+    title: text({ required: true }),
+    status: text(),
+  }),
+}
+
 const config: ResolvedConfig = defineConfig({
   db: memoryAdapter(),
   modules: [
     AuthModule({ secret: 'test-secret' }),
-    { name: 'test-content', entities: [postsEntity] },
+    { name: 'test-content', entities: [postsEntity, articlesEntity] },
   ],
 })
 
@@ -92,6 +104,8 @@ before(async () => {
   const latha = await getRuntime(config)
   await latha.db.create('posts', { title: 'Hello', internalNote: 'secret', featured: true })
   await latha.db.create('posts', { title: 'World', internalNote: 'secret', featured: false })
+  await latha.db.create('articles', { title: 'Live', status: 'published' })
+  await latha.db.create('articles', { title: 'WIP', status: 'draft' })
 })
 
 test('anonymous read is denied until the Public role grants it', async () => {
@@ -157,6 +171,28 @@ test('granting the Public role a read opens anonymous access', async () => {
 
   // But the Public grant does not leak other entities.
   assert.equal((await get('/api/roles')).status, 403)
+})
+
+test('the delivery constraint hides drafts even from privileged keys', async () => {
+  const latha = await getRuntime(config)
+  const adminRole = (await latha.db.find('roles', { where: { name: 'admin' }, limit: 1 }))[0]!
+  const { token } = await createApiKey(latha, { name: 'drafts', roles: [adminRole.id] })
+  const auth = { authorization: `Bearer ${token}` }
+
+  const list = await get('/api/articles', auth)
+  const body = (await list.json()) as { docs: Doc[]; total: number }
+  assert.equal(body.total, 1)
+  assert.deepEqual(body.docs.map((d) => d.title), ['Live'])
+
+  // A caller's where[] can never widen the constraint.
+  const widened = await get('/api/articles?where[status]=draft', auth)
+  const wbody = (await widened.json()) as { docs: Doc[]; total: number }
+  assert.equal(wbody.total, 1)
+  assert.deepEqual(wbody.docs.map((d) => d.title), ['Live'])
+
+  // Direct fetch of a draft id 404s.
+  const draft = (await latha.db.find('articles', { where: { status: 'draft' } }))[0]!
+  assert.equal((await get(`/api/articles/${draft.id}`, auth)).status, 404)
 })
 
 test('unknown sort/filter fields are 400s, not silent full scans', async () => {

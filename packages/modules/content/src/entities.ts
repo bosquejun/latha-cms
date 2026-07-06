@@ -13,8 +13,10 @@
  */
 
 import {
+  select,
   stampFields,
   text,
+  z,
   type Entity,
   type EntityAccess,
   type EntityAdminConfig,
@@ -36,21 +38,42 @@ export interface CollectionConfig<TDoc = Record<string, unknown>> {
   access?: EntityAccess<TDoc>
   hooks?: EntityHooks<TDoc>
   timestamps?: boolean
+  /**
+   * Draft/publish workflow. Enabled by default: the collection carries a
+   * `status` select (`draft` | `published`, new records start as drafts) and
+   * the public delivery API serves only published records — the admin surface
+   * always sees everything. Declare your own `status` field to restyle it
+   * (the delivery filter still applies), or pass `false` for collections
+   * whose saves should be live immediately.
+   */
+  drafts?: boolean
+}
+
+/** The implicit publish-workflow field stamped by `Collection()` (unless overridden). */
+function statusField() {
+  return select({
+    options: z.enum(['draft', 'published']),
+    defaultValue: 'draft',
+    meta: { sidebar: true },
+  })
 }
 
 /** Define a Collection — many records, standard CRUD. */
 export function Collection<TFields extends FieldsRecord>(
   input: { fields: TFields } & CollectionConfig<InferDoc<TFields>>,
 ): Collection<InferDoc<TFields>> {
-  const { fields, ...rest } = input
+  const { fields, drafts = true, ...rest } = input
+  const withStatus: FieldsRecord =
+    drafts && !('status' in fields) ? { ...fields, status: statusField() } : fields
   return {
     kind: 'collection',
     cardinality: 'many',
     timestamps: true,
     actions: ['read', 'create', 'update', 'delete'],
     ...rest,
+    ...(drafts ? { api: { where: { status: 'published' } } } : {}),
     admin: { segment: 'content', ...rest.admin },
-    fields: stampFields(fields),
+    fields: stampFields(withStatus),
   }
 }
 
