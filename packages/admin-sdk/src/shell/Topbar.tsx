@@ -19,14 +19,18 @@ export function Topbar({ brand = 'LathaCMS', onMenuClick, children }: TopbarProp
           size="icon"
           onClick={onMenuClick}
           aria-label="Menu"
-          className="min-[861px]:hidden [&_svg]:size-[18px]"
+          className="lg:hidden pointer-coarse:min-h-11 pointer-coarse:min-w-11 [&_svg]:size-[18px]"
         >
           <Menu />
         </Button>
         <span className="grid size-7 shrink-0 place-items-center rounded-[var(--radius-md)] bg-primary text-sm font-semibold text-primary-foreground">
           {brand.charAt(0).toUpperCase()}
         </span>
-        <span className="text-base font-semibold tracking-tight">{brand}</span>
+        {/* The wordmark yields to actions on phones — the logo mark keeps the
+            bar branded, and the mobile drawer shows the full brand. */}
+        <span className="truncate text-base font-semibold tracking-tight max-sm:hidden">
+          {brand}
+        </span>
       </div>
       {children}
     </header>

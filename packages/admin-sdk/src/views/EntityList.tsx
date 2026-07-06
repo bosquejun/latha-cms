@@ -101,6 +101,53 @@ export function EntityList({
 
   return (
     <>
+      {/* ── Mobile (< md): stacked cards ──────────────────────────────────
+          Tables force horizontal panning on phones, so each row becomes a
+          card: tappable title on top, remaining columns as label/value
+          pairs, delete action in the corner. */}
+      <ul className="divide-y divide-border md:hidden">
+        {rows.map((row) => {
+          const detailCols = columns.filter((col) => col !== titleCol)
+          return (
+            <li key={row.id} className="flex flex-col gap-2 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <a
+                  href={getEditHref(row.id)}
+                  className="min-w-0 flex-1 py-1 font-medium text-foreground"
+                >
+                  {renderCell(row[titleCol ?? 'id'] ?? row.id, colType.get(titleCol ?? ''))}
+                </a>
+                {onDelete && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={busy}
+                    className="shrink-0 text-muted-foreground"
+                    onClick={() => setPendingDeleteId(row.id)}
+                  >
+                    Delete
+                  </Button>
+                )}
+              </div>
+              {detailCols.length > 0 && (
+                <dl className="flex flex-col gap-1">
+                  {detailCols.map((col) => (
+                    <div key={col} className="flex items-baseline gap-2 text-small">
+                      <dt className="shrink-0 text-muted-foreground">{humanize(col)}</dt>
+                      <dd className="min-w-0 truncate">
+                        {renderCell(row[col], colType.get(col))}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+            </li>
+          )
+        })}
+      </ul>
+
+      {/* ── Tablet & desktop (md+): the classic table ───────────────────── */}
+      <div className="max-md:hidden">
       <Table>
         <THead>
           <TR>
@@ -143,6 +190,7 @@ export function EntityList({
           ))}
         </TBody>
       </Table>
+      </div>
 
       <Dialog
         open={pendingDeleteId !== null}

@@ -30,6 +30,7 @@ import {
   type SidebarSection,
   type SidebarLinkProps,
   PermissionsProvider,
+  AdminNavigateProvider,
   useCan,
   useLatha,
   useAsync,
@@ -90,6 +91,9 @@ function parseEntitySegs(
   const segment = seg[0]
   const slug = seg[1]
   if (!segment || !slug) return null
+  // Only claim the route when the slug is a real entity — otherwise fall
+  // through so extension pages can own sub-paths (e.g. /settings/roles/<id>).
+  if (!cardinalities.has(slug)) return null
   if (cardinalities.get(slug) === 'single') return { view: 'global', slug }
   if (seg[2] === 'new') return { view: 'create', slug, segment }
   if (seg[2]) return { view: 'edit', slug, id: seg[2], segment }
@@ -325,6 +329,9 @@ export function LathaAdmin() {
 
   return (
     <PermissionsProvider permissions={session.data.permissions}>
+      {/* Bridge the router so extension pages can navigate client-side
+          (URL-driven master-detail views, redirects) without a router dep. */}
+      <AdminNavigateProvider navigate={(href) => void navigate({ to: href })}>
       <AdminShell
         sections={inSettings ? settingsSections : mainSections}
         currentPath={pathname}
@@ -350,6 +357,7 @@ export function LathaAdmin() {
       >
         <AdminView route={route} nav={mainNav} routeBase={inSettings ? settingsRoot : basePath} />
       </AdminShell>
+      </AdminNavigateProvider>
     </PermissionsProvider>
   )
 }

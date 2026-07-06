@@ -41,7 +41,9 @@ function Tabs({
       data-slot="tabs-list"
       role="tablist"
       className={cn(
-        'inline-flex items-center gap-1 rounded-md bg-muted p-1',
+        // max-w-full + overflow-x-auto: on narrow screens the strip scrolls
+        // horizontally instead of forcing the page wider.
+        'inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-md bg-muted p-1 no-scrollbar',
         className,
       )}
       {...props}
@@ -57,7 +59,7 @@ function Tabs({
             data-state={isActive ? 'active' : 'inactive'}
             onClick={() => select(it.value)}
             className={cn(
-              'inline-flex h-7 items-center gap-1.5 rounded-sm px-3 text-sm font-medium transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
+              'inline-flex h-7 shrink-0 touch-manipulation items-center gap-1.5 whitespace-nowrap rounded-sm px-3 text-sm font-medium transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 pointer-coarse:min-h-9',
               isActive
                 ? 'bg-background text-foreground shadow-xs'
                 : 'text-muted-foreground hover:text-foreground',

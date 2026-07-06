@@ -66,12 +66,16 @@ export default function MediaLibraryList({ rows, getEditHref, onDelete, busy }: 
                 {filename}
               </a>
               {onDelete && (
+                // Hover-revealed on fine pointers; always visible on touch
+                // devices (there is no hover to reveal it) and when focused
+                // via keyboard. The translucent backdrop keeps it legible
+                // over any thumbnail.
                 <Button
                   type="button"
                   size="sm"
                   variant="ghost"
                   disabled={busy}
-                  className="absolute right-1 top-1 opacity-0 group-hover:opacity-100"
+                  className="absolute right-1 top-1 bg-background/80 opacity-0 shadow-xs backdrop-blur-sm transition-opacity focus-visible:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100"
                   onClick={(e) => {
                     e.preventDefault()
                     setPendingDeleteId(row.id)

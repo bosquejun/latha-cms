@@ -9,6 +9,11 @@
  * module), columns = read/create/update/delete — plus the `admin:access` and
  * superadmin (`*`) toggles. Includes column/module bulk-select, scope search,
  * and a confirmation modal for destructive actions.
+ *
+ * Selection is URL-driven (`/settings/roles/<id>`), which makes roles
+ * deep-linkable and gives phones a real master-detail flow: without a role
+ * param the list is the page; with one, the detail is the page with a back
+ * button (desktop always shows both panes, defaulting to the first role).
  */
 
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
@@ -32,11 +37,14 @@ import {
   PageLayout,
   defineSettingsConfig,
   useLatha,
+  useAdminNavigate,
   useAsync,
   type JsonDoc,
+  type PageComponentProps,
 } from '@latha/admin-sdk'
 import {
   ChevronDown,
+  ChevronLeft,
   Lock,
   Plus,
   Search,
@@ -335,13 +343,13 @@ function ToggleRow({
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-export default function RolesPermissions() {
-  const { client } = useLatha()
+export default function RolesPermissions({ params }: PageComponentProps) {
+  const { client, basePath } = useLatha()
+  const navigate = useAdminNavigate()
   const roles = useAsync(() => client.list('roles'), [])
   const scopes = useAsync(() => client.list('scopes'), [])
   const permissions = useAsync(() => client.list('permissions'), [])
 
-  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [checked, setChecked] = useState<Set<string>>(new Set())
   const [saving, setSaving] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -349,10 +357,16 @@ export default function RolesPermissions() {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [filterQuery, setFilterQuery] = useState('')
   const [pendingDelete, setPendingDelete] = useState<JsonDoc | null>(null)
-  const [pendingSwitch, setPendingSwitch] = useState<string | null>(null)
+  const [pendingNav, setPendingNav] = useState<string | null>(null)
 
+  // The URL is the source of truth for selection: `/settings/roles/<id>`.
+  // Without a param, desktop's two-pane view falls back to the first role
+  // while the phone layout shows only the list (`detailOpen` gates panes).
+  const rootHref = `${basePath}/settings/roles`
+  const paramId = params[0] ?? null
   const roleList = roles.data ?? []
-  const selected = roleList.find((r) => r.id === selectedId) ?? roleList[0] ?? null
+  const selected = (paramId ? roleList.find((r) => r.id === paramId) : null) ?? roleList[0] ?? null
+  const detailOpen = paramId !== null
 
   useEffect(() => {
     if (selected) setChecked(new Set(asIds(selected.permissions)))
@@ -504,13 +518,19 @@ export default function RolesPermissions() {
       return next
     })
 
-  // Switch roles, prompting for confirmation when there are unsaved changes
+  // Navigate within the roles area, prompting when there are unsaved changes
+  const go = (href: string) => {
+    if (dirty) setPendingNav(href)
+    else navigate(href)
+  }
+
+  // Select a role → its URL. Re-selecting the current role (e.g. tapping it
+  // from the mobile list before any param is set) never risks data loss, so
+  // it navigates without the guard.
   const trySelectRole = (id: string) => {
-    if (dirty && id !== selected?.id) {
-      setPendingSwitch(id)
-    } else {
-      setSelectedId(id)
-    }
+    const href = `${rootHref}/${id}`
+    if (id === selected?.id) navigate(href)
+    else go(href)
   }
 
   const loading = roles.loading || scopes.loading || permissions.loading
@@ -538,15 +558,15 @@ export default function RolesPermissions() {
     setNewName('')
     setCreating(false)
     await roles.reload()
-    setSelectedId(created.id)
+    navigate(`${rootHref}/${created.id}`)
   }
 
   const confirmDelete = async () => {
     if (!pendingDelete) return
     await client.remove('roles', pendingDelete.id)
     setPendingDelete(null)
-    setSelectedId(null)
     await roles.reload()
+    navigate(rootHref)
   }
 
   return (
@@ -578,17 +598,17 @@ export default function RolesPermissions() {
         />
       )}
 
-      {/* Unsaved-changes guard when switching roles */}
-      {pendingSwitch && (
+      {/* Unsaved-changes guard when navigating away from a dirty role */}
+      {pendingNav && (
         <ConfirmModal
           title="Discard unsaved changes?"
           description="You have unsaved permission changes for this role. Switching away will discard them."
           confirmLabel="Discard & switch"
           onConfirm={() => {
-            setSelectedId(pendingSwitch)
-            setPendingSwitch(null)
+            navigate(pendingNav)
+            setPendingNav(null)
           }}
-          onCancel={() => setPendingSwitch(null)}
+          onCancel={() => setPendingNav(null)}
         />
       )}
 
@@ -619,7 +639,9 @@ export default function RolesPermissions() {
       ) : (
         <PageLayout
           left={
-            <div className="flex flex-col gap-inline">
+            /* On phones the list *is* the page when no role param is set;
+               opening a role hides it in favour of the detail subpage. */
+            <div className={cn('flex flex-col gap-inline', detailOpen && 'max-lg:hidden')}>
             {/* Sidebar header */}
             <div className="flex items-center justify-between px-stack">
               <div className="flex items-center gap-inline">
@@ -698,7 +720,24 @@ export default function RolesPermissions() {
         >
           {/* ── Matrix panel ─────────────────────────────────────────────── */}
           {selected ? (
-            <div className="flex min-w-0 flex-col gap-card-gap">
+            <div
+              className={cn(
+                'flex min-w-0 flex-col gap-card-gap',
+                // On phones the detail is a subpage — hidden until a role
+                // param is in the URL, entered from the list.
+                !detailOpen && 'max-lg:hidden',
+              )}
+            >
+              {/* Back to the role list — phones only, where the list is a
+                  separate page. Guarded like any other dirty navigation. */}
+              <button
+                type="button"
+                onClick={() => go(rootHref)}
+                className="flex items-center gap-1 self-start rounded-md py-1 pr-2 text-small font-medium text-muted-foreground transition-colors hover:text-foreground lg:hidden pointer-coarse:min-h-10"
+              >
+                <ChevronLeft className="size-4" /> All roles
+              </button>
+
               {/* Role header */}
               <div className="flex flex-wrap items-start justify-between gap-card-gap">
                 <div>
@@ -817,11 +856,13 @@ export default function RolesPermissions() {
                   <THead>
                     {/* Row 1 — column labels, aligned on the same baseline */}
                     <TR className="border-b-0">
-                      <TH>Resource</TH>
+                      <TH className="max-sm:px-3">Resource</TH>
+                      {/* Compact action columns on phones so all four fit
+                          without sideways panning. */}
                       {ACTION_COLUMNS.map((action) => (
                         <TH
                           key={action}
-                          className="min-w-[80px] text-center capitalize"
+                          className="min-w-12 px-2 text-center capitalize sm:min-w-[80px] sm:px-4"
                         >
                           {action}
                         </TH>
@@ -829,11 +870,11 @@ export default function RolesPermissions() {
                     </TR>
                     {/* Row 2 — bulk-select checkboxes with room to breathe */}
                     <TR>
-                      <TH className="py-group font-normal text-muted-foreground">
+                      <TH className="py-group font-normal text-muted-foreground max-sm:px-3">
                         Select all
                       </TH>
                       {ACTION_COLUMNS.map((action) => (
-                        <TH key={action} className="py-group text-center">
+                        <TH key={action} className="px-2 py-group text-center sm:px-4">
                           <div className="flex items-center justify-center">
                             <BulkCheckbox
                               checked={columnState[action].allChecked}
@@ -866,7 +907,7 @@ export default function RolesPermissions() {
                             <TR className="bg-muted/30 hover:bg-muted/40">
                               <TD
                                 colSpan={1 + ACTION_COLUMNS.length}
-                                className="py-inline"
+                                className="py-inline max-sm:px-3"
                               >
                                 <div className="flex items-center gap-inline">
                                   {/* Accordion toggle */}
@@ -911,12 +952,12 @@ export default function RolesPermissions() {
                                   key={scope.key}
                                   className="hover:bg-accent/20"
                                 >
-                                  <TD>
+                                  <TD className="max-sm:px-3">
                                     <span className="text-small font-medium">
                                       {scope.label || scope.key}
                                     </span>
                                     {scope.label && scope.label.toLowerCase() !== scope.key.toLowerCase() && (
-                                      <span className="ml-tight text-caption text-muted-foreground">
+                                      <span className="ml-tight text-caption text-muted-foreground max-sm:hidden">
                                         {scope.key}
                                       </span>
                                     )}
@@ -926,7 +967,7 @@ export default function RolesPermissions() {
                                       `${scope.key}:${action}`,
                                     )
                                     return (
-                                      <TD key={action} className="text-center">
+                                      <TD key={action} className="px-2 text-center sm:px-4">
                                         {perm ? (
                                           <Checkbox
                                             checked={
@@ -954,8 +995,9 @@ export default function RolesPermissions() {
               </Card>
             </div>
           ) : (
-            /* Empty state — no roles exist */
-            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-empty text-center">
+            /* Empty state — no roles exist. On phones the list card already
+               says so, so this desktop-pane echo stays hidden there. */
+            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-empty text-center max-lg:hidden">
               <div className="mb-card-gap flex size-14 items-center justify-center rounded-full bg-muted">
                 <ShieldAlert className="size-7 text-muted-foreground" />
               </div>

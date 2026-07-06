@@ -49,7 +49,10 @@ export function AdminShell({
         </div>
       </Topbar>
       <div className="flex min-h-0 flex-1">
-        <aside className="sticky top-(--header-height) h-[calc(100vh-var(--header-height))] max-[860px]:hidden">
+        {/* Persistent sidebar from `lg` (1024px) up: tablet landscape and
+            desktop. Below that — phones and tablet portrait — navigation
+            moves into the drawer, matching PageLayout's `lg:` panel split. */}
+        <aside className="sticky top-(--header-height) h-[calc(100dvh-var(--header-height))] max-lg:hidden">
           <Sidebar
             sections={sections}
             currentPath={currentPath}
@@ -62,6 +65,7 @@ export function AdminShell({
         <MobileDrawer
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
+          brand={brand}
           sections={sections}
           currentPath={currentPath}
           LinkComponent={LinkComponent}
