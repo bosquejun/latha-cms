@@ -68,6 +68,8 @@ export interface SidebarProps {
   header?: ReactNode
   /** Pinned to the bottom of the sidebar (e.g. a Settings button). */
   footer?: ReactNode
+  /** Extra classes for the nav container (e.g. the drawer stretches it). */
+  className?: string
 }
 
 // `pointer-coarse:min-h-11` keeps every nav row at a ~44px touch target in
@@ -104,6 +106,7 @@ export function Sidebar({
   showDashboard = true,
   header,
   footer,
+  className,
 }: SidebarProps) {
   const renderLink = (item: SidebarItem, active: boolean) => {
     const body = (
@@ -141,7 +144,12 @@ export function Sidebar({
     !item.external && (currentPath?.startsWith(item.href) ?? false)
 
   return (
-    <nav className="flex h-full w-(--sidebar-width) shrink-0 flex-col gap-card-gap overflow-y-auto border-r border-sidebar-border bg-sidebar p-sidebar">
+    <nav
+      className={cn(
+        'flex h-full w-(--sidebar-width) shrink-0 flex-col gap-card-gap overflow-y-auto border-r border-sidebar-border bg-sidebar p-sidebar',
+        className,
+      )}
+    >
       {header}
       <Slot zone="shell.sidebar.top" />
 

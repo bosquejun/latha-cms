@@ -65,6 +65,7 @@ export function AdminShell({
         <MobileDrawer
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
+          brand={brand}
           sections={sections}
           currentPath={currentPath}
           LinkComponent={LinkComponent}
