@@ -26,7 +26,11 @@ export function Topbar({ brand = 'LathaCMS', onMenuClick, children }: TopbarProp
         <span className="grid size-7 shrink-0 place-items-center rounded-[var(--radius-md)] bg-primary text-sm font-semibold text-primary-foreground">
           {brand.charAt(0).toUpperCase()}
         </span>
-        <span className="text-base font-semibold tracking-tight">{brand}</span>
+        {/* The wordmark yields to actions on phones — the logo mark keeps the
+            bar branded, and the mobile drawer shows the full brand. */}
+        <span className="truncate text-base font-semibold tracking-tight max-sm:hidden">
+          {brand}
+        </span>
       </div>
       {children}
     </header>
