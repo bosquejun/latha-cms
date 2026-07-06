@@ -17,10 +17,12 @@ export default function TopbarHelp(_props: WidgetContext) {
       href="https://github.com/bosquejun/latha-cms"
       target="_blank"
       rel="noreferrer"
-      className="flex items-center gap-tight rounded-md px-inline py-stack text-small text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      aria-label="Help"
+      className="flex items-center gap-tight rounded-md px-inline py-stack text-small text-muted-foreground transition-colors hover:bg-accent hover:text-foreground pointer-coarse:min-h-10"
     >
       <LifeBuoy className="size-4" />
-      Help
+      {/* Icon-only on phones to keep the topbar uncluttered. */}
+      <span className="max-sm:hidden">Help</span>
     </a>
   )
 }
