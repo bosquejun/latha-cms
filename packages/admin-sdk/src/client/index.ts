@@ -27,6 +27,7 @@ export {
   type LathaRpcInput,
   type LathaServerFn,
   type JsonDoc,
+  type PageResult,
   type SessionUser,
   type NavItem,
   type NavSection,

@@ -294,6 +294,16 @@ export async function handleLathaRequest(
     }
     case 'list':
       return (await operations.find(opCtx, input.slug)).map(toJson)
+    case 'page': {
+      const limit = input.limit ?? 50
+      const offset = input.offset ?? 0
+      const query = { limit, offset, sort: input.sort }
+      const [docs, total] = await Promise.all([
+        operations.find(opCtx, input.slug, query),
+        operations.count(opCtx, input.slug),
+      ])
+      return { docs: docs.map(toJson), total, limit, offset }
+    }
     case 'get': {
       const doc = await operations.findOne(opCtx, input.slug, input.id)
       return doc ? toJson(doc) : null

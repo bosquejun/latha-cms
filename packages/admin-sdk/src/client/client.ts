@@ -18,6 +18,7 @@ import type {
   LathaRpcInput,
   LathaServerFn,
   NavSection,
+  PageResult,
   SessionUser,
 } from './rpc.js'
 
@@ -25,6 +26,15 @@ export interface LathaClient {
   nav(): Promise<NavSection[]>
   entity(slug: string): Promise<EntityDescriptor | null>
   list(slug: string): Promise<JsonDoc[]>
+  /** One page of a list plus the total, for paginated views. */
+  page(
+    slug: string,
+    query?: {
+      limit?: number
+      offset?: number
+      sort?: { field: string; direction: 'asc' | 'desc' }[]
+    },
+  ): Promise<PageResult>
   get(slug: string, id: string): Promise<JsonDoc | null>
   create(slug: string, data: Record<string, unknown>): Promise<JsonDoc>
   update(slug: string, id: string, data: Record<string, unknown>): Promise<JsonDoc>
@@ -102,6 +112,7 @@ export function createLathaClient(
     nav: () => call<NavSection[]>({ action: 'nav' }),
     entity: (slug) => call<EntityDescriptor | null>({ action: 'entity', slug }),
     list: (slug) => call<JsonDoc[]>({ action: 'list', slug }),
+    page: (slug, query) => call<PageResult>({ action: 'page', slug, ...query }),
     get: (slug, id) => call<JsonDoc | null>({ action: 'get', slug, id }),
     create: (slug, data) => call<JsonDoc>({ action: 'create', slug, data }),
     update: (slug, id, data) => call<JsonDoc>({ action: 'update', slug, id, data }),
