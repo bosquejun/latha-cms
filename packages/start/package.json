@@ -41,6 +41,11 @@
       "types": "./dist/routes/upload.d.ts",
       "development": "./src/routes/upload.ts",
       "import": "./dist/routes/upload.js"
+    },
+    "./routes/api": {
+      "types": "./dist/routes/api.d.ts",
+      "development": "./src/routes/api.ts",
+      "import": "./dist/routes/api.js"
     }
   },
   "main": "./dist/index.js",

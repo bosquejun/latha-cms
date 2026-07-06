@@ -214,14 +214,14 @@ async function currentAuthUser(latha: LathaInstance): Promise<AuthUser | null> {
 }
 
 type PublicPrincipal = Awaited<ReturnType<typeof getPublicPrincipal>>
-const publicPrincipals = new WeakMap<LathaInstance, PublicPrincipal>()
 
-async function getCachedPublicPrincipal(latha: LathaInstance): Promise<PublicPrincipal> {
-  const cached = publicPrincipals.get(latha)
-  if (cached) return cached
-  const p = await getPublicPrincipal(latha)
-  publicPrincipals.set(latha, p)
-  return p
+/**
+ * The synthetic anonymous principal. Resolved fresh per request — like user
+ * grants — so edits to the Public role in the matrix UI apply immediately
+ * instead of waiting for a server restart.
+ */
+export async function resolveAnonymousPrincipal(latha: LathaInstance): Promise<PublicPrincipal> {
+  return getPublicPrincipal(latha)
 }
 
 /**
@@ -237,7 +237,7 @@ export async function resolvePrincipal(
 ): Promise<{ sessionUser: AuthUser | null; principal: AuthUser | PublicPrincipal }> {
   const sessionUser = await currentAuthUser(latha)
   const principal: AuthUser | PublicPrincipal =
-    sessionUser ?? (await getCachedPublicPrincipal(latha))
+    sessionUser ?? (await resolveAnonymousPrincipal(latha))
   return { sessionUser, principal }
 }
 

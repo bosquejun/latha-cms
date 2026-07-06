@@ -20,6 +20,12 @@ export const DEFAULT_RPC_PATH = '/__latha/rpc'
  */
 export const DEFAULT_UPLOAD_PATH = '/__latha/upload'
 
+/**
+ * Where the public content delivery API is mounted — the read-only REST
+ * surface headless consumers fetch, as opposed to the admin-gated RPC above.
+ */
+export const DEFAULT_API_PATH = '/api'
+
 /** Identity validator that pins a custom server function's input to `LathaRpcInput`. */
 export function lathaRpcValidator(data: LathaRpcInput): LathaRpcInput {
   return data
