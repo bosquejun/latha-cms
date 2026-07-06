@@ -12,8 +12,10 @@
 import { createClient, type Client } from '@libsql/client'
 import type { DBAdapter, Doc, Entity, Query } from '@latha/core'
 import {
+  alterTableSQL,
   buildTablePlan,
   createTableSQL,
+  undeclaredColumns,
   type TablePlan,
 } from '../schema/generator.js'
 import { rowToDoc, toSql, type SqlValue } from '../schema/marshal.js'
@@ -54,6 +56,27 @@ class TursoAdapter implements DBAdapter {
       const plan = buildTablePlan(entity)
       this.plans.set(plan.table, plan)
       await this.client.execute(createTableSQL(plan))
+      await this.reconcileColumns(plan)
+    }
+  }
+
+  /**
+   * Additive schema evolution: add any declared column missing from the live
+   * table (always nullable — see `alterTableSQL`), and warn about live columns
+   * the entity no longer declares. Never drops or retypes.
+   */
+  private async reconcileColumns(plan: TablePlan): Promise<void> {
+    const info = await this.client.execute(`PRAGMA table_info("${plan.table}")`)
+    const existing = info.rows.map((row) =>
+      String((row as unknown as Record<string, unknown>).name),
+    )
+    for (const sql of alterTableSQL(plan, existing, 'sqlite')) {
+      await this.client.execute(sql)
+    }
+    for (const name of undeclaredColumns(plan, existing)) {
+      console.warn(
+        `[latha] table "${plan.table}" has a column "${name}" that no field declares; it is left untouched.`,
+      )
     }
   }
 

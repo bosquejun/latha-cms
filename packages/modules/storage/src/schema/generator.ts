@@ -202,3 +202,53 @@ export function createTableSQL(plan: TablePlan, dialect: Dialect = 'sqlite'): st
 
   return `CREATE TABLE IF NOT EXISTS "${plan.table}" (\n  ${lines.join(',\n  ')}\n);`
 }
+
+/**
+ * `ALTER TABLE … ADD COLUMN` statements bringing an existing table up to
+ * `plan`: one per declared (or implicit timestamp) column missing from
+ * `existingColumns`.
+ *
+ * Added columns are always nullable and unconstrained — SQLite can neither add
+ * a NOT NULL column without a default to a non-empty table nor add a UNIQUE
+ * column at all — so NOT NULL/UNIQUE on late-added fields is enforced at the
+ * validation layer only, until a manual migration hardens the table.
+ */
+export function alterTableSQL(
+  plan: TablePlan,
+  existingColumns: Iterable<string>,
+  dialect: Dialect = 'sqlite',
+): string[] {
+  const existing = new Set(existingColumns)
+  const out: string[] = []
+  for (const col of plan.columns) {
+    if (existing.has(col.name)) continue
+    out.push(
+      `ALTER TABLE "${plan.table}" ADD COLUMN "${col.name}" ${ddlTypeForColumn(col, dialect)};`,
+    )
+  }
+  if (plan.timestamps) {
+    for (const name of ['createdAt', 'updatedAt']) {
+      if (existing.has(name)) continue
+      out.push(
+        `ALTER TABLE "${plan.table}" ADD COLUMN "${name}" ${timestampType(dialect)};`,
+      )
+    }
+  }
+  return out
+}
+
+/**
+ * Live columns no longer declared by the entity. Never dropped — data loss is
+ * a human decision — but surfaced so adapters can warn at boot.
+ */
+export function undeclaredColumns(
+  plan: TablePlan,
+  existingColumns: Iterable<string>,
+): string[] {
+  const declared = new Set(['id', ...plan.columns.map((c) => c.name)])
+  if (plan.timestamps) {
+    declared.add('createdAt')
+    declared.add('updatedAt')
+  }
+  return [...existingColumns].filter((name) => !declared.has(name))
+}
