@@ -70,9 +70,11 @@ export interface SidebarProps {
   footer?: ReactNode
 }
 
+// `pointer-coarse:min-h-11` keeps every nav row at a ~44px touch target in
+// the mobile drawer without loosening the desktop pointer density.
 const linkClass = (active: boolean) =>
   cn(
-    'flex items-center gap-2.5 rounded-md border border-transparent px-3 py-1.5 text-sm transition-colors',
+    'flex touch-manipulation items-center gap-2.5 rounded-md border border-transparent px-3 py-1.5 text-sm transition-colors pointer-coarse:min-h-11',
     '[&_svg]:size-4 [&_svg]:shrink-0',
     active
       ? 'border-sidebar-border bg-sidebar-accent font-medium text-sidebar-accent-foreground shadow-2xs [&_svg]:text-foreground'
@@ -86,7 +88,7 @@ const sectionLabelClass =
 // group reads as a top-level menu item rather than a section label.
 const groupHeaderClass = (active: boolean) =>
   cn(
-    'flex w-full items-center justify-between rounded-md border border-transparent px-3 py-1.5 text-sm transition-colors',
+    'flex w-full touch-manipulation items-center justify-between rounded-md border border-transparent px-3 py-1.5 text-sm transition-colors pointer-coarse:min-h-11',
     '[&_svg]:size-4 [&_svg]:shrink-0',
     active
       ? 'font-medium text-sidebar-accent-foreground [&_svg]:text-foreground'

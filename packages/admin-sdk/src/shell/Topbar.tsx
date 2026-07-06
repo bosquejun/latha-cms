@@ -19,7 +19,7 @@ export function Topbar({ brand = 'LathaCMS', onMenuClick, children }: TopbarProp
           size="icon"
           onClick={onMenuClick}
           aria-label="Menu"
-          className="min-[861px]:hidden [&_svg]:size-[18px]"
+          className="lg:hidden pointer-coarse:min-h-11 pointer-coarse:min-w-11 [&_svg]:size-[18px]"
         >
           <Menu />
         </Button>

@@ -242,11 +242,15 @@ export function EntityForm({
             tabs sit on the left (filling what was otherwise dead space), and
             the unsaved-changes status + actions sit on the right. Uses
             bg-background/95 + backdrop-blur so content scrolling underneath
-            reads clearly.
+            reads clearly. `bleed-x` + `px-(--container-px)` track the page
+            gutter (which shrinks on mobile) instead of hardcoding 24px, and
+            flex-wrap lets the actions drop to a second row on narrow screens
+            while the tab strip scrolls within the first.
         ──────────────────────────────────────────────────────────────────────── */}
-        <div className="sticky top-(--header-height) z-10 mb-page-gap -mx-6 flex items-center gap-3 border-b border-border bg-background/95 px-6 py-2.5 backdrop-blur-sm">
+        <div className="bleed-x sticky top-(--header-height) z-10 mb-page-gap flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border bg-background/95 px-(--container-px) py-2.5 backdrop-blur-sm">
           {tabbed ? (
             <Tabs
+              className="max-w-full"
               items={groups.map((group) => {
                 const errorCount = group.fields.filter((f) => errors[f.name]).length
                 return {
@@ -284,9 +288,13 @@ export function EntityForm({
               </>
             )}
             {isDirty ? (
-              <span className="mr-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+              <span
+                className="mr-1 flex items-center gap-1.5 text-sm text-muted-foreground"
+                title="Unsaved changes"
+              >
                 <span className="inline-block h-2 w-2 rounded-full bg-warning" />
-                Unsaved changes
+                {/* On phones the amber dot alone signals dirty state. */}
+                <span className="max-sm:sr-only">Unsaved changes</span>
               </span>
             ) : null}
             {onCancel && (
