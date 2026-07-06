@@ -17,6 +17,14 @@ export const fieldMetaSchema = z.object({
   hidden: z.boolean().optional(),
   /** Render this field in the form sidebar rather than the main area. */
   sidebar: z.boolean().optional(),
+  /**
+   * Name of the form section this field belongs to. Fields sharing a `group`
+   * are collected together; the admin form renders each group as a tab (in the
+   * order groups first appear). Fields without a `group` collect into a leading
+   * "General" tab. When no field in an entity sets `group`, the form renders
+   * flat (no tabs) — this is a purely opt-in layout hint the kernel ignores.
+   */
+  group: z.string().optional(),
   /** Left add-on text shown inside the input border (e.g. 'https://'). */
   prefix: z.string().optional(),
   /** Right add-on text shown inside the input border (e.g. '.com'). */

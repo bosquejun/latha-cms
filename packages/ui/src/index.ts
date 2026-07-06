@@ -16,7 +16,9 @@ export { Label } from './components/ui/label.js'
 export { Badge, badgeVariants } from './components/ui/badge.js'
 export {
   StatusBadge,
+  statusVariant,
   type StatusBadgeProps,
+  type BadgeVariant,
 } from './components/ui/status-badge.js'
 export { Avatar, type AvatarProps } from './components/ui/avatar.js'
 export { Separator, type SeparatorProps } from './components/ui/separator.js'

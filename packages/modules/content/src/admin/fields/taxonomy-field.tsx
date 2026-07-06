@@ -3,11 +3,13 @@
  *
  * Lives in `@latha/content/admin` (not the SDK) because the `taxonomy` field
  * type is owned by this module. Single taxonomies render a Select with the
- * term tree flattened + indented by depth; `many` taxonomies render a checkbox
- * list. If the term list read is denied (RBAC), it degrades to a raw-id input.
+ * term tree flattened + indented by depth; `many` taxonomies render the
+ * `ManyTermPicker` below — removable chips for the current selection, a filter
+ * for long lists, and a bordered, scrollable checkbox list. If the term list
+ * read is denied (RBAC), it degrades to a raw-id input.
  */
-import type { ReactNode } from 'react'
-import { Badge, Checkbox, Field as FieldWrap, Input, Select, Spinner } from '@latha/ui'
+import { useState, type ReactNode } from 'react'
+import { Badge, Checkbox, cn, Field as FieldWrap, Input, Select, Spinner } from '@latha/ui'
 import { type FieldControlProps, humanize } from '@latha/admin-sdk'
 import { useLatha, useAsync, type JsonDoc } from '@latha/start'
 import { flattenTermTree, indentLabel } from '../../term-tree.js'
@@ -15,6 +17,120 @@ import { flattenTermTree, indentLabel } from '../../term-tree.js'
 export const config = { type: 'taxonomy' }
 
 const NONE = '__none__'
+
+type FlatTerm = ReturnType<typeof flattenTermTree>[number]
+
+/** Small × glyph for removable selection chips. Inlined to avoid an icon dep. */
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
+  )
+}
+
+/**
+ * Multi-select term picker: chips for the current selection (each removable),
+ * a filter input once the list gets long, and a bordered scrollable checkbox
+ * list so a big taxonomy never dominates the form. Its own `useState` for the
+ * filter query is why this is a component rather than an inline branch.
+ */
+function ManyTermPicker({
+  terms,
+  selected,
+  onChange,
+  onBlur,
+  noun,
+}: {
+  terms: FlatTerm[]
+  selected: string[]
+  onChange: (value: string[]) => void
+  onBlur: () => void
+  noun: string
+}) {
+  const [query, setQuery] = useState('')
+  const q = query.trim().toLowerCase()
+  const filtered = q ? terms.filter((t) => t.name.toLowerCase().includes(q)) : terms
+  const nameOf = (id: string) => terms.find((t) => t.id === id)?.name ?? id
+
+  function commit(next: string[]) {
+    onChange(next)
+    onBlur()
+  }
+
+  if (terms.length === 0) {
+    return <span className="text-caption text-muted-foreground">No {noun} to choose from.</span>
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {selected.map((v) => (
+            <Badge key={v} variant="secondary" className="gap-0.5 pr-1">
+              {nameOf(v)}
+              <button
+                type="button"
+                aria-label={`Remove ${nameOf(v)}`}
+                className="ml-0.5 rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
+                onClick={() => commit(selected.filter((s) => s !== v))}
+              >
+                <XIcon className="size-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      )}
+
+      {terms.length > 6 && (
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={`Filter ${noun}…`}
+          className="h-8"
+        />
+      )}
+
+      <div className="flex max-h-52 flex-col gap-0.5 overflow-y-auto rounded-md border border-input p-1.5">
+        {filtered.length === 0 ? (
+          <span className="px-1 py-1 text-caption text-muted-foreground">No matches.</span>
+        ) : (
+          filtered.map((term) => (
+            <label
+              key={term.id}
+              className={cn(
+                'flex cursor-pointer items-center gap-2 rounded-sm px-1.5 py-1 text-small transition-colors hover:bg-accent/60',
+              )}
+              style={{ paddingLeft: `${term.depth * 12 + 6}px` }}
+            >
+              <Checkbox
+                checked={selected.includes(term.id)}
+                onChange={(e) =>
+                  commit(
+                    e.target.checked
+                      ? [...selected, term.id]
+                      : selected.filter((s) => s !== term.id),
+                  )
+                }
+              />
+              <span>{term.name}</span>
+            </label>
+          ))
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function TaxonomyField({ field, id, value, onChange, onBlur, error }: FieldControlProps) {
   const { client } = useLatha()
@@ -27,14 +143,7 @@ export default function TaxonomyField({ field, id, value, onChange, onBlur, erro
   const selectedMany: string[] = Array.isArray(value) ? (value as string[]) : []
   const selectedOne = typeof value === 'string' ? value : ''
 
-  function toggle(termId: string, checked: boolean) {
-    onChange(checked ? [...selectedMany, termId] : selectedMany.filter((v) => v !== termId))
-    onBlur()
-  }
-
   const flat = flattenTermTree((terms.data ?? []) as Parameters<typeof flattenTermTree>[0])
-  const nameOf = (termId: string) =>
-    flat.find((t) => t.id === termId)?.name ?? termId
 
   let control: ReactNode
   if (terms.loading) {
@@ -51,33 +160,13 @@ export default function TaxonomyField({ field, id, value, onChange, onBlur, erro
     )
   } else if (many) {
     control = (
-      <div className="flex flex-col gap-2">
-        {flat.length === 0 && (
-          <span className="text-caption text-muted-foreground">No {to} to choose from.</span>
-        )}
-        {flat.map((term) => (
-          <label
-            key={term.id}
-            className="flex items-center gap-2 text-small"
-            style={{ paddingLeft: `${term.depth * 12}px` }}
-          >
-            <Checkbox
-              checked={selectedMany.includes(term.id)}
-              onChange={(e) => toggle(term.id, e.target.checked)}
-            />
-            <span>{term.name}</span>
-          </label>
-        ))}
-        {selectedMany.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {selectedMany.map((v) => (
-              <Badge key={v} variant="secondary">
-                {nameOf(v)}
-              </Badge>
-            ))}
-          </div>
-        )}
-      </div>
+      <ManyTermPicker
+        terms={flat}
+        selected={selectedMany}
+        onChange={onChange}
+        onBlur={onBlur}
+        noun={to}
+      />
     )
   } else {
     control = (
