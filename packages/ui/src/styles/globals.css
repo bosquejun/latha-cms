@@ -109,11 +109,16 @@
   --space-12: 3rem;     /* 48px */
   --space-16: 4rem;     /* 64px */
 
-  /* Spacing — semantic aliases (Layer B), intent-named */
-  --space-page: var(--space-6);        /* page / content padding                           */
-  --space-page-gap: var(--space-6);    /* gap between PageHeader and page content          */
-  --space-section: var(--space-8);     /* gap between page sections                        */
-  --space-card: var(--space-6);        /* card inner padding                               */
+  /* Spacing — semantic aliases (Layer B), intent-named.
+     Mobile-first: the base values are the compact (phone) rhythm; the
+     min-width media query below relaxes them at tablet/desktop widths.
+     Consumers only ever reference the alias, so every padded surface
+     (page gutter, cards, empty states) adapts without per-component
+     breakpoints. */
+  --space-page: var(--space-4);        /* page / content padding                           */
+  --space-page-gap: var(--space-5);    /* gap between PageHeader and page content          */
+  --space-section: var(--space-6);     /* gap between page sections                        */
+  --space-card: var(--space-4);        /* card inner padding                               */
   --space-card-gap: var(--space-4);    /* gap inside a card                                */
   --space-group: var(--space-3);       /* gap within a component row (title + actions row) */
   --space-field-gap: var(--space-2);   /* label <-> control <-> help                       */
@@ -122,7 +127,7 @@
   --space-tight: 0.375rem;             /* 6px  — compact atom padding (dropdown items, tabs) */
   --space-stack: var(--space-1);       /* nav item lists                                   */
   --space-sidebar: var(--space-4);     /* sidebar inner padding                            */
-  --space-empty: var(--space-16);      /* empty / placeholder state padding                */
+  --space-empty: var(--space-10);      /* empty / placeholder state padding                */
 
   /* Container-awareness hook — set by any padded block container, inherited by children */
   --container-px: 0px;
@@ -144,6 +149,17 @@
   --text-caption--line-height: 1rem;
   --text-label: 0.7rem;
   --text-label--line-height: 1rem;
+}
+
+/* Tablet & up (48rem / 768px): relax the compact mobile rhythm. */
+@media (min-width: 48rem) {
+  :root {
+    --space-page: var(--space-6);
+    --space-page-gap: var(--space-6);
+    --space-section: var(--space-8);
+    --space-card: var(--space-6);
+    --space-empty: var(--space-16);
+  }
 }
 
 .dark {
@@ -276,6 +292,14 @@
   .bleed-x {
     margin-inline: calc(-1 * var(--container-px, 0px));
   }
+  /* Scrollable strips (tab bars, toolbars) that shouldn't show a scrollbar. */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @layer base {
@@ -283,7 +307,13 @@
     border-color: var(--border);
     outline-color: var(--ring);
   }
+  html {
+    /* Keep mobile Safari from inflating text after orientation changes. */
+    -webkit-text-size-adjust: 100%;
+  }
   body {
+    /* The design system provides its own pressed/focus states. */
+    -webkit-tap-highlight-color: transparent;
     background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
