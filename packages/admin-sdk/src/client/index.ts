@@ -11,6 +11,8 @@ export {
   useLatha,
   PermissionsProvider,
   useCan,
+  AdminNavigateProvider,
+  useAdminNavigate,
   type LathaProviderProps,
   type LathaContextValue,
 } from './context.js'

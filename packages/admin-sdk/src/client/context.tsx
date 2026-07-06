@@ -90,6 +90,43 @@ export function useLatha(): LathaContextValue {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Navigation — router-agnostic client-side navigation for extensions        */
+/* -------------------------------------------------------------------------- */
+
+type AdminNavigate = (href: string) => void
+
+const AdminNavigateContext = createContext<AdminNavigate | null>(null)
+
+/**
+ * Provide client-side navigation to admin extensions. The framework layer
+ * (e.g. `@latha/start`'s `LathaAdmin`) wraps the admin tree with this,
+ * bridging its router. Extension pages stay router-agnostic.
+ */
+export function AdminNavigateProvider({
+  navigate,
+  children,
+}: {
+  navigate: AdminNavigate
+  children: ReactNode
+}) {
+  return (
+    <AdminNavigateContext.Provider value={navigate}>
+      {children}
+    </AdminNavigateContext.Provider>
+  )
+}
+
+/**
+ * Navigate to an admin href (e.g. `${basePath}/settings/roles/123`).
+ * Client-side when a provider bridged the router; falls back to a full
+ * document navigation otherwise, so extension code works in any host.
+ */
+export function useAdminNavigate(): AdminNavigate {
+  const navigate = useContext(AdminNavigateContext)
+  return navigate ?? ((href) => window.location.assign(href))
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Permissions — client-side gating                                           */
 /* -------------------------------------------------------------------------- */
 
