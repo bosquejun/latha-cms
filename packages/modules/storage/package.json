@@ -19,7 +19,7 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "tsc -p tsconfig.json && node --test dist/"
+    "test": "tsc -p tsconfig.json && node --test 'dist/**/*.test.js'"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
