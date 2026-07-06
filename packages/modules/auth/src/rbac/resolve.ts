@@ -58,14 +58,17 @@ export async function getRolePermissions(
   return role ? keysFromRole(getCatalog(latha), role) : []
 }
 
-/** Resolve `{ roles, permissions }` for a logged-in user document. */
-export async function resolveUserPermissions(
+/**
+ * Resolve `{ roles, permissions }` for a list of role document ids — the
+ * shared core of user and API-key grant resolution. No implicit baseline:
+ * callers add one where it applies (logged-in users get Authenticated;
+ * API keys carry exactly their roles).
+ */
+export async function resolveRoleGrants(
   latha: LathaInstance,
-  userDoc: Record<string, unknown>,
+  roleIds: string[],
 ): Promise<ResolvedGrants> {
   const catalog = getCatalog(latha)
-  const roleIds = Array.isArray(userDoc.roles) ? (userDoc.roles as string[]) : []
-
   const roles: string[] = []
   const permissions = new Set<string>()
 
@@ -75,6 +78,18 @@ export async function resolveUserPermissions(
     if (typeof role.name === 'string') roles.push(role.name)
     for (const key of keysFromRole(catalog, role)) permissions.add(key)
   }
+
+  return { roles, permissions: [...permissions] }
+}
+
+/** Resolve `{ roles, permissions }` for a logged-in user document. */
+export async function resolveUserPermissions(
+  latha: LathaInstance,
+  userDoc: Record<string, unknown>,
+): Promise<ResolvedGrants> {
+  const roleIds = Array.isArray(userDoc.roles) ? (userDoc.roles as string[]) : []
+  const { roles, permissions: keys } = await resolveRoleGrants(latha, roleIds)
+  const permissions = new Set(keys)
 
   // Every logged-in user implicitly carries the Authenticated baseline.
   for (const key of await getRolePermissions(latha, AUTHENTICATED_ROLE)) {
