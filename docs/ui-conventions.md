@@ -60,6 +60,45 @@ optional action. Never a bare `<p>` or an ad-hoc dashed box.
 - Field-level empties (an empty `array`/`blocks` field) stay compact — a small
   dashed box — since `EmptyState` is a page/panel-level pattern.
 
+## Loading & feedback
+
+- **Page/panel-level initial loads** render `LoadingState` from
+  `@latha/admin-sdk` — a centered spinner with an accessible status role —
+  never a bare `Loading…` paragraph. Views with a known layout (e.g. the roles
+  master-detail) may render `Skeleton`s instead.
+- **In-flight button work** uses the Button `loading` prop (spinner + disable),
+  not a hand-rolled `<Spinner />` child.
+- **Every successful mutation confirms with `toast.success`** ("Changes
+  saved.", "Deleted.", "Role created.") unless the UI already shows the result
+  modally (e.g. the one-time API-key token dialog). Failures surface with
+  `toast.error` carrying the server message. The `Toaster` is mounted once, in
+  `AdminShell`.
+- **Field-level fetches** (relationship options, media doc lookups) show a
+  small inline `Spinner` in place of the control.
+
+## Mobile & responsive
+
+- **Tables become stacked cards below `md`.** The pattern (from `EntityList`,
+  mirrored by the API-keys table): a `<ul>` with `divide-y`, one card per row —
+  tappable title on top, secondary columns as label/value pairs, row actions as
+  icon buttons in the corner. Never ship a data table whose only phone
+  affordance is horizontal panning.
+- **Master-detail pages** (roles) make the list the page on phones; opening an
+  item swaps to the detail as a subpage with a back link. Desktop shows both
+  panes via `PageLayout`.
+- **`PageLayout` panels stack** vertically below `lg` and only then arrange
+  into columns; form sidebar fields follow the main column on phones.
+- **The form toolbar** splits into two rows below `sm`: actions right-aligned
+  on top, section tabs stretched into a full-width segmented control beneath.
+- **Touch targets**: every interactive control keeps a ≥40px hit area on
+  coarse pointers via `pointer-coarse:min-*` (baked into Button sizes and
+  sidebar rows) — do not undo it with fixed `h-*`/`w-*` overrides.
+- **Hover-revealed actions must not be hover-only**: reveal on focus-visible
+  and force visible on `pointer-coarse:` (see the media grid delete button).
+- Dialogs are already phone-safe (`w-[calc(100%-2rem)]`, `max-h` with internal
+  scroll, footer buttons stack primary-first below `sm`) — don't override
+  their width with fixed values.
+
 ## Sizing
 
 - `size="sm"` for actions in headers, toolbars, and dense panels.
