@@ -1,9 +1,19 @@
 /**
  * Public content delivery API — the headless read surface.
  *
- *   GET <api>/:slug           → paginated list  { docs, total, limit, offset }
- *   GET <api>/:slug/:id       → one document (404 when absent)
- *   GET <api>/:slug (single)  → the singleton document
+ * Every entity is addressed through the delivery-API prefix of the module
+ * that contributes it (`Module.api.prefix`, defaulting to the module's own
+ * `name`) — not by a flat, module-agnostic slug:
+ *
+ *   GET <api>/<prefix>/<slug>           → paginated list  { docs, total, limit, offset }
+ *   GET <api>/<prefix>/<slug>/:id       → one document (404 when absent)
+ *   GET <api>/<prefix>/<slug> (single)  → the singleton document
+ *
+ * A module contributing exactly one entity may address it directly under its
+ * own prefix, without a redundant slug segment — `@latha/media`'s single
+ * `media` entity is `<api>/media` and `<api>/media/:id`, not
+ * `<api>/media/media/:id`. Modules with more than one entity always need the
+ * slug segment to disambiguate (`<api>/contents/posts`, `<api>/contents/pages`).
  *
  * Query params on lists: `limit`, `offset`, `sort` (`-createdAt,name`), and
  * equality filters `where[field]=value`.
@@ -20,6 +30,7 @@
 
 import {
   AccessDeniedError,
+  moduleApiPrefix,
   operations,
   type Entity,
   type LathaInstance,
@@ -206,6 +217,45 @@ async function resolveApiPrincipal(
   return { principal }
 }
 
+/** One resolved delivery-API target: the entity to operate on, and an optional item id. */
+interface ResolvedRoute {
+  entity: Entity
+  id?: string
+}
+
+/**
+ * Resolve `[prefix, ...rest]` path segments to an entity (+ optional id),
+ * scoped to the module that owns `prefix`. `rest` is at most 2 segments —
+ * `[slug]`, `[slug, id]`, or, when the module contributes exactly one entity,
+ * `[]` (that entity's list/singleton) or `[id]` (that entity's item).
+ */
+function resolveDeliveryRoute(latha: LathaInstance, segments: string[]): ResolvedRoute | undefined {
+  const [prefix, ...rest] = segments
+  if (!prefix || rest.length > 2) return undefined
+
+  const module = latha.modules.find((m) => moduleApiPrefix(m) === prefix)
+  if (!module) return undefined
+  const entities = (module.entities ?? []) as Entity[]
+
+  if (rest.length === 0) {
+    // `/api/v1/<prefix>` — unambiguous only when the module has one entity.
+    return entities.length === 1 ? { entity: entities[0]! } : undefined
+  }
+
+  const [first, second] = rest as [string, string?]
+  const bySlug = entities.find((e) => e.slug === first)
+  if (bySlug) return { entity: bySlug, id: second }
+
+  // `first` isn't any of this module's entity slugs — with exactly one
+  // entity, read it as that entity's id instead (never with a second segment,
+  // which would just be noise past the id).
+  if (entities.length === 1 && second === undefined) {
+    return { entity: entities[0]!, id: first }
+  }
+
+  return undefined
+}
+
 /** Answer a CORS preflight for the delivery API. */
 export function handleDeliveryPreflight(
   config: ResolvedConfig,
@@ -236,14 +286,15 @@ export async function handleDeliveryRequest(
   const url = new URL(request.url)
   const rest = url.pathname.startsWith(basePath) ? url.pathname.slice(basePath.length) : ''
   const segments = rest.split('/').filter(Boolean).map(decodeURIComponent)
-  if (segments.length < 1 || segments.length > 2) {
+  if (segments.length < 1 || segments.length > 3) {
     return json(404, { error: 'Not found.' }, cors)
   }
-  const [slug, id] = segments as [string, string?]
 
   const latha = await getRuntime(config)
-  const entity = latha.getEntity(slug)
-  if (!entity) return json(404, { error: 'Not found.' }, cors)
+  const route = resolveDeliveryRoute(latha, segments)
+  if (!route) return json(404, { error: 'Not found.' }, cors)
+  const { entity, id } = route
+  const slug = entity.slug
 
   const resolved = await resolveApiPrincipal(latha, request)
   if ('error' in resolved) return resolved.error

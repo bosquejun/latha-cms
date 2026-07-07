@@ -6,17 +6,27 @@
  * on. Cycles are detected and reported.
  */
 
-import type { Module } from '../types/config.js'
+import { moduleApiPrefix, type Module } from '../types/config.js'
 import type { Entity } from '../types/entity.js'
 
 export class ModuleRegistry {
   private readonly modules = new Map<string, Module>()
+  private readonly apiPrefixes = new Map<string, string>()
 
-  /** Register a module. Throws on duplicate names. */
+  /** Register a module. Throws on duplicate names or a colliding delivery-API prefix. */
   register(module: Module): void {
     if (this.modules.has(module.name)) {
       throw new Error(`Duplicate module registered: "${module.name}".`)
     }
+    const prefix = moduleApiPrefix(module)
+    const owner = this.apiPrefixes.get(prefix)
+    if (owner) {
+      throw new Error(
+        `Modules "${owner}" and "${module.name}" both resolve to the delivery-API prefix ` +
+          `"${prefix}" — set a distinct \`api.prefix\` on one of them.`,
+      )
+    }
+    this.apiPrefixes.set(prefix, module.name)
     this.modules.set(module.name, module)
   }
 

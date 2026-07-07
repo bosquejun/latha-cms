@@ -56,6 +56,9 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
       MediaModule({ storage }),
 
       ContentModule({
+        // Delivery-API reads land at /api/v1/contents/posts, /api/v1/contents/pages,
+        // etc. instead of the module's default name-derived prefix (/api/v1/content/...).
+        apiPrefix: 'contents',
         entities: [
           Document({
             slug: 'site-settings',

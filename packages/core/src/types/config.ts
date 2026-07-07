@@ -111,6 +111,17 @@ export interface ModuleAdminConfig {
   ui?: string
 }
 
+/** How a module's entities are mounted in the public delivery API. */
+export interface ModuleApiConfig {
+  /**
+   * Base path segment this module's entities are mounted under in the public
+   * delivery API — `/api/v1/<prefix>/<entitySlug>[/<id>]` (or, when the
+   * module contributes exactly one entity, `/api/v1/<prefix>[/<id>]` with no
+   * redundant slug segment). Defaults to the module's own `name` if omitted.
+   */
+  prefix?: string
+}
+
 export interface Module {
   name: string
   dependsOn?: string[]
@@ -127,6 +138,13 @@ export interface Module {
   adminPages?: AdminPage[]
   /** Admin-UI metadata for this module (sidebar grouping). */
   admin?: ModuleAdminConfig
+  /** Public delivery-API mounting config for this module's entities. */
+  api?: ModuleApiConfig
+}
+
+/** This module's delivery-API prefix: its explicit `api.prefix`, or its `name`. */
+export function moduleApiPrefix(module: Module): string {
+  return module.api?.prefix ?? module.name
 }
 
 export interface PluginAdminConfig {
