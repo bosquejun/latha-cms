@@ -9,6 +9,9 @@ export {
   lathaRpcValidator,
   DEFAULT_RPC_PATH,
   DEFAULT_UPLOAD_PATH,
+  DEFAULT_LOGIN_PATH,
+  DEFAULT_LOGOUT_PATH,
+  DEFAULT_CURRENT_USER_PATH,
   DEFAULT_API_PATH,
 } from './default-rpc.js'
 export {

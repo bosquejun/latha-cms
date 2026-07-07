@@ -11,7 +11,13 @@
  * or `{ endpoint }` to point at a different path.
  */
 
-import { DEFAULT_RPC_PATH, DEFAULT_UPLOAD_PATH } from './default-rpc.js'
+import {
+  DEFAULT_RPC_PATH,
+  DEFAULT_UPLOAD_PATH,
+  DEFAULT_LOGIN_PATH,
+  DEFAULT_LOGOUT_PATH,
+  DEFAULT_CURRENT_USER_PATH,
+} from './default-rpc.js'
 import type {
   EntityDescriptor,
   JsonDoc,
@@ -73,6 +79,20 @@ async function fetchRpc<T>(endpoint: string, data: LathaRpcInput): Promise<T> {
   return res.json() as Promise<T>
 }
 
+/**
+ * Call one of `@latha/auth`'s own routes (login/logout/current-user) — plain
+ * JSON over fetch, not the generic RPC `action` envelope. These run without
+ * an admin session by definition, so they can't be RPC actions gated by the
+ * dispatcher's admin check.
+ */
+async function fetchJson<T>(endpoint: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(endpoint, { credentials: 'same-origin', ...init })
+  if (!res.ok) {
+    throw new Error(`Latha request failed (${res.status} ${res.statusText})`)
+  }
+  return res.json() as Promise<T>
+}
+
 /** POST a file (+ extra fields) to the upload endpoint as multipart form data. */
 async function fetchUpload(
   endpoint: string,
@@ -120,15 +140,38 @@ export function createLathaClient(
     getGlobal: (slug) => call<JsonDoc | null>({ action: 'getGlobal', slug }),
     saveGlobal: (slug, data) =>
       call<JsonDoc>({ action: 'saveGlobal', slug, data }),
-    currentUser: () => call<SessionUser | null>({ action: 'currentUser' }),
-    login: (email, password) =>
-      call<{ ok: boolean; user: SessionUser | null; error?: string }>({
-        action: 'login',
-        email,
-        password,
-      }),
-    logout: () => call<{ ok: true }>({ action: 'logout' }),
-    upload: (file, extra) => {
+    currentUser: async () => {
+      if (serverFn) {
+        throw new Error(
+          'client.currentUser() requires the default fetch transport (no custom serverFn support yet).',
+        )
+      }
+      return fetchJson<SessionUser | null>(DEFAULT_CURRENT_USER_PATH, { method: 'GET' })
+    },
+    login: async (email, password) => {
+      if (serverFn) {
+        throw new Error(
+          'client.login() requires the default fetch transport (no custom serverFn support yet).',
+        )
+      }
+      return fetchJson<{ ok: boolean; user: SessionUser | null; error?: string }>(
+        DEFAULT_LOGIN_PATH,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        },
+      )
+    },
+    logout: async () => {
+      if (serverFn) {
+        throw new Error(
+          'client.logout() requires the default fetch transport (no custom serverFn support yet).',
+        )
+      }
+      return fetchJson<{ ok: true }>(DEFAULT_LOGOUT_PATH, { method: 'POST' })
+    },
+    upload: async (file, extra) => {
       if (serverFn) {
         throw new Error(
           'client.upload() requires the default fetch transport (no custom serverFn support yet).',

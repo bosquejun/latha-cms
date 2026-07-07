@@ -15,7 +15,14 @@ export {
   type LathaClient,
   type LathaClientOptions,
 } from '@latha/admin-sdk'
-export { lathaRpcValidator, DEFAULT_RPC_PATH, DEFAULT_UPLOAD_PATH } from '@latha/admin-sdk'
+export {
+  lathaRpcValidator,
+  DEFAULT_RPC_PATH,
+  DEFAULT_UPLOAD_PATH,
+  DEFAULT_LOGIN_PATH,
+  DEFAULT_LOGOUT_PATH,
+  DEFAULT_CURRENT_USER_PATH,
+} from '@latha/admin-sdk'
 export {
   LathaProvider,
   useLatha,

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import type { LathaInstance, Module, StorageAdapter } from '@latha/core'
 import { buildMediaEntity } from './entities.js'
+import { uploadRoute } from './upload.js'
 
 export interface MediaModuleConfig {
   /** Where uploaded files are stored (e.g. `localDiskStorage()`, an R2/S3 adapter). */
@@ -29,6 +30,7 @@ export function MediaModule(config: MediaModuleConfig): Module {
         allowedMimeTypes: config.allowedMimeTypes,
       }),
     ],
+    routes: { upload: uploadRoute },
     onInit(cms: LathaInstance) {
       cms.registerStorageAdapter(config.storage)
       cms.registerFieldType({

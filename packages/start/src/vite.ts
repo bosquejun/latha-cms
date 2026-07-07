@@ -16,7 +16,8 @@ import { createRequire } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import { physical, rootRoute, route } from '@tanstack/virtual-file-routes'
-import { DEFAULT_API_PATH, DEFAULT_RPC_PATH, DEFAULT_UPLOAD_PATH } from '@latha/admin-sdk'
+import { DEFAULT_API_PATH, DEFAULT_RPC_PATH } from '@latha/admin-sdk'
+import { DEFAULT_MODULE_ROUTES_PATH } from './module-routes.js'
 
 type TanStackStartOptions = NonNullable<Parameters<typeof tanstackStart>[0]>
 type TanStackStartPlugins = ReturnType<typeof tanstackStart>
@@ -145,7 +146,7 @@ export function lathaStart(
     route(loginPath, routeFile('@latha/start/routes/login')),
     route(`${adminBasePath}/$`, routeFile('@latha/start/routes/admin')),
     route(DEFAULT_RPC_PATH, routeFile('@latha/start/routes/rpc')),
-    route(DEFAULT_UPLOAD_PATH, routeFile('@latha/start/routes/upload')),
+    route(`${DEFAULT_MODULE_ROUTES_PATH}/$`, routeFile('@latha/start/routes/modules')),
     ...(options.api === false
       ? []
       : [route(`${DEFAULT_API_PATH}/$`, routeFile('@latha/start/routes/api'))]),

@@ -37,10 +37,10 @@
       "development": "./src/routes/rpc.ts",
       "import": "./dist/routes/rpc.js"
     },
-    "./routes/upload": {
-      "types": "./dist/routes/upload.d.ts",
-      "development": "./src/routes/upload.ts",
-      "import": "./dist/routes/upload.js"
+    "./routes/modules": {
+      "types": "./dist/routes/modules.d.ts",
+      "development": "./src/routes/modules.ts",
+      "import": "./dist/routes/modules.js"
     },
     "./routes/api": {
       "types": "./dist/routes/api.d.ts",

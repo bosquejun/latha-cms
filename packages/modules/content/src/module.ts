@@ -16,6 +16,13 @@ import type { BlockDefinition } from './builders.js'
 
 export interface ContentModuleConfig {
   entities: AnyEntity[]
+  /**
+   * Base path segment this module's entities are mounted under in the public
+   * delivery API (`/api/v1/<apiPrefix>/<entitySlug>`). Defaults to the
+   * module's own name (`content`) — set this if you'd rather it read e.g.
+   * `/api/v1/contents/posts`.
+   */
+  apiPrefix?: string
 }
 
 // Exported so `index.ts` can derive the `FieldTypeMap` augmentation via
@@ -46,6 +53,7 @@ export function ContentModule(config: ContentModuleConfig): Module {
     name: 'content',
     capabilities: ['content'],
     admin: { nav: { label: 'Content', order: 10, collapsible: true }, ui: '@latha/content/admin' },
+    api: config.apiPrefix ? { prefix: config.apiPrefix } : undefined,
     entities: config.entities,
     onInit(cms: LathaInstance) {
       cms.registerFieldType({

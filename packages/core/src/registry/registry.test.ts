@@ -43,3 +43,25 @@ test('duplicate module names and entity slugs are rejected', () => {
   dupes.registerAll([mod('a', undefined, ['posts']), mod('b', undefined, ['posts'])])
   assert.throws(() => dupes.collectEntities(), /Duplicate entity slug "posts"/)
 })
+
+test('a colliding delivery-API prefix is rejected', () => {
+  const registry = new ModuleRegistry()
+  registry.register(mod('content'))
+  // No explicit prefix on either module — 'blog' would default to its own
+  // name, but here it's configured to collide with 'content'.
+  assert.throws(
+    () => registry.register({ ...mod('blog'), api: { prefix: 'content' } }),
+    /"content" and "blog" both resolve to the delivery-API prefix "content"/,
+  )
+})
+
+test('distinct explicit prefixes register fine, even reusing another module\'s name', () => {
+  const registry = new ModuleRegistry()
+  registry.register({ ...mod('content'), api: { prefix: 'articles' } })
+  // 'content' the string is now free as a prefix even though it was the
+  // other module's *name* — prefixes and names are only compared to each
+  // other, not across the two namespaces.
+  registry.register({ ...mod('blog'), api: { prefix: 'content' } })
+  assert.equal(registry.get('content')?.name, 'content')
+  assert.equal(registry.get('blog')?.name, 'blog')
+})

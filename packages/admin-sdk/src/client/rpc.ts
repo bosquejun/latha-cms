@@ -38,9 +38,6 @@ export const LathaRpcInputSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('remove'), slug: z.string(), id: z.string() }),
   z.object({ action: z.literal('getGlobal'), slug: z.string() }),
   z.object({ action: z.literal('saveGlobal'), slug: z.string(), data: z.record(z.string(), z.unknown()) }),
-  z.object({ action: z.literal('currentUser') }),
-  z.object({ action: z.literal('login'), email: z.string(), password: z.string() }),
-  z.object({ action: z.literal('logout') }),
 ])
 
 export type LathaRpcInput = z.infer<typeof LathaRpcInputSchema>

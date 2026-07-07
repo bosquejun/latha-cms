@@ -15,7 +15,7 @@ test('upload posts multipart form data to DEFAULT_UPLOAD_PATH', async (t) => {
 
   assert.equal(doc.id, 'm1')
   assert.equal(calls.length, 1)
-  assert.match(calls[0]!.url, /\/__latha\/upload$/)
+  assert.match(calls[0]!.url, /\/__latha\/modules\/media\/upload$/)
   const form = calls[0]!.body as FormData
   assert.ok(form instanceof FormData)
   assert.equal((form.get('file') as File).name, 'x.png')

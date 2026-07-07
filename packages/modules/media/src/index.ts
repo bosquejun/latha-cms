@@ -15,6 +15,7 @@ export { localDiskStorage, type LocalDiskStorageOptions } from './storage/local-
 export { s3Storage, type S3StorageOptions } from './storage/s3.js'
 export { media } from './builders.js'
 export { MediaModule, type MediaModuleConfig } from './module.js'
+export { uploadRoute } from './upload.js'
 export {
   MEDIA_SLUG,
   buildMediaEntity,

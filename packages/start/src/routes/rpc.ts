@@ -28,7 +28,7 @@ export const Route = (createFileRoute as (path: string) => any)('/__latha/rpc')(
         if (rejected) return rejected
         // Pass raw JSON — dispatchLathaRpc validates shape with Zod before dispatch.
         const data: unknown = await request.json()
-        const result = await dispatchLathaRpc(config, data)
+        const result = await dispatchLathaRpc(config, data, request)
         return Response.json(result)
       },
     },

@@ -14,11 +14,25 @@ import type { LathaRpcInput } from './rpc.js'
 export const DEFAULT_RPC_PATH = '/__latha/rpc'
 
 /**
- * Where the framework's file-upload server route is mounted. Binary payloads
- * can't go through the JSON-only RPC route, so uploads (see `@latha/media`)
- * get their own dedicated multipart endpoint.
+ * Where `@latha/media`'s upload endpoint is mounted. Binary payloads can't go
+ * through the JSON-only RPC route, so uploads get their own dedicated
+ * multipart endpoint — declared by the media module itself as a route (see
+ * `ModuleRoutes` in `@latha/core`) at `<module.name>/upload`, and served by
+ * the runner's generic module-route dispatcher under
+ * `DEFAULT_MODULE_ROUTES_PATH`.
  */
-export const DEFAULT_UPLOAD_PATH = '/__latha/upload'
+export const DEFAULT_UPLOAD_PATH = '/__latha/modules/media/upload'
+
+/**
+ * Where `@latha/auth`'s login/logout/current-user endpoints are mounted.
+ * These are ordinary module routes (see `ModuleRoutes` in `@latha/core`),
+ * declared by the auth module itself at `<module.name>/login` etc. and
+ * served by the runner's generic module-route dispatcher — not special-cased
+ * RPC actions, since they must run without an existing admin session.
+ */
+export const DEFAULT_LOGIN_PATH = '/__latha/modules/auth/login'
+export const DEFAULT_LOGOUT_PATH = '/__latha/modules/auth/logout'
+export const DEFAULT_CURRENT_USER_PATH = '/__latha/modules/auth/current-user'
 
 /**
  * Where the public content delivery API is mounted — the read-only REST
