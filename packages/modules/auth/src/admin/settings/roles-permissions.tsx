@@ -33,6 +33,7 @@ import {
   THead,
   TR,
   cn,
+  toast,
 } from '@latha/ui'
 import {
   EmptyState,
@@ -480,6 +481,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
     setSaving(true)
     try {
       await client.update('roles', selected.id, { permissions: [...checked] })
+      toast.success('Permissions saved.')
       await roles.reload()
     } finally {
       setSaving(false)
@@ -497,6 +499,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
     })
     setNewName('')
     setCreating(false)
+    toast.success('Role created.')
     await roles.reload()
     navigate(`${rootHref}/${created.id}`)
   }
@@ -505,6 +508,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
     if (!pendingDelete) return
     await client.remove('roles', pendingDelete.id)
     setPendingDelete(null)
+    toast.success('Role deleted.')
     await roles.reload()
     navigate(rootHref)
   }

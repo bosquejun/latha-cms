@@ -16,6 +16,7 @@ import {
   EntityList,
   EntityForm,
   EmptyState,
+  LoadingState,
   PageHeader,
   Slot,
   useExtensions,
@@ -38,7 +39,7 @@ import {
   type NavItem,
   type NavSection,
 } from '@latha/admin-sdk'
-import { Button, Card, CardHeader, CardTitle, CardDescription, ConfirmDialog } from '@latha/ui'
+import { Button, Card, CardHeader, CardTitle, CardDescription, ConfirmDialog, toast } from '@latha/ui'
 import {
   Plus,
   Settings,
@@ -307,7 +308,7 @@ export function LathaAdmin() {
     }
   }, [session.loading, session.data, loginPath, navigate])
 
-  if (session.loading || nav.loading) return <Centered>Loading…</Centered>
+  if (session.loading || nav.loading) return <Centered><LoadingState /></Centered>
   if (!session.data) return <Centered>Redirecting…</Centered>
 
   const navSections = nav.data ?? []
@@ -504,8 +505,7 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
     [slug, offset],
   )
 
-  if (entity.loading || (rows.loading && !rows.data))
-    return <p className="text-small text-muted-foreground">Loading…</p>
+  if (entity.loading || (rows.loading && !rows.data)) return <LoadingState />
   if (!entity.data)
     return <p className="text-small text-muted-foreground">Entity not found.</p>
 
@@ -559,6 +559,7 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
                 canDelete
                   ? async (id) => {
                       await client.remove(slug, id)
+                      toast.success('Deleted.')
                       // Deleting the last row of a trailing page steps back a
                       // page instead of showing an empty one.
                       if (list.length === 1 && offset > 0) {
@@ -608,7 +609,7 @@ function CreateView({ slug, base, segment }: { slug: string; base: string; segme
   const navigate = useNavigate()
   const entity = useAsync(() => client.entity(slug), [slug])
 
-  if (entity.loading) return <p className="text-small text-muted-foreground">Loading…</p>
+  if (entity.loading) return <LoadingState />
   if (!entity.data) return <p className="text-small text-muted-foreground">Entity not found.</p>
 
   const toList = () => navigate({ to: `${base}/${segment}/${slug}` })
@@ -622,6 +623,7 @@ function CreateView({ slug, base, segment }: { slug: string; base: string; segme
         entity={asEntity(entity.data)}
         onSubmit={async (values) => {
           await client.create(slug, values)
+          toast.success(`${entity.data!.label} created.`)
           await toList()
         }}
         onCancel={toList}
@@ -639,7 +641,7 @@ function EditView({ slug, id, base, segment }: { slug: string; id: string; base:
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
-  if (entity.loading || doc.loading) return <p className="text-small text-muted-foreground">Loading…</p>
+  if (entity.loading || doc.loading) return <LoadingState />
   if (!entity.data) return <p className="text-small text-muted-foreground">Entity not found.</p>
   if (!doc.data) return <p className="text-small text-muted-foreground">Not found.</p>
 
@@ -656,6 +658,7 @@ function EditView({ slug, id, base, segment }: { slug: string; id: string; base:
         entity={asEntity(entity.data)}
         onSubmit={async (values) => {
           await client.update(slug, id, values)
+          toast.success('Changes saved.')
           await toList()
         }}
         onCancel={toList}
@@ -674,6 +677,7 @@ function EditView({ slug, id, base, segment }: { slug: string; id: string; base:
           setDeleting(true)
           try {
             await client.remove(slug, id)
+            toast.success('Deleted.')
             await toList()
           } finally {
             setDeleting(false)
@@ -690,7 +694,7 @@ function GlobalView({ slug }: { slug: string }) {
   const entity = useAsync(() => client.entity(slug), [slug])
   const value = useAsync(() => client.getGlobal(slug), [slug])
 
-  if (entity.loading || value.loading) return <p className="text-small text-muted-foreground">Loading…</p>
+  if (entity.loading || value.loading) return <LoadingState />
   if (!entity.data) return <p className="text-small text-muted-foreground">Entity not found.</p>
 
   return (
@@ -704,6 +708,7 @@ function GlobalView({ slug }: { slug: string }) {
         entity={asEntity(entity.data)}
         onSubmit={async (values) => {
           await client.saveGlobal(slug, values)
+          toast.success('Changes saved.')
           value.reload()
         }}
       />

@@ -69,6 +69,14 @@ function renderCell(value: unknown, fieldType?: string): ReactNode {
     const d = new Date(value)
     if (!Number.isNaN(d.getTime())) return d.toLocaleDateString()
   }
+  // Arrays (relationship ids, multi-selects) summarize as a count — raw ids
+  // are meaningless in a table and JSON blobs don't fit a cell.
+  if (Array.isArray(value))
+    return (
+      <Badge variant="secondary">
+        {value.length} {value.length === 1 ? 'item' : 'items'}
+      </Badge>
+    )
   if (typeof value === 'object')
     return (
       <code className="font-mono text-xs">{JSON.stringify(value)}</code>
