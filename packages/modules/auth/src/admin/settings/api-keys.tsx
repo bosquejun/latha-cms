@@ -17,6 +17,7 @@ import {
   Button,
   Card,
   Checkbox,
+  ConfirmDialog,
   CopyButton,
   Dialog,
   DialogContent,
@@ -25,7 +26,6 @@ import {
   DialogHeader,
   DialogTitle,
   Input,
-  Spinner,
   Switch,
   Table,
   TBody,
@@ -34,8 +34,11 @@ import {
   THead,
   TR,
   cn,
+  toast,
 } from '@latha/ui'
 import {
+  EmptyState,
+  LoadingState,
   PageHeader,
   PageLayout,
   defineSettingsConfig,
@@ -43,7 +46,7 @@ import {
   useAsync,
   type JsonDoc,
 } from '@latha/admin-sdk'
-import { KeyRound, Plus, Trash2, TriangleAlert } from 'lucide-react'
+import { KeyRound, Plus, Trash2 } from 'lucide-react'
 import {
   apiKeyDisplayPrefix,
   generateApiKeyToken,
@@ -99,6 +102,7 @@ export default function ApiKeys() {
     try {
       await client.remove(API_KEYS_SLUG, doc.id)
       setConfirmDelete(null)
+      toast.success('API key deleted.')
       keys.reload()
     } finally {
       setBusy(false)
@@ -118,18 +122,65 @@ export default function ApiKeys() {
       />
 
       {keys.loading ? (
-        <div className="flex justify-center py-12">
-          <Spinner />
-        </div>
+        <LoadingState />
       ) : keys.error ? (
         <Card className="p-6 text-sm text-destructive">{keys.error}</Card>
       ) : sorted.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-muted-foreground">
-          No API keys yet. Create one to let a headless consumer read published
-          content over <code>/api/v1</code>.
-        </Card>
+        <EmptyState
+          icon={KeyRound}
+          title="No API keys yet"
+          description="Create one to let a headless consumer read published content over /api/v1."
+          action={
+            <Button size="sm" className="mt-stack" onClick={() => setCreateOpen(true)}>
+              <Plus /> Create key
+            </Button>
+          }
+        />
       ) : (
         <Card className="overflow-x-auto p-0">
+          {/* ── Mobile (< md): stacked cards, same pattern as EntityList ──── */}
+          <ul className="divide-y divide-border md:hidden">
+            {sorted.map((doc) => (
+              <li key={doc.id} className="flex flex-col gap-2 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{asStr(doc.name)}</p>
+                    <code className="text-xs text-muted-foreground">
+                      {asStr(doc.prefix)}…
+                    </code>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <Switch
+                      checked={doc.enabled !== false}
+                      onChange={() => void toggleEnabled(doc)}
+                      aria-label={`Enable ${asStr(doc.name)}`}
+                    />
+                    <Button
+                      variant="destructive-subtle"
+                      size="icon-sm"
+                      aria-label={`Delete ${asStr(doc.name)}`}
+                      title="Delete"
+                      onClick={() => setConfirmDelete(doc)}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                </div>
+                {asIds(doc.roles).length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {roleNames(roles.data, asIds(doc.roles)).map((name) => (
+                      <Badge key={name} variant="secondary">
+                        {name}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          {/* ── Tablet & desktop (md+) ─────────────────────────────────────── */}
+          <div className="max-md:hidden">
           <Table>
             <THead>
               <TR>
@@ -167,18 +218,20 @@ export default function ApiKeys() {
                   </TD>
                   <TD>
                     <Button
-                      variant="ghost"
-                      size="icon"
+                      variant="destructive-subtle"
+                      size="icon-sm"
                       aria-label={`Delete ${asStr(doc.name)}`}
+                      title="Delete"
                       onClick={() => setConfirmDelete(doc)}
                     >
-                      <Trash2 className="size-4 text-destructive" />
+                      <Trash2 className="size-4" />
                     </Button>
                   </TD>
                 </TR>
               ))}
             </TBody>
           </Table>
+          </div>
         </Card>
       )}
 
@@ -215,34 +268,16 @@ export default function ApiKeys() {
       </Dialog>
 
       {/* Delete confirmation. */}
-      <Dialog
+      <ConfirmDialog
         open={confirmDelete !== null}
         onOpenChange={(open) => !open && setConfirmDelete(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <TriangleAlert className="size-4 text-destructive" /> Delete API key
-            </DialogTitle>
-            <DialogDescription>
-              “{asStr(confirmDelete?.name)}” stops working immediately. Consumers
-              using it will get 401s.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDelete(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              disabled={busy}
-              onClick={() => confirmDelete && void removeKey(confirmDelete)}
-            >
-              Delete key
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title="Delete API key"
+        description={`“${asStr(confirmDelete?.name)}” stops working immediately. Consumers using it will get 401s.`}
+        confirmLabel="Delete key"
+        destructive
+        busy={busy}
+        onConfirm={() => confirmDelete && void removeKey(confirmDelete)}
+      />
     </PageLayout>
   )
 }
@@ -339,8 +374,8 @@ function CreateKeyDialog({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button disabled={busy || name.trim() === ''} onClick={() => void create()}>
-            {busy ? <Spinner className="size-4" /> : null} Create key
+          <Button loading={busy} disabled={busy || name.trim() === ''} onClick={() => void create()}>
+            Create key
           </Button>
         </DialogFooter>
       </DialogContent>

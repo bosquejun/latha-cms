@@ -31,6 +31,7 @@ export { Topbar, type TopbarProps } from './shell/Topbar.js'
 export { useTheme, type Theme } from './shell/useTheme.js'
 export { PageHeader, type PageHeaderProps } from './shell/PageHeader.js'
 export { EmptyState, type EmptyStateProps } from './shell/EmptyState.js'
+export { LoadingState, type LoadingStateProps } from './shell/LoadingState.js'
 export { PageLayout, type PageLayoutProps } from './shell/PageLayout.js'
 export { WidgetLayout, type WidgetLayoutProps } from './shell/WidgetLayout.js'
 

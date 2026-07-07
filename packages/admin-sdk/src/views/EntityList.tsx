@@ -4,17 +4,17 @@
  * Columns derive from `defaultColumns` (falling back to the title field plus
  * the first couple of fields). Routing stays in the app: the caller supplies
  * `getEditHref` and `onDelete`, so this view has no dependency on any router.
+ *
+ * Row actions follow the design-system convention: icon buttons only — a
+ * ghost pencil linking to the edit view and a `destructive-subtle` trash that
+ * opens the shared ConfirmDialog. `onDelete` fires only after confirmation,
+ * so callers must not stack their own confirm on top.
  */
 
 import {
   Badge,
   Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  ConfirmDialog,
   StatusBadge,
   Table,
   TBody,
@@ -23,9 +23,11 @@ import {
   THead,
   TR,
 } from '@latha/ui'
+import { Pencil, Trash2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { humanize } from '../schema.js'
 import type { AdminEntity } from '../schema.js'
+import { EmptyState } from '../shell/EmptyState.js'
 
 export interface EntityRow {
   id: string
@@ -67,6 +69,14 @@ function renderCell(value: unknown, fieldType?: string): ReactNode {
     const d = new Date(value)
     if (!Number.isNaN(d.getTime())) return d.toLocaleDateString()
   }
+  // Arrays (relationship ids, multi-selects) summarize as a count — raw ids
+  // are meaningless in a table and JSON blobs don't fit a cell.
+  if (Array.isArray(value))
+    return (
+      <Badge variant="secondary">
+        {value.length} {value.length === 1 ? 'item' : 'items'}
+      </Badge>
+    )
   if (typeof value === 'object')
     return (
       <code className="font-mono text-xs">{JSON.stringify(value)}</code>
@@ -91,11 +101,46 @@ export function EntityList({
     ? String(pendingRow[titleCol ?? 'id'] ?? pendingRow.id)
     : ''
 
+  const rowLabel = (row: EntityRow) =>
+    String(row[titleCol ?? 'id'] ?? row.id)
+
+  const rowActions = (row: EntityRow) => (
+    <div className="flex shrink-0 items-center justify-end gap-1">
+      <Button
+        asChild
+        size="icon-sm"
+        variant="ghost"
+        className="text-muted-foreground hover:text-foreground"
+      >
+        <a
+          href={getEditHref(row.id)}
+          aria-label={`Edit ${rowLabel(row)}`}
+          title="Edit"
+        >
+          <Pencil />
+        </a>
+      </Button>
+      {onDelete && (
+        <Button
+          size="icon-sm"
+          variant="destructive-subtle"
+          disabled={busy}
+          aria-label={`Delete ${rowLabel(row)}`}
+          title="Delete"
+          onClick={() => setPendingDeleteId(row.id)}
+        >
+          <Trash2 />
+        </Button>
+      )}
+    </div>
+  )
+
   if (rows.length === 0) {
     return (
-      <p className="rounded-md border border-dashed p-card text-center text-small text-muted-foreground">
-        No {entity.label.toLowerCase()} yet.
-      </p>
+      <EmptyState
+        title={`No ${entity.label.toLowerCase()} yet`}
+        description={`Create your first to start managing ${entity.label.toLowerCase()}.`}
+      />
     )
   }
 
@@ -104,7 +149,7 @@ export function EntityList({
       {/* ── Mobile (< md): stacked cards ──────────────────────────────────
           Tables force horizontal panning on phones, so each row becomes a
           card: tappable title on top, remaining columns as label/value
-          pairs, delete action in the corner. */}
+          pairs, the action icons in the corner. */}
       <ul className="divide-y divide-border md:hidden">
         {rows.map((row) => {
           const detailCols = columns.filter((col) => col !== titleCol)
@@ -119,13 +164,14 @@ export function EntityList({
                 </a>
                 {onDelete && (
                   <Button
-                    size="sm"
-                    variant="ghost"
+                    size="icon-sm"
+                    variant="destructive-subtle"
                     disabled={busy}
-                    className="shrink-0 text-muted-foreground"
+                    aria-label={`Delete ${rowLabel(row)}`}
+                    title="Delete"
                     onClick={() => setPendingDeleteId(row.id)}
                   >
-                    Delete
+                    <Trash2 />
                   </Button>
                 )}
               </div>
@@ -154,7 +200,9 @@ export function EntityList({
             {columns.map((col) => (
               <TH key={col}>{humanize(col)}</TH>
             ))}
-            <TH className="w-0 text-right">Actions</TH>
+            <TH className="w-0 text-right">
+              <span className="sr-only">Actions</span>
+            </TH>
           </TR>
         </THead>
         <TBody>
@@ -174,54 +222,27 @@ export function EntityList({
                   )}
                 </TD>
               ))}
-              <TD className="text-right">
-                {onDelete && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    disabled={busy}
-                    onClick={() => setPendingDeleteId(row.id)}
-                  >
-                    Delete
-                  </Button>
-                )}
-              </TD>
+              <TD className="text-right">{rowActions(row)}</TD>
             </TR>
           ))}
         </TBody>
       </Table>
       </div>
 
-      <Dialog
+      <ConfirmDialog
         open={pendingDeleteId !== null}
         onOpenChange={(open) => { if (!open) setPendingDeleteId(null) }}
-      >
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Delete "{pendingLabel}"?</DialogTitle>
-            <DialogDescription>
-              This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setPendingDeleteId(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              disabled={busy}
-              onClick={() => {
-                if (pendingDeleteId) {
-                  onDelete?.(pendingDeleteId)
-                  setPendingDeleteId(null)
-                }
-              }}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title={`Delete "${pendingLabel}"?`}
+        description="This action cannot be undone."
+        destructive
+        busy={busy}
+        onConfirm={() => {
+          if (pendingDeleteId) {
+            onDelete?.(pendingDeleteId)
+            setPendingDeleteId(null)
+          }
+        }}
+      />
     </>
   )
 }

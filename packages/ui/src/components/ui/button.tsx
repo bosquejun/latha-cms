@@ -20,7 +20,11 @@ const buttonVariants = cva(
           'bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80',
         ghost:
           'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
-        "ghost-outline": "text-destructive hover:bg-destructive/5 hover:text-destructive",
+        // Low-emphasis destructive: the standard treatment for inline delete /
+        // remove actions (table rows, form toolbars). Solid `destructive` is
+        // reserved for the confirming button inside a dialog.
+        'destructive-subtle':
+          'text-destructive hover:bg-destructive/10 hover:text-destructive focus-visible:ring-destructive/20 dark:hover:bg-destructive/20 dark:focus-visible:ring-destructive/40',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       // `pointer-coarse:min-*` widens the hit target on touch devices without
@@ -31,6 +35,8 @@ const buttonVariants = cva(
         sm: 'h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5 pointer-coarse:min-h-10',
         lg: 'h-10 rounded-md px-6 has-[>svg]:px-4 pointer-coarse:min-h-11',
         icon: 'size-9 pointer-coarse:min-h-10 pointer-coarse:min-w-10',
+        // Compact icon button for dense contexts (table rows, card headers).
+        'icon-sm': 'size-8 rounded-md pointer-coarse:min-h-10 pointer-coarse:min-w-10',
       },
     },
     defaultVariants: {

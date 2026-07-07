@@ -164,14 +164,13 @@ export default function MediaField({ field, id, value, onChange, onBlur, error }
               {subtitle && <p className="text-caption text-muted-foreground">{subtitle}</p>}
             </div>
             <div className="flex shrink-0 items-center gap-inline">
-              <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={openPicker}>
-                {busy ? <Spinner className="size-4" /> : 'Replace'}
+              <Button type="button" variant="ghost" size="sm" loading={busy} onClick={openPicker}>
+                Replace
               </Button>
               <Button
                 type="button"
-                variant="ghost"
+                variant="destructive-subtle"
                 size="sm"
-                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                 disabled={busy}
                 onClick={() => {
                   setUploaded(null)

@@ -16,6 +16,7 @@ import {
   EntityList,
   EntityForm,
   EmptyState,
+  LoadingState,
   PageHeader,
   Slot,
   useExtensions,
@@ -38,10 +39,9 @@ import {
   type NavItem,
   type NavSection,
 } from '@latha/admin-sdk'
-import { Button, Card, CardHeader, CardTitle, CardDescription } from '@latha/ui'
+import { Button, Card, CardHeader, CardTitle, CardDescription, ConfirmDialog, Pagination, toast } from '@latha/ui'
 import {
   Plus,
-  FileText,
   Settings,
   type LucideIcon,
 } from 'lucide-react'
@@ -308,7 +308,7 @@ export function LathaAdmin() {
     }
   }, [session.loading, session.data, loginPath, navigate])
 
-  if (session.loading || nav.loading) return <Centered>Loading…</Centered>
+  if (session.loading || nav.loading) return <Centered><LoadingState /></Centered>
   if (!session.data) return <Centered>Redirecting…</Centered>
 
   const navSections = nav.data ?? []
@@ -505,8 +505,7 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
     [slug, offset],
   )
 
-  if (entity.loading || (rows.loading && !rows.data))
-    return <p className="text-small text-muted-foreground">Loading…</p>
+  if (entity.loading || (rows.loading && !rows.data)) return <LoadingState />
   if (!entity.data)
     return <p className="text-small text-muted-foreground">Entity not found.</p>
 
@@ -535,12 +534,11 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
       />
       {total === 0 ? (
         <EmptyState
-          icon={FileText}
           title={`No ${entity.data.label.toLowerCase()} yet`}
           description={`Create your first to start managing ${entity.data.label.toLowerCase()}.`}
           action={
             canCreate ? (
-              <Button asChild size="sm" className="mt-1">
+              <Button asChild size="sm" className="mt-stack">
                 <Link to={newHref}>
                   <Plus /> New
                 </Link>
@@ -556,10 +554,12 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
               rows={list}
               getEditHref={(id) => `${base}/${segment}/${slug}/${id}`}
               onDelete={
+                // List renderers own the confirmation (shared ConfirmDialog),
+                // so this fires only after the user has confirmed.
                 canDelete
                   ? async (id) => {
-                      if (!window.confirm('Delete this record? This cannot be undone.')) return
                       await client.remove(slug, id)
+                      toast.success('Deleted.')
                       // Deleting the last row of a trailing page steps back a
                       // page instead of showing an empty one.
                       if (list.length === 1 && offset > 0) {
@@ -572,31 +572,19 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
               }
             />
           </Card>
-          {total > LIST_PAGE_SIZE && (
-            <div className="mt-3 flex items-center justify-between text-small text-muted-foreground">
-              <span>
-                {offset + 1}–{Math.min(offset + LIST_PAGE_SIZE, total)} of {total}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={offset === 0 || rows.loading}
-                  onClick={() => setOffset(Math.max(0, offset - LIST_PAGE_SIZE))}
-                >
-                  Previous
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={offset + LIST_PAGE_SIZE >= total || rows.loading}
-                  onClick={() => setOffset(offset + LIST_PAGE_SIZE)}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
+          <Pagination
+            className="mt-group"
+            total={total}
+            offset={offset}
+            pageSize={LIST_PAGE_SIZE}
+            busy={rows.loading}
+            onOffsetChange={(next) => {
+              setOffset(next)
+              // The pager sits below a page-tall list — snap back to the top
+              // so the new page is read from its first row.
+              window.scrollTo({ top: 0 })
+            }}
+          />
         </>
       )}
       <Slot zone="list.after" entity={entity.data} data={{ rows: list }} />
@@ -609,7 +597,7 @@ function CreateView({ slug, base, segment }: { slug: string; base: string; segme
   const navigate = useNavigate()
   const entity = useAsync(() => client.entity(slug), [slug])
 
-  if (entity.loading) return <p className="text-small text-muted-foreground">Loading…</p>
+  if (entity.loading) return <LoadingState />
   if (!entity.data) return <p className="text-small text-muted-foreground">Entity not found.</p>
 
   const toList = () => navigate({ to: `${base}/${segment}/${slug}` })
@@ -623,6 +611,7 @@ function CreateView({ slug, base, segment }: { slug: string; base: string; segme
         entity={asEntity(entity.data)}
         onSubmit={async (values) => {
           await client.create(slug, values)
+          toast.success(`${entity.data!.label} created.`)
           await toList()
         }}
         onCancel={toList}
@@ -637,8 +626,10 @@ function EditView({ slug, id, base, segment }: { slug: string; id: string; base:
   const navigate = useNavigate()
   const entity = useAsync(() => client.entity(slug), [slug])
   const doc = useAsync(() => client.get(slug, id), [slug, id])
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
-  if (entity.loading || doc.loading) return <p className="text-small text-muted-foreground">Loading…</p>
+  if (entity.loading || doc.loading) return <LoadingState />
   if (!entity.data) return <p className="text-small text-muted-foreground">Entity not found.</p>
   if (!doc.data) return <p className="text-small text-muted-foreground">Not found.</p>
 
@@ -655,18 +646,32 @@ function EditView({ slug, id, base, segment }: { slug: string; id: string; base:
         entity={asEntity(entity.data)}
         onSubmit={async (values) => {
           await client.update(slug, id, values)
+          toast.success('Changes saved.')
           await toList()
         }}
         onCancel={toList}
         onDelete={
-          can(`${slug}:delete`)
-            ? async () => {
-                if (!window.confirm('Delete this record? This cannot be undone.')) return
-                await client.remove(slug, id)
-                await toList()
-              }
-            : undefined
+          can(`${slug}:delete`) ? () => setConfirmingDelete(true) : undefined
         }
+      />
+      <ConfirmDialog
+        open={confirmingDelete}
+        onOpenChange={setConfirmingDelete}
+        title="Delete this record?"
+        description="This action cannot be undone."
+        destructive
+        busy={deleting}
+        onConfirm={async () => {
+          setDeleting(true)
+          try {
+            await client.remove(slug, id)
+            toast.success('Deleted.')
+            await toList()
+          } finally {
+            setDeleting(false)
+            setConfirmingDelete(false)
+          }
+        }}
       />
     </>
   )
@@ -677,7 +682,7 @@ function GlobalView({ slug }: { slug: string }) {
   const entity = useAsync(() => client.entity(slug), [slug])
   const value = useAsync(() => client.getGlobal(slug), [slug])
 
-  if (entity.loading || value.loading) return <p className="text-small text-muted-foreground">Loading…</p>
+  if (entity.loading || value.loading) return <LoadingState />
   if (!entity.data) return <p className="text-small text-muted-foreground">Entity not found.</p>
 
   return (
@@ -691,6 +696,7 @@ function GlobalView({ slug }: { slug: string }) {
         entity={asEntity(entity.data)}
         onSubmit={async (values) => {
           await client.saveGlobal(slug, values)
+          toast.success('Changes saved.')
           value.reload()
         }}
       />

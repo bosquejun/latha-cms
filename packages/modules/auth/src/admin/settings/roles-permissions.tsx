@@ -22,7 +22,9 @@ import {
   Button,
   Card,
   Checkbox,
+  ConfirmDialog,
   Input,
+  Skeleton,
   Switch,
   Table,
   TBody,
@@ -31,8 +33,10 @@ import {
   THead,
   TR,
   cn,
+  toast,
 } from '@latha/ui'
 import {
+  EmptyState,
   PageHeader,
   PageLayout,
   defineSettingsConfig,
@@ -176,69 +180,6 @@ function BulkCheckbox({
       )}
     </span>
   )
-}
-
-/** Inline confirmation dialog rendered over a dark overlay. */
-function ConfirmModal({
-  icon,
-  title,
-  description,
-  confirmLabel = 'Confirm',
-  variant = 'default',
-  onConfirm,
-  onCancel,
-}: {
-  icon?: React.ReactNode
-  title: string
-  description: React.ReactNode
-  confirmLabel?: string
-  variant?: 'default' | 'destructive'
-  onConfirm: () => void
-  onCancel: () => void
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-page">
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onCancel}
-      />
-      <Card className="relative z-10 w-full max-w-sm p-card shadow-2xl">
-        <div className="flex flex-col gap-card-gap">
-          {icon && (
-            <div
-              className={cn(
-                'flex size-10 items-center justify-center rounded-full',
-                variant === 'destructive' ? 'bg-destructive/10' : 'bg-muted',
-              )}
-            >
-              {icon}
-            </div>
-          )}
-          <div>
-            <h3 className="font-semibold">{title}</h3>
-            <p className="mt-stack text-small text-muted-foreground">{description}</p>
-          </div>
-          <div className="flex justify-end gap-inline">
-            <Button variant="outline" size="sm" onClick={onCancel}>
-              Cancel
-            </Button>
-            <Button
-              variant={variant === 'destructive' ? 'destructive' : 'default'}
-              size="sm"
-              onClick={onConfirm}
-            >
-              {confirmLabel}
-            </Button>
-          </div>
-        </div>
-      </Card>
-    </div>
-  )
-}
-
-/** Animated skeleton block for loading states. */
-function Skeleton({ className }: { className?: string }) {
-  return <div className={cn('animate-pulse rounded-md bg-muted', className)} />
 }
 
 /** Sidebar role item — name + description + permission count. */
@@ -540,6 +481,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
     setSaving(true)
     try {
       await client.update('roles', selected.id, { permissions: [...checked] })
+      toast.success('Permissions saved.')
       await roles.reload()
     } finally {
       setSaving(false)
@@ -557,6 +499,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
     })
     setNewName('')
     setCreating(false)
+    toast.success('Role created.')
     await roles.reload()
     navigate(`${rootHref}/${created.id}`)
   }
@@ -565,6 +508,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
     if (!pendingDelete) return
     await client.remove('roles', pendingDelete.id)
     setPendingDelete(null)
+    toast.success('Role deleted.')
     await roles.reload()
     navigate(rootHref)
   }
@@ -577,12 +521,12 @@ export default function RolesPermissions({ params }: PageComponentProps) {
       />
 
       {/* Delete confirmation */}
-      {pendingDelete && (
-        <ConfirmModal
-          variant="destructive"
-          icon={<Trash2 className="size-5 text-destructive" />}
-          title="Delete role"
-          description={
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+        title="Delete role"
+        description={
+          pendingDelete && (
             <>
               Delete{' '}
               <strong>
@@ -591,26 +535,27 @@ export default function RolesPermissions({ params }: PageComponentProps) {
               ? This cannot be undone and will remove the role from all users
               assigned to it.
             </>
-          }
-          confirmLabel="Delete role"
-          onConfirm={() => void confirmDelete()}
-          onCancel={() => setPendingDelete(null)}
-        />
-      )}
+          )
+        }
+        confirmLabel="Delete role"
+        destructive
+        onConfirm={() => void confirmDelete()}
+      />
 
       {/* Unsaved-changes guard when navigating away from a dirty role */}
-      {pendingNav && (
-        <ConfirmModal
-          title="Discard unsaved changes?"
-          description="You have unsaved permission changes for this role. Switching away will discard them."
-          confirmLabel="Discard & switch"
-          onConfirm={() => {
+      <ConfirmDialog
+        open={pendingNav !== null}
+        onOpenChange={(open) => !open && setPendingNav(null)}
+        title="Discard unsaved changes?"
+        description="You have unsaved permission changes for this role. Switching away will discard them."
+        confirmLabel="Discard & switch"
+        onConfirm={() => {
+          if (pendingNav) {
             navigate(pendingNav)
             setPendingNav(null)
-          }}
-          onCancel={() => setPendingNav(null)}
-        />
-      )}
+          }
+        }}
+      />
 
       {loading ? (
         <PageLayout
@@ -651,11 +596,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                 <Badge variant="secondary">{roleList.length}</Badge>
               </div>
               {!creating && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setCreating(true)}
-                >
+                <Button size="sm" onClick={() => setCreating(true)}>
                   <Plus /> New role
                 </Button>
               )}
@@ -775,7 +716,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                   {!selected.system && (
                     <Button
                       size="sm"
-                      variant="ghost-outline"
+                      variant="destructive-subtle"
                       onClick={() => setPendingDelete(selected)}
                     >
                       <Trash2 /> Delete
@@ -997,22 +938,17 @@ export default function RolesPermissions({ params }: PageComponentProps) {
           ) : (
             /* Empty state — no roles exist. On phones the list card already
                says so, so this desktop-pane echo stays hidden there. */
-            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-empty text-center max-lg:hidden">
-              <div className="mb-card-gap flex size-14 items-center justify-center rounded-full bg-muted">
-                <ShieldAlert className="size-7 text-muted-foreground" />
-              </div>
-              <p className="font-semibold">No roles yet</p>
-              <p className="mt-stack max-w-xs text-small text-muted-foreground">
-                Create your first role to start managing who can do what across
-                your content.
-              </p>
-              <Button
-                size="sm"
-                className="mt-form"
-                onClick={() => setCreating(true)}
-              >
-                <Plus /> Create a role
-              </Button>
+            <div className="max-lg:hidden">
+              <EmptyState
+                icon={ShieldAlert}
+                title="No roles yet"
+                description="Create your first role to start managing who can do what across your content."
+                action={
+                  <Button size="sm" className="mt-stack" onClick={() => setCreating(true)}>
+                    <Plus /> Create a role
+                  </Button>
+                }
+              />
             </div>
           )}
         </PageLayout>
