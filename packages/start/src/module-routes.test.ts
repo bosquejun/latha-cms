@@ -1,10 +1,10 @@
 /**
- * Only the routing-table half of `handleModuleRoute` (unknown module/path,
- * wrong method) is covered here: those return before touching the caller's
- * principal. The `requireAdmin` gate and successful dispatch both go through
- * `resolvePrincipal` → `getCookie`, which requires a live TanStack request
- * context (`AsyncLocalStorage`) that plain `node:test` doesn't provide — the
- * same constraint that keeps `server.resolve-principal.test.ts` trivial.
+ * `handleModuleRoute` coverage: routing-table lookups (unknown module/path,
+ * wrong method), the `requireAdmin` gate, successful dispatch, and error
+ * mapping. `resolvePrincipal` takes `request` explicitly and reads the
+ * `Cookie` header straight off it (via `@latha/auth`'s `getSessionUser`) — no
+ * framework-specific ambient request context needed, so all of this runs
+ * under plain `node:test`.
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -14,6 +14,19 @@ import { handleModuleRoute, DEFAULT_MODULE_ROUTES_PATH } from './module-routes.j
 const echoRoute: ModuleRoute = {
   method: 'POST',
   handler: async ({ request }) => Response.json({ body: await request.text() }),
+}
+
+const adminOnlyRoute: ModuleRoute = {
+  method: 'POST',
+  requireAdmin: true,
+  handler: async () => Response.json({ ok: true }),
+}
+
+const throwingRoute: ModuleRoute = {
+  method: 'POST',
+  handler: async () => {
+    throw new Error('nope')
+  },
 }
 
 function fakeConfig(modules: Module[]): ResolvedConfig {
@@ -52,4 +65,24 @@ test('handleModuleRoute 405s when the path exists but not for that method', asyn
   const mod: Module = { name: 'demo', routes: { echo: echoRoute } }
   const res = await handleModuleRoute(fakeConfig([mod]), request('/demo/echo', 'DELETE'))
   assert.equal(res.status, 405)
+})
+
+test('handleModuleRoute dispatches to the module handler on a match', async () => {
+  const mod: Module = { name: 'demo', routes: { echo: echoRoute } }
+  const res = await handleModuleRoute(fakeConfig([mod]), request('/demo/echo', 'POST', 'hi'))
+  assert.equal(res.status, 200)
+  assert.deepEqual(await res.json(), { body: 'hi' })
+})
+
+test('handleModuleRoute rejects requireAdmin routes for an unauthenticated caller', async () => {
+  const mod: Module = { name: 'demo', routes: { secure: adminOnlyRoute } }
+  const res = await handleModuleRoute(fakeConfig([mod]), request('/demo/secure'))
+  assert.equal(res.status, 403)
+})
+
+test('handleModuleRoute turns a handler throw into a 400', async () => {
+  const mod: Module = { name: 'demo', routes: { boom: throwingRoute } }
+  const res = await handleModuleRoute(fakeConfig([mod]), request('/demo/boom'))
+  assert.equal(res.status, 400)
+  assert.deepEqual(await res.json(), { error: 'nope' })
 })

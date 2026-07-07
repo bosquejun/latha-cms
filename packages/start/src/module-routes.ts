@@ -42,7 +42,7 @@ export async function handleModuleRoute(
   const route = candidates.find((r) => r.method === request.method)
   if (!route) return json(405, { error: 'Method not allowed.' })
 
-  const { principal } = await resolvePrincipal(latha)
+  const { principal } = await resolvePrincipal(latha, request)
   if (route.requireAdmin && !hasPermission(principal, ADMIN_ACCESS)) {
     return json(403, { error: 'Forbidden.' })
   }

@@ -2,12 +2,14 @@
  * Server-only RPC dispatcher.
  *
  * The consuming app exposes ONE server function that forwards to
- * `handleLathaRequest`. This module imports `@tanstack/react-start/server`
- * (cookies), so it must only be reached via a dynamic `import()` inside a
- * server-function handler — never statically from client-reachable code.
+ * `handleLathaRequest`. Session/cookie handling lives entirely in
+ * `@latha/auth` (`getSessionUser` reads the `Cookie` header straight off the
+ * `Request` — no framework-specific cookie API); this module just carries the
+ * `Request` through. It's still server-only business logic, so it must only
+ * be reached via a dynamic `import()` inside a server-function handler —
+ * never statically from client-reachable code.
  */
 
-import { getCookie } from '@tanstack/react-start/server'
 import {
   operations,
   evaluateAccess,
@@ -21,10 +23,9 @@ import {
   type ResolvedConfig,
 } from '@latha/core'
 import {
-  getUserById,
+  getSessionUser,
   getPublicPrincipal,
   resolveAuthOptions,
-  verifySessionToken,
   hasPermission,
   ADMIN_ACCESS,
   type AuthUser,
@@ -193,15 +194,6 @@ function describe(entity: Entity): EntityDescriptor {
   }
 }
 
-async function currentAuthUser(latha: LathaInstance): Promise<AuthUser | null> {
-  const opts = resolveAuthOptions()
-  const token = getCookie(opts.cookieName)
-  if (!token) return null
-  const payload = await verifySessionToken(token, opts.secret)
-  if (!payload) return null
-  return getUserById(latha, payload.sub)
-}
-
 type PublicPrincipal = Awaited<ReturnType<typeof getPublicPrincipal>>
 
 /**
@@ -220,11 +212,16 @@ export async function resolveAnonymousPrincipal(latha: LathaInstance): Promise<P
  * `admin:access`, so callers still get blocked by an admin gate downstream.
  * Shared by the RPC dispatcher and the generic module-route dispatcher so
  * every transport authenticates identically.
+ *
+ * Session resolution itself (`getSessionUser`) is `@latha/auth`'s: it reads
+ * the `Cookie` header directly off `request`, so this runner never touches a
+ * framework-specific cookie API.
  */
 export async function resolvePrincipal(
   latha: LathaInstance,
+  request: Request,
 ): Promise<{ sessionUser: AuthUser | null; principal: AuthUser | PublicPrincipal }> {
-  const sessionUser = await currentAuthUser(latha)
+  const sessionUser = await getSessionUser(request, resolveAuthOptions(), latha)
   const principal: AuthUser | PublicPrincipal =
     sessionUser ?? (await resolveAnonymousPrincipal(latha))
   return { sessionUser, principal }
@@ -235,19 +232,24 @@ export async function resolvePrincipal(
  *
  * This is the default handler body for the app's single server function. Import
  * it lazily inside the handler (`await import('@latha/start/server')`) so this
- * module's server-only imports never reach the client bundle.
+ * module's server-only imports never reach the client bundle. `request` is
+ * needed for session resolution (`resolvePrincipal`) — a hand-written
+ * `createServerFn` wiring its own call to this must supply it (e.g. via
+ * `getRequest()` from `@tanstack/react-start/server`).
  */
 export async function dispatchLathaRpc(
   config: ResolvedConfig,
   rawInput: unknown,
+  request: Request,
 ): Promise<JsonValue> {
-  return (await handleLathaRequest(config, rawInput)) as JsonValue
+  return (await handleLathaRequest(config, rawInput, request)) as JsonValue
 }
 
 /** Dispatch a single RPC request against the running instance. */
 export async function handleLathaRequest(
   config: ResolvedConfig,
   rawInput: unknown,
+  request: Request,
 ): Promise<unknown> {
   const parseResult = LathaRpcInputSchema.safeParse(rawInput)
   if (!parseResult.success) {
@@ -257,7 +259,7 @@ export async function handleLathaRequest(
   const latha = await getRuntime(config)
   const basePath = config.adminPath || '/admin'
 
-  const { principal } = await resolvePrincipal(latha)
+  const { principal } = await resolvePrincipal(latha, request)
 
   // Every remaining action is admin-only — login/logout/currentUser moved to
   // @latha/auth's own routes (see `ModuleRoute`), which run without a session
