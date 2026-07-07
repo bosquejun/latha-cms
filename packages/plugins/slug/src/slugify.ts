@@ -45,6 +45,9 @@ export function slugifyPath(input: string): string {
 /** One or more kebab-case segments joined by `/` — the stored slug shape. */
 export const SLUG_PATH_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*$/
 
+/** A single kebab-case segment — the stored shape of a `nested` slug leaf. */
+export const SLUG_SEGMENT_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
 /**
  * Format a date with `yyyy`/`MM`/`dd`/`HH`/`mm`/`ss` tokens, in UTC so a
  * generated slug never depends on the server's timezone. Returns `''` for

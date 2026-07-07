@@ -8,15 +8,28 @@
  * starts locked — retitling never rewrites a saved URL); the ↻ button
  * regenerates and resumes following. The server hook remains authoritative:
  * it re-normalizes and uniquifies (-2, -3…) on save.
+ *
+ * In `nested` mode the input edits only this page's own URL segment; the
+ * selected parent's full path renders as a read-only `/parent/path/` prefix
+ * inside the control (fetched live as the writer picks a parent), so the
+ * whole control reads as the page's URL. The server recomputes the real path
+ * (and cascades it to descendants) on save.
  */
 import { useEffect, useState } from 'react'
 import { Button, Field as FieldWrap, Input, InputAddon, InputGroup } from '@latha/ui'
 import { type FieldControlProps, humanize, useFieldValue } from '@latha/admin-sdk'
 import { useLatha, useAsync, type JsonDoc } from '@latha/start'
-import { slugifyPath } from '../../slugify.js'
+import { slugify, slugifyPath } from '../../slugify.js'
 import { renderTokenValue, type SlugToken } from '../../template.js'
 
 export const config = { type: 'slug' }
+
+/** The resolved nested config `slugPlugin` stamps onto the field at onInit. */
+interface NestedConfig {
+  parent: string
+  pathField: string
+  to: string
+}
 
 /**
  * Refresh glyph for the regenerate button. Inlined (rather than pulling in an
@@ -41,13 +54,12 @@ function RegenerateIcon() {
 }
 
 /** Lenient while-typing normalizer: keeps trailing `-`/`/` so typing flows. */
-function liveNormalize(input: string): string {
-  return input
+function liveNormalize(input: string, allowSlash: boolean): string {
+  const folded = input
     .toLowerCase()
-    .replace(/[^a-z0-9/-]+/g, '-')
+    .replace(allowSlash ? /[^a-z0-9/-]+/g : /[^a-z0-9-]+/g, '-')
     .replace(/-{2,}/g, '-')
-    .replace(/\/{2,}/g, '/')
-    .replace(/^[-/]+/, '')
+  return (allowSlash ? folded.replace(/\/{2,}/g, '/') : folded).replace(/^[-/]+/, '')
 }
 
 /**
@@ -67,7 +79,29 @@ function useTokenValues(tokens: SlugToken[]): Record<string, unknown> {
 export default function SlugField({ field, id, value, onChange, onBlur, error }: FieldControlProps) {
   const { client } = useLatha()
   const tokens = ((field as { tokens?: SlugToken[] }).tokens ?? []) as SlugToken[]
+  const nested = (field as { nested?: NestedConfig }).nested
   const values = useTokenValues(tokens)
+  // Nested slugs are single segments; flat slugs may carry `/` path structure.
+  const fold = nested ? slugify : slugifyPath
+
+  // Selected parent id, live from the form. The empty-name fallback keeps the
+  // hook call unconditional (it reads an always-absent form key).
+  const parentValue = useFieldValue(nested?.parent ?? '')
+  const parentId = (() => {
+    const first = Array.isArray(parentValue) ? parentValue[0] : parentValue
+    return first == null || first === '' ? undefined : String(first)
+  })()
+
+  // The selected parent doc, for the URL prefix; re-fetched when it changes.
+  const parentDoc = useAsync<JsonDoc | null>(
+    async () => (nested && parentId ? await client.get(nested.to, parentId) : null),
+    [parentId],
+  )
+  // Fall back to the parent's own leaf when its path predates the plugin.
+  const parentPathValue = nested
+    ? (parentDoc.data?.[nested.pathField] ?? parentDoc.data?.[field.name])
+    : undefined
+  const parentPath = typeof parentPathValue === 'string' ? parentPathValue : ''
 
   // Referenced docs for ref tokens (e.g. {category.slug}), keyed by token
   // field name; re-fetched only when a referenced id changes.
@@ -88,7 +122,7 @@ export default function SlugField({ field, id, value, onChange, onBlur, error }:
     return out
   }, [refIds.join('|')])
 
-  const preview = slugifyPath(
+  const preview = fold(
     tokens
       .map((t) => {
         if (t.kind === 'literal') return t.text
@@ -118,11 +152,16 @@ export default function SlugField({ field, id, value, onChange, onBlur, error }:
       description={field.meta?.description}
       error={error}
     >
-      {/* The regenerate button lives inside the field border as a trailing
-          add-on (InputGroup owns the border + focus ring; the Input drops its
-          own), so it reads as one connected control instead of a detached
-          button floating beside the input. */}
+      {/* The prefix/regenerate add-ons live inside the field border (InputGroup
+          owns the border + focus ring; the Input drops its own), so the whole
+          thing reads as one connected control — in nested mode, as the page's
+          full URL with only the leaf segment editable. */}
       <InputGroup>
+        {nested && (
+          <InputAddon className="font-mono" aria-hidden="true">
+            /{parentPath === '' ? '' : `${parentPath}/`}
+          </InputAddon>
+        )}
         <Input
           id={id}
           className="border-0 font-mono shadow-none focus-visible:ring-0"
@@ -130,10 +169,10 @@ export default function SlugField({ field, id, value, onChange, onBlur, error }:
           value={current}
           onChange={(e) => {
             setLocked(true)
-            onChange(liveNormalize(e.target.value))
+            onChange(liveNormalize(e.target.value, !nested))
           }}
           onBlur={() => {
-            const clean = slugifyPath(current)
+            const clean = fold(current)
             if (clean !== current) onChange(clean === '' ? undefined : clean)
             onBlur()
           }}

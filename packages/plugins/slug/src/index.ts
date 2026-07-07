@@ -32,6 +32,7 @@ declare module '@latha/core' {
       type: 'slug'
       from: string
       maxLength?: number
+      nested?: { parent: string; pathField?: string; to?: string }
       tokens?: SlugToken[]
     }
   }
@@ -39,7 +40,13 @@ declare module '@latha/core' {
 
 export { slugPlugin } from './plugin.js'
 export { slug } from './builders.js'
-export { slugify, slugifyPath, formatDate, SLUG_PATH_PATTERN } from './slugify.js'
+export {
+  slugify,
+  slugifyPath,
+  formatDate,
+  SLUG_PATH_PATTERN,
+  SLUG_SEGMENT_PATTERN,
+} from './slugify.js'
 export { slugFieldConfigSchema, slugFieldEntry } from './field.js'
 export {
   parseTemplate,
@@ -51,4 +58,12 @@ export {
   type RawSlugToken,
   type TokenContext,
 } from './template.js'
-export { createSlugHooks, ensureUniqueSlug, type SlugHookTarget } from './hooks.js'
+export {
+  createSlugHooks,
+  ensureUniqueSlug,
+  resolveAncestorPath,
+  cascadeDescendantPaths,
+  type SlugHookTarget,
+  type SlugNestedTarget,
+  type SlugUniqueScope,
+} from './hooks.js'

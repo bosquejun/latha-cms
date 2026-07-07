@@ -1,7 +1,12 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import type { DBAdapter, Doc } from '@latha/core'
-import { createSlugHooks, ensureUniqueSlug } from './hooks.js'
+import {
+  createSlugHooks,
+  ensureUniqueSlug,
+  resolveAncestorPath,
+  type SlugHookTarget,
+} from './hooks.js'
 import { compileTokens, parseTemplate } from './template.js'
 
 const postFields = [
@@ -29,8 +34,11 @@ function fakeDb(tables: Record<string, Doc[]>): DBAdapter {
     async create() {
       throw new Error('unused')
     },
-    async update() {
-      throw new Error('unused')
+    async update(collection, id, data) {
+      const row = (tables[collection] ?? []).find((r) => r.id === id)
+      if (!row) throw new Error(`missing ${collection}/${id}`)
+      Object.assign(row, data)
+      return row
     },
     async delete() {},
     async migrate() {},
@@ -131,4 +139,162 @@ test('ensureUniqueSlug falls back to a timestamp suffix after 50 collisions', as
   const out = await ensureUniqueSlug(fakeDb({ posts: rows }), 'posts', 'slug', 'base')
   assert.match(out, /^base-[a-z0-9]+$/)
   assert.equal(rows.some((r) => r.slug === out), false)
+})
+
+// ---------------------------------------------------------------------------
+// Nested mode — leaf slug + derived path with parent prefix.
+// ---------------------------------------------------------------------------
+
+const pageFields = [
+  { name: 'title', type: 'text' },
+  { name: 'parent', type: 'relationship', to: 'pages' },
+]
+const pageTokens = compileTokens(parseTemplate('{title}'), pageFields, 'pages.slug')
+const nestedTarget: SlugHookTarget = {
+  name: 'slug',
+  tokens: pageTokens,
+  nested: { parentField: 'parent', pathField: 'path' },
+}
+
+function nestedHooks(db: DBAdapter) {
+  return createSlugHooks(db, 'pages', [nestedTarget])
+}
+
+/** A three-level tree: /docs → /docs/setup → /docs/setup/linux. */
+function pageTree(): Doc[] {
+  return [
+    { id: 'docs', title: 'Docs', slug: 'docs', parent: null, path: 'docs' },
+    { id: 'setup', title: 'Setup', slug: 'setup', parent: 'docs', path: 'docs/setup' },
+    { id: 'linux', title: 'Linux', slug: 'linux', parent: 'setup', path: 'docs/setup/linux' },
+  ]
+}
+
+test('nested create: root page gets leaf slug and path equal to it', async () => {
+  const { beforeCreate } = nestedHooks(fakeDb({ pages: [] }))
+  const out = await beforeCreate({ ...hookArgs, slug: 'pages', data: { title: 'Docs' } })
+  assert.equal(out.slug, 'docs')
+  assert.equal(out.path, 'docs')
+})
+
+test('nested create: child path is prefixed by the parent chain', async () => {
+  const { beforeCreate } = nestedHooks(fakeDb({ pages: pageTree() }))
+  const out = await beforeCreate({
+    ...hookArgs,
+    slug: 'pages',
+    data: { title: 'Windows', parent: 'setup' },
+  })
+  assert.equal(out.slug, 'windows')
+  assert.equal(out.path, 'docs/setup/windows')
+})
+
+test('nested create: leaf collides only among siblings, and folds slashes', async () => {
+  const pages = pageTree()
+  const { beforeCreate } = nestedHooks(fakeDb({ pages }))
+  // Same leaf under a different parent is fine.
+  const elsewhere = await beforeCreate({
+    ...hookArgs,
+    slug: 'pages',
+    data: { title: 'Setup', parent: 'setup' },
+  })
+  assert.equal(elsewhere.slug, 'setup')
+  assert.equal(elsewhere.path, 'docs/setup/setup')
+  // Same leaf under the same parent suffixes.
+  const sibling = await beforeCreate({
+    ...hookArgs,
+    slug: 'pages',
+    data: { title: 'Setup', parent: 'docs' },
+  })
+  assert.equal(sibling.slug, 'setup-2')
+  assert.equal(sibling.path, 'docs/setup-2')
+  // Manual multi-segment input folds to a single segment.
+  const manual = await beforeCreate({
+    ...hookArgs,
+    slug: 'pages',
+    data: { title: 'X', slug: 'a/b c', parent: 'docs' },
+  })
+  assert.equal(manual.slug, 'a-b-c')
+})
+
+test('nested create: client-sent path is stripped and recomputed', async () => {
+  const { beforeCreate } = nestedHooks(fakeDb({ pages: pageTree() }))
+  const out = await beforeCreate({
+    ...hookArgs,
+    slug: 'pages',
+    data: { title: 'Windows', parent: 'docs', path: 'evil/override' },
+  })
+  assert.equal(out.path, 'docs/windows')
+})
+
+test('nested update: changing the parent recomputes the path with the slug key absent', async () => {
+  const { beforeUpdate } = nestedHooks(fakeDb({ pages: pageTree() }))
+  const out = await beforeUpdate({
+    ...hookArgs,
+    slug: 'pages',
+    operation: 'update',
+    data: { parent: 'docs' },
+    previousDoc: { id: 'linux', title: 'Linux', slug: 'linux', parent: 'setup', path: 'docs/setup/linux' },
+  })
+  assert.equal(out.slug, 'linux')
+  assert.equal(out.path, 'docs/linux')
+})
+
+test('nested update: payload without slug or parent stays untouched', async () => {
+  const { beforeUpdate } = nestedHooks(fakeDb({ pages: pageTree() }))
+  const out = await beforeUpdate({
+    ...hookArgs,
+    slug: 'pages',
+    operation: 'update',
+    data: { title: 'Renamed', path: 'evil' },
+    previousDoc: { id: 'linux', slug: 'linux', parent: 'setup', path: 'docs/setup/linux' },
+  })
+  assert.equal('slug' in out, false)
+  assert.equal('path' in out, false)
+})
+
+test('nested update: re-parenting under a descendant (or itself) throws', async () => {
+  const { beforeUpdate } = nestedHooks(fakeDb({ pages: pageTree() }))
+  const move = async (parent: string) =>
+    beforeUpdate({
+      ...hookArgs,
+      slug: 'pages',
+      operation: 'update',
+      data: { parent },
+      previousDoc: { id: 'docs', slug: 'docs', parent: null, path: 'docs' },
+    })
+  await assert.rejects(() => move('linux'), /cannot be nested under itself or its own descendant/)
+  await assert.rejects(() => move('docs'), /cannot be nested under itself or its own descendant/)
+})
+
+test('nested afterUpdate: a changed path cascades to all descendants', async () => {
+  const pages = pageTree()
+  const db = fakeDb({ pages })
+  const { beforeUpdate, afterUpdate } = nestedHooks(db)
+  assert.notEqual(afterUpdate, undefined)
+  // Rename the root's slug: docs → guides.
+  const before = await beforeUpdate({
+    ...hookArgs,
+    slug: 'pages',
+    operation: 'update',
+    data: { slug: 'guides' },
+    previousDoc: pages[0],
+  })
+  const saved = { ...pages[0]!, ...before } as Doc
+  Object.assign(pages[0]!, saved)
+  await afterUpdate!({
+    ...hookArgs,
+    slug: 'pages',
+    operation: 'update',
+    data: saved,
+    previousDoc: { id: 'docs', slug: 'docs', parent: null, path: 'docs' },
+  })
+  assert.equal(pages[1]!.path, 'guides/setup')
+  assert.equal(pages[2]!.path, 'guides/setup/linux')
+})
+
+test('resolveAncestorPath throws on a dangling parent pointer', async () => {
+  const db = fakeDb({ pages: pageTree() })
+  await assert.rejects(
+    () => resolveAncestorPath(db, 'pages', 'slug', 'parent', 'ghost'),
+    /does not exist/,
+  )
 })

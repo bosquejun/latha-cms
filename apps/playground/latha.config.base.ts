@@ -125,7 +125,12 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
             admin: { order: 15, useAsTitle: 'title', defaultColumns: ['title', 'status'] },
             fields: {
               title: text({ required: true }),
-              slug: slug({ from: '{title}' }),
+              // Nested pages: pick a parent and this page's URL nests under
+              // it — the slug stores only the page's own segment, and the
+              // plugin maintains the full `path` (cascading to children when
+              // a page moves or is renamed).
+              parent: relationship({ to: 'pages', meta: { sidebar: true } }),
+              slug: slug({ from: '{title}', nested: { parent: 'parent' } }),
               status: select({
                 options: z.enum(['draft', 'published']),
                 defaultValue: 'draft',
