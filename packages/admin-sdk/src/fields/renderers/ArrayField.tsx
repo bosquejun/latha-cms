@@ -11,6 +11,7 @@
  * a follow-up alongside group's.
  */
 import { Button, Card, CardContent } from '@latha/ui'
+import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
 import type { Field } from '@latha/core'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
@@ -59,7 +60,7 @@ export function ArrayField({ field, id, value, onChange, onBlur, error }: FieldC
           {field.required && <span className="ml-1 text-destructive">*</span>}
         </p>
         <Button type="button" size="sm" variant="outline" onClick={addItem}>
-          Add {itemLabel.toLowerCase()}
+          <Plus /> Add {itemLabel.toLowerCase()}
         </Button>
       </div>
       {field.meta?.description && (
@@ -80,32 +81,35 @@ export function ArrayField({ field, id, value, onChange, onBlur, error }: FieldC
                 <div className="flex gap-1">
                   <Button
                     type="button"
-                    size="sm"
+                    size="icon-sm"
                     variant="ghost"
                     aria-label="Move up"
+                    title="Move up"
                     disabled={index === 0}
                     onClick={() => moveItem(index, -1)}
                   >
-                    ↑
+                    <ChevronUp />
                   </Button>
                   <Button
                     type="button"
-                    size="sm"
+                    size="icon-sm"
                     variant="ghost"
                     aria-label="Move down"
+                    title="Move down"
                     disabled={index === items.length - 1}
                     onClick={() => moveItem(index, 1)}
                   >
-                    ↓
+                    <ChevronDown />
                   </Button>
                   <Button
                     type="button"
-                    size="sm"
-                    variant="ghost"
-                    className="text-destructive"
+                    size="icon-sm"
+                    variant="destructive-subtle"
+                    aria-label={`Remove ${itemLabel.toLowerCase()} ${index + 1}`}
+                    title="Remove"
                     onClick={() => removeItem(index)}
                   >
-                    Remove
+                    <Trash2 />
                   </Button>
                 </div>
               </div>

@@ -29,6 +29,7 @@ import { Controller, useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { Field } from '@latha/core'
 import { Button, Tabs, toast } from '@latha/ui'
+import { Trash2 } from 'lucide-react'
 import { useId } from 'react'
 import { buildFormSchema } from '../fields/formSchema.js'
 import { FormValuesProvider, type FormValuesStore } from '../fields/form-values.js'
@@ -281,12 +282,11 @@ export function EntityForm({
               <>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="destructive-subtle"
                   size="sm"
-                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                   onClick={() => void onDelete()}
                 >
-                  Delete
+                  <Trash2 /> Delete
                 </Button>
                 <div className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
               </>
@@ -312,6 +312,7 @@ export function EntityForm({
             <Button
               type="submit"
               size="sm"
+              loading={isSubmitting}
               disabled={isSubmitting || (recordId != null && !isDirty)}
             >
               {isSubmitting ? 'Saving…' : submitLabel}

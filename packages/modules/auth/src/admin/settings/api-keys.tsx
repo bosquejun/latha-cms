@@ -17,6 +17,7 @@ import {
   Button,
   Card,
   Checkbox,
+  ConfirmDialog,
   CopyButton,
   Dialog,
   DialogContent,
@@ -36,6 +37,7 @@ import {
   cn,
 } from '@latha/ui'
 import {
+  EmptyState,
   PageHeader,
   PageLayout,
   defineSettingsConfig,
@@ -43,7 +45,7 @@ import {
   useAsync,
   type JsonDoc,
 } from '@latha/admin-sdk'
-import { KeyRound, Plus, Trash2, TriangleAlert } from 'lucide-react'
+import { KeyRound, Plus, Trash2 } from 'lucide-react'
 import {
   apiKeyDisplayPrefix,
   generateApiKeyToken,
@@ -124,10 +126,16 @@ export default function ApiKeys() {
       ) : keys.error ? (
         <Card className="p-6 text-sm text-destructive">{keys.error}</Card>
       ) : sorted.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-muted-foreground">
-          No API keys yet. Create one to let a headless consumer read published
-          content over <code>/api/v1</code>.
-        </Card>
+        <EmptyState
+          icon={KeyRound}
+          title="No API keys yet"
+          description="Create one to let a headless consumer read published content over /api/v1."
+          action={
+            <Button size="sm" className="mt-stack" onClick={() => setCreateOpen(true)}>
+              <Plus /> Create key
+            </Button>
+          }
+        />
       ) : (
         <Card className="overflow-x-auto p-0">
           <Table>
@@ -167,12 +175,13 @@ export default function ApiKeys() {
                   </TD>
                   <TD>
                     <Button
-                      variant="ghost"
-                      size="icon"
+                      variant="destructive-subtle"
+                      size="icon-sm"
                       aria-label={`Delete ${asStr(doc.name)}`}
+                      title="Delete"
                       onClick={() => setConfirmDelete(doc)}
                     >
-                      <Trash2 className="size-4 text-destructive" />
+                      <Trash2 className="size-4" />
                     </Button>
                   </TD>
                 </TR>
@@ -215,34 +224,16 @@ export default function ApiKeys() {
       </Dialog>
 
       {/* Delete confirmation. */}
-      <Dialog
+      <ConfirmDialog
         open={confirmDelete !== null}
         onOpenChange={(open) => !open && setConfirmDelete(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <TriangleAlert className="size-4 text-destructive" /> Delete API key
-            </DialogTitle>
-            <DialogDescription>
-              “{asStr(confirmDelete?.name)}” stops working immediately. Consumers
-              using it will get 401s.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDelete(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              disabled={busy}
-              onClick={() => confirmDelete && void removeKey(confirmDelete)}
-            >
-              Delete key
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title="Delete API key"
+        description={`“${asStr(confirmDelete?.name)}” stops working immediately. Consumers using it will get 401s.`}
+        confirmLabel="Delete key"
+        destructive
+        busy={busy}
+        onConfirm={() => confirmDelete && void removeKey(confirmDelete)}
+      />
     </PageLayout>
   )
 }
@@ -339,8 +330,8 @@ function CreateKeyDialog({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button disabled={busy || name.trim() === ''} onClick={() => void create()}>
-            {busy ? <Spinner className="size-4" /> : null} Create key
+          <Button loading={busy} disabled={busy || name.trim() === ''} onClick={() => void create()}>
+            Create key
           </Button>
         </DialogFooter>
       </DialogContent>

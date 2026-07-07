@@ -38,10 +38,9 @@ import {
   type NavItem,
   type NavSection,
 } from '@latha/admin-sdk'
-import { Button, Card, CardHeader, CardTitle, CardDescription } from '@latha/ui'
+import { Button, Card, CardHeader, CardTitle, CardDescription, ConfirmDialog } from '@latha/ui'
 import {
   Plus,
-  FileText,
   Settings,
   type LucideIcon,
 } from 'lucide-react'
@@ -535,12 +534,11 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
       />
       {total === 0 ? (
         <EmptyState
-          icon={FileText}
           title={`No ${entity.data.label.toLowerCase()} yet`}
           description={`Create your first to start managing ${entity.data.label.toLowerCase()}.`}
           action={
             canCreate ? (
-              <Button asChild size="sm" className="mt-1">
+              <Button asChild size="sm" className="mt-stack">
                 <Link to={newHref}>
                   <Plus /> New
                 </Link>
@@ -556,9 +554,10 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
               rows={list}
               getEditHref={(id) => `${base}/${segment}/${slug}/${id}`}
               onDelete={
+                // List renderers own the confirmation (shared ConfirmDialog),
+                // so this fires only after the user has confirmed.
                 canDelete
                   ? async (id) => {
-                      if (!window.confirm('Delete this record? This cannot be undone.')) return
                       await client.remove(slug, id)
                       // Deleting the last row of a trailing page steps back a
                       // page instead of showing an empty one.
@@ -637,6 +636,8 @@ function EditView({ slug, id, base, segment }: { slug: string; id: string; base:
   const navigate = useNavigate()
   const entity = useAsync(() => client.entity(slug), [slug])
   const doc = useAsync(() => client.get(slug, id), [slug, id])
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   if (entity.loading || doc.loading) return <p className="text-small text-muted-foreground">Loading…</p>
   if (!entity.data) return <p className="text-small text-muted-foreground">Entity not found.</p>
@@ -659,14 +660,26 @@ function EditView({ slug, id, base, segment }: { slug: string; id: string; base:
         }}
         onCancel={toList}
         onDelete={
-          can(`${slug}:delete`)
-            ? async () => {
-                if (!window.confirm('Delete this record? This cannot be undone.')) return
-                await client.remove(slug, id)
-                await toList()
-              }
-            : undefined
+          can(`${slug}:delete`) ? () => setConfirmingDelete(true) : undefined
         }
+      />
+      <ConfirmDialog
+        open={confirmingDelete}
+        onOpenChange={setConfirmingDelete}
+        title="Delete this record?"
+        description="This action cannot be undone."
+        destructive
+        busy={deleting}
+        onConfirm={async () => {
+          setDeleting(true)
+          try {
+            await client.remove(slug, id)
+            await toList()
+          } finally {
+            setDeleting(false)
+            setConfirmingDelete(false)
+          }
+        }}
       />
     </>
   )

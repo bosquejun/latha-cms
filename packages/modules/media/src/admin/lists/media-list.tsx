@@ -6,18 +6,36 @@
  * `media` field renderer.
  */
 import { useState } from 'react'
+import { Button, ConfirmDialog } from '@latha/ui'
 import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@latha/ui'
-import { defineEntityListConfig, type EntityListProps } from '@latha/admin-sdk'
+  EmptyState,
+  defineEntityListConfig,
+  type EntityListProps,
+} from '@latha/admin-sdk'
 
 export const config = defineEntityListConfig({ slug: 'media' })
+
+/** Trash glyph for the per-thumbnail delete action. Inlined to avoid an icon dep. */
+function TrashIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 6h18" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+    </svg>
+  )
+}
 
 export default function MediaLibraryList({ rows, getEditHref, onDelete, busy }: EntityListProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
@@ -25,9 +43,10 @@ export default function MediaLibraryList({ rows, getEditHref, onDelete, busy }: 
 
   if (rows.length === 0) {
     return (
-      <p className="rounded-md border border-dashed p-card text-center text-small text-muted-foreground">
-        No media yet.
-      </p>
+      <EmptyState
+        title="No media yet"
+        description="Upload your first file to start building the library."
+      />
     )
   }
 
@@ -72,16 +91,18 @@ export default function MediaLibraryList({ rows, getEditHref, onDelete, busy }: 
                 // over any thumbnail.
                 <Button
                   type="button"
-                  size="sm"
-                  variant="ghost"
+                  size="icon-sm"
+                  variant="destructive-subtle"
                   disabled={busy}
+                  aria-label={`Delete ${filename}`}
+                  title="Delete"
                   className="absolute right-1 top-1 bg-background/80 opacity-0 shadow-xs backdrop-blur-sm transition-opacity focus-visible:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100"
                   onClick={(e) => {
                     e.preventDefault()
                     setPendingDeleteId(row.id)
                   }}
                 >
-                  Delete
+                  <TrashIcon className="size-4" />
                 </Button>
               )}
             </div>
@@ -89,38 +110,22 @@ export default function MediaLibraryList({ rows, getEditHref, onDelete, busy }: 
         })}
       </div>
 
-      <Dialog
+      <ConfirmDialog
         open={pendingDeleteId !== null}
         onOpenChange={(open) => {
           if (!open) setPendingDeleteId(null)
         }}
-      >
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>
-              Delete "{pendingRow ? String(pendingRow.filename ?? pendingRow.id) : ''}"?
-            </DialogTitle>
-            <DialogDescription>This action cannot be undone.</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setPendingDeleteId(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              disabled={busy}
-              onClick={() => {
-                if (pendingDeleteId) {
-                  onDelete?.(pendingDeleteId)
-                  setPendingDeleteId(null)
-                }
-              }}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title={`Delete "${pendingRow ? String(pendingRow.filename ?? pendingRow.id) : ''}"?`}
+        description="This action cannot be undone."
+        destructive
+        busy={busy}
+        onConfirm={() => {
+          if (pendingDeleteId) {
+            onDelete?.(pendingDeleteId)
+            setPendingDeleteId(null)
+          }
+        }}
+      />
     </>
   )
 }

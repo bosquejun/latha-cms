@@ -214,22 +214,22 @@ export function BlocksField({
                   <div className="flex shrink-0 items-center gap-0.5">
                     <Button
                       type="button"
-                      size="icon"
+                      size="icon-sm"
                       variant="ghost"
-                      className="h-7 w-7"
                       disabled={index === 0}
                       onClick={() => move(index, index - 1)}
+                      aria-label="Move up"
                       title="Move up"
                     >
                       <ChevronUp className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                       type="button"
-                      size="icon"
+                      size="icon-sm"
                       variant="ghost"
-                      className="h-7 w-7"
                       disabled={index === items.length - 1}
                       onClick={() => move(index, index + 1)}
+                      aria-label="Move down"
                       title="Move down"
                     >
                       <ChevronDown className="h-3.5 w-3.5" />
@@ -237,10 +237,10 @@ export function BlocksField({
                     <Separator orientation="vertical" className="mx-1 h-5" />
                     <Button
                       type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 text-destructive hover:text-destructive"
+                      size="icon-sm"
+                      variant="destructive-subtle"
                       onClick={() => remove(index)}
+                      aria-label="Remove block"
                       title="Remove block"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -248,9 +248,8 @@ export function BlocksField({
                     <Separator orientation="vertical" className="mx-1 h-5" />
                     <Button
                       type="button"
-                      size="icon"
+                      size="icon-sm"
                       variant="ghost"
-                      className="h-7 w-7"
                       onClick={() => toggleCollapsed(index)}
                       title={isCollapsed ? 'Expand block' : 'Collapse block'}
                       aria-expanded={!isCollapsed}
@@ -300,10 +299,10 @@ export function BlocksField({
                 </p>
                 <Button
                   type="button"
-                  size="icon"
+                  size="icon-sm"
                   variant="ghost"
-                  className="h-6 w-6 rounded-sm"
                   onClick={() => setShowPicker(false)}
+                  aria-label="Close"
                   title="Close"
                 >
                   <X className="h-3 w-3" />
