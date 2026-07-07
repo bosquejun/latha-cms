@@ -39,7 +39,7 @@ import {
   type NavItem,
   type NavSection,
 } from '@latha/admin-sdk'
-import { Button, Card, CardHeader, CardTitle, CardDescription, ConfirmDialog, toast } from '@latha/ui'
+import { Button, Card, CardHeader, CardTitle, CardDescription, ConfirmDialog, Pagination, toast } from '@latha/ui'
 import {
   Plus,
   Settings,
@@ -572,31 +572,19 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
               }
             />
           </Card>
-          {total > LIST_PAGE_SIZE && (
-            <div className="mt-3 flex items-center justify-between text-small text-muted-foreground">
-              <span>
-                {offset + 1}–{Math.min(offset + LIST_PAGE_SIZE, total)} of {total}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={offset === 0 || rows.loading}
-                  onClick={() => setOffset(Math.max(0, offset - LIST_PAGE_SIZE))}
-                >
-                  Previous
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={offset + LIST_PAGE_SIZE >= total || rows.loading}
-                  onClick={() => setOffset(offset + LIST_PAGE_SIZE)}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
+          <Pagination
+            className="mt-group"
+            total={total}
+            offset={offset}
+            pageSize={LIST_PAGE_SIZE}
+            busy={rows.loading}
+            onOffsetChange={(next) => {
+              setOffset(next)
+              // The pager sits below a page-tall list — snap back to the top
+              // so the new page is read from its first row.
+              window.scrollTo({ top: 0 })
+            }}
+          />
         </>
       )}
       <Slot zone="list.after" entity={entity.data} data={{ rows: list }} />

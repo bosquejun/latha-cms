@@ -76,6 +76,21 @@ optional action. Never a bare `<p>` or an ad-hoc dashed box.
 - **Field-level fetches** (relationship options, media doc lookups) show a
   small inline `Spinner` in place of the control.
 
+## Pagination
+
+List footers use `Pagination` from `@latha/ui` — never a hand-rolled bar.
+
+- Layout: range summary on the left ("26–50 of 132"), icon prev/next controls
+  (`icon-sm` outline chevrons with `aria-label`s) around a "Page X of Y"
+  indicator on the right.
+- Offset-based, matching the `page` RPC envelope: pass `total`, `offset`,
+  `pageSize`, and `onOffsetChange`; pass `busy` while a page is in flight so
+  the controls disable instead of double-firing.
+- The component renders nothing when everything fits on one page — mount it
+  unconditionally below the list card.
+- Deleting the last row of a trailing page steps back a page rather than
+  showing an empty one (see `ListView`).
+
 ## Mobile & responsive
 
 - **Tables become stacked cards below `md`.** The pattern (from `EntityList`,

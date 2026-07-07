@@ -119,3 +119,4 @@ export {
 export { CopyButton, type CopyButtonProps } from './components/CopyButton.js'
 export { PasswordInput, type PasswordInputProps } from './components/PasswordInput.js'
 export { ConfirmDialog, type ConfirmDialogProps } from './components/ConfirmDialog.js'
+export { Pagination, type PaginationProps } from './components/Pagination.js'
