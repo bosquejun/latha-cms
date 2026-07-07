@@ -38,8 +38,42 @@ export interface LathaInstance {
   ready: boolean
 }
 
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'OPTIONS'
+
+/** Context a runner passes to a module route handler when it dispatches a request to it. */
+export interface ModuleRouteContext {
+  cms: LathaInstance
+  /**
+   * The resolved caller for this request — an authenticated principal or the
+   * runner's anonymous principal. Opaque to core, same contract as
+   * `OperationContext.principal`.
+   */
+  principal: unknown
+  request: Request
+}
+
+export interface ModuleRoute {
+  method: HttpMethod
+  /**
+   * Gate this route behind the runner's admin-access check before the handler
+   * runs (the same gate the admin RPC applies), so a module never needs to
+   * import an auth package itself to enforce it. Default false — the handler
+   * runs for any resolved principal (including the anonymous Public one) and
+   * is responsible for its own authorization, e.g. via `operations.*`, which
+   * already enforces entity access + guards.
+   */
+  requireAdmin?: boolean
+  handler: (ctx: ModuleRouteContext) => Response | Promise<Response>
+}
+
+/**
+ * A module's custom HTTP endpoints, keyed by path — relative to wherever the
+ * runner mounts module routes (e.g. `@latha/start` mounts them at
+ * `/__latha/modules/<module.name>/<path>`). One path may answer more than one
+ * method.
+ */
 export interface ModuleRoutes {
-  [path: string]: unknown
+  [path: string]: ModuleRoute | ModuleRoute[]
 }
 
 export interface AdminPage {
@@ -82,6 +116,11 @@ export interface Module {
   dependsOn?: string[]
   onInit?: (cms: LathaInstance) => void | Promise<void>
   onReady?: (cms: LathaInstance) => void | Promise<void>
+  /**
+   * Custom HTTP endpoints this module exposes (e.g. `@latha/media`'s file
+   * upload route). The runner discovers and mounts these generically — it
+   * never needs module-specific knowledge to dispatch them.
+   */
   routes?: ModuleRoutes
   entities?: AnyEntity[]
   capabilities?: string[]
