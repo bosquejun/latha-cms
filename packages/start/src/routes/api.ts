@@ -1,6 +1,6 @@
 /**
  * Framework-owned public delivery API endpoint — the read-only REST surface
- * headless consumers fetch (`GET /api/:slug[/:id]`), as opposed to the
+ * headless consumers fetch (`GET /api/v1/:slug[/:id]`), as opposed to the
  * admin-gated RPC route.
  *
  * Injected by the `lathaStart()` Vite plugin (mounted at `DEFAULT_API_PATH`;
@@ -22,7 +22,7 @@ const dispatch = async ({ request }: { request: Request }) => {
   return handleDeliveryRequest(config, request)
 }
 
-export const Route = (createFileRoute as (path: string) => any)('/api/$')({
+export const Route = (createFileRoute as (path: string) => any)('/api/v1/$')({
   server: {
     handlers: {
       GET: dispatch,

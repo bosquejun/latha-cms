@@ -122,7 +122,7 @@ export interface LathaStartOptions {
    */
   configPath?: string
   /**
-   * The public content delivery API (`GET /api/:slug[/:id]`). Mounted at
+   * The public content delivery API (`GET /api/v1/:slug[/:id]`). Mounted at
    * `DEFAULT_API_PATH` by default; pass `false` to not mount it at all.
    */
   api?: false

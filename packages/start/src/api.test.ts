@@ -109,28 +109,28 @@ before(async () => {
 })
 
 test('anonymous read is denied until the Public role grants it', async () => {
-  const res = await get('/api/posts')
+  const res = await get('/api/v1/posts')
   assert.equal(res.status, 403)
   assert.equal(res.headers.get('access-control-allow-origin'), '*')
 })
 
 test('unknown entities and bad paths 404', async () => {
-  assert.equal((await get('/api/nope')).status, 404)
-  assert.equal((await get('/api/a/b/c')).status, 404)
+  assert.equal((await get('/api/v1/nope')).status, 404)
+  assert.equal((await get('/api/v1/a/b/c')).status, 404)
 })
 
 test('non-GET methods are rejected', async () => {
   const res = await handleDeliveryRequest(
     config,
-    new Request('http://cms.test/api/posts', { method: 'POST' }),
+    new Request('http://cms.test/api/v1/posts', { method: 'POST' }),
   )
   assert.equal(res.status, 405)
 })
 
 test('invalid bearer tokens fail loudly, not as Public', async () => {
-  const res = await get('/api/posts', { authorization: 'Bearer latha_bogus' })
+  const res = await get('/api/v1/posts', { authorization: 'Bearer latha_bogus' })
   assert.equal(res.status, 401)
-  const other = await get('/api/posts', { authorization: 'Basic dXNlcg==' })
+  const other = await get('/api/v1/posts', { authorization: 'Basic dXNlcg==' })
   assert.equal(other.status, 401)
 })
 
@@ -139,7 +139,7 @@ test('an API key carrying the admin role reads, with hidden fields stripped', as
   const adminRole = (await latha.db.find('roles', { where: { name: 'admin' }, limit: 1 }))[0]!
   const { token } = await createApiKey(latha, { name: 'test', roles: [adminRole.id] })
 
-  const res = await get('/api/posts?sort=title', { authorization: `Bearer ${token}` })
+  const res = await get('/api/v1/posts?sort=title', { authorization: `Bearer ${token}` })
   assert.equal(res.status, 200)
   const body = (await res.json()) as { docs: Doc[]; total: number; limit: number; offset: number }
   assert.equal(body.total, 2)
@@ -156,21 +156,21 @@ test('granting the Public role a read opens anonymous access', async () => {
   const publicRole = (await latha.db.find('roles', { where: { name: 'public' }, limit: 1 }))[0]!
   await latha.db.update('roles', publicRole.id, { permissions: [permission.id] })
 
-  const list = await get('/api/posts?where[featured]=true&limit=1')
+  const list = await get('/api/v1/posts?where[featured]=true&limit=1')
   assert.equal(list.status, 200)
   const body = (await list.json()) as { docs: Doc[]; total: number }
   assert.equal(body.total, 1)
   assert.equal(body.docs[0]!.title, 'Hello')
   assert.ok(!('internalNote' in body.docs[0]!))
 
-  const one = await get(`/api/posts/${body.docs[0]!.id}`)
+  const one = await get(`/api/v1/posts/${body.docs[0]!.id}`)
   assert.equal(one.status, 200)
 
-  const missing = await get('/api/posts/does-not-exist')
+  const missing = await get('/api/v1/posts/does-not-exist')
   assert.equal(missing.status, 404)
 
   // But the Public grant does not leak other entities.
-  assert.equal((await get('/api/roles')).status, 403)
+  assert.equal((await get('/api/v1/roles')).status, 403)
 })
 
 test('the delivery constraint hides drafts even from privileged keys', async () => {
@@ -179,25 +179,25 @@ test('the delivery constraint hides drafts even from privileged keys', async () 
   const { token } = await createApiKey(latha, { name: 'drafts', roles: [adminRole.id] })
   const auth = { authorization: `Bearer ${token}` }
 
-  const list = await get('/api/articles', auth)
+  const list = await get('/api/v1/articles', auth)
   const body = (await list.json()) as { docs: Doc[]; total: number }
   assert.equal(body.total, 1)
   assert.deepEqual(body.docs.map((d) => d.title), ['Live'])
 
   // A caller's where[] can never widen the constraint.
-  const widened = await get('/api/articles?where[status]=draft', auth)
+  const widened = await get('/api/v1/articles?where[status]=draft', auth)
   const wbody = (await widened.json()) as { docs: Doc[]; total: number }
   assert.equal(wbody.total, 1)
   assert.deepEqual(wbody.docs.map((d) => d.title), ['Live'])
 
   // Direct fetch of a draft id 404s.
   const draft = (await latha.db.find('articles', { where: { status: 'draft' } }))[0]!
-  assert.equal((await get(`/api/articles/${draft.id}`, auth)).status, 404)
+  assert.equal((await get(`/api/v1/articles/${draft.id}`, auth)).status, 404)
 })
 
 test('unknown sort/filter fields are 400s, not silent full scans', async () => {
-  assert.equal((await get('/api/posts?sort=nope')).status, 400)
-  assert.equal((await get('/api/posts?where[nope]=1')).status, 400)
+  assert.equal((await get('/api/v1/posts?sort=nope')).status, 400)
+  assert.equal((await get('/api/v1/posts?where[nope]=1')).status, 400)
 })
 
 test('preflight answers with CORS headers', () => {

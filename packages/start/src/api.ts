@@ -220,7 +220,7 @@ export function handleDeliveryPreflight(
   return new Response(null, { status: 204, headers })
 }
 
-/** Dispatch one delivery-API request. `basePath` defaults to `/api`. */
+/** Dispatch one delivery-API request. `basePath` defaults to `/api/v1`. */
 export async function handleDeliveryRequest(
   config: ResolvedConfig,
   request: Request,

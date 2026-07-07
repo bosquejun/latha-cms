@@ -126,7 +126,7 @@ export default function ApiKeys() {
       ) : sorted.length === 0 ? (
         <Card className="p-8 text-center text-sm text-muted-foreground">
           No API keys yet. Create one to let a headless consumer read published
-          content over <code>/api</code>.
+          content over <code>/api/v1</code>.
         </Card>
       ) : (
         <Card className="overflow-x-auto p-0">
