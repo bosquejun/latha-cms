@@ -25,6 +25,7 @@ import { rbacEntities } from './rbac/entities.js'
 import { createRbacGuard } from './rbac/guard.js'
 import { syncCatalog, getCatalog } from './rbac/catalog.js'
 import { defaultRoles, seedRoles, type RoleSeed } from './rbac/seed.js'
+import { loginRoute, logoutRoute, currentUserRoute } from './api/index.js'
 import {
   entitySubjectStore,
   setSubjectStore,
@@ -58,7 +59,11 @@ export interface AuthModuleConfig {
 }
 
 export function AuthModule(config: AuthModuleConfig): Module {
-  void config.secret // consumed by the app's RPC/server layer via env, kept for API symmetry
+  // `secret`/`cookieName`/`sessionTtlSeconds` are resolved from the environment
+  // at request time (`resolveAuthOptions()`, shared with `@latha/start`'s
+  // principal resolution) — kept here for API symmetry with the rest of the
+  // config, not read directly.
+  void config.secret
   void (config.cookieName ?? DEFAULT_COOKIE_NAME)
 
   return {
@@ -66,6 +71,11 @@ export function AuthModule(config: AuthModuleConfig): Module {
     capabilities: ['auth', 'rbac'],
     entities: [...rbacEntities, apiKeysEntity],
     admin: { nav: { area: 'settings', label: 'Access', order: 90 }, ui: '@latha/auth/admin' },
+    routes: {
+      login: loginRoute,
+      logout: logoutRoute,
+      'current-user': currentUserRoute,
+    },
 
     onInit(latha) {
       // Register the identity source (custom, a configured entity, or the

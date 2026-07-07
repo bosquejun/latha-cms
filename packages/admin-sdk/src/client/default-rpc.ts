@@ -24,6 +24,17 @@ export const DEFAULT_RPC_PATH = '/__latha/rpc'
 export const DEFAULT_UPLOAD_PATH = '/__latha/modules/media/upload'
 
 /**
+ * Where `@latha/auth`'s login/logout/current-user endpoints are mounted.
+ * These are ordinary module routes (see `ModuleRoutes` in `@latha/core`),
+ * declared by the auth module itself at `<module.name>/login` etc. and
+ * served by the runner's generic module-route dispatcher — not special-cased
+ * RPC actions, since they must run without an existing admin session.
+ */
+export const DEFAULT_LOGIN_PATH = '/__latha/modules/auth/login'
+export const DEFAULT_LOGOUT_PATH = '/__latha/modules/auth/logout'
+export const DEFAULT_CURRENT_USER_PATH = '/__latha/modules/auth/current-user'
+
+/**
  * Where the public content delivery API is mounted — the read-only REST
  * surface headless consumers fetch, as opposed to the admin-gated RPC above.
  * Versioned so the envelope/query semantics can evolve as `/api/v2` alongside

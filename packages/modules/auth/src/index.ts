@@ -41,6 +41,20 @@ export {
   type AuthOptions,
 } from './service.js'
 
+export { resolveAuthOptions, DEV_SECRET, type ResolvedAuthOptions } from './config.js'
+export { serializeSetCookie, type SetCookieOptions } from './cookie.js'
+export { loginBlocked, recordLoginFailure, clearLoginFailures } from './login-throttle.js'
+
+// The module's own HTTP endpoints (login/logout/current-user) — exported for
+// introspection/testing; `AuthModule()` already wires them onto `routes`.
+export {
+  loginRoute,
+  logoutRoute,
+  currentUserRoute,
+  toSessionUser,
+  type SessionUser,
+} from './api/index.js'
+
 // RBAC: permission helpers, catalog, entities, and seeding.
 export {
   hasPermission,

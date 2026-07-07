@@ -7,7 +7,7 @@
  * server-function handler — never statically from client-reachable code.
  */
 
-import { getCookie, setCookie } from '@tanstack/react-start/server'
+import { getCookie } from '@tanstack/react-start/server'
 import {
   operations,
   evaluateAccess,
@@ -21,45 +21,28 @@ import {
   type ResolvedConfig,
 } from '@latha/core'
 import {
-  authenticate,
-  createSessionToken,
   getUserById,
   getPublicPrincipal,
+  resolveAuthOptions,
   verifySessionToken,
   hasPermission,
   ADMIN_ACCESS,
   type AuthUser,
-  type AuthOptions,
-  DEFAULT_COOKIE_NAME,
-  DEFAULT_SESSION_TTL_SECONDS,
 } from '@latha/auth'
 import { AccessDeniedError } from '@latha/core'
 import type { JsonValue } from '@latha/core'
 import { getRuntime } from './runtime.js'
-import { clearLoginFailures, loginBlocked, recordLoginFailure } from './login-throttle.js'
 import { humanize, LathaRpcInputSchema } from '@latha/admin-sdk'
-import type {
-  EntityDescriptor,
-  LathaRpcInput,
-  NavItem,
-  NavSection,
-  SessionUser,
-} from '@latha/admin-sdk'
-
-// Avoid a hard @types/node dependency for one env var.
-declare const process: { env: Record<string, string | undefined> }
+import type { EntityDescriptor, NavItem, NavSection } from '@latha/admin-sdk'
 
 /** Force a value to its JSON-serializable form via a structural round-trip. */
 function toJson<T>(v: T): T {
   return JSON.parse(JSON.stringify(v)) as T
 }
 
-/** Dev fallback — set `AUTH_SECRET` in production. */
-export const DEV_SECRET = 'latha-dev-secret-change-me'
-
 /**
- * CSRF guard for the cookie-authenticated endpoints (RPC + upload): a browser
- * always sends `Origin` on cross-origin POSTs, so an Origin whose host differs
+ * CSRF guard for the cookie-authenticated endpoints (RPC + module routes): a
+ * browser always sends `Origin` on cross-origin POSTs, so an Origin whose host differs
  * from the request host is rejected. Requests without an Origin header
  * (curl, server-to-server) pass — they don't carry ambient cookies. Hosts are
  * compared (not full origins) so a TLS-terminating proxy doesn't false-flag
@@ -82,18 +65,6 @@ export function rejectUntrustedOrigin(request: Request): Response | null {
     )
   }
   return null
-}
-
-function authOptions(): AuthOptions {
-  const secret = process.env['AUTH_SECRET']
-  if (!secret && process.env['NODE_ENV'] === 'production') {
-    throw new Error('[latha] AUTH_SECRET environment variable is required in production.')
-  }
-  return {
-    secret: secret ?? DEV_SECRET,
-    cookieName: DEFAULT_COOKIE_NAME,
-    sessionTtlSeconds: DEFAULT_SESSION_TTL_SECONDS,
-  }
 }
 
 function labelOf(entity: Entity): string {
@@ -222,19 +193,9 @@ function describe(entity: Entity): EntityDescriptor {
   }
 }
 
-function toSessionUser(user: AuthUser): SessionUser {
-  return {
-    id: user.id,
-    email: user.email ?? null,
-    name: user.name ?? null,
-    roles: user.roles ?? [],
-    permissions: user.permissions ?? [],
-  }
-}
-
 async function currentAuthUser(latha: LathaInstance): Promise<AuthUser | null> {
-  const opts = authOptions()
-  const token = getCookie(opts.cookieName ?? DEFAULT_COOKIE_NAME)
+  const opts = resolveAuthOptions()
+  const token = getCookie(opts.cookieName)
   if (!token) return null
   const payload = await verifySessionToken(token, opts.secret)
   if (!payload) return null
@@ -253,12 +214,12 @@ export async function resolveAnonymousPrincipal(latha: LathaInstance): Promise<P
 }
 
 /**
- * Resolve the caller for an incoming request: the actual logged-in user (for
- * `currentUser` / login redirects) and the effective principal for
- * enforcement — the user, or the synthetic Public principal for anonymous
- * requests. Public never holds `admin:access`, so callers still get blocked
- * by an admin gate downstream. Shared by the RPC dispatcher and the upload
- * dispatcher so both transports authenticate identically.
+ * Resolve the caller for an incoming request: the actual logged-in user (if
+ * any) and the effective principal for enforcement — the user, or the
+ * synthetic Public principal for anonymous requests. Public never holds
+ * `admin:access`, so callers still get blocked by an admin gate downstream.
+ * Shared by the RPC dispatcher and the generic module-route dispatcher so
+ * every transport authenticates identically.
  */
 export async function resolvePrincipal(
   latha: LathaInstance,
@@ -283,13 +244,6 @@ export async function dispatchLathaRpc(
   return (await handleLathaRequest(config, rawInput)) as JsonValue
 }
 
-/** Actions available without an authenticated admin session. */
-const PUBLIC_ACTIONS = new Set<LathaRpcInput['action']>([
-  'currentUser',
-  'login',
-  'logout',
-])
-
 /** Dispatch a single RPC request against the running instance. */
 export async function handleLathaRequest(
   config: ResolvedConfig,
@@ -303,11 +257,12 @@ export async function handleLathaRequest(
   const latha = await getRuntime(config)
   const basePath = config.adminPath || '/admin'
 
-  const { sessionUser, principal } = await resolvePrincipal(latha)
+  const { principal } = await resolvePrincipal(latha)
 
-  // Top-level gate: every action except login/logout/currentUser requires a
-  // principal that can access the admin surface.
-  if (!PUBLIC_ACTIONS.has(input.action) && !hasPermission(principal, ADMIN_ACCESS)) {
+  // Every remaining action is admin-only — login/logout/currentUser moved to
+  // @latha/auth's own routes (see `ModuleRoute`), which run without a session
+  // by definition and so can't sit behind this gate.
+  if (!hasPermission(principal, ADMIN_ACCESS)) {
     throw new AccessDeniedError('read', 'admin')
   }
 
@@ -349,47 +304,5 @@ export async function handleLathaRequest(
     }
     case 'saveGlobal':
       return toJson(await operations.saveGlobal(opCtx, input.slug, input.data))
-
-    case 'currentUser':
-      return sessionUser ? toSessionUser(sessionUser) : null
-    case 'login': {
-      const opts = authOptions()
-      if (loginBlocked(input.email)) {
-        return {
-          ok: false,
-          user: null,
-          error: 'Too many failed attempts. Try again in a few minutes.',
-        }
-      }
-      const user = await authenticate(latha, input.email, input.password)
-      if (!user) {
-        recordLoginFailure(input.email)
-        return { ok: false, user: null }
-      }
-      clearLoginFailures(input.email)
-      const token = await createSessionToken(
-        { sub: user.id },
-        opts.secret,
-        opts.sessionTtlSeconds,
-      )
-      setCookie(opts.cookieName ?? DEFAULT_COOKIE_NAME, token, {
-        httpOnly: true,
-        secure: process.env['NODE_ENV'] !== 'development',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: opts.sessionTtlSeconds,
-      })
-      return { ok: true, user: toSessionUser(user) }
-    }
-    case 'logout': {
-      const opts = authOptions()
-      setCookie(opts.cookieName ?? DEFAULT_COOKIE_NAME, '', {
-        httpOnly: true,
-        secure: process.env['NODE_ENV'] !== 'development',
-        path: '/',
-        maxAge: 0,
-      })
-      return { ok: true }
-    }
   }
 }
