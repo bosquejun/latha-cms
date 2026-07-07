@@ -21,12 +21,13 @@ export const Route = (createFileRoute as (path: string) => any)('/__latha/rpc')(
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {
+        const [{ default: config }, { dispatchLathaRpc, rejectUntrustedOrigin }] =
+          await Promise.all([import('virtual:latha/config'), import('../server.js')])
+        // Cookie-authenticated endpoint: refuse cross-origin browser POSTs.
+        const rejected = rejectUntrustedOrigin(request)
+        if (rejected) return rejected
         // Pass raw JSON — dispatchLathaRpc validates shape with Zod before dispatch.
         const data: unknown = await request.json()
-        const [{ default: config }, { dispatchLathaRpc }] = await Promise.all([
-          import('virtual:latha/config'),
-          import('../server.js'),
-        ])
         const result = await dispatchLathaRpc(config, data)
         return Response.json(result)
       },

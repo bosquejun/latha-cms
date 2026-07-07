@@ -20,6 +20,7 @@
 
 import type { LathaInstance, Module } from '@latha/core'
 import { DEFAULT_COOKIE_NAME } from './service.js'
+import { apiKeysEntity } from './api-keys/entities.js'
 import { rbacEntities } from './rbac/entities.js'
 import { createRbacGuard } from './rbac/guard.js'
 import { syncCatalog, getCatalog } from './rbac/catalog.js'
@@ -63,7 +64,7 @@ export function AuthModule(config: AuthModuleConfig): Module {
   return {
     name: 'auth',
     capabilities: ['auth', 'rbac'],
-    entities: rbacEntities,
+    entities: [...rbacEntities, apiKeysEntity],
     admin: { nav: { area: 'settings', label: 'Access', order: 90 }, ui: '@latha/auth/admin' },
 
     onInit(latha) {

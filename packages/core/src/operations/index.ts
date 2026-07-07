@@ -89,6 +89,19 @@ export async function find(
   return ctx.cms.db.find(entity.slug, query)
 }
 
+/** Count the records matching `query.where`, under the same read authorization as `find`. */
+export async function count(
+  ctx: OperationContext,
+  slug: string,
+  query?: Pick<Query, 'where'>,
+): Promise<number> {
+  const entity = resolveMany(ctx.cms, slug)
+  const principal = ctx.principal ?? null
+  await assertAccess(entity.access, { principal, operation: 'read' }, entity.slug)
+  await runGuards(ctx, entity, 'read')
+  return ctx.cms.db.count(entity.slug, query)
+}
+
 export async function findOne(
   ctx: OperationContext,
   slug: string,

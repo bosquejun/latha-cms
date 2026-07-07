@@ -13,6 +13,11 @@
     { "path": "../../core" },
     { "path": "../../admin-sdk" }
   ],
-  "include": ["src/admin/**/*.ts", "src/admin/**/*.tsx"],
+  "include": [
+    "src/admin/**/*.ts",
+    "src/admin/**/*.tsx",
+    "src/api-keys/token.ts",
+    "src/crypto.ts"
+  ],
   "exclude": ["dist", "node_modules"]
 }

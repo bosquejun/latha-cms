@@ -12,8 +12,13 @@
  */
 import { useRef, useState } from 'react'
 import { Button, cn, Field as FieldWrap, Spinner } from '@latha/ui'
-import { type FieldControlProps, humanize } from '@latha/admin-sdk'
-import { useLatha, useAsync, type JsonDoc } from '@latha/start'
+import {
+  type FieldControlProps,
+  humanize,
+  useLatha,
+  useAsync,
+  type JsonDoc,
+} from '@latha/admin-sdk'
 
 export const config = { type: 'media' }
 

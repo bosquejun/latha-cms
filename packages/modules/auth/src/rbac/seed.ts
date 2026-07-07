@@ -37,7 +37,7 @@ export interface RoleSeed {
 }
 
 /** Auth-owned scopes that are always reserved for the superadmin. */
-const AUTH_SENSITIVE = new Set(['roles', 'scopes', 'permissions', 'admin', '*'])
+const AUTH_SENSITIVE = new Set(['roles', 'scopes', 'permissions', 'api-keys', 'admin', '*'])
 
 /**
  * Built-in default roles, computed against the live catalog.

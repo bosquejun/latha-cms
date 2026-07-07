@@ -109,12 +109,28 @@ export interface Plugin {
   admin?: PluginAdminConfig
 }
 
+/**
+ * Public delivery-API settings. A passthrough for runners (e.g. `@latha/start`
+ * mounts the read-only REST surface and applies these) — the kernel itself
+ * never reads them, the same contract as `adminPath`.
+ */
+export interface DeliveryApiConfig {
+  /**
+   * CORS origins allowed on delivery-API responses: `'*'` (the default —
+   * public content is meant to be fetched cross-origin), an explicit origin
+   * list, or `false` to send no CORS headers at all.
+   */
+  cors?: '*' | string[] | false
+}
+
 export interface LathaConfig {
   db: DBAdapter
   modules: Module[]
   plugins?: Plugin[]
   /** Base path the admin UI is mounted under. Defaults to `/admin`. */
   adminPath?: string
+  /** Public delivery-API settings, read by runners — see {@link DeliveryApiConfig}. */
+  api?: DeliveryApiConfig
   /**
    * Optional one-time setup run once after the instance is ready (e.g. seeding
    * a first admin user). Runners decide when to invoke it; the kernel does not.

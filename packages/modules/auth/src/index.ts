@@ -62,6 +62,7 @@ export {
 
 export {
   resolveUserPermissions,
+  resolveRoleGrants,
   getPublicPrincipal,
   getRolePermissions,
   type ResolvedGrants,
@@ -81,3 +82,18 @@ export {
   SCOPES_SLUG,
   PERMISSIONS_SLUG,
 } from './rbac/entities.js'
+
+// API keys — bearer credentials for headless/machine consumers.
+export { apiKeysEntity, API_KEYS_SLUG } from './api-keys/entities.js'
+export {
+  createApiKey,
+  verifyApiKeyToken,
+  type ApiKeyPrincipal,
+  type CreateApiKeyInput,
+} from './api-keys/service.js'
+export {
+  API_KEY_TOKEN_PREFIX,
+  apiKeyDisplayPrefix,
+  generateApiKeyToken,
+  hashApiKeyToken,
+} from './api-keys/token.js'

@@ -10,7 +10,7 @@
  */
 
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   AdminShell,
   EntityList,
@@ -478,12 +478,13 @@ function DashboardWidget({ widget }: { widget: DashboardWidgetExtension }) {
 function StatCount({ client, item }: { client: ReturnType<typeof useLatha>['client']; item: NavItem }) {
   const count = useAsync(
     () => {
-      if (item.cardinality === 'many') return client.list(item.slug)
-      return Promise.resolve([])
+      // The page envelope carries the total — no need to download every row.
+      if (item.cardinality === 'many') return client.page(item.slug, { limit: 1 })
+      return Promise.resolve(null)
     },
     [item.slug, item.cardinality],
   )
-  const value = item.cardinality === 'many' ? (count.data?.length ?? '—') : '—'
+  const value = item.cardinality === 'many' ? (count.data?.total ?? '—') : '—'
   return (
     <div className="px-4 pb-4 pt-1.5 text-3xl font-semibold tracking-[-0.02em]">
       {count.loading ? '·' : value}
@@ -491,21 +492,28 @@ function StatCount({ client, item }: { client: ReturnType<typeof useLatha>['clie
   )
 }
 
+const LIST_PAGE_SIZE = 25
+
 function ListView({ slug, base, segment }: { slug: string; base: string; segment: string }) {
   const { client } = useLatha()
   const can = useCan()
   const ext = useExtensions()
+  const [offset, setOffset] = useState(0)
   const entity = useAsync(() => client.entity(slug), [slug])
-  const rows = useAsync(() => client.list(slug), [slug])
+  const rows = useAsync(
+    () => client.page(slug, { limit: LIST_PAGE_SIZE, offset }),
+    [slug, offset],
+  )
 
-  if (entity.loading || rows.loading)
+  if (entity.loading || (rows.loading && !rows.data))
     return <p className="text-small text-muted-foreground">Loading…</p>
   if (!entity.data)
     return <p className="text-small text-muted-foreground">Entity not found.</p>
 
   const canCreate = can(`${slug}:create`)
   const canDelete = can(`${slug}:delete`)
-  const list = rows.data ?? []
+  const list = rows.data?.docs ?? []
+  const total = rows.data?.total ?? 0
   const newHref = `${base}/${segment}/${slug}/new`
   // A module may register a full list-view replacement for this slug (e.g.
   // @latha/media's thumbnail grid) — falls back to the generic table.
@@ -525,7 +533,7 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
           ) : undefined
         }
       />
-      {list.length === 0 ? (
+      {total === 0 ? (
         <EmptyState
           icon={FileText}
           title={`No ${entity.data.label.toLowerCase()} yet`}
@@ -541,22 +549,55 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
           }
         />
       ) : (
-        <Card className="overflow-hidden p-0">
-          <ListComponent
-            entity={asEntity(entity.data)}
-            rows={list}
-            getEditHref={(id) => `${base}/${segment}/${slug}/${id}`}
-            onDelete={
-              canDelete
-                ? async (id) => {
-                    if (!window.confirm('Delete this record? This cannot be undone.')) return
-                    await client.remove(slug, id)
-                    rows.reload()
-                  }
-                : undefined
-            }
-          />
-        </Card>
+        <>
+          <Card className="overflow-hidden p-0">
+            <ListComponent
+              entity={asEntity(entity.data)}
+              rows={list}
+              getEditHref={(id) => `${base}/${segment}/${slug}/${id}`}
+              onDelete={
+                canDelete
+                  ? async (id) => {
+                      if (!window.confirm('Delete this record? This cannot be undone.')) return
+                      await client.remove(slug, id)
+                      // Deleting the last row of a trailing page steps back a
+                      // page instead of showing an empty one.
+                      if (list.length === 1 && offset > 0) {
+                        setOffset(Math.max(0, offset - LIST_PAGE_SIZE))
+                      } else {
+                        rows.reload()
+                      }
+                    }
+                  : undefined
+              }
+            />
+          </Card>
+          {total > LIST_PAGE_SIZE && (
+            <div className="mt-3 flex items-center justify-between text-small text-muted-foreground">
+              <span>
+                {offset + 1}–{Math.min(offset + LIST_PAGE_SIZE, total)} of {total}
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={offset === 0 || rows.loading}
+                  onClick={() => setOffset(Math.max(0, offset - LIST_PAGE_SIZE))}
+                >
+                  Previous
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={offset + LIST_PAGE_SIZE >= total || rows.loading}
+                  onClick={() => setOffset(offset + LIST_PAGE_SIZE)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
       <Slot zone="list.after" entity={entity.data} data={{ rows: list }} />
     </>

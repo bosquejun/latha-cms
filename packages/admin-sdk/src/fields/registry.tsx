@@ -16,6 +16,7 @@ import { SelectField } from './renderers/SelectField.js'
 import { BlocksField } from './renderers/BlocksField.js'
 import { RelationshipField } from './renderers/RelationshipField.js'
 import { GroupField } from './renderers/GroupField.js'
+import { ArrayField } from './renderers/ArrayField.js'
 import { FallbackField } from './renderers/FallbackField.js'
 
 // Keyed by string so module-registered types (taxonomy, media, etc.) can be
@@ -32,7 +33,7 @@ const registry = new Map<string, FieldRenderer>([
   ['relationship', RelationshipField],
   ['taxonomy', FallbackField],
   ['group', GroupField],
-  ['array', FallbackField],
+  ['array', ArrayField],
 ])
 
 /** Resolve the renderer for a field type, falling back to the JSON editor. */

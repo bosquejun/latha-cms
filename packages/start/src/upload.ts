@@ -20,6 +20,19 @@ import { resolvePrincipal } from './server.js'
 
 const MEDIA_SLUG = 'media'
 
+/** Structural view of the policy `@latha/media` stamps on its entity. */
+interface UploadPolicyCarrier {
+  upload?: { maxFileSize: number; allowedMimeTypes: string[] }
+}
+
+/** `image/*` wildcards or exact matches, case-insensitive. */
+function mimeMatches(allowed: string, actual: string): boolean {
+  const a = allowed.toLowerCase()
+  const b = actual.toLowerCase()
+  if (a.endsWith('/*')) return b.startsWith(a.slice(0, -1))
+  return a === b
+}
+
 function toJson<T>(v: T): T {
   return JSON.parse(JSON.stringify(v)) as T
 }
@@ -44,6 +57,20 @@ export async function dispatchLathaUpload(
     throw new Error('Upload request must include a "file" field.')
   }
   const alt = form.get('alt')
+
+  // Enforce the media module's upload policy (stamped on the media entity as
+  // an opaque passthrough) before any bytes reach the storage adapter.
+  const policy = (latha.getEntity(MEDIA_SLUG) as UploadPolicyCarrier | undefined)?.upload
+  if (policy) {
+    if (file.size > policy.maxFileSize) {
+      throw new Error(
+        `File is ${file.size} bytes; the upload limit is ${policy.maxFileSize} bytes.`,
+      )
+    }
+    if (!policy.allowedMimeTypes.some((allowed) => mimeMatches(allowed, file.type))) {
+      throw new Error(`File type "${file.type || 'unknown'}" is not allowed for upload.`)
+    }
+  }
 
   const { url, key } = await latha.storage.upload(file)
 

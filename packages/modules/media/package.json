@@ -23,18 +23,16 @@
     "build": "tsc -p tsconfig.json && tsc -p tsconfig.admin.json",
     "dev": "tsc -p tsconfig.json --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.admin.json --noEmit",
-    "test": "tsc -p tsconfig.json && node --test dist/"
+    "test": "tsc -p tsconfig.json && node --test 'dist/**/*.test.js'"
   },
   "peerDependencies": {
     "@latha/core": "workspace:*",
     "@latha/admin-sdk": "workspace:*",
-    "@latha/start": "workspace:*",
     "@latha/ui": "workspace:*",
     "react": "^18 || ^19"
   },
   "peerDependenciesMeta": {
     "@latha/admin-sdk": { "optional": true },
-    "@latha/start": { "optional": true },
     "@latha/ui": { "optional": true },
     "react": { "optional": true }
   },
@@ -44,7 +42,6 @@
   "devDependencies": {
     "@latha/core": "workspace:*",
     "@latha/admin-sdk": "workspace:*",
-    "@latha/start": "workspace:*",
     "@latha/ui": "workspace:*",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",

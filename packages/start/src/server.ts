@@ -36,6 +36,7 @@ import {
 import { AccessDeniedError } from '@latha/core'
 import type { JsonValue } from '@latha/core'
 import { getRuntime } from './runtime.js'
+import { clearLoginFailures, loginBlocked, recordLoginFailure } from './login-throttle.js'
 import { humanize, LathaRpcInputSchema } from '@latha/admin-sdk'
 import type {
   EntityDescriptor,
@@ -55,6 +56,33 @@ function toJson<T>(v: T): T {
 
 /** Dev fallback — set `AUTH_SECRET` in production. */
 export const DEV_SECRET = 'latha-dev-secret-change-me'
+
+/**
+ * CSRF guard for the cookie-authenticated endpoints (RPC + upload): a browser
+ * always sends `Origin` on cross-origin POSTs, so an Origin whose host differs
+ * from the request host is rejected. Requests without an Origin header
+ * (curl, server-to-server) pass — they don't carry ambient cookies. Hosts are
+ * compared (not full origins) so a TLS-terminating proxy doesn't false-flag
+ * the scheme.
+ */
+export function rejectUntrustedOrigin(request: Request): Response | null {
+  const origin = request.headers.get('origin')
+  if (!origin) return null
+  let originHost: string
+  try {
+    originHost = new URL(origin).host
+  } catch {
+    return Response.json({ error: 'Invalid Origin header.' }, { status: 403 })
+  }
+  const requestHost = request.headers.get('x-forwarded-host') ?? new URL(request.url).host
+  if (originHost !== requestHost) {
+    return Response.json(
+      { error: 'Cross-origin requests to this endpoint are not allowed.' },
+      { status: 403 },
+    )
+  }
+  return null
+}
 
 function authOptions(): AuthOptions {
   const secret = process.env['AUTH_SECRET']
@@ -214,14 +242,14 @@ async function currentAuthUser(latha: LathaInstance): Promise<AuthUser | null> {
 }
 
 type PublicPrincipal = Awaited<ReturnType<typeof getPublicPrincipal>>
-const publicPrincipals = new WeakMap<LathaInstance, PublicPrincipal>()
 
-async function getCachedPublicPrincipal(latha: LathaInstance): Promise<PublicPrincipal> {
-  const cached = publicPrincipals.get(latha)
-  if (cached) return cached
-  const p = await getPublicPrincipal(latha)
-  publicPrincipals.set(latha, p)
-  return p
+/**
+ * The synthetic anonymous principal. Resolved fresh per request — like user
+ * grants — so edits to the Public role in the matrix UI apply immediately
+ * instead of waiting for a server restart.
+ */
+export async function resolveAnonymousPrincipal(latha: LathaInstance): Promise<PublicPrincipal> {
+  return getPublicPrincipal(latha)
 }
 
 /**
@@ -237,7 +265,7 @@ export async function resolvePrincipal(
 ): Promise<{ sessionUser: AuthUser | null; principal: AuthUser | PublicPrincipal }> {
   const sessionUser = await currentAuthUser(latha)
   const principal: AuthUser | PublicPrincipal =
-    sessionUser ?? (await getCachedPublicPrincipal(latha))
+    sessionUser ?? (await resolveAnonymousPrincipal(latha))
   return { sessionUser, principal }
 }
 
@@ -294,6 +322,16 @@ export async function handleLathaRequest(
     }
     case 'list':
       return (await operations.find(opCtx, input.slug)).map(toJson)
+    case 'page': {
+      const limit = input.limit ?? 50
+      const offset = input.offset ?? 0
+      const query = { limit, offset, sort: input.sort }
+      const [docs, total] = await Promise.all([
+        operations.find(opCtx, input.slug, query),
+        operations.count(opCtx, input.slug),
+      ])
+      return { docs: docs.map(toJson), total, limit, offset }
+    }
     case 'get': {
       const doc = await operations.findOne(opCtx, input.slug, input.id)
       return doc ? toJson(doc) : null
@@ -316,8 +354,19 @@ export async function handleLathaRequest(
       return sessionUser ? toSessionUser(sessionUser) : null
     case 'login': {
       const opts = authOptions()
+      if (loginBlocked(input.email)) {
+        return {
+          ok: false,
+          user: null,
+          error: 'Too many failed attempts. Try again in a few minutes.',
+        }
+      }
       const user = await authenticate(latha, input.email, input.password)
-      if (!user) return { ok: false, user: null }
+      if (!user) {
+        recordLoginFailure(input.email)
+        return { ok: false, user: null }
+      }
+      clearLoginFailures(input.email)
       const token = await createSessionToken(
         { sub: user.id },
         opts.secret,

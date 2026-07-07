@@ -12,12 +12,26 @@ export const Route = (createFileRoute as (path: string) => any)('/__latha/upload
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {
-        const [{ default: config }, { dispatchLathaUpload }] = await Promise.all([
-          import('virtual:latha/config'),
-          import('../upload.js'),
-        ])
-        const result = await dispatchLathaUpload(config, request)
-        return Response.json(result)
+        const [{ default: config }, { dispatchLathaUpload }, { rejectUntrustedOrigin }] =
+          await Promise.all([
+            import('virtual:latha/config'),
+            import('../upload.js'),
+            import('../server.js'),
+          ])
+        // Cookie-authenticated endpoint: refuse cross-origin browser POSTs.
+        const rejected = rejectUntrustedOrigin(request)
+        if (rejected) return rejected
+        try {
+          const result = await dispatchLathaUpload(config, request)
+          return Response.json(result)
+        } catch (err) {
+          // Policy rejections (size/type) and access denials are client
+          // errors, not server faults — surface the message with a 4xx.
+          const status =
+            err instanceof Error && err.name === 'AccessDeniedError' ? 403 : 400
+          const message = err instanceof Error ? err.message : 'Upload failed.'
+          return Response.json({ error: message }, { status })
+        }
       },
     },
   },

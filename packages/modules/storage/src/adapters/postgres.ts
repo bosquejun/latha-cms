@@ -12,16 +12,19 @@
  * and build SQL. Identifiers are interpolated as quoted names; values are bound
  * as `$1..$n` parameters via `sql.unsafe(text, args)`.
  *
- * Schema note: `migrate()` only issues `CREATE TABLE IF NOT EXISTS` — it does
- * not ALTER existing tables. Adding a field to an existing entity therefore
- * needs a fresh table/schema. This matches the Turso adapter's behaviour.
+ * Schema note: `migrate()` issues `CREATE TABLE IF NOT EXISTS` and then adds
+ * any newly declared columns via `ALTER TABLE ADD COLUMN` (always nullable —
+ * see `alterTableSQL`). It never drops or retypes columns; removals are only
+ * warned about. This matches the Turso adapter's behaviour.
  */
 
 import postgres, { type Sql } from 'postgres'
 import type { DBAdapter, Doc, Entity, Query } from '@latha/core'
 import {
+  alterTableSQL,
   buildTablePlan,
   createTableSQL,
+  undeclaredColumns,
   type TablePlan,
 } from '../schema/generator.js'
 import { rowToDocPg, toPg, type PgValue } from '../schema/pg-marshal.js'
@@ -71,6 +74,29 @@ class PostgresAdapter implements DBAdapter {
       const plan = buildTablePlan(entity)
       this.plans.set(plan.table, plan)
       await this.sql.unsafe(createTableSQL(plan, 'postgres'))
+      await this.reconcileColumns(plan)
+    }
+  }
+
+  /**
+   * Additive schema evolution: add any declared column missing from the live
+   * table (always nullable — see `alterTableSQL`), and warn about live columns
+   * the entity no longer declares. Never drops or retypes.
+   */
+  private async reconcileColumns(plan: TablePlan): Promise<void> {
+    const rows = await this.query(
+      `SELECT column_name FROM information_schema.columns
+       WHERE table_name = $1 AND table_schema = current_schema()`,
+      [plan.table],
+    )
+    const existing = rows.map((row) => String(row.column_name))
+    for (const sql of alterTableSQL(plan, existing, 'postgres')) {
+      await this.sql.unsafe(sql)
+    }
+    for (const name of undeclaredColumns(plan, existing)) {
+      console.warn(
+        `[latha] table "${plan.table}" has a column "${name}" that no field declares; it is left untouched.`,
+      )
     }
   }
 

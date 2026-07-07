@@ -72,6 +72,13 @@ export interface Entity<TDoc = Record<string, unknown>> {
    * same contract as a field's `meta` bag.
    */
   kind?: string
+  /**
+   * Public-delivery hint, read by runners the same way `admin` is — the
+   * kernel never reads it. `where` holds equality constraints every delivery
+   * read of this entity is scoped to (e.g. `{ status: 'published' }` stamped
+   * by a content module with drafts enabled).
+   */
+  api?: { where?: Record<string, unknown> }
 }
 
 /**

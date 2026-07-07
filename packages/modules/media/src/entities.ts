@@ -3,11 +3,36 @@ import { relationship, stampFields, text, number, type Entity, type FieldsRecord
 export const MEDIA_SLUG = 'media'
 
 /**
+ * Server-side upload policy, enforced by the upload dispatcher before any
+ * bytes reach the storage adapter. Attached to the media entity as an opaque
+ * passthrough (same contract as `kind`/`admin`) so the framework layer can
+ * read it without depending on this package.
+ */
+export interface UploadPolicy {
+  /** Maximum upload size in bytes. */
+  maxFileSize: number
+  /** Allowed MIME types — exact (`application/pdf`) or wildcard (`image/*`). */
+  allowedMimeTypes: string[]
+}
+
+export const DEFAULT_MAX_FILE_SIZE = 20 * 1024 * 1024 // 20 MiB
+
+export const DEFAULT_ALLOWED_MIME_TYPES = [
+  'image/*',
+  'video/*',
+  'audio/*',
+  'application/pdf',
+]
+
+/** The media entity plus its stamped upload policy. */
+export type MediaEntity = Entity & { upload: UploadPolicy }
+
+/**
  * Built directly (not via `@latha/content`'s `Collection()`) — media must not
  * depend on the content module (lateral module-to-module import), same as
  * `@latha/users` builds its raw `Entity` by hand.
  */
-export function buildMediaEntity(): Entity {
+export function buildMediaEntity(policy?: Partial<UploadPolicy>): MediaEntity {
   const fields: FieldsRecord = {
     filename: text({ required: true }),
     mimeType: text({ required: true }),
@@ -31,5 +56,9 @@ export function buildMediaEntity(): Entity {
       labels: { singular: 'Media', plural: 'Media Library' },
     },
     fields: stampFields(fields),
+    upload: {
+      maxFileSize: policy?.maxFileSize ?? DEFAULT_MAX_FILE_SIZE,
+      allowedMimeTypes: policy?.allowedMimeTypes ?? DEFAULT_ALLOWED_MIME_TYPES,
+    },
   }
 }

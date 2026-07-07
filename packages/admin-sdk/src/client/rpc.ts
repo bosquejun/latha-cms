@@ -18,6 +18,15 @@ export const LathaRpcInputSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('nav') }),
   z.object({ action: z.literal('entity'), slug: z.string() }),
   z.object({ action: z.literal('list'), slug: z.string() }),
+  z.object({
+    action: z.literal('page'),
+    slug: z.string(),
+    limit: z.number().int().min(1).max(200).optional(),
+    offset: z.number().int().min(0).optional(),
+    sort: z
+      .array(z.object({ field: z.string(), direction: z.enum(['asc', 'desc']) }))
+      .optional(),
+  }),
   z.object({ action: z.literal('get'), slug: z.string(), id: z.string() }),
   z.object({ action: z.literal('create'), slug: z.string(), data: z.record(z.string(), z.unknown()) }),
   z.object({
@@ -38,6 +47,14 @@ export type LathaRpcInput = z.infer<typeof LathaRpcInputSchema>
 
 /** A document as it crosses the wire — always JSON-serializable. */
 export type JsonDoc = { id: string } & Record<string, JsonValue>
+
+/** One page of a list plus the total row count — the `page` action's result. */
+export interface PageResult {
+  docs: JsonDoc[]
+  total: number
+  limit: number
+  offset: number
+}
 
 export interface SessionUser {
   id: string

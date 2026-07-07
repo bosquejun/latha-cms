@@ -15,6 +15,7 @@ import {
   ContentModule,
   Document,
   Taxonomy,
+  array,
   blocks,
   heroBlock,
   ctaBlock,
@@ -129,6 +130,14 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
               }),
               content: blocks({
                 blocks: [heroBlock, richTextBlock, ctaBlock, imageBlock, featuresBlock],
+              }),
+              // Repeatable fieldset — exercises the `array` renderer.
+              faqs: array({
+                fields: {
+                  question: text({ required: true }),
+                  answer: text({ meta: { multiline: true } }),
+                },
+                meta: { description: 'Frequently asked questions shown at the bottom of the page.' },
               }),
             },
           }),

@@ -22,7 +22,7 @@ export function LathaLogin() {
     try {
       const res = await client.login(email, password)
       if (!res.ok) {
-        setError('Invalid email or password.')
+        setError(res.error ?? 'Invalid email or password.')
         return
       }
       await navigate({ to: basePath })

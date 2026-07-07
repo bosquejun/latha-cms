@@ -41,6 +41,11 @@
       "types": "./dist/routes/upload.d.ts",
       "development": "./src/routes/upload.ts",
       "import": "./dist/routes/upload.js"
+    },
+    "./routes/api": {
+      "types": "./dist/routes/api.d.ts",
+      "development": "./src/routes/api.ts",
+      "import": "./dist/routes/api.js"
     }
   },
   "main": "./dist/index.js",
@@ -57,7 +62,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsc -p tsconfig.json && node --test 'dist/**/*.test.js'"
   },
   "peerDependencies": {
     "@latha/admin-sdk": "workspace:*",

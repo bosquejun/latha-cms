@@ -16,7 +16,7 @@ import { createRequire } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import { physical, rootRoute, route } from '@tanstack/virtual-file-routes'
-import { DEFAULT_RPC_PATH, DEFAULT_UPLOAD_PATH } from '@latha/admin-sdk'
+import { DEFAULT_API_PATH, DEFAULT_RPC_PATH, DEFAULT_UPLOAD_PATH } from '@latha/admin-sdk'
 
 type TanStackStartOptions = NonNullable<Parameters<typeof tanstackStart>[0]>
 type TanStackStartPlugins = ReturnType<typeof tanstackStart>
@@ -121,6 +121,11 @@ export interface LathaStartOptions {
    * Default `./latha.config.ts`.
    */
   configPath?: string
+  /**
+   * The public content delivery API (`GET /api/v1/:slug[/:id]`). Mounted at
+   * `DEFAULT_API_PATH` by default; pass `false` to not mount it at all.
+   */
+  api?: false
   /** Extra options forwarded to `tanstackStart()`. */
   start?: TanStackStartOptions
 }
@@ -141,6 +146,9 @@ export function lathaStart(
     route(`${adminBasePath}/$`, routeFile('@latha/start/routes/admin')),
     route(DEFAULT_RPC_PATH, routeFile('@latha/start/routes/rpc')),
     route(DEFAULT_UPLOAD_PATH, routeFile('@latha/start/routes/upload')),
+    ...(options.api === false
+      ? []
+      : [route(`${DEFAULT_API_PATH}/$`, routeFile('@latha/start/routes/api'))]),
   ])
 
   const start = options.start ?? {}
