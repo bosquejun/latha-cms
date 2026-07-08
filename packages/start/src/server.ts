@@ -35,6 +35,7 @@ import type { JsonValue } from '@latha/core'
 import { getRuntime } from './runtime.js'
 import { humanize, LathaRpcInputSchema } from '@latha/admin-sdk'
 import type { EntityDescriptor, NavItem, NavSection } from '@latha/admin-sdk'
+import { hiddenFieldNames, projectDoc } from './hidden-fields.js'
 
 /** Force a value to its JSON-serializable form via a structural round-trip. */
 function toJson<T>(v: T): T {
@@ -270,6 +271,15 @@ export async function handleLathaRequest(
 
   const opCtx: OperationContext = { cms: latha, principal, context: { enforce: true } }
 
+  // `meta.hidden` fields (credential material like `passwordHash`/`keyHash`)
+  // must never reach the browser — not even here, where the admin form just
+  // omits them from rendering. Mirrors the delivery API's `projectDoc`.
+  const project = (slug: string, doc: Record<string, unknown>) => {
+    const entity = latha.getEntity(slug)
+    const hidden = entity ? hiddenFieldNames(entity) : new Set<string>()
+    return projectDoc(hidden, toJson(doc))
+  }
+
   switch (input.action) {
     case 'nav':
       return navOf(latha, basePath, principal)
@@ -278,7 +288,7 @@ export async function handleLathaRequest(
       return entity ? describe(entity) : null
     }
     case 'list':
-      return (await operations.find(opCtx, input.slug)).map(toJson)
+      return (await operations.find(opCtx, input.slug)).map((doc) => project(input.slug, doc))
     case 'page': {
       const limit = input.limit ?? 50
       const offset = input.offset ?? 0
@@ -287,24 +297,24 @@ export async function handleLathaRequest(
         operations.find(opCtx, input.slug, query),
         operations.count(opCtx, input.slug),
       ])
-      return { docs: docs.map(toJson), total, limit, offset }
+      return { docs: docs.map((doc) => project(input.slug, doc)), total, limit, offset }
     }
     case 'get': {
       const doc = await operations.findOne(opCtx, input.slug, input.id)
-      return doc ? toJson(doc) : null
+      return doc ? project(input.slug, doc) : null
     }
     case 'create':
-      return toJson(await operations.create(opCtx, input.slug, input.data))
+      return project(input.slug, await operations.create(opCtx, input.slug, input.data))
     case 'update':
-      return toJson(await operations.update(opCtx, input.slug, input.id, input.data))
+      return project(input.slug, await operations.update(opCtx, input.slug, input.id, input.data))
     case 'remove':
       await operations.destroy(opCtx, input.slug, input.id)
       return { id: input.id }
     case 'getGlobal': {
       const doc = await operations.findGlobal(opCtx, input.slug)
-      return doc ? toJson(doc) : null
+      return doc ? project(input.slug, doc) : null
     }
     case 'saveGlobal':
-      return toJson(await operations.saveGlobal(opCtx, input.slug, input.data))
+      return project(input.slug, await operations.saveGlobal(opCtx, input.slug, input.data))
   }
 }

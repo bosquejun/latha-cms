@@ -42,6 +42,7 @@ import { verifyApiKeyToken, API_KEY_TOKEN_PREFIX } from '@latha/auth'
 import { DEFAULT_API_PATH } from '@latha/admin-sdk'
 import { getRuntime } from './runtime.js'
 import { resolveAnonymousPrincipal } from './server.js'
+import { hiddenFieldNames, projectDoc } from './hidden-fields.js'
 
 const LIST_DEFAULT_LIMIT = 50
 const LIST_MAX_LIMIT = 200
@@ -77,28 +78,6 @@ function json(
       ...extraHeaders,
     },
   })
-}
-
-/** Fields whose `meta.hidden` flags credential material — never serialized here. */
-function hiddenFieldNames(entity: Entity): Set<string> {
-  const hidden = new Set<string>()
-  for (const field of entity.fields) {
-    const meta = (field as { meta?: { hidden?: boolean } }).meta
-    if (meta?.hidden) hidden.add((field as { name: string }).name)
-  }
-  return hidden
-}
-
-function projectDoc(
-  hidden: Set<string>,
-  doc: Record<string, unknown>,
-): Record<string, unknown> {
-  if (hidden.size === 0) return doc
-  const out: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(doc)) {
-    if (!hidden.has(key)) out[key] = value
-  }
-  return out
 }
 
 /** Field names valid in `sort` / `where` params (declared fields + implicits). */
