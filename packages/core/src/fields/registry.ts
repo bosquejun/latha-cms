@@ -78,7 +78,11 @@ export class FieldRegistry {
       if (defaultValue !== undefined) {
         schema = schema.default(defaultValue)
       } else if (!field.required) {
-        schema = schema.optional()
+        // `undefined` (absent key) means "untouched" on a partial update;
+        // `null` is the explicit "clear this field" sentinel — the only value
+        // JSON can carry that survives `JSON.stringify` (which drops
+        // `undefined`-valued keys outright).
+        schema = schema.nullable().optional()
       }
 
       shape[field.name as string] = schema

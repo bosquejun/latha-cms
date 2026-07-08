@@ -6,6 +6,19 @@
 
 import type { FieldMeta, PhantomMeta } from '@latha/core'
 
+interface SlugNestedOpts {
+  /**
+   * Sibling relationship field naming this document's parent — must point
+   * back at the same entity (`relationship({ to: '<this entity>' })`).
+   */
+  parent: string
+  /**
+   * Name of the derived full-path field the plugin injects and maintains
+   * (`ancestors.../own-segment`). Default `'path'`.
+   */
+  pathField?: string
+}
+
 interface SlugOpts {
   /**
    * Generation template — sibling field tokens, optional date formats, and
@@ -14,8 +27,17 @@ interface SlugOpts {
    */
   from: string
   maxLength?: number
-  /** Defaults to true — slugs are unique per entity unless opted out. */
+  /**
+   * Defaults to true — slugs are unique per entity unless opted out. Not
+   * allowed with `nested`: a nested slug stores only its own URL segment,
+   * unique among siblings; global uniqueness lives on the injected path field.
+   */
   unique?: boolean
+  /**
+   * Nested-page mode: store only this document's own segment and maintain a
+   * full URL path prefixed by the selected parent page's path.
+   */
+  nested?: SlugNestedOpts
   meta?: FieldMeta
   // No `required`: validation runs before the generation hook (see field.ts).
 }
@@ -28,5 +50,5 @@ type SlugBuilt<O extends SlugOpts> = O & { type: 'slug'; unique: boolean } & Pha
 
 /** URL slug generated from a template over sibling fields. Unique by default. */
 export function slug<const O extends SlugOpts>(opts: O): SlugBuilt<O> {
-  return { unique: true, ...opts, type: 'slug' } as SlugBuilt<O>
+  return { unique: !opts.nested, ...opts, type: 'slug' } as SlugBuilt<O>
 }

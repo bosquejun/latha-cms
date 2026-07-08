@@ -115,13 +115,20 @@ function buildDefaults(fields: Field[], initial: FormValues | undefined): FormVa
   return values
 }
 
-/** Drop empty optional values so the schema can apply defaults / optionality. */
+/**
+ * Normalize empty optional values to `null` — the explicit "clear this
+ * field" sentinel (see the registry's `nullable()` wrapping) — rather than
+ * dropping the key. Dropping would mean "untouched", which is wrong: the
+ * writer emptied the field on purpose. Required fields keep their empty
+ * value so the schema surfaces the "required" error instead of silently
+ * clearing.
+ */
 function cleanValues(fields: Field[], values: FormValues): FormValues {
   const out: FormValues = {}
   for (const field of fields) {
     const value = values[field.name]
     if (value === '' || (typeof value === 'number' && Number.isNaN(value))) {
-      if (field.required) out[field.name] = value
+      out[field.name] = field.required ? value : null
       continue
     }
     out[field.name] = value

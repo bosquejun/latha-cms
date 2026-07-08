@@ -94,7 +94,9 @@ export function RelationshipField({ field, id, value, onChange, onBlur, error }:
         id={id}
         value={selectedOne}
         onValueChange={(v) => {
-          onChange(v === NONE ? undefined : v)
+          // `null`, not `undefined` — the explicit "clear" sentinel that
+          // survives JSON.stringify (see EntityForm's cleanValues).
+          onChange(v === NONE ? null : v)
           onBlur()
         }}
         placeholder={`Select ${label.toLowerCase()}…`}

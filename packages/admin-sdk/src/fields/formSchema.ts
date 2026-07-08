@@ -110,7 +110,8 @@ export function buildFormSchema(fields: Field[]): z.ZodObject<z.ZodRawShape> {
     if (field.defaultValue !== undefined) {
       s = s.default(field.defaultValue)
     } else if (!field.required) {
-      s = s.optional()
+      // Mirrors the registry's optional/clear contract (see registry.ts).
+      s = s.nullable().optional()
     }
     overrides[field.name] = s
   }

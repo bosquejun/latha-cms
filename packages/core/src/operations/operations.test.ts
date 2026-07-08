@@ -169,6 +169,25 @@ test('update validates partially and threads previousDoc to hooks', async () => 
   await assert.rejects(() => operations.update({ cms }, 'notes', 'missing', { body: 'x' }))
 })
 
+test('update: an omitted optional field is untouched; an explicit null clears it', async () => {
+  const entity: Entity = {
+    cardinality: 'many',
+    slug: 'notes2',
+    fields: stampFields({ title: text({ required: true }), body: text() }),
+  }
+  const cms = instanceFor([entity])
+  const doc = await operations.create({ cms }, 'notes2', { title: 'v1', body: 'b' })
+
+  // Omitting `body` from the payload must not touch its stored value.
+  const untouched = await operations.update({ cms }, 'notes2', doc.id, { title: 'v2' })
+  assert.equal(untouched.body, 'b')
+
+  // An explicit `null` is the clear sentinel — it survives validation (the
+  // registry wraps optional fields in `.nullable()`) and reaches the DB.
+  const cleared = await operations.update({ cms }, 'notes2', doc.id, { body: null })
+  assert.equal(cleared.body, null)
+})
+
 test('count applies the same read authorization as find', async () => {
   const denyRead: Entity = {
     cardinality: 'many',
