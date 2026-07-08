@@ -32,9 +32,15 @@ import {
   text,
 } from '@latha/content'
 import { UsersModule } from '@latha/users'
-import { AuthModule } from '@latha/auth'
 import { countUsers, createUser } from '@latha/users'
-import { hashPassword, getRoleByName } from '@latha/auth'
+import {
+  AuthModule,
+  getCatalog,
+  getRoleByName,
+  hashPassword,
+  hasPermission,
+  type AuthUser,
+} from '@latha/auth'
 import { media, MediaModule } from '@latha/media'
 import { slug, slugPlugin } from '@latha/slug'
 
@@ -74,10 +80,42 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
           Collection({
             slug: 'posts',
             admin: { order: 10, useAsTitle: 'title', defaultColumns: ['title', 'status', 'publishedAt'] },
-            // No explicit `access` block: the admin surface is governed by RBAC
-            // (deny-by-default + the posts:* permissions). To expose public,
-            // headless reads, add e.g. `access: { read: () => true }` — explicit
-            // predicates always override the RBAC default for that operation.
+            // `read`/`create` stay on the RBAC default (deny-by-default + the
+            // posts:* permissions). `update`/`delete` get an explicit ownership
+            // predicate: the `author` role only ever holds posts:create/read, so
+            // without this every author would be locked out of editing their own
+            // posts. The guard defers entirely to an explicit predicate once one
+            // is declared (see rbac/guard.ts), so it must re-check the blanket
+            // posts:update/posts:delete permission itself — otherwise editors and
+            // admins would lose the ability to touch posts they didn't author.
+            access: {
+              update: ({ principal, doc }) => {
+                const user = principal as AuthUser | undefined
+                if (!user) return false
+                return hasPermission(user, 'posts:update') || user.id === doc?.author
+              },
+              delete: ({ principal, doc }) => {
+                const user = principal as AuthUser | undefined
+                if (!user) return false
+                return hasPermission(user, 'posts:delete') || user.id === doc?.author
+              },
+            },
+            hooks: {
+              // Authors (lacking posts:update) can only ever write as themselves;
+              // editors/admins may still assign authorship explicitly. Also
+              // defaults `author` to the creator when left blank.
+              beforeCreate: [
+                ({ data, principal }) => {
+                  const user = principal as AuthUser | undefined
+                  if (!user) return data
+                  const canAssignOthers = hasPermission(user, 'posts:update')
+                  if (!canAssignOthers || !data.author) {
+                    return { ...data, author: user.id }
+                  }
+                  return data
+                },
+              ],
+            },
             // Main-column fields are split into tabs via `meta.group`: a
             // "Content" tab for the body, an "SEO & Meta" tab for metadata.
             // Sidebar fields (`meta.sidebar`) stay in the sidebar regardless.
@@ -165,6 +203,27 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
           passwordHash: await hashPassword(process.env.ADMIN_PASSWORD ?? 'password'),
         })
         console.log('[latha] seeded admin: admin@latha.dev / password')
+      }
+
+      // Seed the `author` role: admin access plus posts:create/posts:read only —
+      // no blanket posts:update/posts:delete, so the posts `access` predicates
+      // above fall back to the id === doc.author ownership check for holders of
+      // this role. AuthModule's own default-role seeding has already run and
+      // synced the catalog by this point (see runtime.ts: bootstrap completes
+      // before `seed` runs), so permission keys are already resolvable to ids.
+      if (!(await getRoleByName(latha, 'author'))) {
+        const catalog = getCatalog(latha)
+        const permissionIds = ['admin:access', 'posts:create', 'posts:read']
+          .map((key) => catalog?.permissionIdByKey.get(key))
+          .filter((id): id is string => typeof id === 'string')
+        await latha.db.create('roles', {
+          name: 'author',
+          label: 'Author',
+          description: 'Can write and manage their own posts.',
+          permissions: permissionIds,
+          system: false,
+        })
+        console.log('[latha] seeded role: author')
       }
 
       // Seed a few taxonomy terms so the category/tags pickers have options.
