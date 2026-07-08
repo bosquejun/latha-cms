@@ -8,7 +8,7 @@
  * only persists whatever hash it is given, keeping storage and crypto separate.
  */
 
-import { relationship, stampFields, text } from '@latha/core'
+import { relationship, stampFields, text, z } from '@latha/core'
 import type { FieldsRecord, Module } from '@latha/core'
 
 export const USERS_SLUG = 'users'
@@ -20,7 +20,9 @@ export interface UsersModuleConfig {
 
 export function UsersModule(config: UsersModuleConfig = {}): Module {
   const fields = stampFields({
-    email: text({ required: true, unique: true }),
+    // The login identity — the zod-first escape hatch (`schema`) enforces
+    // real email format server-side, mirrored to the admin form via jsonSchema.
+    email: text({ required: true, unique: true, schema: z.email() }),
     name: text(),
     // RBAC roles (defined by @latha/auth). A user holds many; effective
     // permissions are the union across them.

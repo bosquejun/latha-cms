@@ -26,7 +26,6 @@ import {
   type ExtensionRegistry,
   type PageExtension,
   type SettingsPageExtension,
-  registerFieldRenderer,
   type SidebarItem,
   type SidebarSection,
   type SidebarLinkProps,
@@ -53,11 +52,6 @@ import {
 } from 'lucide-animated'
 import type { SidebarIcon } from '@latha/admin-sdk'
 import { UserMenu } from './UserMenu.js'
-import { RelationshipField } from './fields/RelationshipField.js'
-
-// Register the client-aware relationship renderer into the SDK registry so
-// relationship fields (e.g. roles.permissions, users.roles) get a real picker.
-registerFieldRenderer('relationship', RelationshipField)
 
 function RouterLink({ href, className, children, onClick }: SidebarLinkProps) {
   return (
