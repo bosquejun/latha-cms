@@ -5,9 +5,15 @@
  * that contributes it (`Module.api.prefix`, defaulting to the module's own
  * `name`) — not by a flat, module-agnostic slug:
  *
- *   GET <api>/<prefix>/<slug>           → paginated list  { docs, total, limit, offset }
+ *   GET <api>/<prefix>/<slug>           → paginated list of documents
  *   GET <api>/<prefix>/<slug>/:id       → one document (404 when absent)
  *   GET <api>/<prefix>/<slug> (single)  → the singleton document
+ *
+ * Every response — success or failure, single resource or list — is the same
+ * envelope (see `./envelope.ts`): `{ data, error, pagination? }`. `error` is
+ * `null` on success; `data` is `null` on failure. `data` is the entity's own
+ * shape for a single resource, or an array of it for a list; `pagination`
+ * only appears on list responses.
  *
  * A module contributing exactly one entity may address it directly under its
  * own prefix, without a redundant slug segment — `@latha/media`'s single
@@ -43,6 +49,7 @@ import { DEFAULT_API_PATH } from '@latha/admin-sdk'
 import { getRuntime } from './runtime.js'
 import { resolveAnonymousPrincipal } from './server.js'
 import { hiddenFieldNames, projectDoc } from './hidden-fields.js'
+import { API_ERROR_CODES, apiFailure, apiPaginationOf, apiSuccess, type ApiResponse } from './envelope.js'
 
 const LIST_DEFAULT_LIMIT = 50
 const LIST_MAX_LIMIT = 200
@@ -67,7 +74,7 @@ function corsHeaders(settings: CorsSettings, origin: string | null): Record<stri
 
 function json(
   status: number,
-  body: unknown,
+  body: ApiResponse<unknown>,
   extraHeaders: Record<string, string>,
 ): Response {
   return new Response(JSON.stringify(body), {
@@ -182,16 +189,21 @@ function parseBoundedInt(
 async function resolveApiPrincipal(
   latha: LathaInstance,
   request: Request,
+  cors: Record<string, string>,
 ): Promise<{ principal: unknown } | { error: Response } | { anonymous: true; principal: unknown }> {
   const header = request.headers.get('authorization')
   if (!header) return { anonymous: true, principal: await resolveAnonymousPrincipal(latha) }
   const [scheme, token] = header.split(' ', 2)
   if (scheme?.toLowerCase() !== 'bearer' || !token?.startsWith(API_KEY_TOKEN_PREFIX)) {
-    return { error: json(401, { error: 'Unsupported authorization scheme.' }, {}) }
+    return {
+      error: json(401, apiFailure(API_ERROR_CODES.UNAUTHORIZED, 'Unsupported authorization scheme.'), cors),
+    }
   }
   const principal = await verifyApiKeyToken(latha, token)
   if (!principal) {
-    return { error: json(401, { error: 'Invalid or expired API key.' }, {}) }
+    return {
+      error: json(401, apiFailure(API_ERROR_CODES.UNAUTHORIZED, 'Invalid or expired API key.'), cors),
+    }
   }
   return { principal }
 }
@@ -259,23 +271,27 @@ export async function handleDeliveryRequest(
   const cors = corsHeaders(settings, request.headers.get('origin'))
 
   if (request.method !== 'GET') {
-    return json(405, { error: 'Method not allowed.' }, { ...cors, allow: 'GET, OPTIONS' })
+    return json(
+      405,
+      apiFailure(API_ERROR_CODES.METHOD_NOT_ALLOWED, 'Method not allowed.'),
+      { ...cors, allow: 'GET, OPTIONS' },
+    )
   }
 
   const url = new URL(request.url)
   const rest = url.pathname.startsWith(basePath) ? url.pathname.slice(basePath.length) : ''
   const segments = rest.split('/').filter(Boolean).map(decodeURIComponent)
   if (segments.length < 1 || segments.length > 3) {
-    return json(404, { error: 'Not found.' }, cors)
+    return json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors)
   }
 
   const latha = await getRuntime(config)
   const route = resolveDeliveryRoute(latha, segments)
-  if (!route) return json(404, { error: 'Not found.' }, cors)
+  if (!route) return json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors)
   const { entity, id } = route
   const slug = entity.slug
 
-  const resolved = await resolveApiPrincipal(latha, request)
+  const resolved = await resolveApiPrincipal(latha, request, cors)
   if ('error' in resolved) return resolved.error
   const opCtx = {
     cms: latha,
@@ -290,20 +306,20 @@ export async function handleDeliveryRequest(
 
   try {
     if (entity.cardinality === 'single') {
-      if (id !== undefined) return json(404, { error: 'Not found.' }, cors)
+      if (id !== undefined) return json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors)
       const doc = await operations.findGlobal(opCtx, slug)
       if (!doc || !matchesConstraint(doc, constraint)) {
-        return json(404, { error: 'Not found.' }, cors)
+        return json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors)
       }
-      return json(200, projectDoc(hidden, doc), cors)
+      return json(200, apiSuccess(projectDoc(hidden, doc)), cors)
     }
 
     if (id !== undefined) {
       const doc = await operations.findOne(opCtx, slug, id)
       if (!doc || !matchesConstraint(doc, constraint)) {
-        return json(404, { error: 'Not found.' }, cors)
+        return json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors)
       }
-      return json(200, projectDoc(hidden, doc), cors)
+      return json(200, apiSuccess(projectDoc(hidden, doc)), cors)
     }
 
     const limit = parseBoundedInt(url.searchParams.get('limit'), LIST_DEFAULT_LIMIT, 1, LIST_MAX_LIMIT)
@@ -321,17 +337,20 @@ export async function handleDeliveryRequest(
     ])
     return json(
       200,
-      { docs: docs.map((doc) => projectDoc(hidden, doc)), total, limit, offset },
+      apiSuccess(
+        docs.map((doc) => projectDoc(hidden, doc)),
+        apiPaginationOf(total, limit, offset),
+      ),
       cors,
     )
   } catch (err) {
     if (err instanceof BadRequestError) {
-      return json(400, { error: err.message }, cors)
+      return json(400, apiFailure(API_ERROR_CODES.BAD_REQUEST, err.message), cors)
     }
     if (err instanceof AccessDeniedError) {
-      return json(403, { error: 'Forbidden.' }, cors)
+      return json(403, apiFailure(API_ERROR_CODES.FORBIDDEN, 'Forbidden.'), cors)
     }
     console.error('[latha] delivery API error:', err)
-    return json(500, { error: 'Internal error.' }, cors)
+    return json(500, apiFailure(API_ERROR_CODES.INTERNAL_ERROR, 'Internal error.'), cors)
   }
 }

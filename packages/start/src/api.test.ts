@@ -24,6 +24,14 @@ import {
 import { AuthModule, createApiKey } from '@latha/auth'
 import { handleDeliveryRequest, handleDeliveryPreflight } from './api.js'
 import { getRuntime } from './runtime.js'
+import type { ApiResponse } from './envelope.js'
+
+/** Narrow an envelope to its success variant, asserting `error` is `null` along the way. */
+function assertSuccess<T>(
+  body: ApiResponse<T>,
+): asserts body is Extract<ApiResponse<T>, { error: null }> {
+  assert.equal(body.error, null)
+}
 
 function memoryAdapter(): DBAdapter {
   const tables = new Map<string, Map<string, Doc>>()
@@ -125,24 +133,36 @@ test('anonymous read is denied until the Public role grants it', async () => {
   const res = await get('/api/v1/test-content/posts')
   assert.equal(res.status, 403)
   assert.equal(res.headers.get('access-control-allow-origin'), '*')
+  const body = (await res.json()) as ApiResponse<unknown>
+  assert.equal(body.data, null)
+  assert.deepEqual(body.error, { code: 'FORBIDDEN', message: 'Forbidden.' })
 })
 
 test('unknown module prefixes, unknown entity slugs, and over-deep paths 404', async () => {
-  assert.equal((await get('/api/v1/nope')).status, 404)
-  assert.equal((await get('/api/v1/test-content/nope')).status, 404)
-  assert.equal((await get('/api/v1/test-content/posts/id/extra')).status, 404)
+  for (const path of ['/api/v1/nope', '/api/v1/test-content/nope', '/api/v1/test-content/posts/id/extra']) {
+    const res = await get(path)
+    assert.equal(res.status, 404)
+    const body = (await res.json()) as ApiResponse<unknown>
+    assert.equal(body.data, null)
+    assert.deepEqual(body.error, { code: 'NOT_FOUND', message: 'Not found.' })
+  }
 })
 
 test('a module with exactly one entity is addressed without a redundant slug segment', async () => {
   const list = await get('/api/v1/widgets')
   assert.equal(list.status, 200)
-  const body = (await list.json()) as { docs: Doc[]; total: number }
-  assert.equal(body.total, 1)
-  assert.equal(body.docs[0]!.name, 'Gadget')
+  const body = (await list.json()) as ApiResponse<Doc[]>
+  assertSuccess(body)
+  assert.deepEqual(body.pagination, { total: 1, limit: 50, offset: 0, hasMore: false })
+  assert.equal(body.data![0]!.name, 'Gadget')
 
-  const one = await get(`/api/v1/widgets/${body.docs[0]!.id}`)
+  const one = await get(`/api/v1/widgets/${body.data![0]!.id}`)
   assert.equal(one.status, 200)
-  assert.equal(((await one.json()) as Doc).name, 'Gadget')
+  const oneBody = (await one.json()) as ApiResponse<Doc>
+  assertSuccess(oneBody)
+  assert.equal(oneBody.data.name, 'Gadget')
+  // Pagination never appears on a single-resource response.
+  assert.equal('pagination' in oneBody, false)
 })
 
 test('non-GET methods are rejected', async () => {
@@ -151,11 +171,16 @@ test('non-GET methods are rejected', async () => {
     new Request('http://cms.test/api/v1/test-content/posts', { method: 'POST' }),
   )
   assert.equal(res.status, 405)
+  const body = (await res.json()) as ApiResponse<unknown>
+  assert.deepEqual(body.error, { code: 'METHOD_NOT_ALLOWED', message: 'Method not allowed.' })
 })
 
 test('invalid bearer tokens fail loudly, not as Public', async () => {
   const res = await get('/api/v1/test-content/posts', { authorization: 'Bearer latha_bogus' })
   assert.equal(res.status, 401)
+  assert.equal(res.headers.get('access-control-allow-origin'), '*')
+  const body = (await res.json()) as ApiResponse<unknown>
+  assert.equal(body.error?.code, 'UNAUTHORIZED')
   const other = await get('/api/v1/test-content/posts', { authorization: 'Basic dXNlcg==' })
   assert.equal(other.status, 401)
 })
@@ -169,11 +194,12 @@ test('an API key carrying the admin role reads, with hidden fields stripped', as
     authorization: `Bearer ${token}`,
   })
   assert.equal(res.status, 200)
-  const body = (await res.json()) as { docs: Doc[]; total: number; limit: number; offset: number }
-  assert.equal(body.total, 2)
-  assert.equal(body.docs.length, 2)
-  assert.ok(body.docs.every((d) => !('internalNote' in d)))
-  assert.ok(body.docs.every((d) => typeof d.title === 'string'))
+  const body = (await res.json()) as ApiResponse<Doc[]>
+  assertSuccess(body)
+  assert.equal(body.pagination?.total, 2)
+  assert.equal(body.data.length, 2)
+  assert.ok(body.data.every((d) => !('internalNote' in d)))
+  assert.ok(body.data.every((d) => typeof d.title === 'string'))
 })
 
 test('granting the Public role a read opens anonymous access', async () => {
@@ -186,12 +212,13 @@ test('granting the Public role a read opens anonymous access', async () => {
 
   const list = await get('/api/v1/test-content/posts?where[featured]=true&limit=1')
   assert.equal(list.status, 200)
-  const body = (await list.json()) as { docs: Doc[]; total: number }
-  assert.equal(body.total, 1)
-  assert.equal(body.docs[0]!.title, 'Hello')
-  assert.ok(!('internalNote' in body.docs[0]!))
+  const body = (await list.json()) as ApiResponse<Doc[]>
+  assertSuccess(body)
+  assert.equal(body.pagination?.total, 1)
+  assert.equal(body.data[0]!.title, 'Hello')
+  assert.ok(!('internalNote' in body.data[0]!))
 
-  const one = await get(`/api/v1/test-content/posts/${body.docs[0]!.id}`)
+  const one = await get(`/api/v1/test-content/posts/${body.data[0]!.id}`)
   assert.equal(one.status, 200)
 
   const missing = await get('/api/v1/test-content/posts/does-not-exist')
@@ -209,15 +236,17 @@ test('the delivery constraint hides drafts even from privileged keys', async () 
   const auth = { authorization: `Bearer ${token}` }
 
   const list = await get('/api/v1/test-content/articles', auth)
-  const body = (await list.json()) as { docs: Doc[]; total: number }
-  assert.equal(body.total, 1)
-  assert.deepEqual(body.docs.map((d) => d.title), ['Live'])
+  const body = (await list.json()) as ApiResponse<Doc[]>
+  assertSuccess(body)
+  assert.equal(body.pagination?.total, 1)
+  assert.deepEqual(body.data.map((d) => d.title), ['Live'])
 
   // A caller's where[] can never widen the constraint.
   const widened = await get('/api/v1/test-content/articles?where[status]=draft', auth)
-  const wbody = (await widened.json()) as { docs: Doc[]; total: number }
-  assert.equal(wbody.total, 1)
-  assert.deepEqual(wbody.docs.map((d) => d.title), ['Live'])
+  const wbody = (await widened.json()) as ApiResponse<Doc[]>
+  assertSuccess(wbody)
+  assert.equal(wbody.pagination?.total, 1)
+  assert.deepEqual(wbody.data.map((d) => d.title), ['Live'])
 
   // Direct fetch of a draft id 404s.
   const draft = (await latha.db.find('articles', { where: { status: 'draft' } }))[0]!
@@ -225,8 +254,25 @@ test('the delivery constraint hides drafts even from privileged keys', async () 
 })
 
 test('unknown sort/filter fields are 400s, not silent full scans', async () => {
-  assert.equal((await get('/api/v1/test-content/posts?sort=nope')).status, 400)
+  const sortRes = await get('/api/v1/test-content/posts?sort=nope')
+  assert.equal(sortRes.status, 400)
+  const sortBody = (await sortRes.json()) as ApiResponse<unknown>
+  assert.equal(sortBody.error?.code, 'BAD_REQUEST')
+
   assert.equal((await get('/api/v1/test-content/posts?where[nope]=1')).status, 400)
+})
+
+test('pagination reflects hasMore across a multi-page list', async () => {
+  const latha = await getRuntime(config)
+  const adminRole = (await latha.db.find('roles', { where: { name: 'admin' }, limit: 1 }))[0]!
+  const { token } = await createApiKey(latha, { name: 'paging', roles: [adminRole.id] })
+
+  const page1 = await get('/api/v1/test-content/posts?limit=1&offset=0', {
+    authorization: `Bearer ${token}`,
+  })
+  const body = (await page1.json()) as ApiResponse<Doc[]>
+  assertSuccess(body)
+  assert.deepEqual(body.pagination, { total: 2, limit: 1, offset: 0, hasMore: true })
 })
 
 test('preflight answers with CORS headers', () => {

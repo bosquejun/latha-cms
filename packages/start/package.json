@@ -46,6 +46,11 @@
       "types": "./dist/routes/api.d.ts",
       "development": "./src/routes/api.ts",
       "import": "./dist/routes/api.js"
+    },
+    "./envelope": {
+      "types": "./dist/envelope.d.ts",
+      "development": "./src/envelope.ts",
+      "import": "./dist/envelope.js"
     }
   },
   "main": "./dist/index.js",
