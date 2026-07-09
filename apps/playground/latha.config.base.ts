@@ -13,6 +13,7 @@ import {
   defineConfig,
   operations,
   z,
+  type CacheAdapter,
   type DBAdapter,
   type FieldsRecord,
   type ResolvedConfig,
@@ -58,6 +59,7 @@ import {
   type AuthUser,
 } from '@latha/auth'
 import { media, MediaModule } from '@latha/media'
+import { CacheModule, inMemoryCache } from '@latha/cache'
 import { slug, slugPlugin } from '@latha/slug'
 
 // `text({ schema: ... })` escape hatch — no dedicated `color` field type
@@ -110,7 +112,11 @@ function linkFields(opts: { withNewTab?: boolean } = {}): FieldsRecord {
   return fields
 }
 
-export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedConfig {
+export function buildConfig(
+  db: DBAdapter,
+  storage: StorageAdapter,
+  cache: CacheAdapter = inMemoryCache(),
+): ResolvedConfig {
   return defineConfig({
     db,
 
@@ -126,6 +132,11 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
       AuthModule({ secret: process.env.AUTH_SECRET ?? 'latha-dev-secret-change-me' }),
 
       MediaModule({ storage }),
+
+      // Read-through caching for the public delivery API — see
+      // `@latha/cache`'s `CacheModule`. Entities can opt out or override the
+      // TTL via their own `api.cache`.
+      CacheModule({ cache }),
 
       ContentModule({
         // Delivery-API reads land at /api/v1/contents/posts, /api/v1/contents/pages,

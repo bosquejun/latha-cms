@@ -12,3 +12,4 @@ export {
   type RedisCacheOptions,
   type RedisClientLike,
 } from './adapters/redis.js'
+export { CacheModule, type CacheModuleConfig } from './module.js'

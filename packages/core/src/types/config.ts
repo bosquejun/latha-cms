@@ -190,6 +190,17 @@ export interface DeliveryApiConfig {
    * list, or `false` to send no CORS headers at all.
    */
   cors?: '*' | string[] | false
+  /**
+   * Read-through caching for delivery-API responses, backed by whichever
+   * `CacheAdapter` a module registered onto `latha.cache` (e.g.
+   * `@latha/cache`'s `CacheModule`). `ttlSeconds` defaults to 60. Pass
+   * `false` to disable caching even when a cache adapter is registered —
+   * omitting this caches whenever `latha.cache` is set. Cached entries are
+   * TTL-only: a write via the admin RPC does not invalidate already-cached
+   * delivery-API reads. Only successful (200) reads are cached. An entity's
+   * own `api.cache` overrides this per entity.
+   */
+  cache?: { ttlSeconds?: number } | false
 }
 
 export interface LathaConfig {

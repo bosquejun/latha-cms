@@ -78,7 +78,16 @@ export interface Entity<TDoc = Record<string, unknown>> {
    * read of this entity is scoped to (e.g. `{ status: 'published' }` stamped
    * by a content module with drafts enabled).
    */
-  api?: { where?: Record<string, unknown> }
+  api?: {
+    where?: Record<string, unknown>
+    /**
+     * Per-entity override of `DeliveryApiConfig.cache` — `false` disables
+     * caching for this entity's delivery-API reads regardless of the
+     * app-wide setting; an object overrides just the TTL. Omit to inherit
+     * the app-wide default. Same passthrough contract as `where`.
+     */
+    cache?: { ttlSeconds?: number } | false
+  }
 }
 
 /**

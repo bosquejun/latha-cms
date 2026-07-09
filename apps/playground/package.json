@@ -13,6 +13,7 @@
   "dependencies": {
     "@latha/admin-sdk": "workspace:*",
     "@latha/auth": "workspace:*",
+    "@latha/cache": "workspace:*",
     "@latha/content": "workspace:*",
     "@latha/core": "workspace:*",
     "@latha/media": "workspace:*",

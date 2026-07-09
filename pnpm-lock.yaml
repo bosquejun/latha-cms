@@ -34,6 +34,9 @@ importers:
       '@latha/auth':
         specifier: workspace:*
         version: link:../../packages/modules/auth
+      '@latha/cache':
+        specifier: workspace:*
+        version: link:../../packages/modules/cache
       '@latha/content':
         specifier: workspace:*
         version: link:../../packages/modules/content
@@ -373,6 +376,9 @@ importers:
       '@latha/auth':
         specifier: workspace:*
         version: link:../modules/auth
+      '@latha/cache':
+        specifier: workspace:*
+        version: link:../modules/cache
       '@latha/content':
         specifier: workspace:*
         version: link:../modules/content
