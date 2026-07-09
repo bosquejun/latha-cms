@@ -75,3 +75,19 @@ export type {
   NavItem,
   EntityDescriptor,
 } from '@latha/admin-sdk'
+
+// Delivery-API response envelope — Zod-first, importable by any client that
+// wants to validate/type a response fetched from `/api/v1/...`.
+export {
+  API_ERROR_CODES,
+  apiErrorSchema,
+  apiPaginationSchema,
+  apiResponseSchema,
+  apiSuccess,
+  apiFailure,
+  apiPaginationOf,
+  type ApiErrorCode,
+  type ApiError,
+  type ApiPagination,
+  type ApiResponse,
+} from './envelope.js'
