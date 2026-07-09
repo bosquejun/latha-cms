@@ -112,7 +112,7 @@ export function ArrayField({ field, id, value, onChange, onBlur, error }: FieldC
         items.map((item, index) => {
           const itemCollapsed = isCollapsed(index)
           return (
-            <Card key={index}>
+            <Card key={index} className={cn(itemCollapsed && 'py-3')}>
               <CardContent className="flex flex-col gap-form">
                 <div className="flex items-center justify-between gap-inline">
                   <button
