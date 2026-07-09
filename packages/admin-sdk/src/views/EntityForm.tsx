@@ -29,7 +29,7 @@
  */
 
 import { useMemo, useState } from 'react'
-import { Controller, useForm, type Resolver } from 'react-hook-form'
+import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { Field } from '@latha/core'
 import { Button, Tabs, toast } from '@latha/ui'
@@ -39,6 +39,8 @@ import { buildFormSchema } from '../fields/formSchema.js'
 import { FormValuesProvider, type FormValuesStore } from '../fields/form-values.js'
 import { getFieldRenderer } from '../fields/registry.js'
 import { layoutRows } from '../fields/layout.js'
+import { isFieldVisible } from '../fields/show-if.js'
+import { defaultForField } from '../fields/defaults.js'
 import { Slot } from '../extensions/Slot.js'
 import { useExtensions } from '../extensions/context.js'
 import { PageLayout } from '../shell/PageLayout.js'
@@ -93,46 +95,6 @@ export interface EntityFormProps {
   entity?: unknown
   /** Record id on edit, forwarded to `form.*` zone widgets as context. */
   recordId?: string
-}
-
-function defaultForField(field: Field): unknown {
-  if (field.defaultValue !== undefined) return field.defaultValue
-  switch (field.type as string) {
-    case 'boolean':
-      return false
-    case 'number':
-      return ''
-    case 'array':
-    case 'blocks':
-      return []
-    case 'group': {
-      // Seed only children that (recursively) declare an explicit
-      // `defaultValue` — e.g. a color swatch's starting hex — so it shows up
-      // on a brand-new document. Every renderer already treats an absent
-      // value as its own blank state, so an untouched child with no default
-      // stays absent rather than submitting a literal `''`/`false`/`[]`,
-      // which can fail a stricter child schema (e.g. a `z.url()` field
-      // rejecting an empty string) that the top-level `cleanValues` pass
-      // (which only looks at top-level fields) never gets a chance to null out.
-      const children = (field as Record<string, unknown>).fields
-      const defaults: Record<string, unknown> = {}
-      if (Array.isArray(children)) {
-        for (const child of children as Field[]) {
-          if (child.defaultValue !== undefined) {
-            defaults[child.name] = child.defaultValue
-          } else if (child.type === 'group') {
-            const nested = defaultForField(child)
-            if (nested && typeof nested === 'object' && Object.keys(nested).length > 0) {
-              defaults[child.name] = nested
-            }
-          }
-        }
-      }
-      return defaults
-    }
-    default:
-      return ''
-  }
 }
 
 function buildDefaults(fields: Field[], initial: FormValues | undefined): FormValues {
@@ -224,8 +186,12 @@ export function EntityForm({
     }
   })
 
-  const mainFields = fields.filter((f) => !f.meta?.sidebar && !f.meta?.hidden)
-  const sidebarFields = fields.filter((f) => f.meta?.sidebar && !f.meta?.hidden)
+  // Reactive snapshot of all top-level values, purely so `meta.showIf` fields
+  // can hide/show as their referenced sibling changes.
+  const watchedValues = (useWatch({ control }) ?? {}) as FormValues
+  const visibleFields = fields.filter((f) => isFieldVisible(f, watchedValues))
+  const mainFields = visibleFields.filter((f) => !f.meta?.sidebar && !f.meta?.hidden)
+  const sidebarFields = visibleFields.filter((f) => f.meta?.sidebar && !f.meta?.hidden)
 
   // Split the main column into tab groups. A single group means no field
   // declared `meta.group`, so we render flat (no tab strip) — unchanged layout.

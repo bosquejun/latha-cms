@@ -9,7 +9,15 @@
  * reachable in a given build — not a runtime branch inside one bundle.
  */
 
-import { defineConfig, operations, z, type DBAdapter, type ResolvedConfig, type StorageAdapter } from '@latha/core'
+import {
+  defineConfig,
+  operations,
+  z,
+  type DBAdapter,
+  type FieldsRecord,
+  type ResolvedConfig,
+  type StorageAdapter,
+} from '@latha/core'
 import {
   Collection,
   ContentModule,
@@ -22,6 +30,7 @@ import {
   richTextBlock,
   imageBlock,
   featuresBlock,
+  boolean,
   date,
   group,
   number,
@@ -48,6 +57,51 @@ import { slug, slugPlugin } from '@latha/slug'
 // exists (or is needed) for a `#rrggbb` string; `inputType: 'color'` on the
 // text renderer already gets a native color picker.
 const hexColor = () => z.string().regex(/^#[0-9a-f]{6}$/i, 'Use a 6-digit hex color, e.g. #171717')
+
+// Same escape hatch, for a site-relative route (e.g. `/shop`) that isn't
+// backed by a `pages`/`posts` entity — an app route the CMS doesn't know
+// about, as opposed to `url` (an external, fully-qualified link).
+const internalPath = () => z.string().regex(/^\//, 'Path must start with /, e.g. /shop')
+
+/**
+ * The link-target shape shared by every menu link: top-level nav items,
+ * their one level of dropdown children, and footer column links. Defined
+ * once so the four `linkType` variants (and which field backs each) can't
+ * drift between the three places a menu link is declared.
+ */
+function linkFields(opts: { withNewTab?: boolean } = {}): FieldsRecord {
+  const fields: FieldsRecord = {
+    label: text({ required: true }),
+    linkType: select({
+      options: z.enum(['page', 'post', 'url', 'path']),
+      defaultValue: 'page',
+      meta: { label: 'Link Type' },
+    }),
+    page: relationship({ to: 'pages', meta: { showIf: { field: 'linkType', equals: 'page' } } }),
+    post: relationship({ to: 'posts', meta: { showIf: { field: 'linkType', equals: 'post' } } }),
+    url: text({
+      schema: z.url(),
+      meta: {
+        label: 'External URL',
+        placeholder: 'https://…',
+        showIf: { field: 'linkType', equals: 'url' },
+      },
+    }),
+    path: text({
+      schema: internalPath(),
+      meta: {
+        label: 'Internal Path',
+        placeholder: '/shop',
+        description: 'A site route not backed by a CMS page.',
+        showIf: { field: 'linkType', equals: 'path' },
+      },
+    }),
+  }
+  if (opts.withNewTab) {
+    fields.openInNewTab = boolean({ meta: { label: 'Open in New Tab' } })
+  }
+  return fields
+}
 
 export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedConfig {
   return defineConfig({
@@ -183,6 +237,48 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
                 },
                 meta: { group: 'Social', label: 'Social Links' },
               }),
+            },
+          }),
+
+          Document({
+            slug: 'navigation',
+            admin: { group: 'Globals', order: 16 },
+            fields: {
+              items: array({
+                fields: {
+                  ...linkFields({ withNewTab: true }),
+                  // One level of dropdown nesting — same link shape as the
+                  // top-level item, minus a third nesting level (not needed
+                  // for a typical site nav).
+                  children: array({
+                    fields: linkFields({ withNewTab: true }),
+                    meta: { label: 'Dropdown Items' },
+                    useAsTitle: 'label',
+                  }),
+                },
+                meta: { description: 'Top-level links shown in the site header.' },
+                useAsTitle: 'label',
+              }),
+            },
+          }),
+
+          Document({
+            slug: 'footer',
+            admin: { group: 'Globals', order: 17 },
+            // Social links are deliberately NOT duplicated here — the public
+            // site reads them from `site-settings.social` (single source of
+            // truth). Duplicating the same handles/URLs into a second
+            // singleton risks the two drifting when only one gets updated.
+            fields: {
+              columns: array({
+                fields: {
+                  title: text({ required: true }),
+                  links: array({ fields: linkFields(), useAsTitle: 'label' }),
+                },
+                meta: { description: 'Footer link columns (e.g. Product, Company, Resources).' },
+                useAsTitle: 'title',
+              }),
+              legalText: richtext({ meta: { label: 'Legal / Copyright Text' } }),
             },
           }),
 

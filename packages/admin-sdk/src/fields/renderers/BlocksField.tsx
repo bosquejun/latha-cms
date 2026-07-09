@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 import { getFieldRenderer } from '../registry.js'
+import { sparseDefaults } from '../defaults.js'
 
 interface BlockDef {
   type: string
@@ -13,23 +14,6 @@ interface BlockDef {
 }
 
 type BlockItem = Record<string, unknown> & { type: string }
-
-function defaultForField(field: Field): unknown {
-  if (field.defaultValue !== undefined) return field.defaultValue
-  switch (field.type as string) {
-    case 'boolean':
-      return false
-    case 'number':
-      return ''
-    case 'array':
-    case 'blocks':
-      return []
-    case 'group':
-      return {}
-    default:
-      return ''
-  }
-}
 
 /** Extract a short plain-text preview from the first text field of a block. */
 function textPreview(def: BlockDef, item: BlockItem): string {
@@ -116,10 +100,7 @@ export function BlocksField({
   function addBlock(type: string) {
     const def = blockDefs.find((d) => d.type === type)
     if (!def) return
-    const blank: BlockItem = { type }
-    for (const f of def.fields) {
-      blank[f.name] = defaultForField(f)
-    }
+    const blank: BlockItem = { type, ...sparseDefaults(def.fields) }
     onChange([...items, blank])
     setShowPicker(false)
   }

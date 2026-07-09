@@ -57,6 +57,12 @@ export const groupFieldConfigSchema = z.object({
 export const arrayFieldConfigSchema = z.object({
   type: z.literal('array'),
   fields: z.array(z.record(z.string(), z.unknown())),
+  /**
+   * Name of a child field whose value labels each item's collapsed header
+   * (e.g. `'label'`) instead of the default "Item 1", "Item 2", … A missing
+   * or empty value on a given item falls back to the numbered label.
+   */
+  useAsTitle: z.string().optional(),
 })
 
 registerFieldType({

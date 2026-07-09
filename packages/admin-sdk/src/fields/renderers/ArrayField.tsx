@@ -7,15 +7,25 @@
  * move-up/down controls (no drag dependency). Setting a child to an empty
  * value drops the key, mirroring `GroupField`/`cleanValues`.
  *
+ * Each item collapses independently (local UI state — not persisted, not
+ * form data) so a long list stays navigable; the header shows the item's
+ * `useAsTitle` child value when the field declares one and the item has it
+ * set, falling back to the numbered "Item 1" label otherwise. Collapse state
+ * is tracked by index and kept in sync with `items` across add/remove/move,
+ * the same operations already applied to the value array itself.
+ *
  * Like `group`, errors surface at the array level only — per-item plumbing is
  * a follow-up alongside group's.
  */
-import { Button, Card, CardContent } from '@latha/ui'
+import { useState } from 'react'
+import { Button, Card, CardContent, cn } from '@latha/ui'
 import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
 import type { Field } from '@latha/core'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 import { getFieldRenderer } from '../registry.js'
+import { isFieldVisible } from '../show-if.js'
+import { sparseDefaults } from '../defaults.js'
 
 export function ArrayField({ field, id, value, onChange, onBlur, error }: FieldControlProps) {
   const children: Field[] = Array.isArray((field as Record<string, unknown>).fields)
@@ -24,9 +34,30 @@ export function ArrayField({ field, id, value, onChange, onBlur, error }: FieldC
   const items: Record<string, unknown>[] = Array.isArray(value)
     ? (value as Record<string, unknown>[])
     : []
+  const useAsTitle =
+    typeof (field as Record<string, unknown>).useAsTitle === 'string'
+      ? ((field as Record<string, unknown>).useAsTitle as string)
+      : undefined
 
   const label = field.meta?.label ?? humanize(field.name)
   const itemLabel = label.replace(/s$/i, '') || 'item'
+
+  const [collapsed, setCollapsed] = useState<boolean[]>([])
+  const isCollapsed = (index: number) => collapsed[index] ?? false
+
+  function toggleCollapsed(index: number) {
+    setCollapsed((prev) => {
+      const next = [...prev]
+      next[index] = !(prev[index] ?? false)
+      return next
+    })
+  }
+
+  function itemTitle(item: Record<string, unknown>, index: number): string {
+    const raw = useAsTitle ? item[useAsTitle] : undefined
+    if (typeof raw === 'string' && raw.trim()) return raw
+    return `${humanize(itemLabel)} ${index + 1}`
+  }
 
   function setItem(index: number, name: string, next: unknown) {
     const merged = { ...items[index] }
@@ -36,12 +67,14 @@ export function ArrayField({ field, id, value, onChange, onBlur, error }: FieldC
   }
 
   function addItem() {
-    onChange([...items, {}])
+    onChange([...items, sparseDefaults(children)])
+    setCollapsed((prev) => [...prev, false])
   }
 
   function removeItem(index: number) {
     const next = items.filter((_, i) => i !== index)
     onChange(next.length === 0 ? undefined : next)
+    setCollapsed((prev) => prev.filter((_, i) => i !== index))
   }
 
   function moveItem(index: number, delta: -1 | 1) {
@@ -50,6 +83,11 @@ export function ArrayField({ field, id, value, onChange, onBlur, error }: FieldC
     const next = [...items]
     ;[next[index], next[target]] = [next[target]!, next[index]!]
     onChange(next)
+    setCollapsed((prev) => {
+      const nextCollapsed = [...prev]
+      ;[nextCollapsed[index], nextCollapsed[target]] = [nextCollapsed[target]!, nextCollapsed[index]!]
+      return nextCollapsed
+    })
   }
 
   return (
@@ -71,65 +109,82 @@ export function ArrayField({ field, id, value, onChange, onBlur, error }: FieldC
           No {label.toLowerCase()} yet.
         </p>
       ) : (
-        items.map((item, index) => (
-          <Card key={index}>
-            <CardContent className="flex flex-col gap-form">
-              <div className="flex items-center justify-between">
-                <p className="text-caption font-medium text-muted-foreground">
-                  {humanize(itemLabel)} {index + 1}
-                </p>
-                <div className="flex gap-1">
-                  <Button
+        items.map((item, index) => {
+          const itemCollapsed = isCollapsed(index)
+          return (
+            <Card key={index} className={cn(itemCollapsed && 'py-3')}>
+              <CardContent className="flex flex-col gap-form">
+                <div className="flex items-center justify-between gap-inline">
+                  <button
                     type="button"
-                    size="icon-sm"
-                    variant="ghost"
-                    aria-label="Move up"
-                    title="Move up"
-                    disabled={index === 0}
-                    onClick={() => moveItem(index, -1)}
+                    onClick={() => toggleCollapsed(index)}
+                    aria-expanded={!itemCollapsed}
+                    className="flex min-w-0 flex-1 items-center gap-1.5 text-caption font-medium text-muted-foreground hover:text-foreground"
                   >
-                    <ChevronUp />
-                  </Button>
-                  <Button
-                    type="button"
-                    size="icon-sm"
-                    variant="ghost"
-                    aria-label="Move down"
-                    title="Move down"
-                    disabled={index === items.length - 1}
-                    onClick={() => moveItem(index, 1)}
-                  >
-                    <ChevronDown />
-                  </Button>
-                  <Button
-                    type="button"
-                    size="icon-sm"
-                    variant="destructive-subtle"
-                    aria-label={`Remove ${itemLabel.toLowerCase()} ${index + 1}`}
-                    title="Remove"
-                    onClick={() => removeItem(index)}
-                  >
-                    <Trash2 />
-                  </Button>
+                    <ChevronDown
+                      className={cn(
+                        'size-3.5 shrink-0 transition-transform duration-150',
+                        itemCollapsed && '-rotate-90',
+                      )}
+                    />
+                    <span className="truncate">{itemTitle(item, index)}</span>
+                  </button>
+                  <div className="flex shrink-0 gap-1">
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      variant="ghost"
+                      aria-label="Move up"
+                      title="Move up"
+                      disabled={index === 0}
+                      onClick={() => moveItem(index, -1)}
+                    >
+                      <ChevronUp />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      variant="ghost"
+                      aria-label="Move down"
+                      title="Move down"
+                      disabled={index === items.length - 1}
+                      onClick={() => moveItem(index, 1)}
+                    >
+                      <ChevronDown />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      variant="destructive-subtle"
+                      aria-label={`Remove ${itemLabel.toLowerCase()} ${index + 1}`}
+                      title="Remove"
+                      onClick={() => removeItem(index)}
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-              {children.map((child) => {
-                const Renderer = getFieldRenderer(child.type)
-                return (
-                  <Renderer
-                    key={child.name}
-                    field={child}
-                    id={`${id}-${index}-${child.name}`}
-                    value={item[child.name]}
-                    onChange={(v) => setItem(index, child.name, v)}
-                    onBlur={onBlur}
-                    error={undefined}
-                  />
-                )
-              })}
-            </CardContent>
-          </Card>
-        ))
+                {!itemCollapsed &&
+                  children
+                    .filter((child) => isFieldVisible(child, item))
+                    .map((child) => {
+                      const Renderer = getFieldRenderer(child.type)
+                      return (
+                        <Renderer
+                          key={child.name}
+                          field={child}
+                          id={`${id}-${index}-${child.name}`}
+                          value={item[child.name]}
+                          onChange={(v) => setItem(index, child.name, v)}
+                          onBlur={onBlur}
+                          error={undefined}
+                        />
+                      )
+                    })}
+              </CardContent>
+            </Card>
+          )
+        })
       )}
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>

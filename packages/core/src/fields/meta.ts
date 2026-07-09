@@ -54,6 +54,24 @@ export const fieldMetaSchema = z.object({
    * the shades themselves are never persisted.
    */
   shades: z.boolean().optional(),
+  /**
+   * Only render this field when a sibling field (within the same group/array
+   * item, or the same entity for top-level fields) currently holds a matching
+   * value — e.g. a `url` field with `showIf: { field: 'linkType', equals: 'url' }`
+   * stays hidden until `linkType` is switched to `'url'`. The field still
+   * validates and persists normally when shown; this is display-only, purely
+   * opt-in, and ignored by the kernel (same contract as the rest of `meta`).
+   */
+  showIf: z
+    .object({
+      /** Name of the sibling field to read. */
+      field: z.string(),
+      /** Show when the sibling's value strictly equals this. */
+      equals: z.union([z.string(), z.number(), z.boolean()]).optional(),
+      /** Show when the sibling's value is one of these. */
+      in: z.array(z.union([z.string(), z.number(), z.boolean()])).optional(),
+    })
+    .optional(),
 })
 
 export type FieldMeta = z.infer<typeof fieldMetaSchema>

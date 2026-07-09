@@ -35,6 +35,7 @@ import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 import { getFieldRenderer } from '../registry.js'
 import { layoutRows } from '../layout.js'
+import { isFieldVisible } from '../show-if.js'
 
 export function GroupField({ field, id, value, onChange, onBlur, error }: FieldControlProps) {
   const children: Field[] = Array.isArray((field as Record<string, unknown>).fields)
@@ -51,8 +52,9 @@ export function GroupField({ field, id, value, onChange, onBlur, error }: FieldC
   }
 
   const label = field.meta?.label ?? humanize(field.name)
-  const primaryChildren = children.filter((c) => !c.meta?.advanced)
-  const advancedChildren = children.filter((c) => c.meta?.advanced)
+  const visibleChildren = children.filter((c) => isFieldVisible(c, obj))
+  const primaryChildren = visibleChildren.filter((c) => !c.meta?.advanced)
+  const advancedChildren = visibleChildren.filter((c) => c.meta?.advanced)
 
   const renderChild = (child: Field) => {
     const Renderer = getFieldRenderer(child.type)

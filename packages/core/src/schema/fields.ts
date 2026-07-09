@@ -171,7 +171,7 @@ type StringRefOpts = CommonOpts & {
 
 type GroupOpts = CommonOpts & { fields: FieldsRecord; defaultValue?: never }
 
-type ArrayOpts = CommonOpts & { fields: FieldsRecord; defaultValue?: never }
+type ArrayOpts = CommonOpts & { fields: FieldsRecord; defaultValue?: never; useAsTitle?: string }
 
 type SelectOut<T extends z.ZodEnum, O> = O extends { many: true }
   ? z.infer<T>[]
