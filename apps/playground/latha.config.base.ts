@@ -118,37 +118,41 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
               // --primary, --secondary, --accent) — a curated subset rather
               // than all ~15 shadcn tokens, since most of those (card, popover,
               // border, ring, ...) are normally derived from these few, not
-              // picked individually. `brandColor` is the editor-facing name for
-              // `--primary` — the one color non-technical users actually think
-              // about; the others stay labeled after their CSS variable.
-              // Fields only for now — reading these back into the public
-              // site's actual CSS variables is a follow-up.
+              // picked individually. `brandColor` (editor-facing name for
+              // `--primary`) is the one color non-technical users actually
+              // think about, so it's the only field shown by default — its
+              // `meta.shades` preview gives a derived scale for free without
+              // asking anyone to pick five colors. The other four stay
+              // labeled after their CSS variable, tucked behind `meta.advanced`
+              // for whoever wants to override them by hand. Fields only for
+              // now — reading these back into the public site's actual CSS
+              // variables is a follow-up.
               palette: group({
                 fields: {
+                  brandColor: text({
+                    schema: hexColor(),
+                    defaultValue: '#171717',
+                    meta: { label: 'Brand Color', inputType: 'color', shades: true },
+                  }),
                   background: text({
                     schema: hexColor(),
                     defaultValue: '#ffffff',
-                    meta: { label: 'Background', inputType: 'color', width: 'half' },
+                    meta: { label: 'Background', inputType: 'color', width: 'half', advanced: true },
                   }),
                   foreground: text({
                     schema: hexColor(),
                     defaultValue: '#0a0a0a',
-                    meta: { label: 'Foreground', inputType: 'color', width: 'half' },
-                  }),
-                  brandColor: text({
-                    schema: hexColor(),
-                    defaultValue: '#171717',
-                    meta: { label: 'Brand Color', inputType: 'color', width: 'half' },
+                    meta: { label: 'Foreground', inputType: 'color', width: 'half', advanced: true },
                   }),
                   secondary: text({
                     schema: hexColor(),
                     defaultValue: '#f5f5f5',
-                    meta: { label: 'Secondary', inputType: 'color', width: 'half' },
+                    meta: { label: 'Secondary', inputType: 'color', width: 'half', advanced: true },
                   }),
                   accent: text({
                     schema: hexColor(),
                     defaultValue: '#f5f5f5',
-                    meta: { label: 'Accent', inputType: 'color' },
+                    meta: { label: 'Accent', inputType: 'color', width: 'half', advanced: true },
                   }),
                 },
                 meta: {

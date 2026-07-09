@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react'
-import { Field as FieldWrap, Input, InputAddon, InputGroup, Textarea } from '@latha/ui'
+import { cn, Field as FieldWrap, Input, InputAddon, InputGroup, Textarea } from '@latha/ui'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
-
-const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
+import { HEX_COLOR, shadesOf } from '../color.js'
 
 export function TextField({
   field,
@@ -42,30 +41,54 @@ export function TextField({
     // real interactive picker crammed into it reads as broken chrome rather
     // than part of the field.
     const swatchColor = HEX_COLOR.test(stringValue) ? stringValue : '#ffffff'
+    // Only a genuinely valid current value has shades worth showing — a
+    // partial/empty one has nothing to derive from (shadesOf returns []).
+    const shades = field.meta?.shades ? shadesOf(stringValue) : []
     control = (
-      <div className="flex items-center gap-2">
-        <label
-          className="relative block size-9 shrink-0 cursor-pointer overflow-hidden rounded-md border border-input shadow-xs focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50"
-          style={{ backgroundColor: swatchColor }}
-        >
-          <span className="sr-only">Pick a color</span>
-          <input
-            type="color"
-            value={swatchColor}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <label
+            className="relative block size-9 shrink-0 cursor-pointer overflow-hidden rounded-md border border-input shadow-xs focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50"
+            style={{ backgroundColor: swatchColor }}
+          >
+            <span className="sr-only">Pick a color</span>
+            <input
+              type="color"
+              value={swatchColor}
+              onChange={(e) => onChange(e.target.value)}
+              onBlur={onBlur}
+              className="absolute inset-0 size-full cursor-pointer opacity-0"
+            />
+          </label>
+          <Input
+            id={id}
+            type="text"
+            value={stringValue}
+            placeholder={field.meta?.placeholder ?? '#171717'}
             onChange={(e) => onChange(e.target.value)}
             onBlur={onBlur}
-            className="absolute inset-0 size-full cursor-pointer opacity-0"
+            className="flex-1"
           />
-        </label>
-        <Input
-          id={id}
-          type="text"
-          value={stringValue}
-          placeholder={field.meta?.placeholder ?? '#171717'}
-          onChange={(e) => onChange(e.target.value)}
-          onBlur={onBlur}
-          className="flex-1"
-        />
+        </div>
+        {shades.length > 0 && (
+          <div className="flex gap-1" role="group" aria-label="Shades">
+            {shades.map((shade, i) => (
+              <button
+                key={`${shade}-${i}`}
+                type="button"
+                title={shade}
+                onClick={() => onChange(shade)}
+                className={cn(
+                  'h-6 flex-1 cursor-pointer rounded-sm border transition-transform hover:scale-y-110',
+                  shade.toLowerCase() === stringValue.toLowerCase()
+                    ? 'border-ring ring-2 ring-ring/50'
+                    : 'border-input',
+                )}
+                style={{ backgroundColor: shade }}
+              />
+            ))}
+          </div>
+        )}
       </div>
     )
   } else {
