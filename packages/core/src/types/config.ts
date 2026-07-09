@@ -2,7 +2,7 @@
  * Top-level configuration and module/plugin contracts.
  */
 
-import type { DBAdapter, StorageAdapter } from './adapter.js'
+import type { CacheAdapter, DBAdapter, StorageAdapter } from './adapter.js'
 import type { AnyEntity } from './entity.js'
 import type { Guard } from './guard.js'
 import type { FieldTypeEntry } from '../fields/registry.js'
@@ -13,6 +13,12 @@ export interface LathaInstance {
   db: DBAdapter
   /** Optional blob/file storage adapter — set when a module (e.g. `@latha/media`) needs one. */
   storage?: StorageAdapter
+  /**
+   * Optional key-value cache adapter — set when a module or the app itself
+   * needs one (e.g. `@latha/cache`'s `redisCache()`/`inMemoryCache()`). Core
+   * has no opinion on what's cached; this is a generic extension seam.
+   */
+  cache?: CacheAdapter
   /** Flat list of every entity contributed by every module. */
   entities: AnyEntity[]
   /** Resolve a single entity by slug. */
@@ -35,6 +41,12 @@ export interface LathaInstance {
    * `registerFieldType`, not a config concept core itself needs.
    */
   registerStorageAdapter(adapter: StorageAdapter): void
+  /**
+   * Register the key-value cache adapter (typically from a module's
+   * `onInit`, e.g. `@latha/cache`). Same shape as `registerStorageAdapter` —
+   * core never reads or writes through it itself.
+   */
+  registerCacheAdapter(adapter: CacheAdapter): void
   ready: boolean
 }
 
