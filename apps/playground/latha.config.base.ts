@@ -68,9 +68,13 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
         entities: [
           Document({
             slug: 'site-settings',
-            // `admin.order` positions an entity within its menu group (lower =
-            // higher). Site settings sits last, after Posts and Categories.
-            admin: { order: 30 },
+            // Lives in the settings sidebar (behind the Settings button)
+            // rather than the main content nav — same `admin.area` used by
+            // `@latha/users`' `users` entity and `@latha/auth`'s RBAC/API-key
+            // entities. It's still a `ContentModule` `Document` (a singleton
+            // needs `Document()`'s persistence/operations), but display
+            // placement is an orthogonal `admin` concern.
+            admin: { area: 'settings' },
             fields: {
               site_name: text({ required: true }),
               tagline: text(),
