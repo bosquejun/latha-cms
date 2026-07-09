@@ -155,6 +155,10 @@ export function buildConfig(
             // sits flat in the settings sidebar (like `users`) instead of
             // nesting under a one-item "Content" folder.
             admin: { area: 'settings', group: '' },
+            // Written rarely (only from the admin), read on nearly every public
+            // page load — a long TTL on the delivery-API cache trades a bit of
+            // staleness after an edit for far fewer reads hitting the db.
+            cache: { ttlSeconds: 3600 },
             // Tabs via `meta.group` (same convention as `posts` below):
             // General is the leading, ungrouped tab; Branding/SEO & Meta/
             // Social are opt-in tabs for the rest.

@@ -3,7 +3,7 @@
  */
 
 import type { CacheAdapter, DBAdapter, StorageAdapter } from './adapter.js'
-import type { AnyEntity } from './entity.js'
+import type { AnyEntity, DeliveryCacheOption } from './entity.js'
 import type { Guard } from './guard.js'
 import type { FieldTypeEntry } from '../fields/registry.js'
 
@@ -200,7 +200,7 @@ export interface DeliveryApiConfig {
    * delivery-API reads. Only successful (200) reads are cached. An entity's
    * own `api.cache` overrides this per entity.
    */
-  cache?: { ttlSeconds?: number } | false
+  cache?: DeliveryCacheOption
 }
 
 export interface LathaConfig {
