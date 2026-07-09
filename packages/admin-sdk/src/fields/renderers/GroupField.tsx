@@ -19,13 +19,17 @@
  * `'half'` field never pairs across that boundary.
  *
  * Children carrying `meta.advanced: true` start collapsed behind an
- * "Advanced settings" toggle beneath the always-shown ones, instead of every
- * child rendering up front — e.g. a color group that only wants its base
- * color shown by default, with the derived tokens available on request.
+ * "Advanced options" accordion trigger beneath the always-shown ones,
+ * instead of every child rendering up front — e.g. a color group that only
+ * wants its base color shown by default, with the derived tokens available
+ * on request. Plain `lucide-react` chevron, not `lucide-animated`'s: the
+ * latter's `ChevronDownIcon` renders a fixed-size inner `<svg>` its own
+ * `className` can't resize and animates a hover bob, not a rotation — wrong
+ * tool for a click-driven expand/collapse indicator.
  */
 import { useState } from 'react'
-import { Card, CardContent, cn } from '@latha/ui'
-import { ChevronDownIcon } from 'lucide-animated'
+import { Card, CardContent, Separator, cn } from '@latha/ui'
+import { ChevronDown } from 'lucide-react'
 import type { Field } from '@latha/core'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
@@ -93,24 +97,32 @@ export function GroupField({ field, id, value, onChange, onBlur, error }: FieldC
       {field.meta?.description && (
         <p className="text-caption text-muted-foreground">{field.meta.description}</p>
       )}
-      <Card>
-        <CardContent className="flex flex-col gap-form">
-          {renderRows(primaryChildren)}
-          {advancedChildren.length > 0 && (
-            <>
-              <button
-                type="button"
-                onClick={() => setShowAdvanced((v) => !v)}
-                aria-expanded={showAdvanced}
-                className="flex items-center gap-1.5 self-start text-caption font-medium text-muted-foreground hover:text-foreground"
-              >
-                <ChevronDownIcon className={cn('size-3.5 transition-transform', !showAdvanced && '-rotate-90')} />
-                {showAdvanced ? 'Hide advanced options' : 'Show advanced options'}
-              </button>
-              {showAdvanced && renderRows(advancedChildren)}
-            </>
-          )}
-        </CardContent>
+      <Card className="gap-0 overflow-hidden">
+        <CardContent className="flex flex-col gap-form">{renderRows(primaryChildren)}</CardContent>
+        {advancedChildren.length > 0 && (
+          <>
+            <Separator className="mt-card" />
+            <button
+              type="button"
+              onClick={() => setShowAdvanced((v) => !v)}
+              aria-expanded={showAdvanced}
+              className="flex w-full items-center justify-between px-card py-2.5 text-caption font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            >
+              Advanced options
+              <ChevronDown
+                className={cn('size-4 shrink-0 transition-transform duration-200', showAdvanced && 'rotate-180')}
+              />
+            </button>
+            {showAdvanced && (
+              <>
+                <Separator />
+                <CardContent className="flex flex-col gap-form pt-card">
+                  {renderRows(advancedChildren)}
+                </CardContent>
+              </>
+            )}
+          </>
+        )}
       </Card>
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
