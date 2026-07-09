@@ -118,21 +118,20 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
               // --primary, --secondary, --accent) — a curated subset rather
               // than all ~15 shadcn tokens, since most of those (card, popover,
               // border, ring, ...) are normally derived from these few, not
-              // picked individually. `brandColor` (editor-facing name for
-              // `--primary`) is the one color non-technical users actually
-              // think about, so it's the only field shown by default — its
-              // `meta.shades` preview gives a derived scale for free without
-              // asking anyone to pick five colors. The other four stay
-              // labeled after their CSS variable, tucked behind `meta.advanced`
-              // for whoever wants to override them by hand. Fields only for
-              // now — reading these back into the public site's actual CSS
-              // variables is a follow-up.
+              // picked individually. `primaryColor` (--primary) is the one
+              // color non-technical users actually think about, so it's the
+              // only field shown by default — its `meta.shades` preview gives
+              // a derived scale for free without asking anyone to pick five
+              // colors. The other four stay labeled after their CSS variable,
+              // tucked behind `meta.advanced` for whoever wants to override
+              // them by hand. Fields only for now — reading these back into
+              // the public site's actual CSS variables is a follow-up.
               palette: group({
                 fields: {
-                  brandColor: text({
+                  primaryColor: text({
                     schema: hexColor(),
                     defaultValue: '#171717',
-                    meta: { label: 'Brand Color', inputType: 'color', shades: true },
+                    meta: { label: 'Primary Color', inputType: 'color', shades: true },
                   }),
                   background: text({
                     schema: hexColor(),
