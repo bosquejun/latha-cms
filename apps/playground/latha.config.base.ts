@@ -73,11 +73,54 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
             // `@latha/users`' `users` entity and `@latha/auth`'s RBAC/API-key
             // entities. It's still a `ContentModule` `Document` (a singleton
             // needs `Document()`'s persistence/operations), but display
-            // placement is an orthogonal `admin` concern.
-            admin: { area: 'settings' },
+            // placement is an orthogonal `admin` concern. `group: ''`
+            // overrides ContentModule's default "Content" nav label so it
+            // sits flat in the settings sidebar (like `users`) instead of
+            // nesting under a one-item "Content" folder.
+            admin: { area: 'settings', group: '' },
+            // Tabs via `meta.group` (same convention as `posts` below):
+            // General is the leading, ungrouped tab; Branding/SEO & Meta/
+            // Social are opt-in tabs for the rest.
             fields: {
-              site_name: text({ required: true }),
+              site_name: text({ required: true, meta: { label: 'Site Name' } }),
               tagline: text(),
+              description: text({
+                meta: {
+                  multiline: true,
+                  description: 'Default meta description and social preview text for pages that don’t set their own.',
+                },
+              }),
+              contactEmail: text({ schema: z.email(), meta: { label: 'Contact Email' } }),
+
+              logo: media({
+                meta: { group: 'Branding', description: 'Shown in the admin topbar and public site header.' },
+              }),
+              favicon: media({
+                meta: { group: 'Branding', description: 'Browser tab icon — square image recommended.' },
+              }),
+
+              seo: group({
+                fields: {
+                  metaTitle: text({ meta: { label: 'Meta Title' } }),
+                  metaDescription: text({ meta: { label: 'Meta Description', multiline: true } }),
+                  ogImage: media({ meta: { label: 'Default OG Image' } }),
+                },
+                meta: {
+                  group: 'SEO & Meta',
+                  label: 'Default SEO',
+                  description: 'Fallback search & social metadata for pages that don’t set their own.',
+                },
+              }),
+
+              social: group({
+                fields: {
+                  twitter: text({ schema: z.url(), meta: { label: 'X / Twitter', inputType: 'url', placeholder: 'https://x.com/yourhandle' } }),
+                  facebook: text({ schema: z.url(), meta: { inputType: 'url', placeholder: 'https://facebook.com/yourpage' } }),
+                  instagram: text({ schema: z.url(), meta: { inputType: 'url', placeholder: 'https://instagram.com/yourhandle' } }),
+                  linkedin: text({ schema: z.url(), meta: { label: 'LinkedIn', inputType: 'url', placeholder: 'https://linkedin.com/company/yourco' } }),
+                },
+                meta: { group: 'Social', label: 'Social Links' },
+              }),
             },
           }),
 
