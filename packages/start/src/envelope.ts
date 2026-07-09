@@ -35,11 +35,11 @@ export const apiErrorSchema = z.object({
 })
 export type ApiError = z.infer<typeof apiErrorSchema>
 
-/** Present only on list responses. */
+/** Present only on list responses. 1-indexed, like the `page`/`pageSize` query params. */
 export const apiPaginationSchema = z.object({
+  page: z.number().int().positive(),
+  pageSize: z.number().int().positive(),
   total: z.number().int().nonnegative(),
-  limit: z.number().int().positive(),
-  offset: z.number().int().nonnegative(),
   hasMore: z.boolean(),
 })
 export type ApiPagination = z.infer<typeof apiPaginationSchema>
@@ -78,7 +78,7 @@ export function apiFailure(code: ApiErrorCode, message: string): ApiResponse<nev
   return { data: null, error: { code, message } }
 }
 
-/** Derive the `pagination` block from a list page's limit/offset/total. */
-export function apiPaginationOf(total: number, limit: number, offset: number): ApiPagination {
-  return { total, limit, offset, hasMore: offset + limit < total }
+/** Derive the `pagination` block from a list page's page/pageSize/total. */
+export function apiPaginationOf(total: number, page: number, pageSize: number): ApiPagination {
+  return { page, pageSize, total, hasMore: page * pageSize < total }
 }

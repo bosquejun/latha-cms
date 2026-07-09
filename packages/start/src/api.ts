@@ -21,8 +21,9 @@
  * `<api>/media/media/:id`. Modules with more than one entity always need the
  * slug segment to disambiguate (`<api>/contents/posts`, `<api>/contents/pages`).
  *
- * Query params on lists: `limit`, `offset`, `sort` (`-createdAt,name`), and
- * equality filters `where[field]=value`.
+ * Query params on lists: `page` (1-indexed, default 1), `pageSize` (default
+ * 50, max 200), `sort` (`-createdAt,name`), and equality filters
+ * `where[field]=value`.
  *
  * Anonymous requests run as the Public role; `Authorization: Bearer latha_…`
  * runs as the API key's roles. Enforcement is always on — the RBAC guard
@@ -51,8 +52,8 @@ import { resolveAnonymousPrincipal } from './server.js'
 import { hiddenFieldNames, projectDoc } from './hidden-fields.js'
 import { API_ERROR_CODES, apiFailure, apiPaginationOf, apiSuccess, type ApiResponse } from './envelope.js'
 
-const LIST_DEFAULT_LIMIT = 50
-const LIST_MAX_LIMIT = 200
+const LIST_DEFAULT_PAGE_SIZE = 50
+const LIST_MAX_PAGE_SIZE = 200
 
 interface CorsSettings {
   cors: '*' | string[] | false
@@ -322,11 +323,16 @@ export async function handleDeliveryRequest(
       return json(200, apiSuccess(projectDoc(hidden, doc)), cors)
     }
 
-    const limit = parseBoundedInt(url.searchParams.get('limit'), LIST_DEFAULT_LIMIT, 1, LIST_MAX_LIMIT)
-    const offset = parseBoundedInt(url.searchParams.get('offset'), 0, 0, Number.MAX_SAFE_INTEGER)
+    const page = parseBoundedInt(url.searchParams.get('page'), 1, 1, Number.MAX_SAFE_INTEGER)
+    const pageSize = parseBoundedInt(
+      url.searchParams.get('pageSize'),
+      LIST_DEFAULT_PAGE_SIZE,
+      1,
+      LIST_MAX_PAGE_SIZE,
+    )
     const query: Query = {
-      limit,
-      offset,
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
       sort: parseSort(entity, url.searchParams.get('sort')),
       // The constraint spreads last: a caller's where[] can never widen it.
       where: mergeWhere(parseWhere(entity, url.searchParams), constraint),
@@ -339,7 +345,7 @@ export async function handleDeliveryRequest(
       200,
       apiSuccess(
         docs.map((doc) => projectDoc(hidden, doc)),
-        apiPaginationOf(total, limit, offset),
+        apiPaginationOf(total, page, pageSize),
       ),
       cors,
     )

@@ -153,7 +153,7 @@ test('a module with exactly one entity is addressed without a redundant slug seg
   assert.equal(list.status, 200)
   const body = (await list.json()) as ApiResponse<Doc[]>
   assertSuccess(body)
-  assert.deepEqual(body.pagination, { total: 1, limit: 50, offset: 0, hasMore: false })
+  assert.deepEqual(body.pagination, { page: 1, pageSize: 50, total: 1, hasMore: false })
   assert.equal(body.data![0]!.name, 'Gadget')
 
   const one = await get(`/api/v1/widgets/${body.data![0]!.id}`)
@@ -210,7 +210,7 @@ test('granting the Public role a read opens anonymous access', async () => {
   const publicRole = (await latha.db.find('roles', { where: { name: 'public' }, limit: 1 }))[0]!
   await latha.db.update('roles', publicRole.id, { permissions: [permission.id] })
 
-  const list = await get('/api/v1/test-content/posts?where[featured]=true&limit=1')
+  const list = await get('/api/v1/test-content/posts?where[featured]=true&pageSize=1')
   assert.equal(list.status, 200)
   const body = (await list.json()) as ApiResponse<Doc[]>
   assertSuccess(body)
@@ -267,12 +267,20 @@ test('pagination reflects hasMore across a multi-page list', async () => {
   const adminRole = (await latha.db.find('roles', { where: { name: 'admin' }, limit: 1 }))[0]!
   const { token } = await createApiKey(latha, { name: 'paging', roles: [adminRole.id] })
 
-  const page1 = await get('/api/v1/test-content/posts?limit=1&offset=0', {
+  const page1 = await get('/api/v1/test-content/posts?page=1&pageSize=1', {
     authorization: `Bearer ${token}`,
   })
   const body = (await page1.json()) as ApiResponse<Doc[]>
   assertSuccess(body)
-  assert.deepEqual(body.pagination, { total: 2, limit: 1, offset: 0, hasMore: true })
+  assert.deepEqual(body.pagination, { page: 1, pageSize: 1, total: 2, hasMore: true })
+
+  const page2 = await get('/api/v1/test-content/posts?page=2&pageSize=1', {
+    authorization: `Bearer ${token}`,
+  })
+  const body2 = (await page2.json()) as ApiResponse<Doc[]>
+  assertSuccess(body2)
+  assert.deepEqual(body2.pagination, { page: 2, pageSize: 1, total: 2, hasMore: false })
+  assert.notDeepEqual(body2.data, body.data)
 })
 
 test('preflight answers with CORS headers', () => {
