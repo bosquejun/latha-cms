@@ -22,6 +22,10 @@
  * because its tab isn't visible, and each tab shows a badge counting its fields
  * with validation errors so problems on a hidden tab stay visible. With no
  * groups declared the main column renders flat, exactly as before.
+ *
+ * Within a tab (or the flat main column), a main-column field carrying
+ * `field.meta?.width === 'half'` pairs with the next `'half'` field into a
+ * two-up row (see `layoutRows`); both stack full-width below `sm`.
  */
 
 import { useMemo, useState } from 'react'
@@ -69,6 +73,38 @@ function groupFields(fields: Field[]): FieldGroup[] {
     group.fields.push(field)
   }
   return order.map((label) => byKey.get(label)!)
+}
+
+/** A row of one full-width field, or two paired `'half'`-width fields. */
+type FieldRow = [Field] | [Field, Field]
+
+/**
+ * Pair up consecutive `meta.width: 'half'` fields into two-up rows; every
+ * other field (including a lone trailing `'half'`) gets its own full-width
+ * row. Order-preserving — pairing only ever looks at the immediately
+ * preceding field.
+ */
+function layoutRows(fields: Field[]): FieldRow[] {
+  const rows: FieldRow[] = []
+  let pendingHalf: Field | undefined
+  for (const field of fields) {
+    if (field.meta?.width === 'half') {
+      if (pendingHalf) {
+        rows.push([pendingHalf, field])
+        pendingHalf = undefined
+      } else {
+        pendingHalf = field
+      }
+      continue
+    }
+    if (pendingHalf) {
+      rows.push([pendingHalf])
+      pendingHalf = undefined
+    }
+    rows.push([field])
+  }
+  if (pendingHalf) rows.push([pendingHalf])
+  return rows
 }
 
 export interface EntityFormProps {
@@ -233,6 +269,24 @@ export function EntityForm({
     )
   }
 
+  /** Render a field list as rows, pairing adjacent `meta.width: 'half'` fields. */
+  const renderFieldRows = (fieldsToRender: Field[]) =>
+    layoutRows(fieldsToRender).map((row) => {
+      if (row.length === 2) {
+        const [first, second] = row
+        return (
+          <div
+            key={`${first.name}+${second.name}`}
+            className="grid grid-cols-2 gap-form max-sm:grid-cols-1"
+          >
+            {renderField(first)}
+            {renderField(second)}
+          </div>
+        )
+      }
+      return renderField(row[0])
+    })
+
   const hasSidebar = sidebarFields.length > 0 || hasSidebarSlots
 
   return (
@@ -367,10 +421,10 @@ export function EntityForm({
                     hidden={group.key !== active}
                     className="flex flex-col gap-form"
                   >
-                    {group.fields.map(renderField)}
+                    {renderFieldRows(group.fields)}
                   </div>
                 ))
-              : mainFields.map(renderField)}
+              : renderFieldRows(mainFields)}
             <Slot
               zone="form.after"
               entity={entity}

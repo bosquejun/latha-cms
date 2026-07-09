@@ -93,10 +93,18 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
               contactEmail: text({ schema: z.email(), meta: { label: 'Contact Email' } }),
 
               logo: media({
-                meta: { group: 'Branding', description: 'Shown in the admin topbar and public site header.' },
+                meta: {
+                  group: 'Branding',
+                  width: 'half',
+                  description: 'Shown in the admin topbar and public site header.',
+                },
               }),
               favicon: media({
-                meta: { group: 'Branding', description: 'Browser tab icon — square image recommended.' },
+                meta: {
+                  group: 'Branding',
+                  width: 'half',
+                  description: 'Browser tab icon — square image recommended.',
+                },
               }),
 
               seo: group({
