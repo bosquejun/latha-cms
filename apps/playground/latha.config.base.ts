@@ -29,7 +29,14 @@ import {
   ctaBlock,
   richTextBlock,
   imageBlock,
+  videoBlock,
+  columnsBlock,
+  bannerBlock,
   featuresBlock,
+  statsBlock,
+  testimonialBlock,
+  faqBlock,
+  galleryBlock,
   boolean,
   date,
   group,
@@ -279,6 +286,47 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
                 useAsTitle: 'title',
               }),
               legalText: richtext({ meta: { label: 'Legal / Copyright Text' } }),
+            },
+          }),
+
+          Document({
+            slug: 'landing-page',
+            admin: { group: 'Globals', order: 18 },
+            fields: {
+              // A flexible, ordered page builder — same `blocks()` field type
+              // `pages.content` uses below, so editors compose the landing
+              // page from the same block library (start with a Hero block,
+              // add Features/Stats/Testimonials/CTA/FAQ/etc. beneath it)
+              // instead of a bespoke fixed layout that would drift from it.
+              sections: blocks({
+                blocks: [
+                  heroBlock,
+                  featuresBlock,
+                  statsBlock,
+                  testimonialBlock,
+                  ctaBlock,
+                  faqBlock,
+                  galleryBlock,
+                  bannerBlock,
+                  richTextBlock,
+                  imageBlock,
+                  videoBlock,
+                  columnsBlock,
+                ],
+                meta: { description: 'Landing page sections, in display order. Start with a Hero block.' },
+              }),
+              seo: group({
+                fields: {
+                  metaTitle: text({ meta: { label: 'Meta Title' } }),
+                  metaDescription: text({ meta: { label: 'Meta Description', multiline: true } }),
+                  ogImage: media({ meta: { label: 'OG Image' } }),
+                },
+                meta: {
+                  group: 'SEO & Meta',
+                  label: 'SEO',
+                  description: 'Search & social metadata for the landing page.',
+                },
+              }),
             },
           }),
 
