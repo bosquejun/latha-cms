@@ -33,30 +33,30 @@ export function TextField({
       />
     )
   } else if (isColor) {
-    // A native `<input type="color">` swatch as the left add-on (rejects
-    // anything but a valid 6-digit hex, so it falls back to white rather
-    // than erroring while the hex text field holds a partial/invalid value)
-    // plus a plain text input for typing the hex directly — instead of the
-    // bare native color input, which is all picker and no visible/typeable
-    // value.
+    // A native `<input type="color">` swatch (rejects anything but a valid
+    // 6-digit hex, so it falls back to white rather than erroring while the
+    // hex text field holds a partial/invalid value) as its own button, next
+    // to — not fused with — a plain text input for typing the hex directly.
+    // Kept as two separate controls rather than one bordered InputGroup:
+    // InputGroup's addon slot is built for static text/icon labels, and a
+    // real interactive picker crammed into it reads as broken chrome rather
+    // than part of the field.
     const swatchColor = HEX_COLOR.test(stringValue) ? stringValue : '#ffffff'
     control = (
-      <InputGroup>
-        <InputAddon className="p-0.5">
-          <label
-            className="relative block size-6 shrink-0 cursor-pointer overflow-hidden rounded-sm border border-input focus-within:ring-2 focus-within:ring-ring/50"
-            style={{ backgroundColor: swatchColor }}
-          >
-            <span className="sr-only">Pick a color</span>
-            <input
-              type="color"
-              value={swatchColor}
-              onChange={(e) => onChange(e.target.value)}
-              onBlur={onBlur}
-              className="absolute inset-0 size-full cursor-pointer opacity-0"
-            />
-          </label>
-        </InputAddon>
+      <div className="flex items-center gap-2">
+        <label
+          className="relative block size-9 shrink-0 cursor-pointer overflow-hidden rounded-md border border-input shadow-xs focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50"
+          style={{ backgroundColor: swatchColor }}
+        >
+          <span className="sr-only">Pick a color</span>
+          <input
+            type="color"
+            value={swatchColor}
+            onChange={(e) => onChange(e.target.value)}
+            onBlur={onBlur}
+            className="absolute inset-0 size-full cursor-pointer opacity-0"
+          />
+        </label>
         <Input
           id={id}
           type="text"
@@ -64,9 +64,9 @@ export function TextField({
           placeholder={field.meta?.placeholder ?? '#171717'}
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
-          className="border-0 shadow-none focus-visible:ring-0"
+          className="flex-1"
         />
-      </InputGroup>
+      </div>
     )
   } else {
     control = (
