@@ -44,6 +44,11 @@ import {
 import { media, MediaModule } from '@latha/media'
 import { slug, slugPlugin } from '@latha/slug'
 
+// `text({ schema: ... })` escape hatch — no dedicated `color` field type
+// exists (or is needed) for a `#rrggbb` string; `inputType: 'color'` on the
+// text renderer already gets a native color picker.
+const hexColor = () => z.string().regex(/^#[0-9a-f]{6}$/i, 'Use a 6-digit hex color, e.g. #171717')
+
 export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedConfig {
   return defineConfig({
     db,
@@ -104,6 +109,49 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
                   group: 'Branding',
                   width: 'half',
                   description: 'Browser tab icon — square image recommended.',
+                },
+              }),
+
+              // Public-site theme tokens, named after the shadcn/ui CSS
+              // variables this admin's own design system already runs on
+              // (@latha/ui/src/styles/globals.css: --background, --foreground,
+              // --primary, --secondary, --accent) — a curated subset rather
+              // than all ~15 shadcn tokens, since most of those (card, popover,
+              // border, ring, ...) are normally derived from these few, not
+              // picked individually. Fields only for now — reading these back
+              // into the public site's actual CSS variables is a follow-up.
+              palette: group({
+                fields: {
+                  background: text({
+                    schema: hexColor(),
+                    defaultValue: '#ffffff',
+                    meta: { label: 'Background', inputType: 'color', width: 'half' },
+                  }),
+                  foreground: text({
+                    schema: hexColor(),
+                    defaultValue: '#0a0a0a',
+                    meta: { label: 'Foreground', inputType: 'color', width: 'half' },
+                  }),
+                  primary: text({
+                    schema: hexColor(),
+                    defaultValue: '#171717',
+                    meta: { label: 'Primary', inputType: 'color', width: 'half' },
+                  }),
+                  secondary: text({
+                    schema: hexColor(),
+                    defaultValue: '#f5f5f5',
+                    meta: { label: 'Secondary', inputType: 'color', width: 'half' },
+                  }),
+                  accent: text({
+                    schema: hexColor(),
+                    defaultValue: '#f5f5f5',
+                    meta: { label: 'Accent', inputType: 'color' },
+                  }),
+                },
+                meta: {
+                  group: 'Branding',
+                  label: 'Brand Colors',
+                  description: 'Theme colors for the public site.',
                 },
               }),
 

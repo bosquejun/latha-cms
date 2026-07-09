@@ -38,6 +38,7 @@ import { useId } from 'react'
 import { buildFormSchema } from '../fields/formSchema.js'
 import { FormValuesProvider, type FormValuesStore } from '../fields/form-values.js'
 import { getFieldRenderer } from '../fields/registry.js'
+import { layoutRows } from '../fields/layout.js'
 import { Slot } from '../extensions/Slot.js'
 import { useExtensions } from '../extensions/context.js'
 import { PageLayout } from '../shell/PageLayout.js'
@@ -75,38 +76,6 @@ function groupFields(fields: Field[]): FieldGroup[] {
   return order.map((label) => byKey.get(label)!)
 }
 
-/** A row of one full-width field, or two paired `'half'`-width fields. */
-type FieldRow = [Field] | [Field, Field]
-
-/**
- * Pair up consecutive `meta.width: 'half'` fields into two-up rows; every
- * other field (including a lone trailing `'half'`) gets its own full-width
- * row. Order-preserving — pairing only ever looks at the immediately
- * preceding field.
- */
-function layoutRows(fields: Field[]): FieldRow[] {
-  const rows: FieldRow[] = []
-  let pendingHalf: Field | undefined
-  for (const field of fields) {
-    if (field.meta?.width === 'half') {
-      if (pendingHalf) {
-        rows.push([pendingHalf, field])
-        pendingHalf = undefined
-      } else {
-        pendingHalf = field
-      }
-      continue
-    }
-    if (pendingHalf) {
-      rows.push([pendingHalf])
-      pendingHalf = undefined
-    }
-    rows.push([field])
-  }
-  if (pendingHalf) rows.push([pendingHalf])
-  return rows
-}
-
 export interface EntityFormProps {
   fields: Field[]
   initialValues?: FormValues
@@ -136,8 +105,31 @@ function defaultForField(field: Field): unknown {
     case 'array':
     case 'blocks':
       return []
-    case 'group':
-      return {}
+    case 'group': {
+      // Seed only children that (recursively) declare an explicit
+      // `defaultValue` — e.g. a color swatch's starting hex — so it shows up
+      // on a brand-new document. Every renderer already treats an absent
+      // value as its own blank state, so an untouched child with no default
+      // stays absent rather than submitting a literal `''`/`false`/`[]`,
+      // which can fail a stricter child schema (e.g. a `z.url()` field
+      // rejecting an empty string) that the top-level `cleanValues` pass
+      // (which only looks at top-level fields) never gets a chance to null out.
+      const children = (field as Record<string, unknown>).fields
+      const defaults: Record<string, unknown> = {}
+      if (Array.isArray(children)) {
+        for (const child of children as Field[]) {
+          if (child.defaultValue !== undefined) {
+            defaults[child.name] = child.defaultValue
+          } else if (child.type === 'group') {
+            const nested = defaultForField(child)
+            if (nested && typeof nested === 'object' && Object.keys(nested).length > 0) {
+              defaults[child.name] = nested
+            }
+          }
+        }
+      }
+      return defaults
+    }
     default:
       return ''
   }
