@@ -181,8 +181,12 @@ test('requests with different Authorization headers get different cache keys', a
   assert.equal(resA.status, 200)
   assert.equal(resB.status, 200)
 
-  const uniqueKeys = new Set(cache.setKeys)
-  assert.equal(uniqueKeys.size, 2)
+  // Each request also warms @latha/auth's own per-identity caches (the
+  // api-key doc, the shared admin role) on the same shared cache instance —
+  // by design, but orthogonal to what this test is proving. Only the
+  // delivery-cache keys (one per distinct caller identity) are relevant here.
+  const deliveryKeys = new Set(cache.setKeys.filter((k) => k.startsWith('delivery:')))
+  assert.equal(deliveryKeys.size, 2)
 })
 
 // --- per-entity opt-out ------------------------------------------------------
@@ -208,6 +212,11 @@ test('an entity with api.cache: false is never read through or written to the ca
     optOutConfig,
     new Request('http://cms.test/api/v1/widgets/uncached-widget'),
   )
+  // Anonymous principal resolution (@latha/auth's getPublicPrincipal) also
+  // reads through the same shared cache instance on every request — that's
+  // by design (one cms.cache serves every module), but it means only the
+  // delivery-cache keys are relevant to this assertion, not the raw total.
+  const deliveryGetKeys = cache.getKeys.filter((k) => k.startsWith('delivery:'))
   assert.equal(cache.setKeys.length, 1)
-  assert.equal(cache.getKeys.length, 1)
+  assert.equal(deliveryGetKeys.length, 1)
 })

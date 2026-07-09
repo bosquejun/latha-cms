@@ -19,6 +19,8 @@
  */
 
 import type { LathaInstance, Module } from '@latha/core'
+import { invalidate } from '@latha/cache'
+import { userIdKey } from './cache.js'
 import { DEFAULT_COOKIE_NAME } from './service.js'
 import { apiKeysEntity } from './api-keys/entities.js'
 import { rbacEntities } from './rbac/entities.js'
@@ -88,6 +90,31 @@ export function AuthModule(config: AuthModuleConfig): Module {
       )
       // Plug RBAC into the kernel's generic authorization seam.
       latha.registerGuard(createRbacGuard())
+
+      // Invalidate the cached subject doc the moment it changes, so a
+      // deactivated/edited account never keeps resolving from a stale cache
+      // entry. Only possible for the built-in entity-backed store — a custom
+      // `subjectStore` has no entity for `@latha/auth` to hook into, so it's
+      // left uncached beyond the defense-in-depth TTL.
+      if (!config.subjectStore) {
+        const usersSlug = config.usersSlug ?? DEFAULT_USERS_SLUG
+        const usersEntity = latha.getEntity(usersSlug)
+        if (usersEntity) {
+          const invalidateUser = async ({
+            data,
+            cms,
+          }: {
+            data: Record<string, unknown>
+            cms: LathaInstance
+          }) => {
+            await invalidate(cms, userIdKey(usersSlug, String(data.id)))
+            return data
+          }
+          usersEntity.hooks ??= {}
+          ;(usersEntity.hooks.afterUpdate ??= []).push(invalidateUser)
+          ;(usersEntity.hooks.afterDelete ??= []).push(invalidateUser)
+        }
+      }
     },
 
     async onReady(latha) {

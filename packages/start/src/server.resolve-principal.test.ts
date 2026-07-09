@@ -10,12 +10,19 @@ import assert from 'node:assert/strict'
 import {
   bootstrapLatha,
   defineConfig,
+  operations,
+  stampFields,
+  text,
+  type CacheAdapter,
   type DBAdapter,
   type Doc,
+  type Entity,
+  type JsonValue,
   type LathaInstance,
   type Query,
 } from '@latha/core'
 import { AuthModule, createSessionToken, resolveAuthOptions } from '@latha/auth'
+import { CacheModule } from '@latha/cache'
 import { resolvePrincipal } from './server.js'
 
 function fakeDb(): DBAdapter {
@@ -105,4 +112,95 @@ test('resolvePrincipal ignores an invalid session cookie (falls back to Public)'
   const { sessionUser, principal } = await resolvePrincipal(cms, request)
   assert.equal(sessionUser, null)
   assert.equal((principal as { id: string }).id, '__public__')
+})
+
+// --- Session/user-lookup caching (the entity-backed subject store) ---------
+
+function spyCache(): CacheAdapter & { setKeys: string[] } {
+  const store = new Map<string, JsonValue>()
+  return {
+    setKeys: [],
+    async get(key: string) {
+      return store.get(key)
+    },
+    async set(key: string, value: JsonValue) {
+      this.setKeys.push(key)
+      store.set(key, value)
+    },
+    async delete(key: string) {
+      store.delete(key)
+    },
+    async has(key: string) {
+      return store.has(key)
+    },
+  }
+}
+
+const usersEntity: Entity = {
+  cardinality: 'many',
+  slug: 'users',
+  actions: ['read', 'update'],
+  fields: stampFields({ email: text({ required: true }) }),
+}
+
+async function bootAuthWithCache(cache: CacheAdapter): Promise<LathaInstance> {
+  const config = defineConfig({
+    db: fakeDb(),
+    modules: [
+      { name: 'users', entities: [usersEntity] },
+      AuthModule({ secret: 'test-secret' }), // default entity-backed store (usersSlug: 'users')
+      CacheModule({ cache }),
+    ],
+  })
+  return bootstrapLatha(config)
+}
+
+const systemCtx = (cms: LathaInstance) => ({
+  cms,
+  principal: { id: '__system__', permissions: ['*'] },
+})
+
+test('a session resolves the user from cache on the second request', async () => {
+  const cache = spyCache()
+  const cachedCms = await bootAuthWithCache(cache)
+  await cachedCms.db.create('users', { id: 'u1', email: 'alice@example.com', roles: [] })
+
+  const opts = resolveAuthOptions()
+  const token = await createSessionToken({ sub: 'u1' }, opts.secret, opts.sessionTtlSeconds)
+  const request = new Request('http://localhost/__latha/rpc', {
+    headers: { cookie: `${opts.cookieName}=${token}` },
+  })
+
+  await resolvePrincipal(cachedCms, request)
+  // The user doc and the implicit Authenticated-role lookup each get their
+  // own cache entry (see `resolveUserPermissions`).
+  assert.deepEqual(new Set(cache.setKeys), new Set(['auth:user:users:u1', 'auth:role:name:authenticated']))
+
+  const setCallsAfterFirst = cache.setKeys.length
+  await resolvePrincipal(cachedCms, request)
+  assert.equal(cache.setKeys.length, setCallsAfterFirst, 'second resolution served entirely from cache')
+})
+
+test('updating the user invalidates the cached session lookup immediately', async () => {
+  const cache = spyCache()
+  const cachedCms = await bootAuthWithCache(cache)
+  await cachedCms.db.create('users', { id: 'u1', email: 'alice@example.com', roles: [] })
+
+  const opts = resolveAuthOptions()
+  const token = await createSessionToken({ sub: 'u1' }, opts.secret, opts.sessionTtlSeconds)
+  const request = new Request('http://localhost/__latha/rpc', {
+    headers: { cookie: `${opts.cookieName}=${token}` },
+  })
+
+  const first = await resolvePrincipal(cachedCms, request)
+  assert.equal(first.sessionUser?.email, 'alice@example.com')
+
+  await operations.update(systemCtx(cachedCms), 'users', 'u1', { email: 'alice2@example.com' })
+
+  const second = await resolvePrincipal(cachedCms, request)
+  assert.equal(
+    second.sessionUser?.email,
+    'alice2@example.com',
+    'reflects the update immediately, not stale-until-TTL',
+  )
 })
