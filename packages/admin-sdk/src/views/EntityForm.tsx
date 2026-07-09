@@ -22,6 +22,10 @@
  * because its tab isn't visible, and each tab shows a badge counting its fields
  * with validation errors so problems on a hidden tab stay visible. With no
  * groups declared the main column renders flat, exactly as before.
+ *
+ * Within a tab (or the flat main column), a main-column field carrying
+ * `field.meta?.width === 'half'` pairs with the next `'half'` field into a
+ * two-up row (see `layoutRows`); both stack full-width below `sm`.
  */
 
 import { useMemo, useState } from 'react'
@@ -34,6 +38,7 @@ import { useId } from 'react'
 import { buildFormSchema } from '../fields/formSchema.js'
 import { FormValuesProvider, type FormValuesStore } from '../fields/form-values.js'
 import { getFieldRenderer } from '../fields/registry.js'
+import { layoutRows } from '../fields/layout.js'
 import { Slot } from '../extensions/Slot.js'
 import { useExtensions } from '../extensions/context.js'
 import { PageLayout } from '../shell/PageLayout.js'
@@ -100,8 +105,31 @@ function defaultForField(field: Field): unknown {
     case 'array':
     case 'blocks':
       return []
-    case 'group':
-      return {}
+    case 'group': {
+      // Seed only children that (recursively) declare an explicit
+      // `defaultValue` — e.g. a color swatch's starting hex — so it shows up
+      // on a brand-new document. Every renderer already treats an absent
+      // value as its own blank state, so an untouched child with no default
+      // stays absent rather than submitting a literal `''`/`false`/`[]`,
+      // which can fail a stricter child schema (e.g. a `z.url()` field
+      // rejecting an empty string) that the top-level `cleanValues` pass
+      // (which only looks at top-level fields) never gets a chance to null out.
+      const children = (field as Record<string, unknown>).fields
+      const defaults: Record<string, unknown> = {}
+      if (Array.isArray(children)) {
+        for (const child of children as Field[]) {
+          if (child.defaultValue !== undefined) {
+            defaults[child.name] = child.defaultValue
+          } else if (child.type === 'group') {
+            const nested = defaultForField(child)
+            if (nested && typeof nested === 'object' && Object.keys(nested).length > 0) {
+              defaults[child.name] = nested
+            }
+          }
+        }
+      }
+      return defaults
+    }
     default:
       return ''
   }
@@ -232,6 +260,24 @@ export function EntityForm({
       />
     )
   }
+
+  /** Render a field list as rows, pairing adjacent `meta.width: 'half'` fields. */
+  const renderFieldRows = (fieldsToRender: Field[]) =>
+    layoutRows(fieldsToRender).map((row) => {
+      if (row.length === 2) {
+        const [first, second] = row
+        return (
+          <div
+            key={`${first.name}+${second.name}`}
+            className="grid grid-cols-2 gap-form max-sm:grid-cols-1"
+          >
+            {renderField(first)}
+            {renderField(second)}
+          </div>
+        )
+      }
+      return renderField(row[0])
+    })
 
   const hasSidebar = sidebarFields.length > 0 || hasSidebarSlots
 
@@ -367,10 +413,10 @@ export function EntityForm({
                     hidden={group.key !== active}
                     className="flex flex-col gap-form"
                   >
-                    {group.fields.map(renderField)}
+                    {renderFieldRows(group.fields)}
                   </div>
                 ))
-              : mainFields.map(renderField)}
+              : renderFieldRows(mainFields)}
             <Slot
               zone="form.after"
               entity={entity}

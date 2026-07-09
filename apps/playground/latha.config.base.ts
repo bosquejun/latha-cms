@@ -44,6 +44,11 @@ import {
 import { media, MediaModule } from '@latha/media'
 import { slug, slugPlugin } from '@latha/slug'
 
+// `text({ schema: ... })` escape hatch — no dedicated `color` field type
+// exists (or is needed) for a `#rrggbb` string; `inputType: 'color'` on the
+// text renderer already gets a native color picker.
+const hexColor = () => z.string().regex(/^#[0-9a-f]{6}$/i, 'Use a 6-digit hex color, e.g. #171717')
+
 export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedConfig {
   return defineConfig({
     db,
@@ -68,12 +73,116 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
         entities: [
           Document({
             slug: 'site-settings',
-            // `admin.order` positions an entity within its menu group (lower =
-            // higher). Site settings sits last, after Posts and Categories.
-            admin: { order: 30 },
+            // Lives in the settings sidebar (behind the Settings button)
+            // rather than the main content nav — same `admin.area` used by
+            // `@latha/users`' `users` entity and `@latha/auth`'s RBAC/API-key
+            // entities. It's still a `ContentModule` `Document` (a singleton
+            // needs `Document()`'s persistence/operations), but display
+            // placement is an orthogonal `admin` concern. `group: ''`
+            // overrides ContentModule's default "Content" nav label so it
+            // sits flat in the settings sidebar (like `users`) instead of
+            // nesting under a one-item "Content" folder.
+            admin: { area: 'settings', group: '' },
+            // Tabs via `meta.group` (same convention as `posts` below):
+            // General is the leading, ungrouped tab; Branding/SEO & Meta/
+            // Social are opt-in tabs for the rest.
             fields: {
-              site_name: text({ required: true }),
+              site_name: text({ required: true, meta: { label: 'Site Name' } }),
               tagline: text(),
+              description: text({
+                meta: {
+                  multiline: true,
+                  description: 'Default meta description and social preview text for pages that don’t set their own.',
+                },
+              }),
+              contactEmail: text({ schema: z.email(), meta: { label: 'Contact Email' } }),
+
+              logo: media({
+                meta: {
+                  group: 'Branding',
+                  width: 'half',
+                  description: 'Shown in the admin topbar and public site header.',
+                },
+              }),
+              favicon: media({
+                meta: {
+                  group: 'Branding',
+                  width: 'half',
+                  description: 'Browser tab icon — square image recommended.',
+                },
+              }),
+
+              // Public-site theme tokens, named after the shadcn/ui CSS
+              // variables this admin's own design system already runs on
+              // (@latha/ui/src/styles/globals.css: --background, --foreground,
+              // --primary, --secondary, --accent) — a curated subset rather
+              // than all ~15 shadcn tokens, since most of those (card, popover,
+              // border, ring, ...) are normally derived from these few, not
+              // picked individually. `primaryColor` (--primary) is the one
+              // color non-technical users actually think about, so it's the
+              // only field shown by default — its `meta.shades` preview gives
+              // a derived scale for free without asking anyone to pick five
+              // colors. The other four stay labeled after their CSS variable,
+              // tucked behind `meta.advanced` for whoever wants to override
+              // them by hand. Fields only for now — reading these back into
+              // the public site's actual CSS variables is a follow-up.
+              palette: group({
+                fields: {
+                  primaryColor: text({
+                    schema: hexColor(),
+                    defaultValue: '#171717',
+                    meta: { label: 'Primary Color', inputType: 'color', shades: true },
+                  }),
+                  background: text({
+                    schema: hexColor(),
+                    defaultValue: '#ffffff',
+                    meta: { label: 'Background', inputType: 'color', width: 'half', advanced: true },
+                  }),
+                  foreground: text({
+                    schema: hexColor(),
+                    defaultValue: '#0a0a0a',
+                    meta: { label: 'Foreground', inputType: 'color', width: 'half', advanced: true },
+                  }),
+                  secondary: text({
+                    schema: hexColor(),
+                    defaultValue: '#f5f5f5',
+                    meta: { label: 'Secondary', inputType: 'color', width: 'half', advanced: true },
+                  }),
+                  accent: text({
+                    schema: hexColor(),
+                    defaultValue: '#f5f5f5',
+                    meta: { label: 'Accent', inputType: 'color', width: 'half', advanced: true },
+                  }),
+                },
+                meta: {
+                  group: 'Branding',
+                  label: 'Brand Colors',
+                  description: 'Theme colors for the public site.',
+                },
+              }),
+
+              seo: group({
+                fields: {
+                  metaTitle: text({ meta: { label: 'Meta Title' } }),
+                  metaDescription: text({ meta: { label: 'Meta Description', multiline: true } }),
+                  ogImage: media({ meta: { label: 'Default OG Image' } }),
+                },
+                meta: {
+                  group: 'SEO & Meta',
+                  label: 'Default SEO',
+                  description: 'Fallback search & social metadata for pages that don’t set their own.',
+                },
+              }),
+
+              social: group({
+                fields: {
+                  twitter: text({ schema: z.url(), meta: { label: 'X / Twitter', inputType: 'url', placeholder: 'https://x.com/yourhandle' } }),
+                  facebook: text({ schema: z.url(), meta: { inputType: 'url', placeholder: 'https://facebook.com/yourpage' } }),
+                  instagram: text({ schema: z.url(), meta: { inputType: 'url', placeholder: 'https://instagram.com/yourhandle' } }),
+                  linkedin: text({ schema: z.url(), meta: { label: 'LinkedIn', inputType: 'url', placeholder: 'https://linkedin.com/company/yourco' } }),
+                },
+                meta: { group: 'Social', label: 'Social Links' },
+              }),
             },
           }),
 

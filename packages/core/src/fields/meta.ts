@@ -33,6 +33,27 @@ export const fieldMetaSchema = z.object({
   inputType: z.string().optional(),
   /** Render a text field as a multi-line `<textarea>` instead of an `<input>`. */
   multiline: z.boolean().optional(),
+  /**
+   * Desktop column width within its tab/sidebar column. `'half'` pairs with
+   * an adjacent `'half'` field into a two-up row (both stack full-width
+   * below the `sm` breakpoint); omitted/`'full'` takes the whole row. Fields
+   * are paired in declaration order — a lone trailing `'half'` just renders
+   * full width.
+   */
+  width: z.enum(['full', 'half']).optional(),
+  /**
+   * Inside a `group()`, collapse this field behind an "Advanced settings"
+   * disclosure instead of showing it up front. A group with no `advanced`
+   * children renders flat, exactly as before — purely opt-in, kernel-ignored.
+   */
+  advanced: z.boolean().optional(),
+  /**
+   * For a `meta.inputType: 'color'` text field, show a row of tint/shade
+   * swatches (derived from the current hex value) beneath the picker as a
+   * live preview — clicking one sets the field to that shade. Preview only;
+   * the shades themselves are never persisted.
+   */
+  shades: z.boolean().optional(),
 })
 
 export type FieldMeta = z.infer<typeof fieldMetaSchema>
