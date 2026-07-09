@@ -77,14 +77,14 @@ function linkFields(opts: { withNewTab?: boolean } = {}): FieldsRecord {
       defaultValue: 'page',
       meta: { label: 'Link Type' },
     }),
-    page: relationship({ to: 'pages', meta: { description: 'Used when Link Type is "page".' } }),
-    post: relationship({ to: 'posts', meta: { description: 'Used when Link Type is "post".' } }),
+    page: relationship({ to: 'pages', meta: { showIf: { field: 'linkType', equals: 'page' } } }),
+    post: relationship({ to: 'posts', meta: { showIf: { field: 'linkType', equals: 'post' } } }),
     url: text({
       schema: z.url(),
       meta: {
         label: 'External URL',
         placeholder: 'https://…',
-        description: 'Used when Link Type is "url".',
+        showIf: { field: 'linkType', equals: 'url' },
       },
     }),
     path: text({
@@ -92,7 +92,8 @@ function linkFields(opts: { withNewTab?: boolean } = {}): FieldsRecord {
       meta: {
         label: 'Internal Path',
         placeholder: '/shop',
-        description: 'Used when Link Type is "path" — a site route not backed by a CMS page.',
+        description: 'A site route not backed by a CMS page.',
+        showIf: { field: 'linkType', equals: 'path' },
       },
     }),
   }

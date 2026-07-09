@@ -16,6 +16,8 @@ import type { Field } from '@latha/core'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 import { getFieldRenderer } from '../registry.js'
+import { isFieldVisible } from '../show-if.js'
+import { sparseDefaults } from '../defaults.js'
 
 export function ArrayField({ field, id, value, onChange, onBlur, error }: FieldControlProps) {
   const children: Field[] = Array.isArray((field as Record<string, unknown>).fields)
@@ -36,7 +38,7 @@ export function ArrayField({ field, id, value, onChange, onBlur, error }: FieldC
   }
 
   function addItem() {
-    onChange([...items, {}])
+    onChange([...items, sparseDefaults(children)])
   }
 
   function removeItem(index: number) {
@@ -113,7 +115,7 @@ export function ArrayField({ field, id, value, onChange, onBlur, error }: FieldC
                   </Button>
                 </div>
               </div>
-              {children.map((child) => {
+              {children.filter((child) => isFieldVisible(child, item)).map((child) => {
                 const Renderer = getFieldRenderer(child.type)
                 return (
                   <Renderer
