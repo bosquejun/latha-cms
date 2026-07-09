@@ -12,7 +12,23 @@
  */
 
 import { z, text, richtext, select, array } from '@latha/core'
+import type { AnyFieldDef, FieldMeta } from '@latha/core'
 import type { BlockInput } from './builders.js'
+
+/**
+ * A reference to a `media` doc, by id. `type: 'media'` is owned by
+ * `@latha/media` — this module must not import it (see the separation-of-
+ * concerns table in CLAUDE.md), so the field is written as the raw
+ * registered-type literal instead of `@latha/media`'s `media()` builder. The
+ * field type registry resolves `'media'` to the real config/data schema and
+ * the admin picker resolves it to `MediaField` purely by string discriminant
+ * at runtime, so this works as long as the app loads `@latha/media` — the
+ * cast is needed because `'media'` isn't a known `FieldType` in this
+ * package's own type graph.
+ */
+function mediaRef(opts: { required?: boolean; meta?: FieldMeta } = {}): AnyFieldDef {
+  return { type: 'media', ...opts } as unknown as AnyFieldDef
+}
 
 /* -------------------------------------------------------------------------- */
 /*  Content                                                                    */
@@ -30,7 +46,7 @@ export const imageBlock: BlockInput = {
   type: 'image',
   label: 'Image',
   fields: {
-    src: text({ required: true, meta: { label: 'Image URL', placeholder: 'https://…' } }),
+    src: mediaRef({ required: true, meta: { label: 'Image' } }),
     alt: text({ meta: { label: 'Alt Text' } }),
     caption: text({ meta: { label: 'Caption' } }),
   },
@@ -202,7 +218,7 @@ export const galleryBlock: BlockInput = {
     }),
     items: array({
       fields: {
-        src: text({ required: true, meta: { label: 'Image URL', placeholder: 'https://…' } }),
+        src: mediaRef({ required: true, meta: { label: 'Image' } }),
         alt: text({ meta: { label: 'Alt Text' } }),
         caption: text({ meta: { label: 'Caption' } }),
       },

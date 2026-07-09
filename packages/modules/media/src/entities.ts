@@ -58,6 +58,10 @@ export function buildMediaEntity(policy?: Partial<UploadPolicy>): MediaEntity {
       // module-label group would render a one-item "Media" folder — override
       // to sit flat instead, same reasoning as `site-settings`' `group: ''`.
       group: '',
+      // Ungrouped items sort by this order among themselves and against
+      // labelled groups alike — push Media Library below content groups
+      // (e.g. Globals) rather than defaulting to the top of the sidebar.
+      order: 50,
     },
     fields: stampFields(fields),
     upload: {
