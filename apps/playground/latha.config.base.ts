@@ -240,8 +240,8 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
           }),
 
           Document({
-            slug: 'main-navigation',
-            admin: { order: 16 },
+            slug: 'navigation',
+            admin: { group: 'Globals', order: 16 },
             fields: {
               items: array({
                 fields: {
@@ -261,7 +261,7 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
 
           Document({
             slug: 'footer',
-            admin: { order: 17 },
+            admin: { group: 'Globals', order: 17 },
             // Social links are deliberately NOT duplicated here — the public
             // site reads them from `site-settings.social` (single source of
             // truth). Duplicating the same handles/URLs into a second
