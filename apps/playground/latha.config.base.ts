@@ -118,8 +118,11 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
               // --primary, --secondary, --accent) — a curated subset rather
               // than all ~15 shadcn tokens, since most of those (card, popover,
               // border, ring, ...) are normally derived from these few, not
-              // picked individually. Fields only for now — reading these back
-              // into the public site's actual CSS variables is a follow-up.
+              // picked individually. `brandColor` is the editor-facing name for
+              // `--primary` — the one color non-technical users actually think
+              // about; the others stay labeled after their CSS variable.
+              // Fields only for now — reading these back into the public
+              // site's actual CSS variables is a follow-up.
               palette: group({
                 fields: {
                   background: text({
@@ -132,10 +135,10 @@ export function buildConfig(db: DBAdapter, storage: StorageAdapter): ResolvedCon
                     defaultValue: '#0a0a0a',
                     meta: { label: 'Foreground', inputType: 'color', width: 'half' },
                   }),
-                  primary: text({
+                  brandColor: text({
                     schema: hexColor(),
                     defaultValue: '#171717',
-                    meta: { label: 'Primary', inputType: 'color', width: 'half' },
+                    meta: { label: 'Brand Color', inputType: 'color', width: 'half' },
                   }),
                   secondary: text({
                     schema: hexColor(),
