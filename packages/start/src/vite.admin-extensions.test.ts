@@ -8,34 +8,34 @@ test('readModuleUiSpecifiers extracts and de-dupes module admin.ui strings', asy
     default: {
       modules: [
         { name: 'users' },
-        { name: 'auth', admin: { ui: '@latha/auth/admin' } },
-        { name: 'auth2', admin: { ui: '@latha/auth/admin' } }, // dup
+        { name: 'auth', admin: { ui: '@kon10/auth/admin' } },
+        { name: 'auth2', admin: { ui: '@kon10/auth/admin' } }, // dup
         { name: 'content', admin: { nav: { area: 'main' } } }, // no ui
       ],
     },
   })
-  const specs = await readModuleUiSpecifiers(fakeLoad, 'virtual:latha/config')
-  assert.deepEqual(specs, ['@latha/auth/admin'])
+  const specs = await readModuleUiSpecifiers(fakeLoad, 'virtual:kon10/config')
+  assert.deepEqual(specs, ['@kon10/auth/admin'])
 })
 
 test('readModuleUiSpecifiers collects plugin admin.ui strings, de-duped against modules', async () => {
   const fakeLoad = async () => ({
     default: {
-      modules: [{ name: 'media', admin: { ui: '@latha/media/admin' } }],
+      modules: [{ name: 'media', admin: { ui: '@kon10/media/admin' } }],
       plugins: [
-        { name: 'slug', admin: { ui: '@latha/slug/admin' } },
-        { name: 'slug2', admin: { ui: '@latha/media/admin' } }, // dup of a module's
+        { name: 'slug', admin: { ui: '@kon10/slug/admin' } },
+        { name: 'slug2', admin: { ui: '@kon10/media/admin' } }, // dup of a module's
         { name: 'bare' }, // no admin
       ],
     },
   })
-  const specs = await readModuleUiSpecifiers(fakeLoad, 'virtual:latha/config')
-  assert.deepEqual(specs, ['@latha/media/admin', '@latha/slug/admin'])
+  const specs = await readModuleUiSpecifiers(fakeLoad, 'virtual:kon10/config')
+  assert.deepEqual(specs, ['@kon10/media/admin', '@kon10/slug/admin'])
 })
 
 test('buildModuleSource imports each specifier and merges with the app glob', () => {
-  const src = buildModuleSource('/src/admin', ['@latha/auth/admin'])
-  assert.match(src, /from ["']@latha\/auth\/admin["']/)
+  const src = buildModuleSource('/src/admin', ['@kon10/auth/admin'])
+  assert.match(src, /from ["']@kon10\/auth\/admin["']/)
   assert.match(src, /import\.meta\.glob\('\/src\/admin\/settings/)
   assert.match(src, /mergeExtensions/)
   assert.match(src, /collectAdminExtensions/)

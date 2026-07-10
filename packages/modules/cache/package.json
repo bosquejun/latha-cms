@@ -1,7 +1,7 @@
 {
-  "name": "@latha/cache",
+  "name": "@kon10/cache",
   "version": "0.0.0",
-  "description": "LathaCMS cache — CacheAdapter implementations (in-memory, Redis).",
+  "description": "Kon10 cache — CacheAdapter implementations (in-memory, Redis).",
   "type": "module",
   "license": "MIT",
   "sideEffects": false,
@@ -25,10 +25,10 @@
     "ioredis": "^5.11.1"
   },
   "peerDependencies": {
-    "@latha/core": "workspace:*"
+    "@kon10/core": "workspace:*"
   },
   "devDependencies": {
-    "@latha/core": "workspace:*",
+    "@kon10/core": "workspace:*",
     "@types/node": "^22.10.0",
     "typescript": "^5.7.2"
   }

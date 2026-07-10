@@ -1,7 +1,7 @@
 /**
  * Auth-hardening coverage: the Origin-based CSRF guard on the
  * cookie-authenticated endpoints. (The login failure throttle moved to
- * `@latha/auth` along with the login/logout/current-user routes themselves —
+ * `@kon10/auth` along with the login/logout/current-user routes themselves —
  * see `login-throttle.test.ts` there.)
  */
 
@@ -11,7 +11,7 @@ import { rejectUntrustedOrigin } from './server.js'
 
 test('origin guard rejects cross-origin, passes same-host and missing Origin', () => {
   const req = (origin?: string, headers: Record<string, string> = {}) =>
-    new Request('https://cms.example.com/__latha/rpc', {
+    new Request('https://cms.example.com/__kon10/rpc', {
       method: 'POST',
       headers: { ...(origin ? { origin } : {}), ...headers },
     })
@@ -27,7 +27,7 @@ test('origin guard rejects cross-origin, passes same-host and missing Origin', (
   assert.equal(malformed?.status, 403)
 
   // Proxied deployments compare against x-forwarded-host.
-  const proxied = new Request('http://10.0.0.5:8080/__latha/rpc', {
+  const proxied = new Request('http://10.0.0.5:8080/__kon10/rpc', {
     method: 'POST',
     headers: { origin: 'https://cms.example.com', 'x-forwarded-host': 'cms.example.com' },
   })

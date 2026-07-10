@@ -1,14 +1,14 @@
 /**
- * LathaLogin — drop-in sign-in screen. Mount it at the configured `loginPath`.
+ * Kon10Login — drop-in sign-in screen. Mount it at the configured `loginPath`.
  */
 
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Button, Card, Field, Input } from '@latha/ui'
-import { useLatha } from '@latha/admin-sdk'
+import { Button, Card, Field, Input } from '@kon10/ui'
+import { useKon10 } from '@kon10/admin-sdk'
 
-export function LathaLogin() {
-  const { client, basePath } = useLatha()
+export function Kon10Login() {
+  const { client, basePath } = useKon10()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -38,7 +38,7 @@ export function LathaLogin() {
           <span className="grid size-8 place-items-center rounded-[var(--radius-md)] bg-primary text-base font-semibold text-primary-foreground">
             L
           </span>
-          <span className="text-lg font-semibold tracking-tight">LathaCMS</span>
+          <span className="text-lg font-semibold tracking-tight">Kon10</span>
         </div>
         <Card className="gap-6 p-6">
           <div className="flex flex-col gap-1.5">

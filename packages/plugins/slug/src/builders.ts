@@ -1,10 +1,10 @@
 /**
  * The `slug()` field builder. A dedicated field type (not `text()` with a
- * hook) so `@latha/slug/admin` can register its live-preview renderer and
+ * hook) so `@kon10/slug/admin` can register its live-preview renderer and
  * `slugPlugin` can find the fields to attach generation hooks to.
  */
 
-import type { FieldMeta, PhantomMeta } from '@latha/core'
+import type { FieldMeta, PhantomMeta } from '@kon10/core'
 
 interface SlugNestedOpts {
   /**

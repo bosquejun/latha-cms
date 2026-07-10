@@ -1,13 +1,12 @@
-# LathaCMS — Project Specification
+# Kon10 — Project Specification
 
-> A config-driven, modular headless CMS built on TanStack Start. 🇵🇭
-> *Latha* comes from the Filipino word *lathala* — to publish.
+> A config-driven, modular headless CMS built on TanStack Start.
 
 ---
 
 ## Overview
 
-LathaCMS is an open-source, headless CMS framework built on TanStack Start. It is modular by design — everything is a module, and modules are composed via a single config file. The goal is to be to TanStack Start what Payload CMS is to Next.js: a first-class, deeply integrated CMS experience without leaving the ecosystem.
+Kon10 is an open-source, headless CMS framework built on TanStack Start. It is modular by design — everything is a module, and modules are composed via a single config file. The goal is to be to TanStack Start what Payload CMS is to Next.js: a first-class, deeply integrated CMS experience without leaving the ecosystem.
 
 This is a learning-driven OSS project. Architecture correctness and developer experience come before feature completeness.
 
@@ -20,28 +19,28 @@ This is a learning-driven OSS project. Architecture correctness and developer ex
 
 ## Repository
 
-- **npm scope:** `@latha`
-- **Domain:** `latha.dev` or `lathacms.dev`
+- **npm scope:** `@kon10`
+- **Domain:** `kon10.dev` or `kon10cms.dev`
 
 ---
 
 ## Monorepo Structure
 
 ```
-lathacms/
+kon10cms/
 ├── apps/
 │   └── playground/                    # TanStack Start app — dev/test harness
 ├── packages/
-│   ├── core/                          # @latha/core — types, defineConfig, module registry, hook engine, access evaluator
-│   ├── ui/                            # @latha/ui — design system, primitives, tokens (no CMS knowledge)
-│   ├── admin-sdk/                     # @latha/admin-sdk — CMS-aware admin layer, field renderers, shell, registry-driven views
-│   ├── start/                         # @latha/start — TanStack Start integration: runtime, RPC dispatcher, client, mountable admin UI
+│   ├── core/                          # @kon10/core — types, defineConfig, module registry, hook engine, access evaluator
+│   ├── ui/                            # @kon10/ui — design system, primitives, tokens (no CMS knowledge)
+│   ├── admin-sdk/                     # @kon10/admin-sdk — CMS-aware admin layer, field renderers, shell, registry-driven views
+│   ├── start/                         # @kon10/start — TanStack Start integration: runtime, RPC dispatcher, client, mountable admin UI
 │   └── modules/                       # all first-party modules live here
-│       ├── content/                   # @latha/content — ContentModule, Collection, Document, Taxonomy
-│       ├── auth/                      # @latha/auth — AuthModule, session handling
-│       ├── users/                     # @latha/users — UsersModule, roles, permissions
-│       ├── media/                     # @latha/media — MediaModule, storage adapters
-│       └── storage/                   # @latha/storage — Drizzle DBAdapter implementation (Turso default)
+│       ├── content/                   # @kon10/content — ContentModule, Collection, Document, Taxonomy
+│       ├── auth/                      # @kon10/auth — AuthModule, session handling
+│       ├── users/                     # @kon10/users — UsersModule, roles, permissions
+│       ├── media/                     # @kon10/media — MediaModule, storage adapters
+│       └── storage/                   # @kon10/storage — Drizzle DBAdapter implementation (Turso default)
 ├── turbo.json
 ├── pnpm-workspace.yaml
 ├── package.json
@@ -62,7 +61,7 @@ lathacms/
 | Validation | Zod | Single source of truth — fields → API validation + form validation + TS types |
 | ORM | Drizzle | Schema-first, adapter-friendly |
 | Default DB | Turso (SQLite) | Serverless, free tier, edge-ready |
-| Styling | Tailwind CSS + shadcn/ui | Design system lives in `@latha/ui` |
+| Styling | Tailwind CSS + shadcn/ui | Design system lives in `@kon10/ui` |
 | Monorepo | pnpm workspaces + Turborepo | Standard OSS setup |
 | Deploy | Vercel (`preset: 'vercel'` in app.config.ts) | Serverless functions per route |
 
@@ -83,12 +82,12 @@ lathacms/
 
 ```ts
 // cms.config.ts
-import { defineConfig } from '@latha/core'
-import { AuthModule } from '@latha/auth'
-import { UsersModule } from '@latha/users'
-import { ContentModule, Collection, Document, Taxonomy } from '@latha/content'
-import { MediaModule } from '@latha/media'
-import { tursoAdapter } from '@latha/storage'
+import { defineConfig } from '@kon10/core'
+import { AuthModule } from '@kon10/auth'
+import { UsersModule } from '@kon10/users'
+import { ContentModule, Collection, Document, Taxonomy } from '@kon10/content'
+import { MediaModule } from '@kon10/media'
+import { tursoAdapter } from '@kon10/storage'
 
 export default defineConfig({
   db: tursoAdapter({
@@ -181,7 +180,7 @@ export default defineConfig({
 
 ---
 
-## Core Abstractions (`@latha/core`)
+## Core Abstractions (`@kon10/core`)
 
 ### Primitives
 
@@ -230,8 +229,8 @@ This schema is used for:
 interface Module {
   name: string
   dependsOn?: string[]
-  onInit?: (cms: LathaInstance) => void | Promise<void>
-  onReady?: (cms: LathaInstance) => void | Promise<void>
+  onInit?: (cms: Kon10Instance) => void | Promise<void>
+  onReady?: (cms: Kon10Instance) => void | Promise<void>
   routes?: ModuleRoutes
   entities?: EntityDefinition[]
   capabilities?: string[]
@@ -267,9 +266,9 @@ interface AuthAdapter {
 interface Plugin {
   name: string
   extendCollections?: (cols: Collection[]) => Collection[]
-  extendConfig?: (config: LathaConfig) => LathaConfig
+  extendConfig?: (config: Kon10Config) => Kon10Config
   routes?: Record<string, RouteHandler>
-  onInit?: (cms: LathaInstance) => void | Promise<void>
+  onInit?: (cms: Kon10Instance) => void | Promise<void>
 }
 ```
 
@@ -279,15 +278,15 @@ interface Plugin {
 
 | Package | npm name | Responsibility |
 |---|---|---|
-| `packages/core` | `@latha/core` | `defineConfig()`, types, module registry, hook engine, access evaluator, Zod schema builder |
-| `packages/ui` | `@latha/ui` | Design system — buttons, inputs, tables, modals, typography, tokens. No CMS knowledge. Usable standalone. |
-| `packages/admin-sdk` | `@latha/admin-sdk` | CMS-aware admin layer — field renderers, shell layout, sidebar (registry-driven), collection list/form views. Builds on `@latha/ui`. |
-| `packages/start` | `@latha/start` | TanStack Start integration — runtime, RPC dispatcher + server route, typed client, provider, mountable admin UI. The framework-integration layer. See [docs/concepts/frameworks](./docs/concepts/frameworks.md). |
-| `packages/modules/content` | `@latha/content` | `ContentModule`, `Collection()`, `Document()`, `Taxonomy()` |
-| `packages/modules/auth` | `@latha/auth` | `AuthModule`, session handling, login/logout |
-| `packages/modules/users` | `@latha/users` | `UsersModule`, roles, permissions |
-| `packages/modules/media` | `@latha/media` | `MediaModule`, file upload, R2/S3 adapters |
-| `packages/modules/storage` | `@latha/storage` | Drizzle `DBAdapter` — Turso (default), Postgres, MySQL |
+| `packages/core` | `@kon10/core` | `defineConfig()`, types, module registry, hook engine, access evaluator, Zod schema builder |
+| `packages/ui` | `@kon10/ui` | Design system — buttons, inputs, tables, modals, typography, tokens. No CMS knowledge. Usable standalone. |
+| `packages/admin-sdk` | `@kon10/admin-sdk` | CMS-aware admin layer — field renderers, shell layout, sidebar (registry-driven), collection list/form views. Builds on `@kon10/ui`. |
+| `packages/start` | `@kon10/start` | TanStack Start integration — runtime, RPC dispatcher + server route, typed client, provider, mountable admin UI. The framework-integration layer. See [docs/concepts/frameworks](./docs/concepts/frameworks.md). |
+| `packages/modules/content` | `@kon10/content` | `ContentModule`, `Collection()`, `Document()`, `Taxonomy()` |
+| `packages/modules/auth` | `@kon10/auth` | `AuthModule`, session handling, login/logout |
+| `packages/modules/users` | `@kon10/users` | `UsersModule`, roles, permissions |
+| `packages/modules/media` | `@kon10/media` | `MediaModule`, file upload, R2/S3 adapters |
+| `packages/modules/storage` | `@kon10/storage` | Drizzle `DBAdapter` — Turso (default), Postgres, MySQL |
 
 ---
 
@@ -379,22 +378,22 @@ Build in phases — do not skip ahead. Each phase must be working end-to-end bef
 
 ### Phase 1 — Foundation
 - [ ] Monorepo scaffold (pnpm + Turborepo)
-- [ ] `@latha/core` — types, `defineConfig()`, Zod schema builder, module registry skeleton
-- [ ] `@latha/storage` — `DBAdapter` implementation for Drizzle + Turso
-- [ ] `apps/playground` — TanStack Start app consuming `@latha/core`
+- [ ] `@kon10/core` — types, `defineConfig()`, Zod schema builder, module registry skeleton
+- [ ] `@kon10/storage` — `DBAdapter` implementation for Drizzle + Turso
+- [ ] `apps/playground` — TanStack Start app consuming `@kon10/core`
 - [ ] One hardcoded `posts` Collection wired end-to-end (server fn → DB → response)
 
 ### Phase 2 — Config-Driven API
 - [ ] Module registry + resolution order
-- [ ] `@latha/content` — `ContentModule`, `Collection`, `Document`, `Taxonomy`
+- [ ] `@kon10/content` — `ContentModule`, `Collection`, `Document`, `Taxonomy`
 - [ ] Config → Drizzle schema generation (`migrate()`)
 - [ ] Config → server functions (list, findOne, create, update, delete per collection)
 - [ ] Access control evaluator
 - [ ] Hook engine (before/after lifecycle)
 
 ### Phase 3 — Admin UI Shell
-- [ ] `@latha/ui` package setup (Tailwind + shadcn/ui base, design tokens, primitives)
-- [ ] `@latha/admin-sdk` package setup — depends on `@latha/ui` and `@latha/core`
+- [ ] `@kon10/ui` package setup (Tailwind + shadcn/ui base, design tokens, primitives)
+- [ ] `@kon10/admin-sdk` package setup — depends on `@kon10/ui` and `@kon10/core`
 - [ ] Admin shell layout (sidebar + topbar) in `admin-sdk`
 - [ ] Sidebar derived from module registry
 - [ ] TanStack Router admin routes
@@ -404,12 +403,12 @@ Build in phases — do not skip ahead. Each phase must be working end-to-end bef
 - [ ] Singleton document form
 
 ### Phase 4 — Auth + Users
-- [ ] `@latha/auth` — session-based auth, login/logout
-- [ ] `@latha/users` — user management, role system
+- [ ] `@kon10/auth` — session-based auth, login/logout
+- [ ] `@kon10/users` — user management, role system
 - [ ] Auth middleware on admin routes and server functions
 
 ### Phase 5 — Media
-- [ ] `@latha/media` — MediaModule
+- [ ] `@kon10/media` — MediaModule
 - [ ] R2 storage adapter
 - [ ] Media library UI
 - [ ] Media field renderer
@@ -444,7 +443,7 @@ Build in phases — do not skip ahead. Each phase must be working end-to-end bef
 packages/core/src/
 ├── index.ts
 ├── types/
-│   ├── config.ts       ← LathaConfig, Module, Plugin
+│   ├── config.ts       ← Kon10Config, Module, Plugin
 │   ├── field.ts        ← Field union type, all field variants
 │   ├── access.ts       ← AccessFn, AccessContext, Operation
 │   ├── hook.ts         ← HookFn, HookArgs, CollectionHooks
@@ -455,7 +454,7 @@ packages/core/src/
 ├── registry/
 │   └── index.ts        ← ModuleRegistry, resolve order
 └── bootstrap/
-    └── index.ts        ← defineConfig(), LathaInstance
+    └── index.ts        ← defineConfig(), Kon10Instance
 
 packages/ui/src/
 ├── index.ts
@@ -474,7 +473,7 @@ packages/ui/src/
 packages/admin-sdk/src/
 ├── index.ts
 ├── shell/
-│   ├── AdminShell.tsx  ← depends on @latha/ui + @latha/core registry
+│   ├── AdminShell.tsx  ← depends on @kon10/ui + @kon10/core registry
 │   ├── Sidebar.tsx     ← derived from module registry
 │   └── Topbar.tsx
 ├── views/
@@ -509,12 +508,12 @@ packages/modules/storage/src/
 
 - Always start from `SPEC.md` for context.
 - Phase 1 first — no admin UI until the kernel works end-to-end.
-- The entry point is `defineConfig()` from `@latha/core` — not `defineCMS`.
+- The entry point is `defineConfig()` from `@kon10/core` — not `defineCMS`.
 - Zod is the single validation layer. Do not add separate validation logic anywhere.
-- All DB access goes through `DBAdapter` from `@latha/storage` — never call Drizzle directly from app code.
-- The admin surface is one **RPC** layer — a single action-dispatched endpoint, not a REST API. In `@latha/start` it is served by a framework-owned **server route** (`/__latha/rpc`); apps can also route it through their own `createServerFn`. See [docs/concepts/taxonomy → RPC vs API](./docs/concepts/taxonomy.md#rpc-vs-api) and [frameworks](./docs/concepts/frameworks.md). Keep the dispatcher in `packages/` so it stays reusable.
+- All DB access goes through `DBAdapter` from `@kon10/storage` — never call Drizzle directly from app code.
+- The admin surface is one **RPC** layer — a single action-dispatched endpoint, not a REST API. In `@kon10/start` it is served by a framework-owned **server route** (`/__kon10/rpc`); apps can also route it through their own `createServerFn`. See [docs/concepts/taxonomy → RPC vs API](./docs/concepts/taxonomy.md#rpc-vs-api) and [frameworks](./docs/concepts/frameworks.md). Keep the dispatcher in `packages/` so it stays reusable.
 - All modules live under `packages/modules/*` — never at the root of `packages/`.
-- Admin UI is split into two packages: `@latha/ui` (dumb design system, no CMS knowledge) and `@latha/admin-sdk` (CMS-aware, builds on top of `@latha/ui`). Never put CMS logic in `@latha/ui`.
+- Admin UI is split into two packages: `@kon10/ui` (dumb design system, no CMS knowledge) and `@kon10/admin-sdk` (CMS-aware, builds on top of `@kon10/ui`). Never put CMS logic in `@kon10/ui`.
 - Keep `apps/playground` thin — it should only wire together packages, not contain business logic.
 - Prefer explicit types over inference where it aids readability in core packages.
 - When in doubt, refer to how Payload CMS v3 solves the same problem — then do it the TanStack way.

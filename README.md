@@ -1,14 +1,13 @@
-# LathaCMS 🇵🇭
+# Kon10
 
 > A config-driven, modular headless CMS built on TanStack Start.
-> *Latha* comes from the Filipino word *lathala* — to publish.
 
-LathaCMS is an open-source headless CMS framework built on TanStack Start.
+Kon10 is an open-source headless CMS framework built on TanStack Start.
 Everything is a module, and modules are composed via a single config file.
 
 - **Concepts** — [taxonomy](./docs/concepts/taxonomy.md) (vocabulary),
   [entities](./docs/concepts/entities.md) (content model),
-  [frameworks](./docs/concepts/frameworks.md) (the `@latha/start` integration).
+  [frameworks](./docs/concepts/frameworks.md) (the `@kon10/start` integration).
 - **Architecture & roadmap** — [`SPEC.md`](./SPEC.md).
 
 ## Status
@@ -20,15 +19,15 @@ auto-generated admin UI is layered on top: config → schema → API → DB → 
 
 Phase 1:
 - [x] Monorepo scaffold (pnpm workspaces + Turborepo)
-- [x] `@latha/core` — types, `defineConfig()`, Zod schema builder, module
+- [x] `@kon10/core` — types, `defineConfig()`, Zod schema builder, module
       registry (topological resolution), hook engine, access evaluator, local
       CRUD operations
-- [x] `@latha/storage` — `DBAdapter` for libsql/Turso, dynamic schema
+- [x] `@kon10/storage` — `DBAdapter` for libsql/Turso, dynamic schema
       generation, value marshalling
 - [x] `apps/playground` — TanStack Start app consuming the kernel
 
 Phase 2:
-- [x] `@latha/content` — `ContentModule`, `Collection()`, `Document()`,
+- [x] `@kon10/content` — `ContentModule`, `Collection()`, `Document()`,
       `Taxonomy()` factories
 - [x] Config → schema generation for collections, document singletons, and
       taxonomies (`migrate()`)
@@ -38,17 +37,17 @@ Phase 2:
 - [x] Access evaluator + hook engine wired through every operation
 
 Phase 3:
-- [x] `@latha/ui` — design system on shadcn/ui (new-york) + Tailwind v4 tokens;
+- [x] `@kon10/ui` — design system on shadcn/ui (new-york) + Tailwind v4 tokens;
       pure, CMS-unaware primitives
-- [x] `@latha/admin-sdk` — admin shell, registry-driven sidebar, field renderer
+- [x] `@kon10/admin-sdk` — admin shell, registry-driven sidebar, field renderer
       registry, and auto-generated list / form / singleton views (TanStack Form
       + the same Zod schema)
 - [x] TanStack Router admin routes — dashboard, collection list/create/edit,
       document singleton — all derived from the config
 
 Phase 4:
-- [x] `@latha/users` — `UsersModule`, the `users` collection, and a role system
-- [x] `@latha/auth` — `AuthModule`, session-based auth with edge-friendly
+- [x] `@kon10/users` — `UsersModule`, the `users` collection, and a role system
+- [x] `@kon10/auth` — `AuthModule`, session-based auth with edge-friendly
       password hashing (PBKDF2) and signed session tokens (HMAC), all on Web
       Crypto — no native deps
 - [x] Auth wired through the stack: login/logout, a first-run admin seed,
@@ -58,21 +57,21 @@ Phase 4:
 > Notes: the current TanStack Start (v1.168+) uses a Vite plugin rather than the
 > Vinxi `app.config.ts` shown in `SPEC.md`; the playground follows the current
 > approach. The public types dropped the `CMS` prefix (`Module`, `Plugin`,
-> `LathaInstance`).
+> `Kon10Instance`).
 
 ## Packages
 
 | Package | Path | Responsibility |
 |---|---|---|
-| `@latha/core` | `packages/core` | Kernel — types, `defineConfig`, registry, hooks, access, Zod builder, operations |
-| `@latha/ui` | `packages/ui` | Design system — shadcn/ui primitives + tokens. No CMS knowledge. |
-| `@latha/admin-sdk` | `packages/admin-sdk` | CMS-aware admin layer — shell, field renderers, auto-generated views |
-| `@latha/start` | `packages/start` | TanStack Start integration — runtime, RPC dispatcher, typed client, and the mountable admin/login UI |
-| `@latha/content` | `packages/modules/content` | `ContentModule`, `Collection`/`Document`/`Taxonomy`, config-driven content API |
-| `@latha/auth` | `packages/modules/auth` | `AuthModule`, session auth, password hashing, login/logout helpers |
-| `@latha/users` | `packages/modules/users` | `UsersModule`, the `users` collection, roles |
-| `@latha/storage` | `packages/modules/storage` | `DBAdapter` — libsql/Turso (default), dynamic SQLite schema |
-| `@latha/playground` | `apps/playground` | TanStack Start dev/test harness |
+| `@kon10/core` | `packages/core` | Kernel — types, `defineConfig`, registry, hooks, access, Zod builder, operations |
+| `@kon10/ui` | `packages/ui` | Design system — shadcn/ui primitives + tokens. No CMS knowledge. |
+| `@kon10/admin-sdk` | `packages/admin-sdk` | CMS-aware admin layer — shell, field renderers, auto-generated views |
+| `@kon10/start` | `packages/start` | TanStack Start integration — runtime, RPC dispatcher, typed client, and the mountable admin/login UI |
+| `@kon10/content` | `packages/modules/content` | `ContentModule`, `Collection`/`Document`/`Taxonomy`, config-driven content API |
+| `@kon10/auth` | `packages/modules/auth` | `AuthModule`, session auth, password hashing, login/logout helpers |
+| `@kon10/users` | `packages/modules/users` | `UsersModule`, the `users` collection, roles |
+| `@kon10/storage` | `packages/modules/storage` | `DBAdapter` — libsql/Turso (default), dynamic SQLite schema |
+| `@kon10/playground` | `apps/playground` | TanStack Start dev/test harness |
 
 ## Getting started
 
@@ -88,7 +87,7 @@ Turso in production via `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN`.
 On first run it seeds an admin user so you can sign in at `/admin`:
 
 ```
-email:    admin@latha.dev   (override with ADMIN_EMAIL)
+email:    admin@kon10.dev   (override with ADMIN_EMAIL)
 password: password          (override with ADMIN_PASSWORD)
 ```
 
@@ -98,11 +97,11 @@ otherwise).
 ## The config
 
 ```ts
-import { defineConfig } from '@latha/core'
-import { tursoAdapter } from '@latha/storage'
-import { Collection, ContentModule, Document, Taxonomy } from '@latha/content'
+import { defineConfig } from '@kon10/core'
+import { tursoAdapter } from '@kon10/storage'
+import { Collection, ContentModule, Document, Taxonomy } from '@kon10/content'
 
-export const lathaConfig = defineConfig({
+export const kon10Config = defineConfig({
   db: tursoAdapter({ url: process.env.TURSO_DATABASE_URL ?? 'file:local.db' }),
   modules: [
     ContentModule({
@@ -130,33 +129,33 @@ Field definitions compile to a Zod schema that drives API validation, form
 validation, and TypeScript inference simultaneously — Zod is the single
 validation layer.
 
-## How a consuming app uses LathaCMS
+## How a consuming app uses Kon10
 
-The config is the single entrypoint. `@latha/start` provides everything else —
-the runtime, the API, auth, and the admin UI. The `lathaStart()` Vite plugin
+The config is the single entrypoint. `@kon10/start` provides everything else —
+the runtime, the API, auth, and the admin UI. The `kon10Start()` Vite plugin
 injects the framework's `/login` and `/admin/$` routes, so the app ships no
 boilerplate route files for them — `src/routes/` holds only the app's own pages:
 
 ```
 your-app/
-├── latha.config.ts            # ★ the entrypoint — defineConfig({ ... })
-├── vite.config.ts             # plugins: [..., lathaStart(), viteReact()]
+├── kon10.config.ts            # ★ the entrypoint — defineConfig({ ... })
+├── vite.config.ts             # plugins: [..., kon10Start(), viteReact()]
 └── src/
-    ├── rpc.ts                 # one server fn → handleLathaRequest(config, data)
-    ├── latha-client.ts        # createLathaClient(serverFn)
+    ├── rpc.ts                 # one server fn → handleKon10Request(config, data)
+    ├── kon10-client.ts        # createKon10Client(serverFn)
     └── routes/
-        ├── __root.tsx         # <LathaProvider client={latha}>…</LathaProvider>
+        ├── __root.tsx         # <Kon10Provider client={kon10}>…</Kon10Provider>
         └── index.tsx          # the app's own landing page (anything you like)
 ```
 
 ```ts
-// vite.config.ts — lathaStart() wraps tanstackStart() and adds /login + /admin/$
+// vite.config.ts — kon10Start() wraps tanstackStart() and adds /login + /admin/$
 import { defineConfig } from 'vite'
-import { lathaStart } from '@latha/start/vite'
+import { kon10Start } from '@kon10/start/vite'
 import viteReact from '@vitejs/plugin-react'
 
 export default defineConfig({
-  plugins: [lathaStart(), viteReact()],
+  plugins: [kon10Start(), viteReact()],
 })
 ```
 
@@ -165,54 +164,54 @@ one-line re-export instead — the route definitions still live in the framework
 
 ```tsx
 // src/routes/login.tsx
-export { Route } from '@latha/start/routes/login'
+export { Route } from '@kon10/start/routes/login'
 // src/routes/admin.$.tsx
-export { Route } from '@latha/start/routes/admin'
+export { Route } from '@kon10/start/routes/admin'
 ```
 
 ```ts
 // src/rpc.ts — the app's only server endpoint (not `server.ts`: that name is
 // reserved by TanStack Start for its SSR server entry)
 import { createServerFn } from '@tanstack/react-start'
-import type { LathaRpcInput } from '@latha/start'
-import config from '../latha.config'
+import type { Kon10RpcInput } from '@kon10/start'
+import config from '../kon10.config'
 
-export const lathaRpc = createServerFn({ method: 'POST' })
-  .validator((data: LathaRpcInput) => data)
+export const kon10Rpc = createServerFn({ method: 'POST' })
+  .validator((data: Kon10RpcInput) => data)
   .handler(async ({ data }) => {
-    const { handleLathaRequest } = await import('@latha/start/server')
-    return handleLathaRequest(config, data)
+    const { handleKon10Request } = await import('@kon10/start/server')
+    return handleKon10Request(config, data)
   })
 ```
 
-`LathaAdmin` (mounted at `/admin/$`) derives the sidebar, list views, and forms
+`Kon10Admin` (mounted at `/admin/$`) derives the sidebar, list views, and forms
 from the config, guards the session, and routes internally — there is no
 per-collection app code. The server endpoint stays in the app because TanStack
 Start requires `createServerFn` to live in app-compiled code; the route tree,
-admin, and login all come from the framework via `lathaStart()`.
+admin, and login all come from the framework via `kon10Start()`.
 
-> **On the package name:** `@latha/start` mirrors the framework it integrates
+> **On the package name:** `@kon10/start` mirrors the framework it integrates
 > (TanStack Start) and stays short. Adapter-style alternatives like
-> `@latha/react-start` or `@latha/tanstack-start` were considered; the name was
-> kept since LathaCMS is defined as "built on TanStack Start."
+> `@kon10/react-start` or `@kon10/tanstack-start` were considered; the name was
+> kept since Kon10 is defined as "built on TanStack Start."
 
 ## Customizing the admin
 
 The auto-generated admin is extensible through a structured set of **injection
-zones** and **custom pages** — the LathaCMS take on Medusa's admin extensions.
-Drop files under `src/admin/` and the `lathaStart()` Vite plugin auto-collects
-them into `virtual:latha/admin-extensions`, which you hand to the provider:
+zones** and **custom pages** — the Kon10 take on Medusa's admin extensions.
+Drop files under `src/admin/` and the `kon10Start()` Vite plugin auto-collects
+them into `virtual:kon10/admin-extensions`, which you hand to the provider:
 
 ```tsx
-import { LathaProvider } from '@latha/start'
-import { adminExtensions } from 'virtual:latha/admin-extensions'
+import { Kon10Provider } from '@kon10/start'
+import { adminExtensions } from 'virtual:kon10/admin-extensions'
 
-<LathaProvider client={latha} extensions={adminExtensions}>…</LathaProvider>
+<Kon10Provider client={kon10} extensions={adminExtensions}>…</Kon10Provider>
 ```
 
 ```tsx
 // src/admin/widgets/post-tips.tsx — a widget in the form sidebar
-import { defineWidgetConfig, type WidgetContext } from '@latha/start'
+import { defineWidgetConfig, type WidgetContext } from '@kon10/start'
 
 export const config = defineWidgetConfig({ zone: 'form.sidebar.before' })
 export default function PostTips({ entity }: WidgetContext) { … }
@@ -233,7 +232,7 @@ Users and settings pages collect). Full guide:
 
 ## Next
 
-Phase 5 — Media: `@latha/media` (MediaModule), an R2 storage adapter, the media
+Phase 5 — Media: `@kon10/media` (MediaModule), an R2 storage adapter, the media
 library UI, and a media field renderer. See `SPEC.md`.
 
 ## License

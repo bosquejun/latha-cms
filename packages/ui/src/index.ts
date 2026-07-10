@@ -1,9 +1,9 @@
 /**
- * @latha/ui — the LathaCMS design system.
+ * @kon10/ui — the Kon10 design system.
  *
  * shadcn/ui primitives (new-york, neutral) plus a couple of thin composites.
  * Pure and CMS-unaware: usable standalone, contains no CMS knowledge. Import
- * `@latha/ui/styles.css` once at the app root for the Tailwind v4 theme.
+ * `@kon10/ui/styles.css` once at the app root for the Tailwind v4 theme.
  */
 
 export { cn } from '@/lib/utils'

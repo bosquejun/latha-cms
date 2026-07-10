@@ -8,9 +8,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@latha/ui'
+} from '@kon10/ui'
 import { LogOut, Moon, Sun, UserRound } from 'lucide-react'
-import type { Theme } from '@latha/admin-sdk'
+import type { Theme } from '@kon10/admin-sdk'
 
 export interface UserMenuProps {
   email: string | null

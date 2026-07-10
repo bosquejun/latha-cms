@@ -6,7 +6,7 @@
  * for a single PUT/DELETE request is a few dozen lines over `node:crypto`,
  * and it sidesteps the SDK's much larger dependency graph — the same
  * zero-extra-runtime-dependency approach already used for `postgres` in
- * `@latha/storage`.
+ * `@kon10/storage`.
  */
 import { createHash, createHmac } from 'node:crypto'
 

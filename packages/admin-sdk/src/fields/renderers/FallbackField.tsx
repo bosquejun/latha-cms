@@ -1,4 +1,4 @@
-import { Field as FieldWrap, Input, Textarea } from '@latha/ui'
+import { Field as FieldWrap, Input, Textarea } from '@kon10/ui'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 

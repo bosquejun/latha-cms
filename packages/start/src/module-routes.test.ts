@@ -2,13 +2,13 @@
  * `handleModuleRoute` coverage: routing-table lookups (unknown module/path,
  * wrong method), the `requireAdmin` gate, successful dispatch, and error
  * mapping. `resolvePrincipal` takes `request` explicitly and reads the
- * `Cookie` header straight off it (via `@latha/auth`'s `getSessionUser`) — no
+ * `Cookie` header straight off it (via `@kon10/auth`'s `getSessionUser`) — no
  * framework-specific ambient request context needed, so all of this runs
  * under plain `node:test`.
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import type { Module, ModuleRoute, ResolvedConfig } from '@latha/core'
+import type { Module, ModuleRoute, ResolvedConfig } from '@kon10/core'
 import { handleModuleRoute, DEFAULT_MODULE_ROUTES_PATH } from './module-routes.js'
 
 const echoRoute: ModuleRoute = {

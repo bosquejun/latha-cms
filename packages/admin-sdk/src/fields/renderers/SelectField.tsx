@@ -1,4 +1,4 @@
-import { cn, Field as FieldWrap, Select, statusVariant, type BadgeVariant } from '@latha/ui'
+import { cn, Field as FieldWrap, Select, statusVariant, type BadgeVariant } from '@kon10/ui'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 

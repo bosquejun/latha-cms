@@ -1,10 +1,10 @@
-# Admin UI Rebrand (Repayload kit → latha-cms) Implementation Plan
+# Admin UI Rebrand (Repayload kit → kon10-cms) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Re-lay-out and restyle the latha-cms admin UI to match the Repayload CMS Design System kit — brand-only full-width topbar, sidebar nav, mobile drawer, user menu with persistent dark mode, and config-driven screen parity.
+**Goal:** Re-lay-out and restyle the kon10-cms admin UI to match the Repayload CMS Design System kit — brand-only full-width topbar, sidebar nav, mobile drawer, user menu with persistent dark mode, and config-driven screen parity.
 
-**Architecture:** Reusable, data-agnostic chrome lives in `@latha/admin-sdk/src/shell/`; wiring (real session, nav, theme, screens via RPC) lives in `@latha/start/src/admin.tsx`. Primitives in `@latha/ui` already match the kit and are consumed as-is. All design tokens already exist in `packages/ui/src/styles/globals.css` — no token work.
+**Architecture:** Reusable, data-agnostic chrome lives in `@kon10/admin-sdk/src/shell/`; wiring (real session, nav, theme, screens via RPC) lives in `@kon10/start/src/admin.tsx`. Primitives in `@kon10/ui` already match the kit and are consumed as-is. All design tokens already exist in `packages/ui/src/styles/globals.css` — no token work.
 
 **Tech Stack:** React 18, TanStack Start/Router, Tailwind v4 (token-based utilities, e.g. `bg-sidebar`, `p-page`, `text-2xl`), lucide-react, TypeScript ESM (NodeNext — imports use `.js` extensions).
 
@@ -13,12 +13,12 @@
 - **Spec:** `docs/superpowers/specs/2026-06-22-admin-kit-rebrand-design.md`.
 - **Visual source of truth:** the kit's `app.jsx` / `screens.jsx` / `kit.css` (reproduced in the spec). Match layout/spacing, but translate to Tailwind utilities + existing tokens, not raw `.kit-*` CSS.
 - **Brand-only topbar:** NO organization or website switcher. Topbar = brand mark + wordmark (left), user menu (right).
-- **Config-driven:** screens use the real RPC client (`useLatha().client`). Only Media is a styled placeholder (no backend).
+- **Config-driven:** screens use the real RPC client (`useKon10().client`). Only Media is a styled placeholder (no backend).
 - **No backend/RPC/auth/config changes.** No new design tokens.
 - **Copy rules (from kit readme):** sentence case everywhere except tiny tracked section/table-head labels which are UPPERCASE; verb-first buttons (`New post`, `Save changes`, `Sign in`, `Upload`); no emoji; Lucide icons only; status words capitalized in badges.
-- **Brand:** mark = rounded-square (`rounded-[14px]` ≈ `--radius`) `bg-primary` with white initial; wordmark "LathaCMS", `font-semibold tracking-tight`.
+- **Brand:** mark = rounded-square (`rounded-[14px]` ≈ `--radius`) `bg-primary` with white initial; wordmark "Kon10", `font-semibold tracking-tight`.
 - **Module system:** ESM NodeNext — every relative import within packages ends in `.js`.
-- **No test runner for UI packages.** Verification per task = `pnpm --filter @latha/playground typecheck` (or root `pnpm typecheck`) + browser observation. Do NOT add unit tests for layout.
+- **No test runner for UI packages.** Verification per task = `pnpm --filter @kon10/playground typecheck` (or root `pnpm typecheck`) + browser observation. Do NOT add unit tests for layout.
 - **Commit after each task.** End commit messages with:
   `Claude-Session: https://claude.ai/code/session_01WvqvMhmnt1ewuJxYK6TxMb`
 
@@ -57,7 +57,7 @@
 import { useEffect, useState } from 'react'
 
 export type Theme = 'light' | 'dark'
-const STORAGE_KEY = 'latha-theme'
+const STORAGE_KEY = 'kon10-theme'
 
 export function useTheme(): { theme: Theme; setTheme: (t: Theme) => void } {
   const [theme, setThemeState] = useState<Theme>('light')
@@ -93,7 +93,7 @@ export function useTheme(): { theme: Theme; setTheme: (t: Theme) => void } {
  * Closes on outside click via a transparent fixed overlay (kit pattern).
  */
 import { useState } from 'react'
-import { Avatar } from '@latha/ui'
+import { Avatar } from '@kon10/ui'
 import { Check, LogOut, Moon, Sun, UserRound } from 'lucide-react'
 import type { Theme } from './useTheme.js'
 
@@ -175,7 +175,7 @@ export { UserMenu, type UserMenuProps } from './shell/UserMenu.js'
 
 - [ ] **Step 4: Typecheck**
 
-Run: `pnpm --filter @latha/playground typecheck`
+Run: `pnpm --filter @kon10/playground typecheck`
 Expected: PASS (no errors). If `Avatar`'s `size` prop differs, check `packages/ui/src/components/ui/avatar.tsx` and use the correct value.
 
 - [ ] **Step 5: Commit**
@@ -273,7 +273,7 @@ export { EmptyState, type EmptyStateProps } from './shell/EmptyState.js'
 
 - [ ] **Step 4: Typecheck**
 
-Run: `pnpm --filter @latha/playground typecheck`
+Run: `pnpm --filter @kon10/playground typecheck`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -357,7 +357,7 @@ export { MobileDrawer, type MobileDrawerProps } from './shell/MobileDrawer.js'
 
 - [ ] **Step 4: Typecheck**
 
-Run: `pnpm --filter @latha/playground typecheck`
+Run: `pnpm --filter @kon10/playground typecheck`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -394,7 +394,7 @@ export interface TopbarProps {
   children?: ReactNode
 }
 
-export function Topbar({ brand = 'LathaCMS', onMenuClick, children }: TopbarProps) {
+export function Topbar({ brand = 'Kon10', onMenuClick, children }: TopbarProps) {
   return (
     <header className="sticky top-0 z-40 flex h-(--header-height) items-center justify-between gap-3 border-b border-border bg-background px-4">
       <div className="flex min-w-0 items-center gap-2">
@@ -443,7 +443,7 @@ export function AdminShell({
   nav,
   currentPath,
   LinkComponent,
-  brand = 'LathaCMS',
+  brand = 'Kon10',
   userMenu,
   children,
 }: AdminShellProps) {
@@ -475,7 +475,7 @@ export function AdminShell({
 
 - [ ] **Step 3: Typecheck**
 
-Run: `pnpm --filter @latha/playground typecheck`
+Run: `pnpm --filter @kon10/playground typecheck`
 Expected: FAIL — `admin.tsx` still passes the old `title`/`actions` props. That is expected and fixed in Task 5. Confirm the only errors are in `packages/start/src/admin.tsx` referencing `title`/`actions`.
 
 - [ ] **Step 4: Commit**
@@ -487,7 +487,7 @@ git commit -m "feat(admin-sdk): full-width topbar + reworked AdminShell layout"
 
 ---
 
-## Task 5: Wire the shell in `@latha/start` (topbar brand + user menu + theme)
+## Task 5: Wire the shell in `@kon10/start` (topbar brand + user menu + theme)
 
 **Files:**
 - Modify: `packages/start/src/admin.tsx`
@@ -496,9 +496,9 @@ git commit -m "feat(admin-sdk): full-width topbar + reworked AdminShell layout"
 - Consumes: new `AdminShell` (Task 4), `UserMenu` + `useTheme` (Task 1).
 - Produces: a working admin shell rendering real session + theme; screen content still the existing `AdminView` (restyled in Tasks 6–7).
 
-- [ ] **Step 1: Update imports in `admin.tsx`** — add `UserMenu`, `useTheme` to the `@latha/admin-sdk` import; the standalone `Avatar`/`Button`/`LogOut` imports used only for the old actions block can stay if still referenced elsewhere (they are used by screens), otherwise leave them.
+- [ ] **Step 1: Update imports in `admin.tsx`** — add `UserMenu`, `useTheme` to the `@kon10/admin-sdk` import; the standalone `Avatar`/`Button`/`LogOut` imports used only for the old actions block can stay if still referenced elsewhere (they are used by screens), otherwise leave them.
 
-- [ ] **Step 2: Replace the `AdminShell` usage** inside `LathaAdmin()`'s return. Replace the whole `<AdminShell …>…</AdminShell>` block (the one with `title`/`actions`) with:
+- [ ] **Step 2: Replace the `AdminShell` usage** inside `Kon10Admin()`'s return. Replace the whole `<AdminShell …>…</AdminShell>` block (the one with `title`/`actions`) with:
 
 ```tsx
 const { theme, setTheme } = useTheme()
@@ -508,7 +508,7 @@ return (
     nav={nav.data ?? []}
     currentPath={pathname}
     LinkComponent={RouterLink}
-    brand="LathaCMS"
+    brand="Kon10"
     userMenu={
       <UserMenu
         email={session.data.email}
@@ -527,17 +527,17 @@ return (
 )
 ```
 
-Note: `useTheme()` is a hook — place the `const { theme, setTheme } = useTheme()` call at the top of `LathaAdmin()` with the other hooks (before the early returns are fine since hooks must run unconditionally; put it alongside `useAsync`/`useNavigate` near the top).
+Note: `useTheme()` is a hook — place the `const { theme, setTheme } = useTheme()` call at the top of `Kon10Admin()` with the other hooks (before the early returns are fine since hooks must run unconditionally; put it alongside `useAsync`/`useNavigate` near the top).
 
 - [ ] **Step 3: Typecheck**
 
-Run: `pnpm --filter @latha/playground typecheck`
+Run: `pnpm --filter @kon10/playground typecheck`
 Expected: PASS. (`session.data.role` exists on `SessionUser`.)
 
 - [ ] **Step 4: Browser verification — shell**
 
-Run: `pnpm --filter @latha/playground dev` (port 3000). Visit `http://localhost:3000/admin`, sign in with a seeded user (any from `latha.config.ts` seed; check `apps/playground/latha.config.ts` for the seeded admin, or create one if none — do NOT change config, use the login flow). Observe:
-- Full-width topbar: burger (only when window < 860px), brand mark + "LathaCMS" left; avatar + email right.
+Run: `pnpm --filter @kon10/playground dev` (port 3000). Visit `http://localhost:3000/admin`, sign in with a seeded user (any from `kon10.config.ts` seed; check `apps/playground/kon10.config.ts` for the seeded admin, or create one if none — do NOT change config, use the login flow). Observe:
+- Full-width topbar: burger (only when window < 860px), brand mark + "Kon10" left; avatar + email right.
 - Sidebar below the topbar with nav groups; main content to its right.
 - User menu opens; Light/Dark toggles `.dark` on `<html>` (inspect element) and content recolors; reload keeps the theme.
 - Narrow the window < 860px: sidebar hides, burger appears, opens the drawer with scrim.
@@ -566,7 +566,7 @@ git commit -m "feat(start): wire brand topbar, user menu, and dark mode toggle"
 
 ```tsx
 import { Plus, ArrowRight, FileText, Files, FolderTree } from 'lucide-react'
-import { StatusBadge } from '@latha/ui'
+import { StatusBadge } from '@kon10/ui'
 // (add these to the existing import lines as needed)
 
 const KIND_ICON: Record<string, typeof FileText> = {
@@ -576,7 +576,7 @@ const KIND_ICON: Record<string, typeof FileText> = {
 }
 
 function Dashboard({ nav }: { nav: NavItem[] }) {
-  const { client, basePath } = useLatha()
+  const { client, basePath } = useKon10()
   return (
     <>
       <PageHeader
@@ -605,7 +605,7 @@ function Dashboard({ nav }: { nav: NavItem[] }) {
   )
 }
 
-function StatCount({ client, item }: { client: ReturnType<typeof useLatha>['client']; item: NavItem }) {
+function StatCount({ client, item }: { client: ReturnType<typeof useKon10>['client']; item: NavItem }) {
   const count = useAsync(
     () => (item.kind === 'collection' ? client.list(item.slug) : Promise.resolve([])),
     [item.slug, item.kind],
@@ -625,7 +625,7 @@ function StatCount({ client, item }: { client: ReturnType<typeof useLatha>['clie
 
 ```tsx
 function ListView({ slug }: { slug: string }) {
-  const { client, basePath } = useLatha()
+  const { client, basePath } = useKon10()
   const entity = useAsync(() => client.entity(slug), [slug])
   const rows = useAsync(() => client.list(slug), [slug])
 
@@ -711,8 +711,8 @@ Leave the `<CollectionForm …>` blocks unchanged below each header.
 
 - [ ] **Step 4: Typecheck**
 
-Run: `pnpm --filter @latha/playground typecheck`
-Expected: PASS. Verify `StatusBadge`, `Card`, `Button asChild` are exported from `@latha/ui` (they are — see `packages/ui/src/index.ts`).
+Run: `pnpm --filter @kon10/playground typecheck`
+Expected: PASS. Verify `StatusBadge`, `Card`, `Button asChild` are exported from `@kon10/ui` (they are — see `packages/ui/src/index.ts`).
 
 - [ ] **Step 5: Browser verification**
 
@@ -737,7 +737,7 @@ git commit -m "feat(start): kit-styled dashboard, list, and editor screens"
 - Consumes: existing `client.login`, `DocumentForm`, `PageHeader`, `Card`, `Field`, `Input`, `Button`.
 - Produces: kit-styled login + settings/document view.
 
-- [ ] **Step 1: Restyle `login.tsx`** — keep the entire auth flow (`onSubmit`, state) unchanged; update only the JSX wrapper to match the kit: centered card on `--muted`, brand mark + "LathaCMS", "Welcome back" card. Replace the returned JSX with:
+- [ ] **Step 1: Restyle `login.tsx`** — keep the entire auth flow (`onSubmit`, state) unchanged; update only the JSX wrapper to match the kit: centered card on `--muted`, brand mark + "Kon10", "Welcome back" card. Replace the returned JSX with:
 
 ```tsx
 return (
@@ -747,7 +747,7 @@ return (
         <span className="grid size-8 place-items-center rounded-[var(--radius-md)] bg-primary text-base font-semibold text-primary-foreground">
           L
         </span>
-        <span className="text-lg font-semibold tracking-tight">LathaCMS</span>
+        <span className="text-lg font-semibold tracking-tight">Kon10</span>
       </div>
       <Card className="gap-6 p-6">
         <div className="flex flex-col gap-1.5">
@@ -811,12 +811,12 @@ return (
 )
 ```
 
-Add `CardHeader, CardTitle, CardDescription, CardContent` to the `@latha/ui` import if not present.
+Add `CardHeader, CardTitle, CardDescription, CardContent` to the `@kon10/ui` import if not present.
 
 - [ ] **Step 3: Typecheck**
 
-Run: `pnpm --filter @latha/playground typecheck`
-Expected: PASS. Confirm `CardHeader`/`CardTitle`/`CardDescription`/`CardContent` are exported by `@latha/ui` (check `packages/ui/src/index.ts`; they back the kit's Card and should exist).
+Run: `pnpm --filter @kon10/playground typecheck`
+Expected: PASS. Confirm `CardHeader`/`CardTitle`/`CardDescription`/`CardContent` are exported by `@kon10/ui` (check `packages/ui/src/index.ts`; they back the kit's Card and should exist).
 
 - [ ] **Step 4: Full browser verification (end-to-end)**
 
@@ -853,7 +853,7 @@ git commit -m "feat(start): kit-styled login and document/settings view"
 - Editor (PageHeader + form, Delete action) → Task 6. ✓
 - Settings/document two-up → Task 7. ✓
 - Login restyle (auth unchanged) → Task 7. ✓
-- Media placeholder → **covered by EmptyState (Task 2)**; latha-cms has no Media route, so no dedicated screen is rendered. If a Media nav entry is later added, render `<EmptyState icon={Image} title="No media yet" …/>`. Documented here; no task needed since there is no Media route in the current config. ✓
+- Media placeholder → **covered by EmptyState (Task 2)**; kon10-cms has no Media route, so no dedicated screen is rendered. If a Media nav entry is later added, render `<EmptyState icon={Image} title="No media yet" …/>`. Documented here; no task needed since there is no Media route in the current config. ✓
 - Users screen → the kit's "Users" maps to the `users` module **only if** it appears in `nav` as a collection; if so it renders via the generic `ListView` (Task 6). No bespoke avatar-table task, since `CollectionList` is config-driven. The spec's bespoke Users table is **descoped to the generic list** to stay config-driven; noted as a deviation.
 
 **Deviations from spec (intentional, to honor "config-driven"):**

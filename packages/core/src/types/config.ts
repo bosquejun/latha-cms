@@ -8,14 +8,14 @@ import type { Guard } from './guard.js'
 import type { FieldTypeEntry } from '../fields/registry.js'
 
 /** Forward reference to the live instance; defined in `bootstrap`. */
-export interface LathaInstance {
+export interface Kon10Instance {
   config: ResolvedConfig
   db: DBAdapter
-  /** Optional blob/file storage adapter — set when a module (e.g. `@latha/media`) needs one. */
+  /** Optional blob/file storage adapter — set when a module (e.g. `@kon10/media`) needs one. */
   storage?: StorageAdapter
   /**
    * Optional key-value cache adapter — set when a module or the app itself
-   * needs one (e.g. `@latha/cache`'s `redisCache()`/`inMemoryCache()`). Core
+   * needs one (e.g. `@kon10/cache`'s `redisCache()`/`inMemoryCache()`). Core
    * has no opinion on what's cached; this is a generic extension seam.
    */
   cache?: CacheAdapter
@@ -36,14 +36,14 @@ export interface LathaInstance {
   registerFieldType(entry: FieldTypeEntry): void
   /**
    * Register the blob/file storage adapter (typically from a module's
-   * `onInit`, e.g. `@latha/media`). Core has no opinion on storage — this is
+   * `onInit`, e.g. `@kon10/media`). Core has no opinion on storage — this is
    * a generic extension seam, the same shape as `registerGuard`/
    * `registerFieldType`, not a config concept core itself needs.
    */
   registerStorageAdapter(adapter: StorageAdapter): void
   /**
    * Register the key-value cache adapter (typically from a module's
-   * `onInit`, e.g. `@latha/cache`). Same shape as `registerStorageAdapter` —
+   * `onInit`, e.g. `@kon10/cache`). Same shape as `registerStorageAdapter` —
    * core never reads or writes through it itself.
    */
   registerCacheAdapter(adapter: CacheAdapter): void
@@ -54,7 +54,7 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'OPTIONS'
 
 /** Context a runner passes to a module route handler when it dispatches a request to it. */
 export interface ModuleRouteContext {
-  cms: LathaInstance
+  cms: Kon10Instance
   /**
    * The resolved caller for this request — an authenticated principal or the
    * runner's anonymous principal. Opaque to core, same contract as
@@ -80,8 +80,8 @@ export interface ModuleRoute {
 
 /**
  * A module's custom HTTP endpoints, keyed by path — relative to wherever the
- * runner mounts module routes (e.g. `@latha/start` mounts them at
- * `/__latha/modules/<module.name>/<path>`). One path may answer more than one
+ * runner mounts module routes (e.g. `@kon10/start` mounts them at
+ * `/__kon10/modules/<module.name>/<path>`). One path may answer more than one
  * method.
  */
 export interface ModuleRoutes {
@@ -116,7 +116,7 @@ export interface ModuleAdminConfig {
   nav?: ModuleNavConfig
   /**
    * Bare import specifier for this module's admin-UI barrel (e.g.
-   * '@latha/auth/admin'). The Start Vite plugin statically imports and merges
+   * '@kon10/auth/admin'). The Start Vite plugin statically imports and merges
    * it into the admin extension registry at build time. A serializable string —
    * never a component. Omit for backend-only modules.
    */
@@ -137,10 +137,10 @@ export interface ModuleApiConfig {
 export interface Module {
   name: string
   dependsOn?: string[]
-  onInit?: (cms: LathaInstance) => void | Promise<void>
-  onReady?: (cms: LathaInstance) => void | Promise<void>
+  onInit?: (cms: Kon10Instance) => void | Promise<void>
+  onReady?: (cms: Kon10Instance) => void | Promise<void>
   /**
-   * Custom HTTP endpoints this module exposes (e.g. `@latha/media`'s file
+   * Custom HTTP endpoints this module exposes (e.g. `@kon10/media`'s file
    * upload route). The runner discovers and mounts these generically — it
    * never needs module-specific knowledge to dispatch them.
    */
@@ -162,7 +162,7 @@ export function moduleApiPrefix(module: Module): string {
 export interface PluginAdminConfig {
   /**
    * Bare import specifier for this plugin's admin-UI barrel (e.g.
-   * '@latha/slug/admin'). Same contract as `ModuleAdminConfig.ui`: the Start
+   * '@kon10/slug/admin'). Same contract as `ModuleAdminConfig.ui`: the Start
    * Vite plugin statically imports and merges it into the admin extension
    * registry at build time. A serializable string — never a component. Omit
    * for backend-only plugins.
@@ -172,14 +172,14 @@ export interface PluginAdminConfig {
 
 export interface Plugin {
   name: string
-  extendConfig?: (config: LathaConfig) => LathaConfig
-  onInit?: (cms: LathaInstance) => void | Promise<void>
+  extendConfig?: (config: Kon10Config) => Kon10Config
+  onInit?: (cms: Kon10Instance) => void | Promise<void>
   /** Admin-UI metadata for this plugin (extension barrel). */
   admin?: PluginAdminConfig
 }
 
 /**
- * Public delivery-API settings. A passthrough for runners (e.g. `@latha/start`
+ * Public delivery-API settings. A passthrough for runners (e.g. `@kon10/start`
  * mounts the read-only REST surface and applies these) — the kernel itself
  * never reads them, the same contract as `adminPath`.
  */
@@ -192,10 +192,10 @@ export interface DeliveryApiConfig {
   cors?: '*' | string[] | false
   /**
    * Read-through caching for delivery-API responses, backed by whichever
-   * `CacheAdapter` a module registered onto `latha.cache` (e.g.
-   * `@latha/cache`'s `CacheModule`). `ttlSeconds` defaults to 60. Pass
+   * `CacheAdapter` a module registered onto `kon10.cache` (e.g.
+   * `@kon10/cache`'s `CacheModule`). `ttlSeconds` defaults to 60. Pass
    * `false` to disable caching even when a cache adapter is registered —
-   * omitting this caches whenever `latha.cache` is set. Cached entries are
+   * omitting this caches whenever `kon10.cache` is set. Cached entries are
    * TTL-only: a write via the admin RPC does not invalidate already-cached
    * delivery-API reads. Only successful (200) reads are cached. An entity's
    * own `api.cache` overrides this per entity.
@@ -203,7 +203,7 @@ export interface DeliveryApiConfig {
   cache?: DeliveryCacheOption
 }
 
-export interface LathaConfig {
+export interface Kon10Config {
   db: DBAdapter
   modules: Module[]
   plugins?: Plugin[]
@@ -215,11 +215,11 @@ export interface LathaConfig {
    * Optional one-time setup run once after the instance is ready (e.g. seeding
    * a first admin user). Runners decide when to invoke it; the kernel does not.
    */
-  seed?: (latha: LathaInstance) => void | Promise<void>
+  seed?: (kon10: Kon10Instance) => void | Promise<void>
 }
 
 /** Config after `defineConfig()` has applied defaults and plugin transforms. */
-export interface ResolvedConfig extends LathaConfig {
+export interface ResolvedConfig extends Kon10Config {
   adminPath: string
   plugins: Plugin[]
 }

@@ -6,7 +6,7 @@
  * cookie helper needed, so this route runs the same whether the runner is
  * TanStack Start or anything else that speaks Fetch `Request`/`Response`.
  */
-import type { ModuleRoute, ModuleRouteContext } from '@latha/core'
+import type { ModuleRoute, ModuleRouteContext } from '@kon10/core'
 import { authenticate } from '../service.js'
 import { createSessionToken } from '../session.js'
 import { resolveAuthOptions } from '../config.js'

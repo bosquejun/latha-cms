@@ -12,7 +12,7 @@
  * The id↔key maps are cached per instance for fast enforcement and seeding.
  */
 
-import type { Doc, LathaInstance } from '@latha/core'
+import type { Doc, Kon10Instance } from '@kon10/core'
 import { ADMIN_ACCESS, SUPERADMIN, permissionKey } from './permissions.js'
 import { PERMISSIONS_SLUG, SCOPES_SLUG } from './entities.js'
 
@@ -39,11 +39,11 @@ export interface RbacCatalog {
   permissionIdByKey: Map<string, string>
 }
 
-const catalogs = new WeakMap<LathaInstance, RbacCatalog>()
+const catalogs = new WeakMap<Kon10Instance, RbacCatalog>()
 
 /** The synced catalog for an instance, if `syncCatalog` has run. */
-export function getCatalog(latha: LathaInstance): RbacCatalog | undefined {
-  return catalogs.get(latha)
+export function getCatalog(kon10: Kon10Instance): RbacCatalog | undefined {
+  return catalogs.get(kon10)
 }
 
 function humanize(input: string): string {
@@ -52,24 +52,24 @@ function humanize(input: string): string {
 }
 
 /** Map each entity slug to the name of the module that contributed it. */
-function moduleOfEntities(latha: LathaInstance): Map<string, string> {
+function moduleOfEntities(kon10: Kon10Instance): Map<string, string> {
   const out = new Map<string, string>()
-  for (const module of latha.modules) {
+  for (const module of kon10.modules) {
     for (const entity of module.entities ?? []) out.set(entity.slug, module.name)
   }
   return out
 }
 
 /** Compute the desired catalog from the live entity set. */
-function buildDesired(latha: LathaInstance): {
+function buildDesired(kon10: Kon10Instance): {
   scopes: ScopeRecord[]
   permissions: PermissionRecord[]
 } {
-  const moduleOf = moduleOfEntities(latha)
+  const moduleOf = moduleOfEntities(kon10)
   const scopes: ScopeRecord[] = []
   const permissions: PermissionRecord[] = []
 
-  for (const entity of latha.entities) {
+  for (const entity of kon10.entities) {
     const actions = entity.actions
     if (!actions?.length) continue
     const module = moduleOf.get(entity.slug) ?? ''
@@ -110,17 +110,17 @@ function buildDesired(latha: LathaInstance): {
 
 /** Upsert `desired` rows (keyed by `key`) into `slug`, pruning stale rows. */
 async function syncTable<T extends { key: string }>(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   slug: string,
   desired: T[],
 ): Promise<Doc[]> {
-  const existing = await latha.db.find(slug)
+  const existing = await kon10.db.find(slug)
   const byKey = new Map(existing.map((row) => [row.key as string, row]))
   const desiredKeys = new Set(desired.map((d) => d.key))
 
   // Prune rows no longer in the catalog.
   for (const row of existing) {
-    if (!desiredKeys.has(row.key as string)) await latha.db.delete(slug, row.id)
+    if (!desiredKeys.has(row.key as string)) await kon10.db.delete(slug, row.id)
   }
 
   // Upsert each desired row.
@@ -130,8 +130,8 @@ async function syncTable<T extends { key: string }>(
     const data = entry as Record<string, unknown>
     result.push(
       found
-        ? await latha.db.update(slug, found.id, data)
-        : await latha.db.create(slug, data),
+        ? await kon10.db.update(slug, found.id, data)
+        : await kon10.db.create(slug, data),
     )
   }
   return result
@@ -141,11 +141,11 @@ async function syncTable<T extends { key: string }>(
  * Sync the catalog into the DB and cache the id↔key maps on the instance.
  * Run from `AuthModule.onReady` (after `migrate`).
  */
-export async function syncCatalog(latha: LathaInstance): Promise<RbacCatalog> {
-  const desired = buildDesired(latha)
+export async function syncCatalog(kon10: Kon10Instance): Promise<RbacCatalog> {
+  const desired = buildDesired(kon10)
 
-  await syncTable(latha, SCOPES_SLUG, desired.scopes)
-  const permRows = await syncTable(latha, PERMISSIONS_SLUG, desired.permissions)
+  await syncTable(kon10, SCOPES_SLUG, desired.scopes)
+  const permRows = await syncTable(kon10, PERMISSIONS_SLUG, desired.permissions)
 
   const permissionKeyById = new Map<string, string>()
   const permissionIdByKey = new Map<string, string>()
@@ -161,6 +161,6 @@ export async function syncCatalog(latha: LathaInstance): Promise<RbacCatalog> {
     permissionKeyById,
     permissionIdByKey,
   }
-  catalogs.set(latha, catalog)
+  catalogs.set(kon10, catalog)
   return catalog
 }

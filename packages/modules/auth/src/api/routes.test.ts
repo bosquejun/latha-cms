@@ -1,8 +1,8 @@
 /**
  * Login/logout/current-user route coverage: a real bootstrapped `AuthModule`
- * instance (custom subject store, no `@latha/users` needed) exercised through
+ * instance (custom subject store, no `@kon10/users` needed) exercised through
  * the declared `ModuleRoute`s exactly as the runner's generic module-route
- * dispatcher calls them. Unlike `@latha/start`'s cookie-reading (which relies
+ * dispatcher calls them. Unlike `@kon10/start`'s cookie-reading (which relies
  * on TanStack's ambient request context), these routes take the `Cookie`
  * header straight off the `Request` they're given, so they're fully testable
  * here with plain `node:test`.
@@ -10,13 +10,13 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  bootstrapLatha,
+  bootstrapKon10,
   defineConfig,
   type DBAdapter,
   type Doc,
-  type LathaInstance,
+  type Kon10Instance,
   type Query,
-} from '@latha/core'
+} from '@kon10/core'
 import { AuthModule } from '../module.js'
 import { hashPassword } from '../crypto.js'
 import { loginRoute } from './login.js'
@@ -68,7 +68,7 @@ const subjects = new Map([
   ['u1', { id: 'u1', email: 'alice@example.com', passwordHash: alicePasswordHash, roles: [] }],
 ])
 
-async function bootAuth(): Promise<LathaInstance> {
+async function bootAuth(): Promise<Kon10Instance> {
   const config = defineConfig({
     db: fakeDb(),
     modules: [
@@ -85,13 +85,13 @@ async function bootAuth(): Promise<LathaInstance> {
       }),
     ],
   })
-  return bootstrapLatha(config)
+  return bootstrapKon10(config)
 }
 
 const cms = await bootAuth()
 
 function jsonRequest(path: string, body: unknown, headers?: Record<string, string>) {
-  return new Request(`http://localhost/__latha/modules/auth/${path}`, {
+  return new Request(`http://localhost/__kon10/modules/auth/${path}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', ...headers },
     body: JSON.stringify(body),
@@ -132,14 +132,14 @@ test('loginRoute succeeds with the right credentials and sets a session cookie',
   })
   const setCookie = res.headers.get('set-cookie')
   assert.ok(setCookie)
-  assert.match(setCookie!, /^latha_session=/)
+  assert.match(setCookie!, /^kon10_session=/)
 
   const body = (await res.json()) as { ok: boolean; user: { email: string } }
   assert.equal(body.ok, true)
   assert.equal(body.user.email, 'alice@example.com')
 
   // Round-trip: the cookie login just set authenticates current-user.
-  const meReq = new Request('http://localhost/__latha/modules/auth/current-user', {
+  const meReq = new Request('http://localhost/__kon10/modules/auth/current-user', {
     headers: { cookie: cookiePair(setCookie!) },
   })
   const meRes = await currentUserRoute.handler({ cms, principal: null, request: meReq })
@@ -151,7 +151,7 @@ test('currentUserRoute returns null with no session cookie', async () => {
   const res = await currentUserRoute.handler({
     cms,
     principal: null,
-    request: new Request('http://localhost/__latha/modules/auth/current-user'),
+    request: new Request('http://localhost/__kon10/modules/auth/current-user'),
   })
   assert.equal(await res.json(), null)
 })
@@ -160,7 +160,7 @@ test('logoutRoute clears the session cookie', async () => {
   const res = await logoutRoute.handler({
     cms,
     principal: null,
-    request: new Request('http://localhost/__latha/modules/auth/logout', { method: 'POST' }),
+    request: new Request('http://localhost/__kon10/modules/auth/logout', { method: 'POST' }),
   })
   const setCookie = res.headers.get('set-cookie')
   assert.ok(setCookie)

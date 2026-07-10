@@ -1,6 +1,6 @@
 /**
  * `media` field renderer — a dropzone with upload progress and a rich preview.
- * Lives in `@latha/media/admin` (not `@latha/admin-sdk`) so the SDK stays
+ * Lives in `@kon10/media/admin` (not `@kon10/admin-sdk`) so the SDK stays
  * ignorant of what "media" means; registered by `type`, same mechanism as any
  * module field renderer.
  *
@@ -11,14 +11,14 @@
  * dropzone and the Replace button open the picker.
  */
 import { useRef, useState } from 'react'
-import { Button, cn, Field as FieldWrap, Spinner } from '@latha/ui'
+import { Button, cn, Field as FieldWrap, Spinner } from '@kon10/ui'
 import {
   type FieldControlProps,
   humanize,
-  useLatha,
+  useKon10,
   useAsync,
   type JsonDoc,
-} from '@latha/admin-sdk'
+} from '@kon10/admin-sdk'
 
 export const config = { type: 'media' }
 
@@ -71,7 +71,7 @@ function formatSize(bytes: number): string {
 }
 
 export default function MediaField({ field, id, value, onChange, onBlur, error }: FieldControlProps) {
-  const { client } = useLatha()
+  const { client } = useKon10()
   const [busy, setBusy] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   // `client.upload()` returns the full media doc, so we keep it to render the

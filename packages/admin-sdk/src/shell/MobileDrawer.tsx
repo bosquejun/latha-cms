@@ -10,7 +10,7 @@
  */
 import { useEffect, type ComponentType, type ReactNode } from 'react'
 import { X } from 'lucide-react'
-import { Button } from '@latha/ui'
+import { Button } from '@kon10/ui'
 import { Sidebar, type SidebarSection, type SidebarLinkProps } from './Sidebar.js'
 
 export interface MobileDrawerProps {
@@ -34,7 +34,7 @@ export function MobileDrawer({
   showDashboard,
   header,
   footer,
-  brand = 'LathaCMS',
+  brand = 'Kon10',
 }: MobileDrawerProps) {
   useEffect(() => {
     if (!open) return

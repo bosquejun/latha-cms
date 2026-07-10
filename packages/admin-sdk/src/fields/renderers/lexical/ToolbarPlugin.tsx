@@ -23,7 +23,7 @@ import {
 } from '@lexical/list'
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link'
 import { $findMatchingParent, $insertNodeToNearestRoot } from '@lexical/utils'
-import { Button, Separator, Spinner, toast } from '@latha/ui'
+import { Button, Separator, Spinner, toast } from '@kon10/ui'
 import {
   Bold,
   Code,
@@ -41,13 +41,13 @@ import {
   Underline,
   Undo2,
 } from 'lucide-react'
-import { useLatha } from '../../../client/index.js'
+import { useKon10 } from '../../../client/index.js'
 import { $createImageNode } from './ImageNode.js'
 import { normalizeUrl } from './linkUtils.js'
 
 export function ToolbarPlugin() {
   const [editor] = useLexicalComposerContext()
-  const { client } = useLatha()
+  const { client } = useKon10()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isBold, setIsBold] = useState(false)
   const [isItalic, setIsItalic] = useState(false)

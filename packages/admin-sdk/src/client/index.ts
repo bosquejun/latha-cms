@@ -1,12 +1,12 @@
 /**
- * The Latha client surface — the typed RPC client, the React provider/hooks,
- * and the client-safe RPC contract types. Moved here from `@latha/start` so
- * both `@latha/start` and `@latha/auth/admin` can consume it without a cycle.
+ * The Kon10 client surface — the typed RPC client, the React provider/hooks,
+ * and the client-safe RPC contract types. Moved here from `@kon10/start` so
+ * both `@kon10/start` and `@kon10/auth/admin` can consume it without a cycle.
  */
 
-export { createLathaClient, type LathaClient, type LathaClientOptions } from './client.js'
+export { createKon10Client, type Kon10Client, type Kon10ClientOptions } from './client.js'
 export {
-  lathaRpcValidator,
+  kon10RpcValidator,
   DEFAULT_RPC_PATH,
   DEFAULT_UPLOAD_PATH,
   DEFAULT_LOGIN_PATH,
@@ -15,20 +15,20 @@ export {
   DEFAULT_API_PATH,
 } from './default-rpc.js'
 export {
-  LathaProvider,
-  useLatha,
+  Kon10Provider,
+  useKon10,
   PermissionsProvider,
   useCan,
   AdminNavigateProvider,
   useAdminNavigate,
-  type LathaProviderProps,
-  type LathaContextValue,
+  type Kon10ProviderProps,
+  type Kon10ContextValue,
 } from './context.js'
 export { useAsync, type AsyncState } from './hooks.js'
 export {
-  LathaRpcInputSchema,
-  type LathaRpcInput,
-  type LathaServerFn,
+  Kon10RpcInputSchema,
+  type Kon10RpcInput,
+  type Kon10ServerFn,
   type JsonDoc,
   type PageResult,
   type SessionUser,

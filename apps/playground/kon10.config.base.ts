@@ -1,8 +1,8 @@
 /**
- * latha.config.base.ts — everything except the DB and storage adapters.
+ * kon10.config.base.ts — everything except the DB and storage adapters.
  *
- * Split out so the two environment-specific entrypoints (`latha.config.ts`
- * for local dev, `latha.config.vercel.ts` for Vercel) can each pass their own
+ * Split out so the two environment-specific entrypoints (`kon10.config.ts`
+ * for local dev, `kon10.config.vercel.ts` for Vercel) can each pass their own
  * `DBAdapter`/`StorageAdapter` without duplicating the rest of the app's
  * schema/modules/seed. `vite.config.ts` picks which entrypoint to build
  * against, so only one pair's module graph (and its dependencies) is ever
@@ -18,7 +18,7 @@ import {
   type FieldsRecord,
   type ResolvedConfig,
   type StorageAdapter,
-} from '@latha/core'
+} from '@kon10/core'
 import {
   Collection,
   ContentModule,
@@ -47,9 +47,9 @@ import {
   select,
   taxonomy,
   text,
-} from '@latha/content'
-import { UsersModule } from '@latha/users'
-import { countUsers, createUser } from '@latha/users'
+} from '@kon10/content'
+import { UsersModule } from '@kon10/users'
+import { countUsers, createUser } from '@kon10/users'
 import {
   AuthModule,
   getCatalog,
@@ -57,10 +57,10 @@ import {
   hashPassword,
   hasPermission,
   type AuthUser,
-} from '@latha/auth'
-import { media, MediaModule } from '@latha/media'
-import { CacheModule, inMemoryCache } from '@latha/cache'
-import { slug, slugPlugin } from '@latha/slug'
+} from '@kon10/auth'
+import { media, MediaModule } from '@kon10/media'
+import { CacheModule, inMemoryCache } from '@kon10/cache'
+import { slug, slugPlugin } from '@kon10/slug'
 
 // `text({ schema: ... })` escape hatch — no dedicated `color` field type
 // exists (or is needed) for a `#rrggbb` string; `inputType: 'color'` on the
@@ -129,12 +129,12 @@ export function buildConfig(
 
       // AuthModule owns RBAC: it seeds the admin/editor/viewer roles on first run
       // and syncs the scope/permission catalog from the entities below.
-      AuthModule({ secret: process.env.AUTH_SECRET ?? 'latha-dev-secret-change-me' }),
+      AuthModule({ secret: process.env.AUTH_SECRET ?? 'kon10-dev-secret-change-me' }),
 
       MediaModule({ storage }),
 
       // Read-through caching for the public delivery API — see
-      // `@latha/cache`'s `CacheModule`. Entities can opt out or override the
+      // `@kon10/cache`'s `CacheModule`. Entities can opt out or override the
       // TTL via their own `api.cache`.
       CacheModule({ cache }),
 
@@ -147,7 +147,7 @@ export function buildConfig(
             slug: 'site-settings',
             // Lives in the settings sidebar (behind the Settings button)
             // rather than the main content nav — same `admin.area` used by
-            // `@latha/users`' `users` entity and `@latha/auth`'s RBAC/API-key
+            // `@kon10/users`' `users` entity and `@kon10/auth`'s RBAC/API-key
             // entities. It's still a `ContentModule` `Document` (a singleton
             // needs `Document()`'s persistence/operations), but display
             // placement is an orthogonal `admin` concern. `group: ''`
@@ -190,7 +190,7 @@ export function buildConfig(
 
               // Public-site theme tokens, named after the shadcn/ui CSS
               // variables this admin's own design system already runs on
-              // (@latha/ui/src/styles/globals.css: --background, --foreground,
+              // (@kon10/ui/src/styles/globals.css: --background, --foreground,
               // --primary, --secondary, --accent) — a curated subset rather
               // than all ~15 shadcn tokens, since most of those (card, popover,
               // border, ring, ...) are normally derived from these few, not
@@ -461,16 +461,16 @@ export function buildConfig(
 
     // First-run seed so login works out of the box. AuthModule has already seeded
     // the default roles by this point, so we can assign the admin role by id.
-    seed: async (latha) => {
-      if ((await countUsers(latha)) === 0) {
-        const adminRole = await getRoleByName(latha, 'admin')
-        await createUser(latha, {
-          email: process.env.ADMIN_EMAIL ?? 'admin@latha.dev',
+    seed: async (kon10) => {
+      if ((await countUsers(kon10)) === 0) {
+        const adminRole = await getRoleByName(kon10, 'admin')
+        await createUser(kon10, {
+          email: process.env.ADMIN_EMAIL ?? 'admin@kon10.dev',
           name: 'Admin',
           roles: adminRole ? [adminRole.id] : [],
           passwordHash: await hashPassword(process.env.ADMIN_PASSWORD ?? 'password'),
         })
-        console.log('[latha] seeded admin: admin@latha.dev / password')
+        console.log('[kon10] seeded admin: admin@kon10.dev / password')
       }
 
       // Seed the `author` role: admin access plus posts:create/posts:read only —
@@ -479,26 +479,26 @@ export function buildConfig(
       // this role. AuthModule's own default-role seeding has already run and
       // synced the catalog by this point (see runtime.ts: bootstrap completes
       // before `seed` runs), so permission keys are already resolvable to ids.
-      if (!(await getRoleByName(latha, 'author'))) {
-        const catalog = getCatalog(latha)
+      if (!(await getRoleByName(kon10, 'author'))) {
+        const catalog = getCatalog(kon10)
         const permissionIds = ['admin:access', 'posts:create', 'posts:read']
           .map((key) => catalog?.permissionIdByKey.get(key))
           .filter((id): id is string => typeof id === 'string')
-        await latha.db.create('roles', {
+        await kon10.db.create('roles', {
           name: 'author',
           label: 'Author',
           description: 'Can write and manage their own posts.',
           permissions: permissionIds,
           system: false,
         })
-        console.log('[latha] seeded role: author')
+        console.log('[kon10] seeded role: author')
       }
 
       // Seed a few taxonomy terms so the category/tags pickers have options.
       // A system principal bypasses RBAC guards, matching how users are seeded.
-      const sys = { cms: latha, principal: { id: '__system__', permissions: ['*'] } }
+      const sys = { cms: kon10, principal: { id: '__system__', permissions: ['*'] } }
 
-      if ((await latha.db.count('categories')) === 0) {
+      if ((await kon10.db.count('categories')) === 0) {
         const eng = await operations.create(sys, 'categories', {
           name: 'Engineering',
           slug: 'engineering',
@@ -509,14 +509,14 @@ export function buildConfig(
           parent: eng.id,
         })
         await operations.create(sys, 'categories', { name: 'Design', slug: 'design' })
-        console.log('[latha] seeded categories')
+        console.log('[kon10] seeded categories')
       }
 
-      if ((await latha.db.count('tags')) === 0) {
+      if ((await kon10.db.count('tags')) === 0) {
         for (const name of ['nextjs', 'cms', 'release']) {
           await operations.create(sys, 'tags', { name, slug: name })
         }
-        console.log('[latha] seeded tags')
+        console.log('[kon10] seeded tags')
       }
     },
   })

@@ -1,20 +1,20 @@
 /**
- * Shared RPC contract between the Latha client and server dispatcher.
+ * Shared RPC contract between the Kon10 client and server dispatcher.
  *
  * The whole admin surface is driven by a single server function so the
  * consuming app only has to declare one endpoint. This file is client-safe
  * (no server imports) and is shared by both ends.
  *
- * `LathaRpcInputSchema` is the single source of truth for the RPC input
- * shape: `LathaRpcInput` is inferred from it, and the server dispatcher
- * (`@latha/start`) validates raw request bodies against this same schema
+ * `Kon10RpcInputSchema` is the single source of truth for the RPC input
+ * shape: `Kon10RpcInput` is inferred from it, and the server dispatcher
+ * (`@kon10/start`) validates raw request bodies against this same schema
  * before dispatch — no hand-mirrored type/schema pair to drift apart.
  */
 
 import { z } from 'zod'
-import type { JsonValue } from '@latha/core'
+import type { JsonValue } from '@kon10/core'
 
-export const LathaRpcInputSchema = z.discriminatedUnion('action', [
+export const Kon10RpcInputSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('nav') }),
   z.object({ action: z.literal('entity'), slug: z.string() }),
   z.object({ action: z.literal('list'), slug: z.string() }),
@@ -40,7 +40,7 @@ export const LathaRpcInputSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('saveGlobal'), slug: z.string(), data: z.record(z.string(), z.unknown()) }),
 ])
 
-export type LathaRpcInput = z.infer<typeof LathaRpcInputSchema>
+export type Kon10RpcInput = z.infer<typeof Kon10RpcInputSchema>
 
 /** A document as it crosses the wire — always JSON-serializable. */
 export type JsonDoc = { id: string } & Record<string, JsonValue>
@@ -103,6 +103,6 @@ export interface EntityDescriptor {
 }
 
 /** The single server function signature the app wires up. */
-export type LathaServerFn = (args: {
-  data: LathaRpcInput
+export type Kon10ServerFn = (args: {
+  data: Kon10RpcInput
 }) => Promise<unknown>

@@ -5,8 +5,8 @@
  * cards. `config.span` controls how many of the 4 grid columns it occupies.
  */
 
-import { defineDashboardWidgetConfig, type WidgetContext } from '@latha/start'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@latha/ui'
+import { defineDashboardWidgetConfig, type WidgetContext } from '@kon10/start'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@kon10/ui'
 import { Sparkles } from 'lucide-react'
 
 export const config = defineDashboardWidgetConfig({ span: 2 })

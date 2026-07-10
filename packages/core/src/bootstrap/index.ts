@@ -3,8 +3,8 @@
  *
  * `defineConfig()` is the entry point referenced from `cms.config.ts`. It
  * applies defaults and plugin `extendConfig` transforms and returns a
- * `ResolvedConfig`. `bootstrapLatha()` turns that config into a live
- * `LathaInstance`: it builds the module registry, resolves dependency order,
+ * `ResolvedConfig`. `bootstrapKon10()` turns that config into a live
+ * `Kon10Instance`: it builds the module registry, resolves dependency order,
  * runs `onInit` → `migrate` → `onReady`, and exposes entity lookups.
  */
 
@@ -16,9 +16,9 @@ import type { CacheAdapter, StorageAdapter } from '../types/adapter.js'
 import type { Entity } from '../types/entity.js'
 import type { Guard } from '../types/guard.js'
 import type {
-  LathaInstance,
+  Kon10Instance,
   Module,
-  LathaConfig,
+  Kon10Config,
   ResolvedConfig,
 } from '../types/config.js'
 
@@ -28,10 +28,10 @@ const DEFAULT_ADMIN_PATH = '/admin'
  * Normalize a user config: apply defaults and run plugin `extendConfig`
  * transforms in declaration order.
  */
-export function defineConfig(config: LathaConfig): ResolvedConfig {
+export function defineConfig(config: Kon10Config): ResolvedConfig {
   const plugins = config.plugins ?? []
 
-  let working: LathaConfig = config
+  let working: Kon10Config = config
   for (const plugin of plugins) {
     if (plugin.extendConfig) working = plugin.extendConfig(working)
   }
@@ -43,7 +43,7 @@ export function defineConfig(config: LathaConfig): ResolvedConfig {
   }
 }
 
-class Latha implements LathaInstance {
+class Kon10 implements Kon10Instance {
   readonly config: ResolvedConfig
   readonly db: ResolvedConfig['db']
   storage?: StorageAdapter
@@ -110,10 +110,10 @@ class Latha implements LathaInstance {
   }
 }
 
-/** Build and initialize a `LathaInstance` from a resolved config. */
-export async function bootstrapLatha(
+/** Build and initialize a `Kon10Instance` from a resolved config. */
+export async function bootstrapKon10(
   config: ResolvedConfig,
-): Promise<LathaInstance> {
-  const latha = new Latha(config)
-  return latha.boot()
+): Promise<Kon10Instance> {
+  const kon10 = new Kon10(config)
+  return kon10.boot()
 }

@@ -9,8 +9,8 @@
  * declaration files:
  *
  * ```ts
- * // @latha/content (taxonomy field)
- * declare module '@latha/core' {
+ * // @kon10/content (taxonomy field)
+ * declare module '@kon10/core' {
  *   interface FieldTypeMap {
  *     taxonomy: BaseFieldConfig & z.infer<typeof taxonomyFieldConfigSchema>
  *   }
@@ -44,8 +44,8 @@ import type {
  * field config can carry `lexicalConfig` without depending on Lexical itself.
  *
  * ```ts
- * // in @latha/admin-sdk
- * declare module '@latha/core' {
+ * // in @kon10/admin-sdk
+ * declare module '@kon10/core' {
  *   interface RichTextExtensions {
  *     nodes?: Klass<LexicalNode>[]
  *     plugins?: ReactNode[]

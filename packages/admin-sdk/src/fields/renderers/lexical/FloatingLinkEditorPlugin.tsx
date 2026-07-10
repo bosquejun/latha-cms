@@ -24,7 +24,7 @@ import {
 import { $isLinkNode } from '@lexical/link'
 import { $findMatchingParent } from '@lexical/utils'
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
-import { Button, Input } from '@latha/ui'
+import { Button, Input } from '@kon10/ui'
 import { Check, ExternalLink, Pencil, Unlink, X } from 'lucide-react'
 import { normalizeUrl } from './linkUtils.js'
 

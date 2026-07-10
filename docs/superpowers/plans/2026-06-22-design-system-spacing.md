@@ -446,7 +446,7 @@ git commit -m "refactor(admin): wire CollectionList empty state to tokens"
 Create the file with this content:
 
 ```markdown
-# Latha Design System
+# Kon10 Design System
 
 Tokens live in `src/styles/globals.css` and are exposed as Tailwind v4
 utilities via `@theme inline`. Always prefer a semantic utility over a raw

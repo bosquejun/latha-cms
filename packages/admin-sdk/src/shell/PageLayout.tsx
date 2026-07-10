@@ -11,7 +11,7 @@
  */
 
 import { type ReactNode } from 'react'
-import { cn } from '@latha/ui'
+import { cn } from '@kon10/ui'
 
 export interface PageLayoutProps {
   /** Left secondary panel — navigation, item lists, filter trees. */

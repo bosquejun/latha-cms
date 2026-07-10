@@ -7,14 +7,14 @@
  * supply a custom store.
  */
 
-import type { LathaInstance } from '@latha/core'
+import type { Kon10Instance } from '@kon10/core'
 import type { AuthUser } from './types.js'
 import { verifyPassword } from './crypto.js'
 import { verifySessionToken } from './session.js'
 import { resolveUserPermissions } from './rbac/resolve.js'
 import { getSubjectStore } from './subject-store.js'
 
-export const DEFAULT_COOKIE_NAME = 'latha_session'
+export const DEFAULT_COOKIE_NAME = 'kon10_session'
 
 export interface AuthOptions {
   secret: string
@@ -30,44 +30,44 @@ export function toAuthUser(doc: Record<string, unknown>): AuthUser {
 
 /** Look up a user by email, including the stored password hash. */
 export async function findUserByEmail(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   email: string,
 ): Promise<(Record<string, unknown> & { id: string }) | null> {
-  const subject = await getSubjectStore(latha).findByEmail(email)
+  const subject = await getSubjectStore(kon10).findByEmail(email)
   return subject ? (subject as Record<string, unknown> & { id: string }) : null
 }
 
 /** Enrich a stripped user with its resolved roles + effective permissions. */
 async function withGrants(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   doc: Record<string, unknown>,
 ): Promise<AuthUser> {
   const base = toAuthUser(doc)
-  const { roles, permissions } = await resolveUserPermissions(latha, doc)
+  const { roles, permissions } = await resolveUserPermissions(kon10, doc)
   return { ...base, roles, permissions }
 }
 
 /** Verify an email + password pair. Returns the auth user, or `null`. */
 export async function authenticate(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   email: string,
   password: string,
 ): Promise<AuthUser | null> {
-  const user = await findUserByEmail(latha, email)
+  const user = await findUserByEmail(kon10, email)
   if (!user) return null
   const hash = user.passwordHash
   if (typeof hash !== 'string') return null
   const ok = await verifyPassword(password, hash)
-  return ok ? withGrants(latha, user) : null
+  return ok ? withGrants(kon10, user) : null
 }
 
 /** Load a user by id (e.g. from a verified session), with roles + permissions. */
 export async function getUserById(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   id: string,
 ): Promise<AuthUser | null> {
-  const doc = await getSubjectStore(latha).findById(id)
-  return doc ? withGrants(latha, doc) : null
+  const doc = await getSubjectStore(kon10).findById(id)
+  return doc ? withGrants(kon10, doc) : null
 }
 
 /** Parse a `Cookie` header into a name → value map. */
@@ -87,12 +87,12 @@ export function parseCookies(header: string | null): Record<string, string> {
 export async function getSessionUser(
   request: Request,
   options: AuthOptions,
-  latha: LathaInstance,
+  kon10: Kon10Instance,
 ): Promise<AuthUser | null> {
   const cookieName = options.cookieName ?? DEFAULT_COOKIE_NAME
   const token = parseCookies(request.headers.get('cookie'))[cookieName]
   if (!token) return null
   const payload = await verifySessionToken(token, options.secret)
   if (!payload) return null
-  return getUserById(latha, payload.sub)
+  return getUserById(kon10, payload.sub)
 }

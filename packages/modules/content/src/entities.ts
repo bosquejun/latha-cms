@@ -24,7 +24,7 @@ import {
   type EntityHooks,
   type FieldsRecord,
   type InferDoc,
-} from '@latha/core'
+} from '@kon10/core'
 
 /** Many records, standard CRUD list — `cardinality: 'many'`. */
 export type Collection<TDoc = Record<string, unknown>> = Entity<TDoc> & { cardinality: 'many' }

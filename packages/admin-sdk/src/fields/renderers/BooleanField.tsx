@@ -1,4 +1,4 @@
-import { Label, Switch } from '@latha/ui'
+import { Label, Switch } from '@kon10/ui'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 

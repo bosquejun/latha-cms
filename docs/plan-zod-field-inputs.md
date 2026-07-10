@@ -58,7 +58,7 @@ It is tempting to store the `ZodEnum` in the field config and have
   export const postStatus = z.enum(['draft', 'published'])
   export type PostStatus = z.infer<typeof postStatus>
 
-  // latha.config.ts
+  // kon10.config.ts
   status: select({ options: postStatus, defaultValue: 'draft' })
 
   // app code, RPC filters, anywhere
@@ -94,7 +94,7 @@ Accepting both `readonly string[]` and `z.ZodEnum` is cheap at runtime
 - The project's identity is "the Zod-native CMS". One way to do it.
 
 Cost: every config now imports `z`. Soften by re-exporting `z` from
-`@latha/core` (and `@latha/content`), so configs don't grow a separate `zod`
+`@kon10/core` (and `@kon10/content`), so configs don't grow a separate `zod`
 dependency line.
 
 ## Design
@@ -196,10 +196,10 @@ not the registry.
 ### Phase 0 — upgrade the workspace to Zod 4 (prerequisite, own commit)
 
 The workspace currently pins `zod ^3.24.1` everywhere except
-`@latha/content`, which already pins `^3.25.76` — a latent dual-instance
+`@kon10/content`, which already pins `^3.25.76` — a latent dual-instance
 hazard (two zod copies break `instanceof` checks and schema identity).
-Phase 0 unifies every package on one latest `zod ^4.x` pin: `@latha/core`,
-`@latha/admin-sdk`, `@latha/content`, `@latha/media`, `apps/playground`.
+Phase 0 unifies every package on one latest `zod ^4.x` pin: `@kon10/core`,
+`@kon10/admin-sdk`, `@kon10/content`, `@kon10/media`, `apps/playground`.
 
 Known v4 breakages in this codebase (from an audit of current usage):
 
@@ -217,7 +217,7 @@ Also sweep for error-customization params (`required_error`, `errorMap`,
 (`z.string().email()` → `z.email()`).
 
 Acceptance: single zod version in the lockfile;
-`pnpm --filter @latha/core build && pnpm -r typecheck` green; existing field
+`pnpm --filter @kon10/core build && pnpm -r typecheck` green; existing field
 registry tests pass unchanged.
 
 ### Phase 1 — `select` takes `z.enum` (single commit, `refactor(core)` + call sites)
@@ -226,13 +226,13 @@ registry tests pass unchanged.
    make `select()` generic over the `ZodEnum`, normalize `.options` to the
    literal array. Type `defaultValue` as `z.infer<T>` (array when
    `many: true`).
-2. Re-export `z` from `@latha/core` (and via `@latha/content`) so configs
+2. Re-export `z` from `@kon10/core` (and via `@kon10/content`) so configs
    have one import surface.
-3. Update call sites: `apps/playground/latha.config.ts` (2),
+3. Update call sites: `apps/playground/kon10.config.ts` (2),
    `packages/modules/content/src/built-in-blocks.ts` (5).
 4. Update examples in `README.md`, `SPEC.md`, `docs/concepts/entities.md`,
    and the doc-comment in `schema/fields.ts`.
-5. `pnpm --filter @latha/core build && pnpm -r typecheck` (per CLAUDE.md).
+5. `pnpm --filter @kon10/core build && pnpm -r typecheck` (per CLAUDE.md).
 
 ### Phase 2 — `schema` escape hatch (separate commit, optional)
 

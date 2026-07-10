@@ -5,19 +5,19 @@
  * order, *after* an entity's own `access` predicate. Any guard may throw to
  * deny the operation. The kernel never interprets the principal or the guard's
  * intent — it only runs the chain. This is how cross-cutting authorization
- * (e.g. RBAC in `@latha/auth`) plugs in without the kernel knowing anything
+ * (e.g. RBAC in `@kon10/auth`) plugs in without the kernel knowing anything
  * about users, roles, or permissions.
  *
- * Modules register guards via `LathaInstance.registerGuard()` during `onInit`.
+ * Modules register guards via `Kon10Instance.registerGuard()` during `onInit`.
  */
 
 import type { Operation } from './access.js'
 import type { Cardinality } from './entity.js'
-import type { LathaInstance } from './config.js'
+import type { Kon10Instance } from './config.js'
 
 export interface GuardContext {
   /** The live instance, so guards can resolve entities, query the DB, etc. */
-  cms: LathaInstance
+  cms: Kon10Instance
   /** The operation being authorized. */
   operation: Operation
   /** Slug of the entity being acted upon. */

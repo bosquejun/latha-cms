@@ -1,10 +1,10 @@
 /**
  * Framework-owned catch-all for module-contributed routes. A module declares
- * `routes` on its `Module` object (see `ModuleRoutes` in `@latha/core`) and
+ * `routes` on its `Module` object (see `ModuleRoutes` in `@kon10/core`) and
  * this single server route dispatches to them — the consuming app and
- * `@latha/start` itself need no per-module wiring.
+ * `@kon10/start` itself need no per-module wiring.
  *
- * Injected by the `lathaStart()` Vite plugin (mounted at
+ * Injected by the `kon10Start()` Vite plugin (mounted at
  * `DEFAULT_MODULE_ROUTES_PATH`). Server-only: config and dispatcher are
  * pulled in with dynamic `import()` so neither reaches the client bundle.
  */
@@ -16,7 +16,7 @@ import { createFileRoute } from '@tanstack/react-router'
 const dispatch = async ({ request }: { request: Request }) => {
   const [{ default: config }, { handleModuleRoute }, { rejectUntrustedOrigin }] =
     await Promise.all([
-      import('virtual:latha/config'),
+      import('virtual:kon10/config'),
       import('../module-routes.js'),
       import('../server.js'),
     ])
@@ -26,7 +26,7 @@ const dispatch = async ({ request }: { request: Request }) => {
   return handleModuleRoute(config, request)
 }
 
-export const Route = (createFileRoute as (path: string) => any)('/__latha/modules/$')({
+export const Route = (createFileRoute as (path: string) => any)('/__kon10/modules/$')({
   server: {
     handlers: {
       GET: dispatch,

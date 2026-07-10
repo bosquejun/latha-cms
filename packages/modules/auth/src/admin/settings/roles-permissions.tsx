@@ -1,8 +1,8 @@
 /**
  * Roles & Permissions — the Strapi-style access matrix (client-aware).
  *
- * Lives in @latha/auth and is registered as a settings extension via the
- * @latha/auth/admin barrel. Migrated from @latha/start.
+ * Lives in @kon10/auth and is registered as a settings extension via the
+ * @kon10/auth/admin barrel. Migrated from @kon10/start.
  *
  * Left: the role list with description and permission count.
  * Right: the selected role's permission matrix — rows = scopes (grouped by
@@ -34,18 +34,18 @@ import {
   TR,
   cn,
   toast,
-} from '@latha/ui'
+} from '@kon10/ui'
 import {
   EmptyState,
   PageHeader,
   PageLayout,
   defineSettingsConfig,
-  useLatha,
+  useKon10,
   useAdminNavigate,
   useAsync,
   type JsonDoc,
   type PageComponentProps,
-} from '@latha/admin-sdk'
+} from '@kon10/admin-sdk'
 import {
   ChevronDown,
   ChevronLeft,
@@ -285,7 +285,7 @@ function ToggleRow({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function RolesPermissions({ params }: PageComponentProps) {
-  const { client, basePath } = useLatha()
+  const { client, basePath } = useKon10()
   const navigate = useAdminNavigate()
   const roles = useAsync(() => client.list('roles'), [])
   const scopes = useAsync(() => client.list('scopes'), [])

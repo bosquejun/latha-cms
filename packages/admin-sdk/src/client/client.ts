@@ -1,12 +1,12 @@
 /**
- * Typed client over the single Latha RPC endpoint.
+ * Typed client over the single Kon10 RPC endpoint.
  *
  * Each method packs an RPC action and unpacks the (already JSON-serializable)
  * result. This is what the admin components talk to; it never touches the
  * server directly.
  *
  * By default it POSTs to the framework's server route (`DEFAULT_RPC_PATH`), so
- * `createLathaClient()` works with zero app wiring. Pass a `LathaServerFn` (or
+ * `createKon10Client()` works with zero app wiring. Pass a `Kon10ServerFn` (or
  * `{ serverFn }`) to route through your own `createServerFn` endpoint instead,
  * or `{ endpoint }` to point at a different path.
  */
@@ -21,14 +21,14 @@ import {
 import type {
   EntityDescriptor,
   JsonDoc,
-  LathaRpcInput,
-  LathaServerFn,
+  Kon10RpcInput,
+  Kon10ServerFn,
   NavSection,
   PageResult,
   SessionUser,
 } from './rpc.js'
 
-export interface LathaClient {
+export interface Kon10Client {
   nav(): Promise<NavSection[]>
   entity(slug: string): Promise<EntityDescriptor | null>
   list(slug: string): Promise<JsonDoc[]>
@@ -58,15 +58,15 @@ export interface LathaClient {
 }
 
 /** Options for the default (fetch-based) client transport. */
-export interface LathaClientOptions {
+export interface Kon10ClientOptions {
   /** RPC endpoint to POST to. Defaults to `DEFAULT_RPC_PATH`. */
   endpoint?: string
   /** Use a custom server function instead of the built-in fetch transport. */
-  serverFn?: LathaServerFn
+  serverFn?: Kon10ServerFn
 }
 
 /** POST one RPC action to the endpoint and return its JSON result. */
-async function fetchRpc<T>(endpoint: string, data: LathaRpcInput): Promise<T> {
+async function fetchRpc<T>(endpoint: string, data: Kon10RpcInput): Promise<T> {
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -74,13 +74,13 @@ async function fetchRpc<T>(endpoint: string, data: LathaRpcInput): Promise<T> {
     body: JSON.stringify(data),
   })
   if (!res.ok) {
-    throw new Error(`Latha RPC request failed (${res.status} ${res.statusText})`)
+    throw new Error(`Kon10 RPC request failed (${res.status} ${res.statusText})`)
   }
   return res.json() as Promise<T>
 }
 
 /**
- * Call one of `@latha/auth`'s own routes (login/logout/current-user) — plain
+ * Call one of `@kon10/auth`'s own routes (login/logout/current-user) — plain
  * JSON over fetch, not the generic RPC `action` envelope. These run without
  * an admin session by definition, so they can't be RPC actions gated by the
  * dispatcher's admin check.
@@ -88,7 +88,7 @@ async function fetchRpc<T>(endpoint: string, data: LathaRpcInput): Promise<T> {
 async function fetchJson<T>(endpoint: string, init?: RequestInit): Promise<T> {
   const res = await fetch(endpoint, { credentials: 'same-origin', ...init })
   if (!res.ok) {
-    throw new Error(`Latha request failed (${res.status} ${res.statusText})`)
+    throw new Error(`Kon10 request failed (${res.status} ${res.statusText})`)
   }
   return res.json() as Promise<T>
 }
@@ -104,7 +104,7 @@ async function fetchUpload(
   for (const [k, v] of Object.entries(extra ?? {})) form.append(k, v)
   const res = await fetch(endpoint, { method: 'POST', credentials: 'same-origin', body: form })
   if (!res.ok) {
-    throw new Error(`Latha upload failed (${res.status} ${res.statusText})`)
+    throw new Error(`Kon10 upload failed (${res.status} ${res.statusText})`)
   }
   return res.json() as Promise<JsonDoc>
 }
@@ -112,20 +112,20 @@ async function fetchUpload(
 /**
  * Build the typed client.
  *
- * - `createLathaClient()` — talks to the framework's RPC server route. No app
+ * - `createKon10Client()` — talks to the framework's RPC server route. No app
  *   wiring needed; this is the default.
- * - `createLathaClient({ endpoint })` — same, against a custom path.
- * - `createLathaClient(serverFn)` / `createLathaClient({ serverFn })` — route
+ * - `createKon10Client({ endpoint })` — same, against a custom path.
+ * - `createKon10Client(serverFn)` / `createKon10Client({ serverFn })` — route
  *   through your own `createServerFn` endpoint when you need to customize dispatch.
  */
-export function createLathaClient(
-  source: LathaServerFn | LathaClientOptions = {},
-): LathaClient {
+export function createKon10Client(
+  source: Kon10ServerFn | Kon10ClientOptions = {},
+): Kon10Client {
   const serverFn = typeof source === 'function' ? source : source.serverFn
   const endpoint =
     typeof source === 'function' ? DEFAULT_RPC_PATH : source.endpoint ?? DEFAULT_RPC_PATH
 
-  const call = <T>(data: LathaRpcInput): Promise<T> =>
+  const call = <T>(data: Kon10RpcInput): Promise<T> =>
     serverFn ? (serverFn({ data }) as Promise<T>) : fetchRpc<T>(endpoint, data)
 
   return {

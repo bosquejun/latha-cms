@@ -1,8 +1,8 @@
 /**
  * API Keys — mint and revoke bearer credentials for the delivery API.
  *
- * Lives in @latha/auth (the module that owns the `api-keys` entity) and is
- * registered as a settings extension via the @latha/auth/admin barrel, like
+ * Lives in @kon10/auth (the module that owns the `api-keys` entity) and is
+ * registered as a settings extension via the @kon10/auth/admin barrel, like
  * Roles & Permissions. The generic CRUD form can't manage keys: creating one
  * means generating a secret and showing it exactly once.
  *
@@ -35,17 +35,17 @@ import {
   TR,
   cn,
   toast,
-} from '@latha/ui'
+} from '@kon10/ui'
 import {
   EmptyState,
   LoadingState,
   PageHeader,
   PageLayout,
   defineSettingsConfig,
-  useLatha,
+  useKon10,
   useAsync,
   type JsonDoc,
-} from '@latha/admin-sdk'
+} from '@kon10/admin-sdk'
 import { KeyRound, Plus, Trash2 } from 'lucide-react'
 import {
   apiKeyDisplayPrefix,
@@ -75,7 +75,7 @@ function roleNames(roles: JsonDoc[] | undefined, ids: string[]): string[] {
 }
 
 export default function ApiKeys() {
-  const { client } = useLatha()
+  const { client } = useKon10()
   const keys = useAsync(() => client.list(API_KEYS_SLUG), [])
   const roles = useAsync(() => client.list('roles'), [])
 
@@ -293,7 +293,7 @@ function CreateKeyDialog({
   onClose: () => void
   onCreated: (token: string) => void
 }) {
-  const { client } = useLatha()
+  const { client } = useKon10()
   const [name, setName] = useState('')
   const [roleIds, setRoleIds] = useState<string[]>([])
   const [busy, setBusy] = useState(false)

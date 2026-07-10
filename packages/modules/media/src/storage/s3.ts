@@ -3,14 +3,14 @@
  * Supabase Storage, MinIO, DigitalOcean Spaces, or anything else speaking the
  * S3 REST API. Signs requests with SigV4 (see `./sigv4.ts`) and uploads via
  * `fetch`, so it has no native bindings and is safe to bundle for serverless
- * deploys (unlike `@libsql/client`, see `latha.config.vercel.ts` in the
+ * deploys (unlike `@libsql/client`, see `kon10.config.vercel.ts` in the
  * playground app).
  *
  * Unlike `localDiskStorage`, this is the adapter production deploys should
  * use — serverless filesystems (Vercel included) don't persist writes.
  */
 import { createHash, randomUUID } from 'node:crypto'
-import type { StorageAdapter } from '@latha/core'
+import type { StorageAdapter } from '@kon10/core'
 import { signS3Request } from './sigv4.js'
 
 export interface S3StorageOptions {

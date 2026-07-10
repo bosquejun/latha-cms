@@ -13,13 +13,13 @@
  * for free.
  */
 
-import { operations } from '@latha/core'
+import { operations } from '@kon10/core'
 import type {
   Doc,
   JsonValue,
-  LathaInstance,
+  Kon10Instance,
   Query,
-} from '@latha/core'
+} from '@kon10/core'
 
 /** A JSON-serializable document. */
 export type JsonDoc = { id: string } & Record<string, JsonValue>
@@ -37,7 +37,7 @@ function serialize<T>(value: T): T {
 
 export interface ContentApiOptions {
   /** Resolve (and memoize) the live CMS instance. */
-  getLatha: () => Promise<LathaInstance>
+  getKon10: () => Promise<Kon10Instance>
   /** Resolve the current principal for access checks. Defaults to anonymous. */
   getPrincipal?: () => Promise<unknown>
   /**
@@ -65,7 +65,7 @@ export interface ContentApi {
 export function createContentApi(options: ContentApiOptions): ContentApi {
   const context = options.enforce ? { enforce: true } : undefined
   const ctx = async () => ({
-    cms: await options.getLatha(),
+    cms: await options.getKon10(),
     principal: (await options.getPrincipal?.()) ?? null,
     context,
   })

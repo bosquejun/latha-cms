@@ -1,11 +1,11 @@
 # Entities — the content model
 
-An **entity** is a content type you declare in `latha.config.ts`, inside a
+An **entity** is a content type you declare in `kon10.config.ts`, inside a
 module (almost always `ContentModule`). Every entity is one of three **kinds**.
 The kind decides its API surface, its admin view, and how it is routed.
 
 ```ts
-import { ContentModule, Collection, Document, Taxonomy, text } from '@latha/content'
+import { ContentModule, Collection, Document, Taxonomy, text } from '@kon10/content'
 
 ContentModule({
   entities: [
@@ -35,7 +35,7 @@ config. If an editor thinks of it as "a list of things" — even 2–3 things �
 ## Anatomy of an entity
 
 ```ts
-import { Collection, text, select } from '@latha/content'
+import { Collection, text, select } from '@kon10/content'
 
 Collection({
   slug: 'posts',                       // unique id; drives URLs and tables
@@ -94,6 +94,6 @@ drives it all. (See [Admin UI Routes](../../SPEC.md#admin-ui-routes-tanstack-rou
 
 Entities are contributed by **modules**, not just `ContentModule`. For example,
 `UsersModule` contributes a `users` collection. The running instance exposes the
-merged set via `latha.entities` / `latha.getEntity(slug)`, and the RPC `nav` and
+merged set via `kon10.entities` / `kon10.getEntity(slug)`, and the RPC `nav` and
 `entity` actions read from there. This is why adding a module can add admin
 screens with no extra wiring.

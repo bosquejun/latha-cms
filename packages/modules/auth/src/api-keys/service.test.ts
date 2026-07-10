@@ -5,7 +5,7 @@
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import type { CacheAdapter, Doc, JsonValue, LathaInstance, Query } from '@latha/core'
+import type { CacheAdapter, Doc, JsonValue, Kon10Instance, Query } from '@kon10/core'
 import { apiKeysEntity } from './entities.js'
 import { createApiKey, verifyApiKeyToken } from './service.js'
 import {
@@ -39,7 +39,7 @@ function spyCache(): CacheAdapter & { getCalls: number; setCalls: number } {
 }
 
 /** Minimal fake instance: an in-memory `api-keys` table, no roles/catalog. */
-function fakeLatha(cache?: CacheAdapter): LathaInstance {
+function fakeKon10(cache?: CacheAdapter): Kon10Instance {
   const rows = new Map<string, Doc>()
   let seq = 0
   const db = {
@@ -72,7 +72,7 @@ function fakeLatha(cache?: CacheAdapter): LathaInstance {
     },
     async migrate() {},
   }
-  return { db, cache } as unknown as LathaInstance
+  return { db, cache } as unknown as Kon10Instance
 }
 
 test('generateApiKeyToken: prefixed, high-entropy, unique', () => {
@@ -84,11 +84,11 @@ test('generateApiKeyToken: prefixed, high-entropy, unique', () => {
 })
 
 test('hashApiKeyToken: deterministic SHA-256 hex', async () => {
-  const token = 'latha_fixed'
+  const token = 'kon10_fixed'
   const first = await hashApiKeyToken(token)
   assert.equal(first, await hashApiKeyToken(token))
   assert.match(first, /^[0-9a-f]{64}$/)
-  assert.notEqual(first, await hashApiKeyToken('latha_other'))
+  assert.notEqual(first, await hashApiKeyToken('kon10_other'))
 })
 
 test('apiKeyDisplayPrefix keeps only the identifying head', () => {
@@ -99,9 +99,9 @@ test('apiKeyDisplayPrefix keeps only the identifying head', () => {
 })
 
 test('createApiKey stores the hash, never the token', async () => {
-  const latha = fakeLatha()
-  const { id, token } = await createApiKey(latha, { name: 'ci' })
-  const doc = await latha.db.findOne('api-keys', id)
+  const kon10 = fakeKon10()
+  const { id, token } = await createApiKey(kon10, { name: 'ci' })
+  const doc = await kon10.db.findOne('api-keys', id)
   assert.ok(doc)
   assert.equal(doc.keyHash, await hashApiKeyToken(token))
   assert.equal(doc.prefix, apiKeyDisplayPrefix(token))
@@ -109,9 +109,9 @@ test('createApiKey stores the hash, never the token', async () => {
 })
 
 test('verifyApiKeyToken: round-trip resolves a principal', async () => {
-  const latha = fakeLatha()
-  const { id, token } = await createApiKey(latha, { name: 'ci' })
-  const principal = await verifyApiKeyToken(latha, token)
+  const kon10 = fakeKon10()
+  const { id, token } = await createApiKey(kon10, { name: 'ci' })
+  const principal = await verifyApiKeyToken(kon10, token)
   assert.ok(principal)
   assert.equal(principal.id, `apikey:${id}`)
   assert.equal(principal.kind, 'api-key')
@@ -119,64 +119,64 @@ test('verifyApiKeyToken: round-trip resolves a principal', async () => {
 })
 
 test('verifyApiKeyToken: unknown / malformed tokens deny', async () => {
-  const latha = fakeLatha()
-  await createApiKey(latha, { name: 'ci' })
-  assert.equal(await verifyApiKeyToken(latha, generateApiKeyToken()), null)
-  assert.equal(await verifyApiKeyToken(latha, 'not-a-latha-token'), null)
+  const kon10 = fakeKon10()
+  await createApiKey(kon10, { name: 'ci' })
+  assert.equal(await verifyApiKeyToken(kon10, generateApiKeyToken()), null)
+  assert.equal(await verifyApiKeyToken(kon10, 'not-a-kon10-token'), null)
 })
 
 test('verifyApiKeyToken: disabled keys deny', async () => {
-  const latha = fakeLatha()
-  const { id, token } = await createApiKey(latha, { name: 'ci' })
-  await latha.db.update('api-keys', id, { enabled: false })
-  assert.equal(await verifyApiKeyToken(latha, token), null)
+  const kon10 = fakeKon10()
+  const { id, token } = await createApiKey(kon10, { name: 'ci' })
+  await kon10.db.update('api-keys', id, { enabled: false })
+  assert.equal(await verifyApiKeyToken(kon10, token), null)
 })
 
 test('verifyApiKeyToken: expired keys deny, future expiry allows', async () => {
-  const latha = fakeLatha()
-  const past = await createApiKey(latha, {
+  const kon10 = fakeKon10()
+  const past = await createApiKey(kon10, {
     name: 'old',
     expiresAt: new Date(Date.now() - 1000),
   })
-  const future = await createApiKey(latha, {
+  const future = await createApiKey(kon10, {
     name: 'new',
     expiresAt: new Date(Date.now() + 60_000),
   })
-  assert.equal(await verifyApiKeyToken(latha, past.token), null)
-  assert.ok(await verifyApiKeyToken(latha, future.token))
+  assert.equal(await verifyApiKeyToken(kon10, past.token), null)
+  assert.ok(await verifyApiKeyToken(kon10, future.token))
 })
 
 test('verifyApiKeyToken caches the resolved doc when a cache is registered', async () => {
   const cache = spyCache()
-  const latha = fakeLatha(cache)
-  const { token } = await createApiKey(latha, { name: 'ci' })
+  const kon10 = fakeKon10(cache)
+  const { token } = await createApiKey(kon10, { name: 'ci' })
 
-  await verifyApiKeyToken(latha, token)
+  await verifyApiKeyToken(kon10, token)
   assert.equal(cache.setCalls, 1)
 
-  await verifyApiKeyToken(latha, token)
+  await verifyApiKeyToken(kon10, token)
   assert.equal(cache.setCalls, 1, 'second call is served from cache, not recomputed')
   assert.equal(cache.getCalls, 2)
 })
 
 test('the entity afterUpdate hook invalidates a disabled key immediately, not stale-until-TTL', async () => {
   const cache = spyCache()
-  const latha = fakeLatha(cache)
-  const { id, token } = await createApiKey(latha, { name: 'ci' })
+  const kon10 = fakeKon10(cache)
+  const { id, token } = await createApiKey(kon10, { name: 'ci' })
 
-  assert.ok(await verifyApiKeyToken(latha, token), 'caches the enabled doc')
+  assert.ok(await verifyApiKeyToken(kon10, token), 'caches the enabled doc')
 
-  const updated = await latha.db.update('api-keys', id, { enabled: false })
+  const updated = await kon10.db.update('api-keys', id, { enabled: false })
   await apiKeysEntity.hooks!.afterUpdate![0]!({
     data: updated as Record<string, unknown>,
     principal: null,
     operation: 'update',
     slug: 'api-keys',
-    cms: latha,
+    cms: kon10,
   })
 
   assert.equal(
-    await verifyApiKeyToken(latha, token),
+    await verifyApiKeyToken(kon10, token),
     null,
     'invalidated entry is re-fetched and denies immediately',
   )
@@ -184,20 +184,20 @@ test('the entity afterUpdate hook invalidates a disabled key immediately, not st
 
 test('the entity afterDelete hook invalidates the deleted key immediately', async () => {
   const cache = spyCache()
-  const latha = fakeLatha(cache)
-  const { id, token } = await createApiKey(latha, { name: 'ci' })
-  const doc = await latha.db.findOne('api-keys', id)
+  const kon10 = fakeKon10(cache)
+  const { id, token } = await createApiKey(kon10, { name: 'ci' })
+  const doc = await kon10.db.findOne('api-keys', id)
 
-  assert.ok(await verifyApiKeyToken(latha, token), 'caches the doc')
+  assert.ok(await verifyApiKeyToken(kon10, token), 'caches the doc')
 
-  await latha.db.delete('api-keys', id)
+  await kon10.db.delete('api-keys', id)
   await apiKeysEntity.hooks!.afterDelete![0]!({
     data: doc as Record<string, unknown>,
     principal: null,
     operation: 'delete',
     slug: 'api-keys',
-    cms: latha,
+    cms: kon10,
   })
 
-  assert.equal(await verifyApiKeyToken(latha, token), null, 'deleted key denies immediately')
+  assert.equal(await verifyApiKeyToken(kon10, token), null, 'deleted key denies immediately')
 })

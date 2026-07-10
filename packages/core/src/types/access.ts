@@ -8,7 +8,7 @@
  * The kernel is deliberately auth-agnostic: it never inspects the principal.
  * `principal` is whatever the caller threaded into the operation (an
  * authenticated user, a service identity, `null` for anonymous, …). Modules
- * such as `@latha/auth` define the concrete principal shape and cast to it
+ * such as `@kon10/auth` define the concrete principal shape and cast to it
  * inside their access functions and guards.
  */
 

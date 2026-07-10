@@ -8,7 +8,7 @@
 import { randomUUID } from 'node:crypto'
 import { mkdir, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import type { StorageAdapter } from '@latha/core'
+import type { StorageAdapter } from '@kon10/core'
 
 export interface LocalDiskStorageOptions {
   /** Directory files are written to, e.g. `./public/uploads`. */

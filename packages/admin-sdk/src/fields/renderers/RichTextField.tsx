@@ -1,4 +1,4 @@
-import { Field as FieldWrap } from '@latha/ui'
+import { Field as FieldWrap } from '@kon10/ui'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 import { LexicalEditor } from './lexical/LexicalEditor.js'

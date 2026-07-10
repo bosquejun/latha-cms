@@ -5,7 +5,7 @@
  * default when no external cache is configured; production deploys with more
  * than one instance should use `redisCache()` instead.
  */
-import type { CacheAdapter, JsonValue } from '@latha/core'
+import type { CacheAdapter, JsonValue } from '@kon10/core'
 
 interface Entry {
   value: JsonValue

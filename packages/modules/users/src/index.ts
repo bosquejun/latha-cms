@@ -1,5 +1,5 @@
 /**
- * @latha/users — the users collection and role system.
+ * @kon10/users — the users collection and role system.
  */
 
 export { UsersModule, USERS_SLUG, type UsersModuleConfig } from './module.js'

@@ -1,14 +1,14 @@
 /**
- * `lathaStart()` — a thin wrapper around TanStack Start's Vite plugin that
- * injects LathaCMS's framework-owned routes (`/login`, the `/admin/$` catch-all,
- * and the `/__latha/rpc` endpoint) through TanStack's virtual file routes, and
- * wires the app's `latha.config` into the framework's server route. A consuming
+ * `kon10Start()` — a thin wrapper around TanStack Start's Vite plugin that
+ * injects Kon10's framework-owned routes (`/login`, the `/admin/$` catch-all,
+ * and the `/__kon10/rpc` endpoint) through TanStack's virtual file routes, and
+ * wires the app's `kon10.config` into the framework's server route. A consuming
  * app keeps only its own pages and `__root.tsx` under its routes directory — no
  * boilerplate route files, and no hand-written RPC endpoint.
  *
  *   // vite.config.ts
- *   import { lathaStart } from '@latha/start/vite'
- *   export default defineConfig({ plugins: [..., lathaStart(), viteReact()] })
+ *   import { kon10Start } from '@kon10/start/vite'
+ *   export default defineConfig({ plugins: [..., kon10Start(), viteReact()] })
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -16,7 +16,7 @@ import { createRequire } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import { physical, rootRoute, route } from '@tanstack/virtual-file-routes'
-import { DEFAULT_API_PATH, DEFAULT_RPC_PATH } from '@latha/admin-sdk'
+import { DEFAULT_API_PATH, DEFAULT_RPC_PATH } from '@kon10/admin-sdk'
 import { DEFAULT_MODULE_ROUTES_PATH } from './module-routes.js'
 
 type TanStackStartOptions = NonNullable<Parameters<typeof tanstackStart>[0]>
@@ -36,18 +36,18 @@ interface VitePluginLike {
   load?: (id: string) => string | undefined | Promise<string | undefined>
 }
 
-const CONFIG_MODULE_ID = 'virtual:latha/config'
+const CONFIG_MODULE_ID = 'virtual:kon10/config'
 const RESOLVED_CONFIG_MODULE_ID = '\0' + CONFIG_MODULE_ID
 
 /**
- * Resolves `virtual:latha/config` to a re-export of the app's `latha.config`
+ * Resolves `virtual:kon10/config` to a re-export of the app's `kon10.config`
  * module, so the framework's server route can reach it without the app wiring
  * anything. Imported only from server-only code, so it never hits the client.
  */
-function lathaConfigPlugin(configPath: string): VitePluginLike {
+function kon10ConfigPlugin(configPath: string): VitePluginLike {
   let resolved = configPath
   return {
-    name: 'latha:config',
+    name: 'kon10:config',
     enforce: 'pre',
     configResolved(config) {
       resolved = path.isAbsolute(configPath)
@@ -81,9 +81,9 @@ function routeFile(subpath: string): string {
   let abs = fileURLToPath(import.meta.resolve(subpath))
   // `import.meta.resolve` runs without the `development` export condition (this
   // plugin is loaded from `dist/`), so it always returns the built `dist/` path.
-  // In dev we serve `@latha/*` from source via Vite's `development` condition;
+  // In dev we serve `@kon10/*` from source via Vite's `development` condition;
   // if the injected route stayed on `dist/`, it would import a *second* copy of
-  // `context.tsx`, so its `useLatha()` would miss the app's <LathaProvider>.
+  // `context.tsx`, so its `useKon10()` would miss the app's <Kon10Provider>.
   // Redirect to the matching source file so the whole graph shares one module.
   if (process.env.NODE_ENV !== 'production') {
     abs = toSourcePath(abs)
@@ -106,20 +106,20 @@ function toSourcePath(distAbs: string): string {
   return distAbs
 }
 
-export interface LathaStartOptions {
+export interface Kon10StartOptions {
   /** Where the sign-in screen mounts. Default `/login`. */
   loginPath?: string
   /** Admin base path; the admin mounts as a catch-all under it. Default `/admin`. */
   adminBasePath?: string
   /**
    * Admin extension auto-discovery. When enabled (the default), files under the
-   * convention directory are collected into the `virtual:latha/admin-extensions`
+   * convention directory are collected into the `virtual:kon10/admin-extensions`
    * module. Pass `false` to disable, or an object to point at a custom folder.
    */
   admin?: false | { dir?: string }
   /**
-   * Path to the app's `latha.config` module, relative to the project root.
-   * Default `./latha.config.ts`.
+   * Path to the app's `kon10.config` module, relative to the project root.
+   * Default `./kon10.config.ts`.
    */
   configPath?: string
   /**
@@ -131,25 +131,25 @@ export interface LathaStartOptions {
   start?: TanStackStartOptions
 }
 
-export function lathaStart(
-  options: LathaStartOptions = {},
+export function kon10Start(
+  options: Kon10StartOptions = {},
 ): TanStackStartPlugins {
   const loginPath = options.loginPath ?? '/login'
   const adminBasePath = options.adminBasePath ?? '/admin'
-  const configPath = options.configPath ?? './latha.config.ts'
+  const configPath = options.configPath ?? './kon10.config.ts'
 
   // Paths inside `virtualRouteConfig` are resolved relative to `routesDirectory`,
   // so the app's own pages are scanned in-place via `physical('', '.')` and the
   // framework routes are layered on as siblings.
   const virtualRouteConfig = rootRoute('__root.tsx', [
     physical('', '.'),
-    route(loginPath, routeFile('@latha/start/routes/login')),
-    route(`${adminBasePath}/$`, routeFile('@latha/start/routes/admin')),
-    route(DEFAULT_RPC_PATH, routeFile('@latha/start/routes/rpc')),
-    route(`${DEFAULT_MODULE_ROUTES_PATH}/$`, routeFile('@latha/start/routes/modules')),
+    route(loginPath, routeFile('@kon10/start/routes/login')),
+    route(`${adminBasePath}/$`, routeFile('@kon10/start/routes/admin')),
+    route(DEFAULT_RPC_PATH, routeFile('@kon10/start/routes/rpc')),
+    route(`${DEFAULT_MODULE_ROUTES_PATH}/$`, routeFile('@kon10/start/routes/modules')),
     ...(options.api === false
       ? []
-      : [route(`${DEFAULT_API_PATH}/$`, routeFile('@latha/start/routes/api'))]),
+      : [route(`${DEFAULT_API_PATH}/$`, routeFile('@kon10/start/routes/api'))]),
   ])
 
   const start = options.start ?? {}
@@ -163,11 +163,11 @@ export function lathaStart(
   })
 
   // Framework virtual-module plugins, appended to TanStack's array (Vite
-  // flattens nested plugin arrays, keeping the single `plugins: [lathaStart()]`
+  // flattens nested plugin arrays, keeping the single `plugins: [kon10Start()]`
   // ergonomics): the config bridge plus, unless disabled, admin auto-discovery.
   const extra: VitePluginLike[] = [
-    lathaDevSourcePlugin(),
-    lathaConfigPlugin(configPath),
+    kon10DevSourcePlugin(),
+    kon10ConfigPlugin(configPath),
   ]
   if (options.admin !== false) {
     extra.push(adminExtensionsPlugin(options.admin?.dir ?? 'src/admin', configPath))
@@ -180,7 +180,7 @@ export function lathaStart(
 }
 
 /**
- * Resolves `@latha/start`'s own source directory if (and only if) this package
+ * Resolves `@kon10/start`'s own source directory if (and only if) this package
  * is consumed as linked workspace source — i.e. its `src/index.ts` exists on
  * disk next to the `dist/` we're running from. Published consumers install
  * `files: ["dist"]`, so `src/` is absent and this returns `undefined`, which is
@@ -188,7 +188,7 @@ export function lathaStart(
  */
 function linkedSrcDir(): string | undefined {
   try {
-    const distIndex = fileURLToPath(import.meta.resolve('@latha/start'))
+    const distIndex = fileURLToPath(import.meta.resolve('@kon10/start'))
     const pkgRoot = distIndex.slice(0, distIndex.lastIndexOf(`${path.sep}dist${path.sep}`))
     const srcDir = path.join(pkgRoot, 'src')
     return fs.existsSync(path.join(srcDir, 'index.ts')) ? srcDir : undefined
@@ -197,10 +197,10 @@ function linkedSrcDir(): string | undefined {
   }
 }
 
-/** Absolute `src/` dir of `@latha/ui` when linked as source, else `undefined`. */
-function lathaUiSrcDir(): string | undefined {
+/** Absolute `src/` dir of `@kon10/ui` when linked as source, else `undefined`. */
+function kon10UiSrcDir(): string | undefined {
   try {
-    const distIndex = fileURLToPath(import.meta.resolve('@latha/ui'))
+    const distIndex = fileURLToPath(import.meta.resolve('@kon10/ui'))
     const pkgRoot = distIndex.slice(0, distIndex.lastIndexOf(`${path.sep}dist${path.sep}`))
     const srcDir = path.join(pkgRoot, 'src')
     return fs.existsSync(path.join(srcDir, 'index.ts')) ? srcDir : undefined
@@ -210,22 +210,22 @@ function lathaUiSrcDir(): string | undefined {
 }
 
 /**
- * Dev-only: when `@latha/*` packages are linked as workspace source (monorepo
+ * Dev-only: when `@kon10/*` packages are linked as workspace source (monorepo
  * development), make Vite load them from source for instant HMR — without each
  * app duplicating this in its own `vite.config`. A no-op for published
  * consumers (no linked `src/`), so it never affects apps installed from npm.
  *
  * Wires three things, all dev-gated:
- *  - the `development` export condition, so `@latha/*` resolve to their `src/`;
- *  - `ssr.noExternal` for `@latha/*`, so Vite transpiles the raw TS/TSX on SSR;
- *  - a scoped `@/` resolver for `@latha/ui` source (it uses a package-local
+ *  - the `development` export condition, so `@kon10/*` resolve to their `src/`;
+ *  - `ssr.noExternal` for `@kon10/*`, so Vite transpiles the raw TS/TSX on SSR;
+ *  - a scoped `@/` resolver for `@kon10/ui` source (it uses a package-local
  *    `@/*` alias), confined to importers inside ui's own `src/` so it can never
  *    shadow the consuming app's own `@/`.
  */
-function lathaDevSourcePlugin(): VitePluginLike {
-  const uiSrc = lathaUiSrcDir()
+function kon10DevSourcePlugin(): VitePluginLike {
+  const uiSrc = kon10UiSrcDir()
   return {
-    name: 'latha:dev-source',
+    name: 'kon10:dev-source',
     enforce: 'pre',
     config(_config, { command }) {
       if (command !== 'serve' || !linkedSrcDir()) return undefined
@@ -233,12 +233,12 @@ function lathaDevSourcePlugin(): VitePluginLike {
         resolve: { conditions: ['development'] },
         ssr: {
           resolve: { conditions: ['development'] },
-          noExternal: [/^@latha\//],
+          noExternal: [/^@kon10\//],
         },
       }
     },
     resolveId(id, importer) {
-      // Rewrite `@/…` only for imports originating inside @latha/ui's source.
+      // Rewrite `@/…` only for imports originating inside @kon10/ui's source.
       if (
         uiSrc &&
         id.startsWith('@/') &&
@@ -263,13 +263,13 @@ function lathaDevSourcePlugin(): VitePluginLike {
   }
 }
 
-const VIRTUAL_ID = 'virtual:latha/admin-extensions'
+const VIRTUAL_ID = 'virtual:kon10/admin-extensions'
 const RESOLVED_ID = '\0' + VIRTUAL_ID
 
 interface AdminUiCarrier { admin?: { ui?: string } }
 
 /**
- * Load the app's `latha.config` and read each module's and plugin's `admin.ui`
+ * Load the app's `kon10.config` and read each module's and plugin's `admin.ui`
  * specifier. Reads static descriptor strings only — never bootstraps an
  * instance. `load` is Vite's SSR module loader (`server.ssrLoadModule`) at
  * serve time, or a direct `import()` wrapper at build time.
@@ -290,16 +290,16 @@ export async function readModuleUiSpecifiers(
 }
 
 /**
- * Build-time config load: there is no running dev server, so `virtual:latha/config`
+ * Build-time config load: there is no running dev server, so `virtual:kon10/config`
  * cannot be resolved by a raw Node `import()` (it's a Vite virtual id). Spin up a
  * throwaway, SSR-capable Vite server in middleware mode that knows ONLY about
- * `lathaConfigPlugin` (so the virtual id resolves to the app's real `latha.config`),
+ * `kon10ConfigPlugin` (so the virtual id resolves to the app's real `kon10.config`),
  * SSR-load the config through it, then close it.
  *
  * `configFile: false` is essential: it stops Vite from loading the app's real
- * `vite.config` (which calls `lathaStart()` again → infinite recursion). We register
- * only `lathaConfigPlugin`, whose own `configResolved` resolves `configPath` against
- * this server's `root` — the same project root — so a relative `./latha.config.ts`
+ * `vite.config` (which calls `kon10Start()` again → infinite recursion). We register
+ * only `kon10ConfigPlugin`, whose own `configResolved` resolves `configPath` against
+ * this server's `root` — the same project root — so a relative `./kon10.config.ts`
  * still points at the real file.
  */
 async function loadSpecifiersAtBuild(
@@ -324,10 +324,10 @@ async function loadSpecifiersAtBuild(
   }
   const viteServer = await createServer({
     root,
-    configFile: false, // do NOT recurse into the app's vite.config (lathaStart)
+    configFile: false, // do NOT recurse into the app's vite.config (kon10Start)
     server: { middlewareMode: true, hmr: false },
     optimizeDeps: { noDiscovery: true },
-    plugins: [lathaConfigPlugin(configPath)],
+    plugins: [kon10ConfigPlugin(configPath)],
     logLevel: 'silent',
   })
   try {
@@ -341,9 +341,9 @@ async function loadSpecifiersAtBuild(
 }
 
 /**
- * Resolves `virtual:latha/admin-extensions` to a module that statically imports
+ * Resolves `virtual:kon10/admin-extensions` to a module that statically imports
  * each module's admin UI barrel and merges it with the app's own `src/admin/`
- * glob via the shared helpers from `@latha/admin-sdk`.
+ * glob via the shared helpers from `@kon10/admin-sdk`.
  */
 function adminExtensionsPlugin(dir: string, configPath: string): VitePluginLike {
   const base = '/' + dir.replace(/^\.?\/*/, '').replace(/\/*$/, '')
@@ -353,7 +353,7 @@ function adminExtensionsPlugin(dir: string, configPath: string): VitePluginLike 
   let root = process.cwd()
 
   return {
-    name: 'latha:admin-extensions',
+    name: 'kon10:admin-extensions',
     // Capture the project root for the build-time throwaway server.
     configResolved(config: { root: string }) {
       root = config.root
@@ -377,7 +377,7 @@ function adminExtensionsPlugin(dir: string, configPath: string): VitePluginLike 
             )
           } catch (err) {
             console.warn(
-              '[latha] admin extensions: config not loadable yet; ' +
+              '[kon10] admin extensions: config not loadable yet; ' +
                 'module admin UI omitted for now —',
               err instanceof Error ? err.message : err,
             )
@@ -390,9 +390,9 @@ function adminExtensionsPlugin(dir: string, configPath: string): VitePluginLike 
             specifiers = await loadSpecifiersAtBuild(root, configPath)
           } catch (err) {
             throw new Error(
-              '[latha] failed to discover module admin UI at build time. ' +
+              '[kon10] failed to discover module admin UI at build time. ' +
                 'The admin config could not be loaded, so module-contributed UI ' +
-                '(e.g. @latha/auth/admin) would be missing from the build. ' +
+                '(e.g. @kon10/auth/admin) would be missing from the build. ' +
                 `Original error: ${err instanceof Error ? err.message : String(err)}`,
               { cause: err instanceof Error ? err : undefined },
             )
@@ -414,7 +414,7 @@ export function buildModuleSource(base: string, specifiers: string[]): string {
   const moduleList = specifiers.map((_, i) => `mod${i}`).join(', ')
 
   return `
-import { collectAdminExtensions, mergeExtensions } from '@latha/admin-sdk'
+import { collectAdminExtensions, mergeExtensions } from '@kon10/admin-sdk'
 ${moduleImports}
 
 const appExtensions = collectAdminExtensions({

@@ -1,15 +1,15 @@
 /**
  * User operations — thin helpers over the kernel's local API for the `users`
- * collection. Hashing is the caller's responsibility (see `@latha/auth`); these
+ * collection. Hashing is the caller's responsibility (see `@kon10/auth`); these
  * helpers persist a `passwordHash` and never see a plaintext password.
  */
 
-import { operations } from '@latha/core'
-import type { Doc, LathaInstance } from '@latha/core'
+import { operations } from '@kon10/core'
+import type { Doc, Kon10Instance } from '@kon10/core'
 import { USERS_SLUG } from './module.js'
 
-const systemCtx = (latha: LathaInstance) => ({
-  cms: latha,
+const systemCtx = (kon10: Kon10Instance) => ({
+  cms: kon10,
   principal: { id: '__system__', permissions: ['*'] },
 })
 
@@ -24,18 +24,18 @@ export interface CreateUserInput {
 
 /** Create a user with an already-hashed password. */
 export function createUser(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   input: CreateUserInput,
 ): Promise<Doc> {
-  return operations.create(systemCtx(latha), USERS_SLUG, input)
+  return operations.create(systemCtx(kon10), USERS_SLUG, input)
 }
 
 /** Total number of users — handy for first-run seeding. */
-export function countUsers(latha: LathaInstance): Promise<number> {
-  return latha.db.count(USERS_SLUG)
+export function countUsers(kon10: Kon10Instance): Promise<number> {
+  return kon10.db.count(USERS_SLUG)
 }
 
-export async function listUsers(latha: LathaInstance): Promise<Doc[]> {
-  const rows = await operations.find(systemCtx(latha), USERS_SLUG)
+export async function listUsers(kon10: Kon10Instance): Promise<Doc[]> {
+  const rows = await operations.find(systemCtx(kon10), USERS_SLUG)
   return rows.map(({ passwordHash: _, ...rest }) => rest as Doc)
 }

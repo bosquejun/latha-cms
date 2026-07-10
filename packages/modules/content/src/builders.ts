@@ -1,14 +1,14 @@
 /**
- * Field builders provided by @latha/content.
+ * Field builders provided by @kon10/content.
  *
  * `taxonomy()` and `blocks()` live here because those field types are owned by
  * this module — registered in ContentModule.onInit and their builders belong
  * alongside that registration, not in core.
  */
 
-import type { FieldMeta, PhantomMeta, FieldsRecord } from '@latha/core'
-import { stampFields } from '@latha/core'
-import type { Field } from '@latha/core'
+import type { FieldMeta, PhantomMeta, FieldsRecord } from '@kon10/core'
+import { stampFields } from '@kon10/core'
+import type { Field } from '@kon10/core'
 
 /* -------------------------------------------------------------------------- */
 /*  taxonomy                                                                   */
@@ -83,7 +83,7 @@ type BlocksBuilt<O extends BlocksOpts> = {
 
 /**
  * A composable page-builder field: an ordered array of typed block objects.
- * Pass `blocks` from `@latha/content` (heroBlock, ctaBlock, etc.) or define
+ * Pass `blocks` from `@kon10/content` (heroBlock, ctaBlock, etc.) or define
  * your own inline.
  */
 export function blocks<const O extends BlocksOpts>(opts: O): BlocksBuilt<O> {

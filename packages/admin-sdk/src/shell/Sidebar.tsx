@@ -11,7 +11,7 @@
 import { useState, type ComponentType, type ReactNode } from 'react'
 import { LayoutDashboard } from 'lucide-react'
 import { ChevronDownIcon } from 'lucide-animated'
-import { cn } from '@latha/ui'
+import { cn } from '@kon10/ui'
 import { Slot } from '../extensions/Slot.js'
 
 /** Accepts both plain lucide-react icons and lucide-animated icons. */

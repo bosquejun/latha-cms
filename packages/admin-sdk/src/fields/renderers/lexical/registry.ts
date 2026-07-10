@@ -1,7 +1,7 @@
 import type { Klass, LexicalNode, EditorThemeClasses } from 'lexical'
 import type { ReactNode } from 'react'
 
-declare module '@latha/core' {
+declare module '@kon10/core' {
   interface RichTextExtensions {
     nodes?: Klass<LexicalNode>[]
     plugins?: ReactNode[]

@@ -3,11 +3,11 @@
  *
  * `buildZodSchema(fields)` already rebuilds the document schema in the
  * browser from the literal field configs (core's built-in types register on
- * `@latha/core` import; module-owned types fall back to `z.unknown()` — real
+ * `@kon10/core` import; module-owned types fall back to `z.unknown()` — real
  * validation always runs on the server).
  *
  * Fields defined with the builders' `schema` escape hatch carry an extra
- * `jsonSchema` property on the wire (stamped by `@latha/start`'s `describe()`
+ * `jsonSchema` property on the wire (stamped by `@kon10/start`'s `describe()`
  * via `z.toJSONSchema`) — the live Zod schema itself never leaves the server.
  * This module interprets the common JSON Schema constraints back into Zod so
  * the form pre-validates them too, and layers the result over the base
@@ -15,7 +15,7 @@
  * field schema; the server remains the source of truth.
  */
 
-import { buildZodSchema, z, type Field } from '@latha/core'
+import { buildZodSchema, z, type Field } from '@kon10/core'
 
 /** The wire shape of a field descriptor that may carry a JSON Schema mirror. */
 type WireField = Field & { jsonSchema?: Record<string, unknown> }

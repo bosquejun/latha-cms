@@ -1,7 +1,7 @@
 {
-  "name": "@latha/users",
+  "name": "@kon10/users",
   "version": "0.0.0",
-  "description": "LathaCMS users — UsersModule, roles, and user operations.",
+  "description": "Kon10 users — UsersModule, roles, and user operations.",
   "type": "module",
   "license": "MIT",
   "exports": {
@@ -20,10 +20,10 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "peerDependencies": {
-    "@latha/core": "workspace:*"
+    "@kon10/core": "workspace:*"
   },
   "devDependencies": {
-    "@latha/core": "workspace:*",
+    "@kon10/core": "workspace:*",
     "typescript": "^5.7.2"
   }
 }

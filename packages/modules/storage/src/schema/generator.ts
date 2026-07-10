@@ -1,7 +1,7 @@
 /**
  * Schema generator — Entity[] → SQLite table plans.
  *
- * LathaCMS entities are dynamic, so rather than a static Drizzle schema we
+ * Kon10 entities are dynamic, so rather than a static Drizzle schema we
  * derive a `TablePlan` per entity describing its columns and how to
  * (de)serialize each one. The Turso adapter uses these plans to emit
  * `CREATE TABLE` statements and to marshal values to/from SQLite.
@@ -13,8 +13,8 @@
  *   group | array | *(many)                                                  → TEXT (JSON)
  */
 
-import { buildZodSchema } from '@latha/core'
-import type { Entity, Field } from '@latha/core'
+import { buildZodSchema } from '@kon10/core'
+import type { Entity, Field } from '@kon10/core'
 
 export type ColumnKind = 'text' | 'integer' | 'real' | 'boolean' | 'json'
 

@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { z } from 'zod'
-import { fieldRegistry, type FieldTypeEntry, type LathaInstance, type StorageAdapter } from '@latha/core'
+import { fieldRegistry, type FieldTypeEntry, type Kon10Instance, type StorageAdapter } from '@kon10/core'
 import { MediaModule } from './module.js'
 import { MEDIA_SLUG } from './entities.js'
 
@@ -10,14 +10,14 @@ const fakeStorage: StorageAdapter = {
   async delete() {},
 }
 
-function fakeCms(): LathaInstance & { registeredStorage?: StorageAdapter } {
+function fakeCms(): Kon10Instance & { registeredStorage?: StorageAdapter } {
   const cms = {
     registerFieldType: (entry: FieldTypeEntry) => fieldRegistry.register(entry),
     registerStorageAdapter(adapter: StorageAdapter) {
       cms.registeredStorage = adapter
       cms.storage = adapter
     },
-  } as unknown as LathaInstance & { registeredStorage?: StorageAdapter }
+  } as unknown as Kon10Instance & { registeredStorage?: StorageAdapter }
   return cms
 }
 

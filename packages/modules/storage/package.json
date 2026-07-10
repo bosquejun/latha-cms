@@ -1,7 +1,7 @@
 {
-  "name": "@latha/storage",
+  "name": "@kon10/storage",
   "version": "0.0.0",
-  "description": "LathaCMS storage — Turso (libsql) + Postgres/Supabase DBAdapters.",
+  "description": "Kon10 storage — Turso (libsql) + Postgres/Supabase DBAdapters.",
   "type": "module",
   "license": "MIT",
   "sideEffects": false,
@@ -26,10 +26,10 @@
     "postgres": "^3.4.5"
   },
   "peerDependencies": {
-    "@latha/core": "workspace:*"
+    "@kon10/core": "workspace:*"
   },
   "devDependencies": {
-    "@latha/core": "workspace:*",
+    "@kon10/core": "workspace:*",
     "@types/node": "^22.10.0",
     "typescript": "^5.7.2"
   }

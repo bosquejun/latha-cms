@@ -16,7 +16,7 @@ import { stampFields, text, number } from '../schema/fields.js'
 import type { DBAdapter, Doc, Query } from '../types/adapter.js'
 import type { Entity } from '../types/entity.js'
 import type { Guard } from '../types/guard.js'
-import type { LathaInstance } from '../types/config.js'
+import type { Kon10Instance } from '../types/config.js'
 
 function memoryAdapter(): DBAdapter {
   const tables = new Map<string, Map<string, Doc>>()
@@ -57,14 +57,14 @@ function memoryAdapter(): DBAdapter {
   }
 }
 
-function instanceFor(entities: Entity[], guards: Guard[] = []): LathaInstance {
+function instanceFor(entities: Entity[], guards: Guard[] = []): Kon10Instance {
   return {
     db: memoryAdapter(),
     entities,
     guards,
     getEntity: (slug: string) => entities.find((e) => e.slug === slug),
     modules: [],
-  } as unknown as LathaInstance
+  } as unknown as Kon10Instance
 }
 
 const hookLog: string[] = []
@@ -208,10 +208,10 @@ test('list operations reject singletons and unknown slugs', async () => {
 test('saveGlobal upserts: create first, update thereafter', async () => {
   const cms = instanceFor([posts, settings])
   assert.equal(await operations.findGlobal({ cms }, 'settings'), null)
-  const created = await operations.saveGlobal({ cms }, 'settings', { siteName: 'Latha' })
-  assert.equal(created.siteName, 'Latha')
-  const updated = await operations.saveGlobal({ cms }, 'settings', { siteName: 'LathaCMS' })
+  const created = await operations.saveGlobal({ cms }, 'settings', { siteName: 'Kon10' })
+  assert.equal(created.siteName, 'Kon10')
+  const updated = await operations.saveGlobal({ cms }, 'settings', { siteName: 'Kon10' })
   assert.equal(updated.id, created.id)
-  assert.equal(updated.siteName, 'LathaCMS')
+  assert.equal(updated.siteName, 'Kon10')
   assert.equal(await cms.db.count('settings'), 1)
 })

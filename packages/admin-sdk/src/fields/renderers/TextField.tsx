@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { cn, Field as FieldWrap, Input, InputAddon, InputGroup, Textarea } from '@latha/ui'
+import { cn, Field as FieldWrap, Input, InputAddon, InputGroup, Textarea } from '@kon10/ui'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 import { HEX_COLOR, shadesOf } from '../color.js'

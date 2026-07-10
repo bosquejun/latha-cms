@@ -1,25 +1,25 @@
 /**
  * Generic cache-or-compute utilities for any module that wants to read
- * through `latha.cache` without reimplementing the get/miss/set dance.
+ * through `kon10.cache` without reimplementing the get/miss/set dance.
  * Fully generic — no knowledge of what's being cached, unlike the
- * delivery-API cache in `@latha/start`, which has its own inline logic
+ * delivery-API cache in `@kon10/start`, which has its own inline logic
  * (it also has to attach CORS headers on every path, so this helper
  * doesn't fit it cleanly).
  */
-import type { JsonValue, LathaInstance } from '@latha/core'
+import type { JsonValue, Kon10Instance } from '@kon10/core'
 
 /**
- * Read `key` from `latha.cache` if one is registered; otherwise always
+ * Read `key` from `kon10.cache` if one is registered; otherwise always
  * recompute. On a miss, `compute()` is called and a non-null result is
  * cached for `ttlSeconds`.
  */
 export async function cached<T>(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   key: string,
   ttlSeconds: number,
   compute: () => Promise<T | null>,
 ): Promise<T | null> {
-  const cache = latha.cache
+  const cache = kon10.cache
   if (!cache) return compute()
   const hit = await cache.get(key)
   if (hit !== undefined) return hit as T
@@ -32,6 +32,6 @@ export async function cached<T>(
 }
 
 /** No-op when no cache is registered — same optional-adapter contract as `cached`. */
-export async function invalidate(latha: LathaInstance, key: string): Promise<void> {
-  await latha.cache?.delete(key)
+export async function invalidate(kon10: Kon10Instance, key: string): Promise<void> {
+  await kon10.cache?.delete(key)
 }

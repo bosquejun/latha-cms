@@ -1,6 +1,6 @@
 # Writer Fields & UX — Phased Roadmap
 
-**Goal:** Take LathaCMS from today's minimal `posts` collection (`title`, `slug`,
+**Goal:** Take Kon10 from today's minimal `posts` collection (`title`, `slug`,
 `content`, `status`, `views`) to the full article/blog authoring experience —
 featured images, byline, taxonomy, SEO metadata, editorial workflow, and the
 UX polish that goes with it — without violating the package boundaries in
@@ -20,9 +20,9 @@ This isn't an either/or per feature. It's two rules applied consistently:
 
 1. **Domain data, entities, and field types are module-first.** Any new
    capability with its own storage shape or validation logic gets a real
-   `@latha/*` package under `packages/modules/*`, exactly like `@latha/auth`,
-   `@latha/users`, `@latha/content` today. `CLAUDE.md`'s package table already
-   names this module for media (`@latha/media` — "`MediaModule`, storage
+   `@kon10/*` package under `packages/modules/*`, exactly like `@kon10/auth`,
+   `@kon10/users`, `@kon10/content` today. `CLAUDE.md`'s package table already
+   names this module for media (`@kon10/media` — "`MediaModule`, storage
    adapters, media-specific field type"), so there's no ambiguity to resolve
    for this initiative: media is a module, not an admin-sdk plugin bolted onto
    an existing package.
@@ -31,18 +31,18 @@ This isn't an either/or per feature. It's two rules applied consistently:
    machinery already built (`docs/superpowers/plans/2026-06-25-module-admin-ui-contract.md`):
    a module ships a `src/admin/{fields,pages,widgets,settings,dashboard}`
    convention folder, exposes it as `<pkg>/admin`, and points to it with
-   `Module.admin.ui`. `@latha/auth` already proved this pattern by moving
-   `RolesPermissions` out of `@latha/start` and into `@latha/auth/admin`.
+   `Module.admin.ui`. `@kon10/auth` already proved this pattern by moving
+   `RolesPermissions` out of `@kon10/start` and into `@kon10/auth/admin`.
    Media's upload dropzone, picker, and library view follow the same route —
-   `@latha/admin-sdk` stays generic (field-renderer *contract*, not concrete
+   `@kon10/admin-sdk` stays generic (field-renderer *contract*, not concrete
    renderers) and never learns what a "media" or "SEO preview" is.
 
-Net effect: `@latha/media` owns the `media` entity + field type + storage
-adapter (module-first). `@latha/media/admin` owns the picker/dropzone/library
-UI (extension-first). Nothing new is added to `@latha/admin-sdk` core except
+Net effect: `@kon10/media` owns the `media` entity + field type + storage
+adapter (module-first). `@kon10/media/admin` owns the picker/dropzone/library
+UI (extension-first). Nothing new is added to `@kon10/admin-sdk` core except
 generic, reusable layout primitives that any module's UI can use (accordion
 group, pill/badge, sticky action bar) — those already partially exist in
-`@latha/ui` and get extended there, not in admin-sdk, per the "pure design
+`@kon10/ui` and get extended there, not in admin-sdk, per the "pure design
 system primitives" boundary.
 
 ---
@@ -50,23 +50,23 @@ system primitives" boundary.
 ## Phases
 
 ### Phase 0 — Media module foundation *(next up)*
-New `@latha/media` package: `media` entity (`Collection`, cardinality
+New `@kon10/media` package: `media` entity (`Collection`, cardinality
 `many`), a `media` field type (`{ type: 'media' }` → stores the media doc id,
 same shape as `taxonomy`/`relationship`; a dedicated type rather than reusing
-`relationship({ to: 'media' })` so `@latha/media/admin` can register its own
+`relationship({ to: 'media' })` so `@kon10/media/admin` can register its own
 dropzone/picker renderer without teaching the generic `RelationshipField` about
-media), a `StorageAdapter` contract (separate from `@latha/storage`'s
+media), a `StorageAdapter` contract (separate from `@kon10/storage`'s
 `DBAdapter` — that package is relational metadata only, no blob storage
 today) with a local-disk implementation, and a **dedicated upload file
-route** (`/__latha/upload`, alongside the existing `/__latha/rpc` in
+route** (`/__kon10/upload`, alongside the existing `/__kon10/rpc` in
 `packages/start/src/routes/rpc.ts`) rather than base64-through-RPC — binary
 through JSON bloats payloads ~33% and complicates request-size limits for
-what's a core part of this flow. `@latha/media/admin` ships the upload
+what's a core part of this flow. `@kon10/media/admin` ships the upload
 dropzone + picker field renderer and the library list view. Unblocks every
 field below that needs an image.
 
 ### Phase 1 — Article content model
-Extend the `posts` `Collection` in `apps/playground/latha.config.ts`:
+Extend the `posts` `Collection` in `apps/playground/kon10.config.ts`:
 `excerpt` (`text`), `category` (`taxonomy`, single), `tags` (new flat
 `Taxonomy` entity, `many: true`), `featuredImage` (`media`), `author`
 (`relationship` → `users`), `publishedAt` (`date`), and an `seo` composite
@@ -85,14 +85,14 @@ internal editorial notes. Depends on Phase 1's fields existing.
 Generic, reusable admin-sdk/ui work that benefits every collection, not just
 posts: collapsible field groups (SEO accordion), a status pill in list views,
 a sticky save/status bar, keyboard shortcuts (`Cmd+S`, `/` block insert),
-preview mode. Lives in `@latha/admin-sdk` + `@latha/ui` because it's generic
+preview mode. Lives in `@kon10/admin-sdk` + `@kon10/ui` because it's generic
 UX, not content-domain logic — consistent with the "what belongs in core/
 admin-sdk" test in `CLAUDE.md`.
 
 ### Phase 4 — Revisions & autosave
 The biggest architectural lift: version history, diff view, autosave state.
 Needs its own design pass before a task plan, because it touches
-`@latha/core`'s operations layer and `@latha/storage`'s migration story
+`@kon10/core`'s operations layer and `@kon10/storage`'s migration story
 (new revision tables) — not something to fast-follow casually. Flagged here
 so it isn't forgotten, not scheduled yet.
 
@@ -116,8 +116,8 @@ Phase 5 (related/series/i18n) — after Phase 1
 
 ## Open risks to flag before Phase 0's task plan is written
 
-- **Upload transport**: settled — a dedicated `/__latha/upload` file route,
-  same dynamic-import-the-config pattern as `/__latha/rpc`, not
+- **Upload transport**: settled — a dedicated `/__kon10/upload` file route,
+  same dynamic-import-the-config pattern as `/__kon10/rpc`, not
   base64-through-RPC. Still need to decide auth/access-check reuse (it must
   run the same guard/RBAC check as a normal `media.create` RPC call would).
 - **Storage adapter scope**: local-disk only for Phase 0; S3-compatible adapter

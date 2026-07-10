@@ -1,37 +1,37 @@
 /**
- * @latha/start — the TanStack Start integration for LathaCMS.
+ * @kon10/start — the TanStack Start integration for Kon10.
  *
- * The consuming app writes a `latha.config.ts` and mounts `<LathaProvider>`;
+ * The consuming app writes a `kon10.config.ts` and mounts `<Kon10Provider>`;
  * this package provides the typed client, the React provider, the entire admin
  * + login UI, and the RPC endpoint itself (a server route injected by
- * `lathaStart()`). No hand-written server function required — `createLathaClient()`
+ * `kon10Start()`). No hand-written server function required — `createKon10Client()`
  * talks to that route out of the box. The server dispatcher lives at
- * `@latha/start/server` (kept separate so its server-only imports never reach the
+ * `@kon10/start/server` (kept separate so its server-only imports never reach the
  * client bundle).
  */
 
 export {
-  createLathaClient,
-  type LathaClient,
-  type LathaClientOptions,
-} from '@latha/admin-sdk'
+  createKon10Client,
+  type Kon10Client,
+  type Kon10ClientOptions,
+} from '@kon10/admin-sdk'
 export {
-  lathaRpcValidator,
+  kon10RpcValidator,
   DEFAULT_RPC_PATH,
   DEFAULT_UPLOAD_PATH,
   DEFAULT_LOGIN_PATH,
   DEFAULT_LOGOUT_PATH,
   DEFAULT_CURRENT_USER_PATH,
-} from '@latha/admin-sdk'
+} from '@kon10/admin-sdk'
 export {
-  LathaProvider,
-  useLatha,
-  type LathaProviderProps,
-  type LathaContextValue,
-} from '@latha/admin-sdk'
-export { LathaAdmin } from './admin.js'
-export { LathaLogin } from './login.js'
-export { useAsync, type AsyncState } from '@latha/admin-sdk'
+  Kon10Provider,
+  useKon10,
+  type Kon10ProviderProps,
+  type Kon10ContextValue,
+} from '@kon10/admin-sdk'
+export { Kon10Admin } from './admin.js'
+export { Kon10Login } from './login.js'
+export { useAsync, type AsyncState } from '@kon10/admin-sdk'
 
 // Admin extension authoring surface — re-exported so apps import from one place.
 export {
@@ -65,16 +65,16 @@ export {
   type ExtensionRegistry,
   type FieldControlProps,
   type FieldRenderer,
-} from '@latha/admin-sdk'
+} from '@kon10/admin-sdk'
 
 export type {
-  LathaRpcInput,
-  LathaServerFn,
+  Kon10RpcInput,
+  Kon10ServerFn,
   JsonDoc,
   SessionUser,
   NavItem,
   EntityDescriptor,
-} from '@latha/admin-sdk'
+} from '@kon10/admin-sdk'
 
 // Delivery-API response envelope — Zod-first, importable by any client that
 // wants to validate/type a response fetched from `/api/v1/...`.

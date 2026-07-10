@@ -4,7 +4,7 @@
  * on its initial data; in-flight button work uses the Button `loading` prop,
  * and views with a known layout may render `Skeleton`s instead.
  */
-import { Spinner } from '@latha/ui'
+import { Spinner } from '@kon10/ui'
 
 export interface LoadingStateProps {
   /** Visible label next to the spinner. Omitted, the label is screen-reader only. */

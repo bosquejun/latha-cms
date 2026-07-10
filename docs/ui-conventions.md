@@ -1,8 +1,8 @@
 # Admin UI Conventions
 
 The authoritative rules for buttons, destructive actions, confirmations, and
-empty states across the admin. `@latha/ui` supplies the primitives; every view
-in `@latha/admin-sdk`, `@latha/start`, and module admin extensions follows the
+empty states across the admin. `@kon10/ui` supplies the primitives; every view
+in `@kon10/admin-sdk`, `@kon10/start`, and module admin extensions follows the
 same vocabulary so screens read as one product.
 
 ---
@@ -34,13 +34,13 @@ Rules:
 
 ## Confirmations
 
-All destructive actions confirm through `ConfirmDialog` from `@latha/ui` —
+All destructive actions confirm through `ConfirmDialog` from `@kon10/ui` —
 never `window.confirm`, never a hand-rolled overlay.
 
 - The **triggering** control is `destructive-subtle`; the **confirming** button
   inside the dialog is solid `destructive`; Cancel is `outline`.
 - Confirmation lives in the component that renders the trigger (list views own
-  their row-delete dialog; `@latha/start`'s `EditView` owns the form-delete
+  their row-delete dialog; `@kon10/start`'s `EditView` owns the form-delete
   dialog). Callers of `EntityListProps.onDelete` must **not** stack a second
   confirm on top — the list renderer has already confirmed.
 - Non-destructive guards (e.g. discard unsaved changes) use the same dialog
@@ -48,7 +48,7 @@ never `window.confirm`, never a hand-rolled overlay.
 
 ## Empty states
 
-Zero-data screens render `EmptyState` from `@latha/admin-sdk` — a dashed card
+Zero-data screens render `EmptyState` from `@kon10/admin-sdk` — a dashed card
 with an icon in a muted circle, a title, an optional description, and an
 optional action. Never a bare `<p>` or an ad-hoc dashed box.
 
@@ -63,7 +63,7 @@ optional action. Never a bare `<p>` or an ad-hoc dashed box.
 ## Loading & feedback
 
 - **Page/panel-level initial loads** render `LoadingState` from
-  `@latha/admin-sdk` — a centered spinner with an accessible status role —
+  `@kon10/admin-sdk` — a centered spinner with an accessible status role —
   never a bare `Loading…` paragraph. Views with a known layout (e.g. the roles
   master-detail) may render `Skeleton`s instead.
 - **In-flight button work** uses the Button `loading` prop (spinner + disable),
@@ -78,7 +78,7 @@ optional action. Never a bare `<p>` or an ad-hoc dashed box.
 
 ## Pagination
 
-List footers use `Pagination` from `@latha/ui` — never a hand-rolled bar.
+List footers use `Pagination` from `@kon10/ui` — never a hand-rolled bar.
 
 - Layout: range summary on the left ("26–50 of 132"), icon prev/next controls
   (`icon-sm` outline chevrons with `aria-label`s) around a "Page X of Y"

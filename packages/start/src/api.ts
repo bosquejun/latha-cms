@@ -16,7 +16,7 @@
  * only appears on list responses.
  *
  * A module contributing exactly one entity may address it directly under its
- * own prefix, without a redundant slug segment — `@latha/media`'s single
+ * own prefix, without a redundant slug segment — `@kon10/media`'s single
  * `media` entity is `<api>/media` and `<api>/media/:id`, not
  * `<api>/media/media/:id`. Modules with more than one entity always need the
  * slug segment to disambiguate (`<api>/contents/posts`, `<api>/contents/pages`).
@@ -25,7 +25,7 @@
  * 50, max 200), `sort` (`-createdAt,name`), and equality filters
  * `where[field]=value`.
  *
- * Anonymous requests run as the Public role; `Authorization: Bearer latha_…`
+ * Anonymous requests run as the Public role; `Authorization: Bearer kon10_…`
  * runs as the API key's roles. Enforcement is always on — the RBAC guard
  * requires `<slug>:read` — so nothing is exposed until an admin grants the
  * Public role a read or issues a key. Fields marked `meta.hidden` (credential
@@ -42,13 +42,13 @@ import {
   operations,
   type Entity,
   type JsonValue,
-  type LathaInstance,
+  type Kon10Instance,
   type Query,
   type QuerySort,
   type ResolvedConfig,
-} from '@latha/core'
-import { verifyApiKeyToken, API_KEY_TOKEN_PREFIX } from '@latha/auth'
-import { DEFAULT_API_PATH } from '@latha/admin-sdk'
+} from '@kon10/core'
+import { verifyApiKeyToken, API_KEY_TOKEN_PREFIX } from '@kon10/auth'
+import { DEFAULT_API_PATH } from '@kon10/admin-sdk'
 import { getRuntime } from './runtime.js'
 import { resolveAnonymousPrincipal } from './server.js'
 import { hiddenFieldNames, projectDoc } from './hidden-fields.js'
@@ -203,19 +203,19 @@ function parseBoundedInt(
  * silently downgrading to Public.
  */
 async function resolveApiPrincipal(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   request: Request,
   cors: Record<string, string>,
 ): Promise<{ principal: unknown } | { error: Response } | { anonymous: true; principal: unknown }> {
   const header = request.headers.get('authorization')
-  if (!header) return { anonymous: true, principal: await resolveAnonymousPrincipal(latha) }
+  if (!header) return { anonymous: true, principal: await resolveAnonymousPrincipal(kon10) }
   const [scheme, token] = header.split(' ', 2)
   if (scheme?.toLowerCase() !== 'bearer' || !token?.startsWith(API_KEY_TOKEN_PREFIX)) {
     return {
       error: json(401, apiFailure(API_ERROR_CODES.UNAUTHORIZED, 'Unsupported authorization scheme.'), cors),
     }
   }
-  const principal = await verifyApiKeyToken(latha, token)
+  const principal = await verifyApiKeyToken(kon10, token)
   if (!principal) {
     return {
       error: json(401, apiFailure(API_ERROR_CODES.UNAUTHORIZED, 'Invalid or expired API key.'), cors),
@@ -236,11 +236,11 @@ interface ResolvedRoute {
  * `[slug]`, `[slug, id]`, or, when the module contributes exactly one entity,
  * `[]` (that entity's list/singleton) or `[id]` (that entity's item).
  */
-function resolveDeliveryRoute(latha: LathaInstance, segments: string[]): ResolvedRoute | undefined {
+function resolveDeliveryRoute(kon10: Kon10Instance, segments: string[]): ResolvedRoute | undefined {
   const [prefix, ...rest] = segments
   if (!prefix || rest.length > 2) return undefined
 
-  const module = latha.modules.find((m) => moduleApiPrefix(m) === prefix)
+  const module = kon10.modules.find((m) => moduleApiPrefix(m) === prefix)
   if (!module) return undefined
   const entities = (module.entities ?? []) as Entity[]
 
@@ -301,16 +301,16 @@ export async function handleDeliveryRequest(
     return json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors)
   }
 
-  const latha = await getRuntime(config)
-  const route = resolveDeliveryRoute(latha, segments)
+  const kon10 = await getRuntime(config)
+  const route = resolveDeliveryRoute(kon10, segments)
   if (!route) return json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors)
   const { entity, id } = route
   const slug = entity.slug
 
-  const resolved = await resolveApiPrincipal(latha, request, cors)
+  const resolved = await resolveApiPrincipal(kon10, request, cors)
   if ('error' in resolved) return resolved.error
   const opCtx = {
-    cms: latha,
+    cms: kon10,
     principal: resolved.principal,
     context: { enforce: true },
   }
@@ -321,24 +321,24 @@ export async function handleDeliveryRequest(
   const constraint = entity.api?.where
 
   // Read-through cache for this entity's delivery-API reads, backed by
-  // whichever `CacheAdapter` a module registered (see `@latha/cache`'s
+  // whichever `CacheAdapter` a module registered (see `@kon10/cache`'s
   // `CacheModule`). The entity's own `api.cache` overrides the app-wide
   // `config.api.cache` when set — including an explicit `false`, since `??`
   // only falls through on `null`/`undefined`, never on `false`. TTL-only:
   // a write via the admin RPC does not invalidate an already-cached entry.
   const cacheOpt = entity.api?.cache ?? config.api?.cache
-  const cacheEnabled = latha.cache !== undefined && cacheOpt !== false
+  const cacheEnabled = kon10.cache !== undefined && cacheOpt !== false
   const cacheTtl = cacheOpt ? (cacheOpt.ttlSeconds ?? DEFAULT_CACHE_TTL_SECONDS) : DEFAULT_CACHE_TTL_SECONDS
   const cacheKey = cacheEnabled ? deliveryCacheKey(request, url) : undefined
 
   if (cacheKey) {
-    const cached = await latha.cache!.get(cacheKey)
+    const cached = await kon10.cache!.get(cacheKey)
     if (cached !== undefined) return json(200, cached as ApiResponse<unknown>, cors)
   }
 
   /** Serve a success body, caching it (when enabled) before returning it. */
   async function respond(body: ApiResponse<unknown>): Promise<Response> {
-    if (cacheKey) await latha.cache!.set(cacheKey, body as unknown as JsonValue, cacheTtl)
+    if (cacheKey) await kon10.cache!.set(cacheKey, body as unknown as JsonValue, cacheTtl)
     return json(200, body, cors)
   }
 
@@ -391,7 +391,7 @@ export async function handleDeliveryRequest(
     if (err instanceof AccessDeniedError) {
       return json(403, apiFailure(API_ERROR_CODES.FORBIDDEN, 'Forbidden.'), cors)
     }
-    console.error('[latha] delivery API error:', err)
+    console.error('[kon10] delivery API error:', err)
     return json(500, apiFailure(API_ERROR_CODES.INTERNAL_ERROR, 'Internal error.'), cors)
   }
 }

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { LathaInstance, Module, StorageAdapter } from '@latha/core'
+import type { Kon10Instance, Module, StorageAdapter } from '@kon10/core'
 import { buildMediaEntity } from './entities.js'
 import { uploadRoute } from './upload.js'
 
@@ -23,7 +23,7 @@ export function MediaModule(config: MediaModuleConfig): Module {
   return {
     name: 'media',
     capabilities: ['media'],
-    admin: { nav: { label: 'Media', order: 25 }, ui: '@latha/media/admin' },
+    admin: { nav: { label: 'Media', order: 25 }, ui: '@kon10/media/admin' },
     entities: [
       buildMediaEntity({
         maxFileSize: config.maxFileSize,
@@ -31,7 +31,7 @@ export function MediaModule(config: MediaModuleConfig): Module {
       }),
     ],
     routes: { upload: uploadRoute },
-    onInit(cms: LathaInstance) {
+    onInit(cms: Kon10Instance) {
       cms.registerStorageAdapter(config.storage)
       cms.registerFieldType({
         configSchema: z.object({ type: z.literal('media') }),

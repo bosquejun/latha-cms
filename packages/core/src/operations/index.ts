@@ -18,12 +18,12 @@ import { runHookEvent } from '../hooks/engine.js'
 import { fieldRegistry } from '../fields/registry.js'
 import type { Doc, Query } from '../types/adapter.js'
 import { isMany, isSingle, type Entity } from '../types/entity.js'
-import type { LathaInstance } from '../types/config.js'
+import type { Kon10Instance } from '../types/config.js'
 import type { Operation } from '../types/access.js'
 import type { GuardContext } from '../types/guard.js'
 
 export interface OperationContext {
-  cms: LathaInstance
+  cms: Kon10Instance
   /** The caller principal, opaque to the kernel. Defaults to anonymous (`null`). */
   principal?: unknown
   /**
@@ -55,7 +55,7 @@ async function runGuards(
   for (const guard of guards) await guard(guardCtx)
 }
 
-function resolveMany(cms: LathaInstance, slug: string): Entity & { cardinality: 'many' } {
+function resolveMany(cms: Kon10Instance, slug: string): Entity & { cardinality: 'many' } {
   const entity = cms.getEntity(slug)
   if (!entity) throw new Error(`Unknown entity: "${slug}".`)
   if (!isMany(entity)) {
@@ -64,7 +64,7 @@ function resolveMany(cms: LathaInstance, slug: string): Entity & { cardinality: 
   return entity
 }
 
-function resolveSingle(cms: LathaInstance, slug: string): Entity & { cardinality: 'single' } {
+function resolveSingle(cms: Kon10Instance, slug: string): Entity & { cardinality: 'single' } {
   const entity = cms.getEntity(slug)
   if (!entity) throw new Error(`Unknown entity: "${slug}".`)
   if (!isSingle(entity)) {
