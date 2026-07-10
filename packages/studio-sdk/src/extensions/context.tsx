@@ -10,20 +10,20 @@ import {
   EMPTY_REGISTRY,
   type ExtensionRegistry,
 } from './registry.js'
-import type { AdminExtensions } from './types.js'
-import type { AdminZone } from './zones.js'
+import type { StudioExtensions } from './types.js'
+import type { StudioZone } from './zones.js'
 import type { WidgetExtension } from './types.js'
 
 const ExtensionsContext = createContext<ExtensionRegistry>(EMPTY_REGISTRY)
 
 export interface ExtensionsProviderProps {
   /** Raw extensions to build a registry from, or a prebuilt registry. */
-  extensions?: AdminExtensions | ExtensionRegistry
+  extensions?: StudioExtensions | ExtensionRegistry
   children: ReactNode
 }
 
 function isRegistry(
-  value: AdminExtensions | ExtensionRegistry,
+  value: StudioExtensions | ExtensionRegistry,
 ): value is ExtensionRegistry {
   return typeof (value as ExtensionRegistry).widgetsForZone === 'function'
 }
@@ -51,6 +51,6 @@ export function useExtensions(): ExtensionRegistry {
 }
 
 /** The widgets registered for a single zone, in render order. */
-export function useZoneWidgets(zone: AdminZone): WidgetExtension[] {
+export function useZoneWidgets(zone: StudioZone): WidgetExtension[] {
   return useExtensions().widgetsForZone(zone)
 }

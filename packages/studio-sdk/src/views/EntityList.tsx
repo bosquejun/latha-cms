@@ -26,7 +26,7 @@ import {
 import { Pencil, Trash2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { humanize } from '../schema.js'
-import type { AdminEntity } from '../schema.js'
+import type { StudioEntity } from '../schema.js'
 import { EmptyState } from '../shell/EmptyState.js'
 
 export interface EntityRow {
@@ -35,14 +35,14 @@ export interface EntityRow {
 }
 
 export interface EntityListProps {
-  entity: AdminEntity
+  entity: StudioEntity
   rows: EntityRow[]
   getEditHref: (id: string) => string
   onDelete?: (id: string) => void
   busy?: boolean
 }
 
-function resolveColumns(entity: AdminEntity): string[] {
+function resolveColumns(entity: StudioEntity): string[] {
   if (entity.defaultColumns?.length) return entity.defaultColumns
   const title = entity.useAsTitle ?? entity.fields[0]?.name
   const names = entity.fields.map((f) => f.name)

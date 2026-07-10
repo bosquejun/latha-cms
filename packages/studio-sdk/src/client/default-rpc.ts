@@ -28,7 +28,7 @@ export const DEFAULT_UPLOAD_PATH = '/__kon10/modules/media/upload'
  * These are ordinary module routes (see `ModuleRoutes` in `@kon10/core`),
  * declared by the auth module itself at `<module.name>/login` etc. and
  * served by the runner's generic module-route dispatcher — not special-cased
- * RPC actions, since they must run without an existing admin session.
+ * RPC actions, since they must run without an existing Studio session.
  */
 export const DEFAULT_LOGIN_PATH = '/__kon10/modules/auth/login'
 export const DEFAULT_LOGOUT_PATH = '/__kon10/modules/auth/logout'
@@ -36,7 +36,7 @@ export const DEFAULT_CURRENT_USER_PATH = '/__kon10/modules/auth/current-user'
 
 /**
  * Where the public content delivery API is mounted — the read-only REST
- * surface headless consumers fetch, as opposed to the admin-gated RPC above.
+ * surface headless consumers fetch, as opposed to the Studio-gated RPC above.
  * Versioned so the envelope/query semantics can evolve as `/api/v2` alongside
  * a still-working v1; the segment must stay in sync with the route literal in
  * `@kon10/start`'s `routes/api.ts`.

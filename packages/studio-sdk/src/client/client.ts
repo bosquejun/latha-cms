@@ -2,7 +2,7 @@
  * Typed client over the single Kon10 RPC endpoint.
  *
  * Each method packs an RPC action and unpacks the (already JSON-serializable)
- * result. This is what the admin components talk to; it never touches the
+ * result. This is what the Studio components talk to; it never touches the
  * server directly.
  *
  * By default it POSTs to the framework's server route (`DEFAULT_RPC_PATH`), so
@@ -81,8 +81,8 @@ async function fetchRpc<T>(endpoint: string, data: Kon10RpcInput): Promise<T> {
 /**
  * Call one of `@kon10/auth`'s own routes (login/logout/current-user) — plain
  * JSON over fetch, not the generic RPC `action` envelope. These run without
- * an admin session by definition, so they can't be RPC actions gated by the
- * dispatcher's admin check.
+ * a Studio session by definition, so they can't be RPC actions gated by the
+ * dispatcher's Studio check.
  */
 async function fetchJson<T>(endpoint: string, init?: RequestInit): Promise<T> {
   const res = await fetch(endpoint, { credentials: 'same-origin', ...init })

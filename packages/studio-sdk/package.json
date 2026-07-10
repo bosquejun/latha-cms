@@ -1,7 +1,7 @@
 {
-  "name": "@kon10/admin-sdk",
+  "name": "@kon10/studio-sdk",
   "version": "0.0.0",
-  "description": "Kon10 admin SDK — CMS-aware shell, field renderers, and auto-generated views.",
+  "description": "Kon10 Studio SDK — CMS-aware shell, field renderers, and auto-generated views.",
   "type": "module",
   "license": "MIT",
   "exports": {

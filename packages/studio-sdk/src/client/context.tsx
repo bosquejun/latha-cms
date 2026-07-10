@@ -1,8 +1,8 @@
 /**
  * Kon10Provider / useKon10 — makes the client + mount paths available to the
- * admin components without prop-drilling.
+ * Studio components without prop-drilling.
  *
- * It also hosts the admin extension system: any `extensions` passed in are
+ * It also hosts the Studio extension system: any `extensions` passed in are
  * normalized into a registry, field-renderer overrides are registered, and the
  * registry is published via `<ExtensionsProvider>` so the shell, the views, and
  * every `<Slot>` can read it.
@@ -12,7 +12,7 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react'
 import {
   ExtensionsProvider,
   createExtensionRegistry,
-  type AdminExtensions,
+  type StudioExtensions,
   type ExtensionRegistry,
 } from '../extensions/index.js'
 import { registerFieldRenderer } from '../fields/registry.js'
@@ -20,7 +20,7 @@ import { createKon10Client, type Kon10Client } from './client.js'
 
 export interface Kon10ContextValue {
   client: Kon10Client
-  /** Base path the admin is mounted under. Defaults to `/admin`. */
+  /** Base path the Studio is mounted under. Defaults to `/studio`. */
   basePath: string
   /** Where to send unauthenticated users. Defaults to `/login`. */
   loginPath: string
@@ -39,18 +39,18 @@ export interface Kon10ProviderProps {
   basePath?: string
   loginPath?: string
   /**
-   * Admin UI extensions — custom widgets, pages, dashboard widgets, settings
+   * Studio UI extensions — custom widgets, pages, dashboard widgets, settings
    * pages, field renderers, and nav links. Pass the object exported by the
-   * `virtual:kon10/admin-extensions` module (auto-collected from `src/admin/`)
-   * or build one by hand with `defineAdminExtensions`.
+   * `virtual:kon10/studio-extensions` module (auto-collected from `src/studio/`)
+   * or build one by hand with `defineStudioExtensions`.
    */
-  extensions?: AdminExtensions
+  extensions?: StudioExtensions
   children: ReactNode
 }
 
 export function Kon10Provider({
   client,
-  basePath = '/admin',
+  basePath = '/studio',
   loginPath = '/login',
   extensions,
   children,
@@ -93,36 +93,36 @@ export function useKon10(): Kon10ContextValue {
 /*  Navigation — router-agnostic client-side navigation for extensions        */
 /* -------------------------------------------------------------------------- */
 
-type AdminNavigate = (href: string) => void
+type StudioNavigate = (href: string) => void
 
-const AdminNavigateContext = createContext<AdminNavigate | null>(null)
+const StudioNavigateContext = createContext<StudioNavigate | null>(null)
 
 /**
- * Provide client-side navigation to admin extensions so extension pages
+ * Provide client-side navigation to Studio extensions so extension pages
  * stay router-agnostic while the host app's router does the actual
  * navigating.
  */
-export function AdminNavigateProvider({
+export function StudioNavigateProvider({
   navigate,
   children,
 }: {
-  navigate: AdminNavigate
+  navigate: StudioNavigate
   children: ReactNode
 }) {
   return (
-    <AdminNavigateContext.Provider value={navigate}>
+    <StudioNavigateContext.Provider value={navigate}>
       {children}
-    </AdminNavigateContext.Provider>
+    </StudioNavigateContext.Provider>
   )
 }
 
 /**
- * Navigate to an admin href (e.g. `${basePath}/settings/roles/123`).
+ * Navigate to a Studio href (e.g. `${basePath}/settings/roles/123`).
  * Client-side when a provider bridged the router; falls back to a full
  * document navigation otherwise, so extension code works in any host.
  */
-export function useAdminNavigate(): AdminNavigate {
-  const navigate = useContext(AdminNavigateContext)
+export function useStudioNavigate(): StudioNavigate {
+  const navigate = useContext(StudioNavigateContext)
   return navigate ?? ((href) => window.location.assign(href))
 }
 
@@ -134,7 +134,7 @@ const PermissionsContext = createContext<string[]>([])
 
 /**
  * Make the current user's effective permission keys available to `useCan()`.
- * The admin shell wraps its content in this once the session resolves.
+ * The Studio shell wraps its content in this once the session resolves.
  */
 export function PermissionsProvider({
   permissions,

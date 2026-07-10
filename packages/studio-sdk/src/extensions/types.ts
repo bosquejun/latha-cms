@@ -1,18 +1,18 @@
 /**
  * The extension contract — the typed shapes a dev provides to customize the
- * admin, plus identity `define*` helpers for type inference and DX.
+ * Studio, plus identity `define*` helpers for type inference and DX.
  *
  * Two authoring styles share these types:
- *  - **Explicit:** build an `AdminExtensions` object and hand it to
- *    `<Kon10Provider extensions={…}>` (use `defineAdminExtensions` for inference).
- *  - **Convention:** drop files under `src/admin/**`, each exporting a default
+ *  - **Explicit:** build a `StudioExtensions` object and hand it to
+ *    `<Kon10Provider extensions={…}>` (use `defineStudioExtensions` for inference).
+ *  - **Convention:** drop files under `src/studio/**`, each exporting a default
  *    component plus a `config` from one of the `define*Config` helpers. The
- *    `kon10Start()` Vite plugin assembles them into the same `AdminExtensions`.
+ *    `kon10Start()` Vite plugin assembles them into the same `StudioExtensions`.
  */
 
 import type { ComponentType } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import type { AdminZone, WidgetContext } from './zones.js'
+import type { StudioZone, WidgetContext } from './zones.js'
 import type { FieldRenderer } from '../fields/types.js'
 import type { SidebarIcon } from '../shell/Sidebar.js'
 import type { EntityListProps } from '../views/EntityList.js'
@@ -23,7 +23,7 @@ export type WidgetComponent = ComponentType<WidgetContext>
 /** Config a widget file declares (convention mode); the component is its default export. */
 export interface WidgetConfig {
   /** One zone, or several, to render into. */
-  zone: AdminZone | AdminZone[]
+  zone: StudioZone | StudioZone[]
   /** Lower renders first within a zone. Default 0. */
   order?: number
 }
@@ -36,14 +36,14 @@ export interface WidgetExtension extends WidgetConfig {
 
 /** Props passed to a custom page / settings page component. */
 export interface PageComponentProps {
-  /** The page's mount path (relative to the admin base), e.g. `analytics`. */
+  /** The page's mount path (relative to the Studio base), e.g. `analytics`. */
   path: string
-  /** Splat segments after the mount path: `/admin/analytics/a/b` → `['a','b']`. */
+  /** Splat segments after the mount path: `/studio/analytics/a/b` → `['a','b']`. */
   params: string[]
 }
 
 export interface PageConfig {
-  /** Mounted at `<adminBase>/<path>` — e.g. `analytics` → `/admin/analytics`. */
+  /** Mounted at `<studioBase>/<path>` — e.g. `analytics` → `/studio/analytics`. */
   path: string
   /** Sidebar label. */
   label: string
@@ -73,7 +73,7 @@ export interface DashboardWidgetExtension extends DashboardWidgetConfig {
 }
 
 export interface SettingsPageConfig {
-  /** Mounted at `<adminBase>/settings/<path>`. */
+  /** Mounted at `<studioBase>/settings/<path>`. */
   path: string
   label: string
   description?: string
@@ -119,8 +119,8 @@ export interface NavItemExtension {
   order?: number
 }
 
-/** The aggregate of everything a dev can contribute to the admin UI. */
-export interface AdminExtensions {
+/** The aggregate of everything a dev can contribute to the Studio UI. */
+export interface StudioExtensions {
   widgets?: WidgetExtension[]
   pages?: PageExtension[]
   dashboardWidgets?: DashboardWidgetExtension[]
@@ -138,7 +138,7 @@ export interface AdminExtensions {
 // which gives autocomplete and catches typos at author time.
 
 /** Type a full set of extensions (explicit mode). */
-export function defineAdminExtensions(ext: AdminExtensions): AdminExtensions {
+export function defineStudioExtensions(ext: StudioExtensions): StudioExtensions {
   return ext
 }
 

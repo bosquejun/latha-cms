@@ -1,7 +1,7 @@
 /**
  * Field renderer registry.
  *
- * Maps a `FieldType` to the React renderer used in admin forms. The registry is
+ * Maps a `FieldType` to the React renderer used in Studio forms. The registry is
  * a plain map so apps and plugins can override or extend renderers
  * (`registerFieldRenderer`) without forking the SDK.
  */
@@ -20,7 +20,7 @@ import { ArrayField } from './renderers/ArrayField.js'
 import { FallbackField } from './renderers/FallbackField.js'
 
 // Keyed by string so module-registered types (taxonomy, media, etc.) can be
-// added without requiring admin-sdk to know about every possible type.
+// added without requiring studio-sdk to know about every possible type.
 const registry = new Map<string, FieldRenderer>([
   ['text', TextField],
   ['richtext', RichTextField],

@@ -1,11 +1,11 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { collectAdminExtensions, mergeExtensions } from './collect.js'
+import { collectStudioExtensions, mergeExtensions } from './collect.js'
 
 const Comp = () => null
 
-test('collectAdminExtensions assembles settings + fields from glob maps', () => {
-  const ext = collectAdminExtensions({
+test('collectStudioExtensions assembles settings + fields from glob maps', () => {
+  const ext = collectStudioExtensions({
     settings: {
       '/a/settings/roles.tsx': { default: Comp, config: { path: 'roles', label: 'Roles' } },
       '/a/settings/skip.tsx': { default: Comp }, // no config -> dropped
@@ -38,8 +38,8 @@ test('mergeExtensions concatenates distinct keys', () => {
   assert.equal(merged.fields?.length, 2)
 })
 
-test('collectAdminExtensions assembles a list-view override from glob maps', () => {
-  const ext = collectAdminExtensions({
+test('collectStudioExtensions assembles a list-view override from glob maps', () => {
+  const ext = collectStudioExtensions({
     lists: {
       '/a/lists/media.tsx': { default: Comp, config: { slug: 'media' } },
       '/a/lists/skip.tsx': { default: Comp }, // no config -> dropped

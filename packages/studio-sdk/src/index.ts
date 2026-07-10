@@ -1,8 +1,8 @@
 /**
- * @kon10/admin-sdk — the CMS-aware admin layer.
+ * @kon10/studio-sdk — the CMS-aware Studio layer.
  *
  * Builds on `@kon10/ui` (design system) and `@kon10/core` (kernel). Provides
- * the admin shell, the registry-driven sidebar, the field renderer registry,
+ * the Studio shell, the registry-driven sidebar, the field renderer registry,
  * and the auto-generated collection/document views. It owns no data fetching or
  * routing — the app wires those in and passes data + callbacks down.
  */
@@ -12,12 +12,12 @@ export {
   describeEntity,
   describeEntities,
   humanize,
-  type AdminEntity,
+  type StudioEntity,
   type EntityKind,
 } from './schema.js'
 
 // Shell
-export { AdminShell, type AdminShellProps } from './shell/AdminShell.js'
+export { StudioShell, type StudioShellProps } from './shell/StudioShell.js'
 export {
   Sidebar,
   type SidebarProps,
@@ -55,18 +55,18 @@ export {
 
 // Extension system — injection zones, registry, <Slot>, define* helpers
 export {
-  ADMIN_ZONES,
-  isAdminZone,
-  type AdminZone,
+  STUDIO_ZONES,
+  isStudioZone,
+  type StudioZone,
   type WidgetContext,
-  defineAdminExtensions,
+  defineStudioExtensions,
   defineWidgetConfig,
   definePageConfig,
   defineDashboardWidgetConfig,
   defineSettingsConfig,
   defineFieldConfig,
   defineEntityListConfig,
-  type AdminExtensions,
+  type StudioExtensions,
   type WidgetComponent,
   type WidgetConfig,
   type WidgetExtension,
@@ -92,10 +92,10 @@ export {
   type ExtensionsProviderProps,
   Slot,
   type SlotProps,
-  collectAdminExtensions,
+  collectStudioExtensions,
   mergeExtensions,
   type GlobMap,
-  type AdminGlobs,
+  type StudioGlobs,
 } from './extensions/index.js'
 
 // Client surface — typed RPC client, React provider/hooks, RPC contract types

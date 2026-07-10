@@ -101,7 +101,7 @@ export function Sidebar({
   sections,
   currentPath,
   LinkComponent,
-  homeHref = '/admin',
+  homeHref = '/studio',
   onNavigate,
   showDashboard = true,
   header,

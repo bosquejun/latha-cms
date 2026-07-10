@@ -1,7 +1,7 @@
 /**
  * The Kon10 client surface — the typed RPC client, the React provider/hooks,
  * and the client-safe RPC contract types, so both `@kon10/start` and
- * `@kon10/auth/admin` can consume it without a dependency cycle.
+ * `@kon10/auth/studio` can consume it without a dependency cycle.
  */
 
 export { createKon10Client, type Kon10Client, type Kon10ClientOptions } from './client.js'
@@ -19,8 +19,8 @@ export {
   useKon10,
   PermissionsProvider,
   useCan,
-  AdminNavigateProvider,
-  useAdminNavigate,
+  StudioNavigateProvider,
+  useStudioNavigate,
   type Kon10ProviderProps,
   type Kon10ContextValue,
 } from './context.js'

@@ -1,12 +1,12 @@
 /**
- * Extension registry — normalizes the raw `AdminExtensions` into indexed,
- * ordered lookups the admin renders from. Pure and serializable-free: it holds
+ * Extension registry — normalizes the raw `StudioExtensions` into indexed,
+ * ordered lookups the Studio renders from. Pure and serializable-free: it holds
  * component references, so it lives entirely on the client.
  */
 
-import type { AdminZone } from './zones.js'
+import type { StudioZone } from './zones.js'
 import type {
-  AdminExtensions,
+  StudioExtensions,
   DashboardWidgetExtension,
   EntityListRendererExtension,
   FieldRendererExtension,
@@ -19,7 +19,7 @@ import type { SidebarIcon } from '../shell/Sidebar.js'
 
 export interface ExtensionRegistry {
   /** Widgets registered for a zone, in render order. */
-  widgetsForZone(zone: AdminZone): WidgetExtension[]
+  widgetsForZone(zone: StudioZone): WidgetExtension[]
   /** Custom pages, sorted. */
   readonly pages: PageExtension[]
   /** Dashboard widgets, sorted. */
@@ -50,10 +50,10 @@ const byOrder = <T extends { order?: number }>(a: T, b: T): number =>
 const EMPTY_WIDGETS: WidgetExtension[] = []
 
 export function createExtensionRegistry(
-  ext: AdminExtensions = {},
+  ext: StudioExtensions = {},
 ): ExtensionRegistry {
   // Index widgets by zone (a widget may declare several), stable-sorted by order.
-  const widgetsByZone = new Map<AdminZone, WidgetExtension[]>()
+  const widgetsByZone = new Map<StudioZone, WidgetExtension[]>()
   for (const widget of ext.widgets ?? []) {
     const zones = Array.isArray(widget.zone) ? widget.zone : [widget.zone]
     for (const zone of zones) {

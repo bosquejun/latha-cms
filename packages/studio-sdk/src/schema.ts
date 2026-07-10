@@ -1,8 +1,8 @@
 /**
- * Registry-driven admin description.
+ * Registry-driven Studio description.
  *
  * Pure, serializable helpers that turn the kernel's `Entity[]` (from the module
- * registry) into the shapes the admin UI consumes: navigation items and
+ * registry) into the shapes the Studio UI consumes: navigation items and
  * per-entity descriptors. No React here, so these can run inside a server
  * function and ship plain JSON to the client.
  */
@@ -10,7 +10,7 @@
 import type { Entity, Field } from '@kon10/core'
 
 /**
- * Admin-sdk's own vocabulary for entity flavors. Core has no concept of these
+ * Studio-sdk's own vocabulary for entity flavors. Core has no concept of these
  * — it only knows `cardinality`/`hierarchical`. Modules tag their entities
  * with the opaque `entity.kind` string (see `Entity.kind` in `@kon10/core`);
  * `kindOf` below reads that tag, falling back to a cardinality-derived guess
@@ -18,7 +18,7 @@ import type { Entity, Field } from '@kon10/core'
  */
 export type EntityKind = 'collection' | 'document' | 'taxonomy'
 
-export interface AdminEntity {
+export interface StudioEntity {
   slug: string
   kind: EntityKind
   label: string
@@ -43,22 +43,22 @@ function kindOf(entity: Entity): EntityKind {
 }
 
 function labelOf(entity: Entity): string {
-  const labels = entity.admin?.labels
+  const labels = entity.studio?.labels
   if (entity.cardinality === 'single') return labels?.singular ?? humanize(entity.slug)
   return labels?.plural ?? humanize(entity.slug)
 }
 
-export function describeEntity(entity: Entity): AdminEntity {
+export function describeEntity(entity: Entity): StudioEntity {
   return {
     slug: entity.slug,
     kind: kindOf(entity),
     label: labelOf(entity),
     fields: entity.fields,
-    useAsTitle: entity.admin?.useAsTitle,
-    defaultColumns: entity.admin?.defaultColumns,
+    useAsTitle: entity.studio?.useAsTitle,
+    defaultColumns: entity.studio?.defaultColumns,
   }
 }
 
-export function describeEntities(entities: Entity[]): AdminEntity[] {
+export function describeEntities(entities: Entity[]): StudioEntity[] {
   return entities.map(describeEntity)
 }

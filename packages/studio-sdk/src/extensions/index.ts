@@ -1,24 +1,24 @@
 /**
- * The admin extension system — injection zones, the registry, the `<Slot>`
+ * The Studio extension system — injection zones, the registry, the `<Slot>`
  * primitive, and the `define*` authoring helpers.
  */
 
 export {
-  ADMIN_ZONES,
-  isAdminZone,
-  type AdminZone,
+  STUDIO_ZONES,
+  isStudioZone,
+  type StudioZone,
   type WidgetContext,
 } from './zones.js'
 
 export {
-  defineAdminExtensions,
+  defineStudioExtensions,
   defineWidgetConfig,
   definePageConfig,
   defineDashboardWidgetConfig,
   defineSettingsConfig,
   defineFieldConfig,
   defineEntityListConfig,
-  type AdminExtensions,
+  type StudioExtensions,
   type WidgetComponent,
   type WidgetConfig,
   type WidgetExtension,
@@ -53,8 +53,8 @@ export {
 export { Slot, type SlotProps } from './Slot.js'
 
 export {
-  collectAdminExtensions,
+  collectStudioExtensions,
   mergeExtensions,
   type GlobMap,
-  type AdminGlobs,
+  type StudioGlobs,
 } from './collect.js'

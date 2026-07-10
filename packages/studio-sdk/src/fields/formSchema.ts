@@ -95,7 +95,7 @@ export function zodFromJsonSchema(js: Record<string, unknown>): z.ZodType | unde
 }
 
 /**
- * The Zod schema the admin form validates against: the registry-built
+ * The Zod schema the Studio form validates against: the registry-built
  * document schema, with `jsonSchema`-carrying fields upgraded to their
  * interpreted constraints (same default/optional layering as the registry).
  */

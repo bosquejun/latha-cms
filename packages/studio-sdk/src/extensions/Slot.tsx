@@ -6,10 +6,10 @@
 
 import { Fragment } from 'react'
 import { useZoneWidgets } from './context.js'
-import type { AdminZone } from './zones.js'
+import type { StudioZone } from './zones.js'
 
 export interface SlotProps {
-  zone: AdminZone
+  zone: StudioZone
   /** Entity descriptor for entity-scoped zones (list/form/document). */
   entity?: unknown
   /** Record id for edit-form zones. */

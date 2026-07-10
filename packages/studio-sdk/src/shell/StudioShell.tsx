@@ -1,5 +1,5 @@
 /**
- * AdminShell — full-width topbar over a (sidebar + content) row.
+ * StudioShell — full-width topbar over a (sidebar + content) row.
  * Owns the mobile drawer open state. Data-agnostic: pages render their own
  * PageHeader inside `children`. Scattered `<Slot>`s expose the shell's chrome
  * (topbar ends, sidebar top/bottom, main before/after) to extensions.
@@ -11,7 +11,7 @@ import { Topbar } from './Topbar.js'
 import { MobileDrawer } from './MobileDrawer.js'
 import { Slot } from '../extensions/Slot.js'
 
-export interface AdminShellProps {
+export interface StudioShellProps {
   /** Sidebar sections (entity groups + extension groups), in display order. */
   sections: SidebarSection[]
   currentPath?: string
@@ -27,7 +27,7 @@ export interface AdminShellProps {
   sidebarFooter?: ReactNode
 }
 
-export function AdminShell({
+export function StudioShell({
   sections,
   currentPath,
   LinkComponent,
@@ -37,7 +37,7 @@ export function AdminShell({
   showDashboard = true,
   sidebarHeader,
   sidebarFooter,
-}: AdminShellProps) {
+}: StudioShellProps) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">

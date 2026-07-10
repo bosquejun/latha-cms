@@ -1,11 +1,11 @@
 /**
- * Shared admin-extension assembly. Turns convention-folder glob maps (from
- * `import.meta.glob(..., { eager: true })`) into a typed `AdminExtensions`,
- * and merges several `AdminExtensions` with later-source-wins precedence.
- * One implementation shared across every source of admin extensions.
+ * Shared Studio-extension assembly. Turns convention-folder glob maps (from
+ * `import.meta.glob(..., { eager: true })`) into a typed `StudioExtensions`,
+ * and merges several `StudioExtensions` with later-source-wins precedence.
+ * One implementation shared across every source of Studio extensions.
  */
 import type {
-  AdminExtensions,
+  StudioExtensions,
   DashboardWidgetExtension,
   EntityListRendererExtension,
   FieldRendererExtension,
@@ -16,7 +16,7 @@ import type {
 
 export type GlobMap = Record<string, { default?: unknown; config?: unknown }>
 
-export interface AdminGlobs {
+export interface StudioGlobs {
   widgets?: GlobMap
   pages?: GlobMap
   dashboard?: GlobMap
@@ -33,7 +33,7 @@ const entries = (map: GlobMap = {}) =>
 const cfg = (mod?: { config?: unknown } | null) =>
   (mod?.config ?? {}) as Record<string, unknown>
 
-export function collectAdminExtensions(globs: AdminGlobs): AdminExtensions {
+export function collectStudioExtensions(globs: StudioGlobs): StudioExtensions {
   const widgets = entries(globs.widgets)
     .filter(({ mod }) => mod && mod.default && cfg(mod).zone)
     .map(({ id, mod }) => ({ id, Component: mod.default, ...cfg(mod) })) as WidgetExtension[]
@@ -74,7 +74,7 @@ const dedupeBy = <T>(items: T[], key: (item: T) => string): T[] => {
   return [...map.values()]
 }
 
-export function mergeExtensions(sources: AdminExtensions[]): AdminExtensions {
+export function mergeExtensions(sources: StudioExtensions[]): StudioExtensions {
   return {
     widgets: dedupeBy(
       sources.flatMap((s) => s.widgets ?? []),

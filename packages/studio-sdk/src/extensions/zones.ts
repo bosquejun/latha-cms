@@ -1,5 +1,5 @@
 /**
- * Injection zones — the catalogue of named places in the admin UI where devs
+ * Injection zones — the catalogue of named places in the Studio UI where devs
  * can attach custom widgets.
  *
  * The naming follows `<surface>.<position>` (à la Medusa's injection zones), so
@@ -9,7 +9,7 @@
  * matching spot in the shell or a view.
  */
 
-export const ADMIN_ZONES = [
+export const STUDIO_ZONES = [
   // Shell chrome — always present, regardless of the current view.
   'shell.topbar.start',
   'shell.topbar.end',
@@ -37,11 +37,11 @@ export const ADMIN_ZONES = [
   'global.after',
 ] as const
 
-export type AdminZone = (typeof ADMIN_ZONES)[number]
+export type StudioZone = (typeof STUDIO_ZONES)[number]
 
 /** Runtime guard — useful when validating zones from untyped (convention) sources. */
-export function isAdminZone(value: unknown): value is AdminZone {
-  return typeof value === 'string' && (ADMIN_ZONES as readonly string[]).includes(value)
+export function isStudioZone(value: unknown): value is StudioZone {
+  return typeof value === 'string' && (STUDIO_ZONES as readonly string[]).includes(value)
 }
 
 /**
@@ -51,7 +51,7 @@ export function isAdminZone(value: unknown): value is AdminZone {
  */
 export interface WidgetContext<TEntity = unknown> {
   /** The zone this widget is rendering in. */
-  zone: AdminZone
+  zone: StudioZone
   /** Entity descriptor in list/form/document zones; otherwise undefined. */
   entity?: TEntity
   /** Record id in edit-form zones; undefined on create and elsewhere. */

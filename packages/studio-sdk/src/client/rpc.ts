@@ -1,7 +1,7 @@
 /**
  * Shared RPC contract between the Kon10 client and server dispatcher.
  *
- * The whole admin surface is driven by a single server function so the
+ * The whole Studio surface is driven by a single server function so the
  * consuming app only has to declare one endpoint. This file is client-safe
  * (no server imports) and is shared by both ends.
  *
