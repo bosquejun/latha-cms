@@ -1,5 +1,5 @@
 /**
- * @latha/auth — session-based authentication + RBAC.
+ * @kon10/auth — session-based authentication + RBAC.
  *
  * Provides the AuthModule (RBAC entities, the RBAC guard, catalog sync, default
  * role seeding), edge-friendly password hashing, signed session tokens, the
@@ -11,7 +11,7 @@ export { AuthModule, getCatalog, type AuthModuleConfig } from './module.js'
 
 export type { AuthUser, AuthAdapter } from './types.js'
 
-// Pluggable identity source — lets auth run without @latha/users.
+// Pluggable identity source — lets auth run without @kon10/users.
 export {
   entitySubjectStore,
   getSubjectStore,

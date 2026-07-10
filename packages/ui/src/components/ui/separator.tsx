@@ -6,7 +6,6 @@ export interface SeparatorProps extends React.ComponentProps<'div'> {
   orientation?: 'horizontal' | 'vertical'
 }
 
-/** Separator — a 1px hairline rule, horizontal (default) or vertical. */
 function Separator({
   className,
   orientation = 'horizontal',

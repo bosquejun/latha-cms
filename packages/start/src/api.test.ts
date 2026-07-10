@@ -20,8 +20,8 @@ import {
   type Entity,
   type Query,
   type ResolvedConfig,
-} from '@latha/core'
-import { AuthModule, createApiKey } from '@latha/auth'
+} from '@kon10/core'
+import { AuthModule, createApiKey } from '@kon10/auth'
 import { handleDeliveryRequest, handleDeliveryPreflight } from './api.js'
 import { getRuntime } from './runtime.js'
 import type { ApiResponse } from './envelope.js'
@@ -121,12 +121,12 @@ const get = (path: string, headers?: Record<string, string>) =>
   handleDeliveryRequest(config, new Request(`http://cms.test${path}`, { headers }))
 
 before(async () => {
-  const latha = await getRuntime(config)
-  await latha.db.create('posts', { title: 'Hello', internalNote: 'secret', featured: true })
-  await latha.db.create('posts', { title: 'World', internalNote: 'secret', featured: false })
-  await latha.db.create('articles', { title: 'Live', status: 'published' })
-  await latha.db.create('articles', { title: 'WIP', status: 'draft' })
-  await latha.db.create('widget', { name: 'Gadget' })
+  const kon10 = await getRuntime(config)
+  await kon10.db.create('posts', { title: 'Hello', internalNote: 'secret', featured: true })
+  await kon10.db.create('posts', { title: 'World', internalNote: 'secret', featured: false })
+  await kon10.db.create('articles', { title: 'Live', status: 'published' })
+  await kon10.db.create('articles', { title: 'WIP', status: 'draft' })
+  await kon10.db.create('widget', { name: 'Gadget' })
 })
 
 test('anonymous read is denied until the Public role grants it', async () => {
@@ -176,7 +176,7 @@ test('non-GET methods are rejected', async () => {
 })
 
 test('invalid bearer tokens fail loudly, not as Public', async () => {
-  const res = await get('/api/v1/test-content/posts', { authorization: 'Bearer latha_bogus' })
+  const res = await get('/api/v1/test-content/posts', { authorization: 'Bearer kon10_bogus' })
   assert.equal(res.status, 401)
   assert.equal(res.headers.get('access-control-allow-origin'), '*')
   const body = (await res.json()) as ApiResponse<unknown>
@@ -186,9 +186,9 @@ test('invalid bearer tokens fail loudly, not as Public', async () => {
 })
 
 test('an API key carrying the admin role reads, with hidden fields stripped', async () => {
-  const latha = await getRuntime(config)
-  const adminRole = (await latha.db.find('roles', { where: { name: 'admin' }, limit: 1 }))[0]!
-  const { token } = await createApiKey(latha, { name: 'test', roles: [adminRole.id] })
+  const kon10 = await getRuntime(config)
+  const adminRole = (await kon10.db.find('roles', { where: { name: 'admin' }, limit: 1 }))[0]!
+  const { token } = await createApiKey(kon10, { name: 'test', roles: [adminRole.id] })
 
   const res = await get('/api/v1/test-content/posts?sort=title', {
     authorization: `Bearer ${token}`,
@@ -203,12 +203,12 @@ test('an API key carrying the admin role reads, with hidden fields stripped', as
 })
 
 test('granting the Public role a read opens anonymous access', async () => {
-  const latha = await getRuntime(config)
+  const kon10 = await getRuntime(config)
   const permission = (
-    await latha.db.find('permissions', { where: { key: 'posts:read' }, limit: 1 })
+    await kon10.db.find('permissions', { where: { key: 'posts:read' }, limit: 1 })
   )[0]!
-  const publicRole = (await latha.db.find('roles', { where: { name: 'public' }, limit: 1 }))[0]!
-  await latha.db.update('roles', publicRole.id, { permissions: [permission.id] })
+  const publicRole = (await kon10.db.find('roles', { where: { name: 'public' }, limit: 1 }))[0]!
+  await kon10.db.update('roles', publicRole.id, { permissions: [permission.id] })
 
   const list = await get('/api/v1/test-content/posts?where[featured]=true&pageSize=1')
   assert.equal(list.status, 200)
@@ -230,9 +230,9 @@ test('granting the Public role a read opens anonymous access', async () => {
 })
 
 test('the delivery constraint hides drafts even from privileged keys', async () => {
-  const latha = await getRuntime(config)
-  const adminRole = (await latha.db.find('roles', { where: { name: 'admin' }, limit: 1 }))[0]!
-  const { token } = await createApiKey(latha, { name: 'drafts', roles: [adminRole.id] })
+  const kon10 = await getRuntime(config)
+  const adminRole = (await kon10.db.find('roles', { where: { name: 'admin' }, limit: 1 }))[0]!
+  const { token } = await createApiKey(kon10, { name: 'drafts', roles: [adminRole.id] })
   const auth = { authorization: `Bearer ${token}` }
 
   const list = await get('/api/v1/test-content/articles', auth)
@@ -249,7 +249,7 @@ test('the delivery constraint hides drafts even from privileged keys', async () 
   assert.deepEqual(wbody.data.map((d) => d.title), ['Live'])
 
   // Direct fetch of a draft id 404s.
-  const draft = (await latha.db.find('articles', { where: { status: 'draft' } }))[0]!
+  const draft = (await kon10.db.find('articles', { where: { status: 'draft' } }))[0]!
   assert.equal((await get(`/api/v1/test-content/articles/${draft.id}`, auth)).status, 404)
 })
 
@@ -263,9 +263,9 @@ test('unknown sort/filter fields are 400s, not silent full scans', async () => {
 })
 
 test('pagination reflects hasMore across a multi-page list', async () => {
-  const latha = await getRuntime(config)
-  const adminRole = (await latha.db.find('roles', { where: { name: 'admin' }, limit: 1 }))[0]!
-  const { token } = await createApiKey(latha, { name: 'paging', roles: [adminRole.id] })
+  const kon10 = await getRuntime(config)
+  const adminRole = (await kon10.db.find('roles', { where: { name: 'admin' }, limit: 1 }))[0]!
+  const { token } = await createApiKey(kon10, { name: 'paging', roles: [adminRole.id] })
 
   const page1 = await get('/api/v1/test-content/posts?page=1&pageSize=1', {
     authorization: `Bearer ${token}`,

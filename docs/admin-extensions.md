@@ -1,6 +1,6 @@
 # Customizing the Admin UI
 
-LathaCMS ships a config-driven admin, but every project eventually needs to bolt
+Kon10 ships a config-driven admin, but every project eventually needs to bolt
 something onto it — a banner, an extra page, a tweak to a form. The **admin
 extension system** gives devs a structured set of *places* to attach custom
 React components, in the spirit of Medusa's admin injection zones.
@@ -24,25 +24,25 @@ Two authoring styles, one underlying registry.
 
 ### File convention (recommended)
 
-The `lathaStart()` Vite plugin scans `src/admin/` and assembles everything into a
-single virtual module, `virtual:latha/admin-extensions`. Each file exports a
+The `kon10Start()` Vite plugin scans `src/admin/` and assembles everything into a
+single virtual module, `virtual:kon10/admin-extensions`. Each file exports a
 **default component** plus a **`config`** declared with a `define*Config` helper.
 Wire the collected object into the provider once:
 
 ```tsx
 // src/routes/__root.tsx
-/// <reference types="@latha/start/virtual" />
-import { LathaProvider } from '@latha/start'
-import { adminExtensions } from 'virtual:latha/admin-extensions'
+/// <reference types="@kon10/start/virtual" />
+import { Kon10Provider } from '@kon10/start'
+import { adminExtensions } from 'virtual:kon10/admin-extensions'
 
-<LathaProvider client={latha} extensions={adminExtensions}>
+<Kon10Provider client={kon10} extensions={adminExtensions}>
   <Outlet />
-</LathaProvider>
+</Kon10Provider>
 ```
 
-This mirrors how `lathaStart()` already injects the `/login` and `/admin/$`
+This mirrors how `kon10Start()` already injects the `/login` and `/admin/$`
 routes: convention + Vite plugin, with an explicit fallback. Disable or relocate
-the scan with `lathaStart({ admin: false })` or `lathaStart({ admin: { dir: 'src/cms' } })`.
+the scan with `kon10Start({ admin: false })` or `kon10Start({ admin: { dir: 'src/cms' } })`.
 
 ### Explicit (no magic)
 
@@ -50,16 +50,16 @@ The engine is just a registry, so you can skip the convention entirely and build
 the object by hand:
 
 ```tsx
-import { defineAdminExtensions } from '@latha/start'
+import { defineAdminExtensions } from '@kon10/start'
 import HelpButton from './HelpButton'
 
 export const extensions = defineAdminExtensions({
   widgets: [{ zone: 'shell.topbar.start', Component: HelpButton }],
-  nav: [{ label: 'Docs', href: 'https://latha.dev', external: true }],
+  nav: [{ label: 'Docs', href: 'https://kon10.dev', external: true }],
 })
 ```
 
-Both produce an `AdminExtensions` object you pass to `<LathaProvider extensions={…}>`.
+Both produce an `AdminExtensions` object you pass to `<Kon10Provider extensions={…}>`.
 
 ---
 
@@ -70,7 +70,7 @@ spot renders every widget for the zone in `order`. Empty zones emit no markup.
 
 ```tsx
 // src/admin/widgets/topbar-help.tsx
-import { defineWidgetConfig, type WidgetContext } from '@latha/start'
+import { defineWidgetConfig, type WidgetContext } from '@kon10/start'
 
 export const config = defineWidgetConfig({ zone: 'shell.topbar.start' })
 
@@ -109,7 +109,7 @@ export default function PostTips({ entity, recordId }: WidgetContext) {
 
 ```tsx
 // src/admin/pages/analytics.tsx
-import { definePageConfig, type PageComponentProps } from '@latha/start'
+import { definePageConfig, type PageComponentProps } from '@kon10/start'
 
 export const config = definePageConfig({
   path: 'analytics',          // → /admin/analytics
@@ -133,14 +133,14 @@ Settings pages are identical but use `defineSettingsConfig` and mount under
 
 ```tsx
 // src/admin/dashboard/welcome.tsx
-import { defineDashboardWidgetConfig } from '@latha/start'
+import { defineDashboardWidgetConfig } from '@kon10/start'
 export const config = defineDashboardWidgetConfig({ span: 2 }) // 1..4 grid columns
 export default function Welcome() { return <Card>…</Card> }
 ```
 
 ```tsx
 // src/admin/fields/color.tsx — override how a field type renders in forms
-import { defineFieldConfig, type FieldControlProps } from '@latha/start'
+import { defineFieldConfig, type FieldControlProps } from '@kon10/start'
 export const config = defineFieldConfig({ type: 'text' })
 export default function ColorField({ value, onChange }: FieldControlProps) {
   return <input type="color" value={String(value ?? '')} onChange={(e) => onChange(e.target.value)} />
@@ -193,11 +193,11 @@ its section a collapse toggle. Custom pages are ungrouped unless they declare a
 
 ## Architecture notes
 
-- The engine lives in `@latha/admin-sdk` (`src/extensions/`): the `AdminZone`
+- The engine lives in `@kon10/admin-sdk` (`src/extensions/`): the `AdminZone`
   catalogue, the `ExtensionRegistry`, the `<Slot>` primitive, and React context.
   It is component-aware and therefore **client-only** — extensions never travel
   over RPC.
-- `@latha/start` wires the registry through `LathaProvider`, merges custom pages
+- `@kon10/start` wires the registry through `Kon10Provider`, merges custom pages
   / nav into the sidebar, routes custom + settings pages on the admin splat, and
   applies field-renderer overrides.
 - Adding a new zone is a two-line change: add the literal to `ADMIN_ZONES`, then

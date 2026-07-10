@@ -8,8 +8,7 @@
  * subfields stay absent rather than persisting `''`.
  *
  * Errors surface only at the group level — react-hook-form nests subfield
- * errors under `group.child`, but the Controller sits at `group`. Acceptable
- * while group subfields are optional; per-child error plumbing is a follow-up.
+ * errors under `group.child`, but the Controller sits at `group`.
  *
  * Children pair into a two-up row wherever consecutive ones carry
  * `meta.width: 'half'` (see `layoutRows`) — the same rule `EntityForm` uses
@@ -28,9 +27,9 @@
  * tool for a click-driven expand/collapse indicator.
  */
 import { useState } from 'react'
-import { Card, CardContent, Separator, cn } from '@latha/ui'
+import { Card, CardContent, Separator, cn } from '@kon10/ui'
 import { ChevronDown } from 'lucide-react'
-import type { Field } from '@latha/core'
+import type { Field } from '@kon10/core'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 import { getFieldRenderer } from '../registry.js'

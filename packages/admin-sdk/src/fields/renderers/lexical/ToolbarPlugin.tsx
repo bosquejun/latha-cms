@@ -23,7 +23,7 @@ import {
 } from '@lexical/list'
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link'
 import { $findMatchingParent, $insertNodeToNearestRoot } from '@lexical/utils'
-import { Button, Separator, Spinner, toast } from '@latha/ui'
+import { Button, Separator, Spinner, toast } from '@kon10/ui'
 import {
   Bold,
   Code,
@@ -41,13 +41,13 @@ import {
   Underline,
   Undo2,
 } from 'lucide-react'
-import { useLatha } from '../../../client/index.js'
+import { useKon10 } from '../../../client/index.js'
 import { $createImageNode } from './ImageNode.js'
 import { normalizeUrl } from './linkUtils.js'
 
 export function ToolbarPlugin() {
   const [editor] = useLexicalComposerContext()
-  const { client } = useLatha()
+  const { client } = useKon10()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isBold, setIsBold] = useState(false)
   const [isItalic, setIsItalic] = useState(false)
@@ -153,7 +153,6 @@ export function ToolbarPlugin() {
 
   return (
     <div className="flex flex-wrap items-center gap-0.5 border-b border-input px-2 py-1.5">
-      {/* History */}
       <Button
         type="button"
         size="icon"
@@ -177,7 +176,6 @@ export function ToolbarPlugin() {
 
       <Separator orientation="vertical" className="mx-1 h-5" />
 
-      {/* Inline formatting */}
       <Button
         type="button"
         size="icon"
@@ -231,7 +229,6 @@ export function ToolbarPlugin() {
 
       <Separator orientation="vertical" className="mx-1 h-5" />
 
-      {/* Block types */}
       <Button
         type="button"
         size="icon"
@@ -275,7 +272,6 @@ export function ToolbarPlugin() {
 
       <Separator orientation="vertical" className="mx-1 h-5" />
 
-      {/* Lists */}
       <Button
         type="button"
         size="icon"
@@ -311,7 +307,6 @@ export function ToolbarPlugin() {
 
       <Separator orientation="vertical" className="mx-1 h-5" />
 
-      {/* Link & media */}
       <Button
         type="button"
         size="icon"

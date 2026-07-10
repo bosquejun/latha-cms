@@ -36,15 +36,11 @@ export function Slot({ zone, entity, recordId, data, className }: SlotProps) {
 
   // A registered widget may itself render nothing for the current context
   // (e.g. it bails out for entities it doesn't apply to) — `widgets.length`
-  // only reflects registration, not actual output. `contents!` (forced via
-  // Tailwind's important modifier — every caller's `className` also sets
-  // `display` via `flex`/`grid`, which would otherwise win the cascade over
-  // a plain `contents`, per Tailwind's fixed utility ordering rather than
-  // class-list order) keeps this wrapper from ever generating its own box,
-  // so a widget that renders null contributes zero flex items/gap to the
-  // parent layout — exactly as if nothing had been registered for this zone
-  // at all. The caller's layout classes still apply to any widgets that do
-  // render: with no box of its own, this element's children are promoted to
-  // participate directly in the parent's layout instead.
+  // only reflects registration, not actual output. `contents!` (Tailwind's
+  // `!important` beats the `flex`/`grid` display every caller's `className`
+  // sets) keeps this wrapper from generating its own box, so a widget that
+  // renders null contributes nothing to the parent's layout — as if it were
+  // never registered. Widgets that do render have their children promoted
+  // straight into the parent's layout instead.
   return className ? <div className={`contents! ${className}`}>{content}</div> : <>{content}</>
 }

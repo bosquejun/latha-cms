@@ -6,7 +6,7 @@
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { stampFields, text, number, boolean, type Entity } from '@latha/core'
+import { stampFields, text, number, boolean, type Entity } from '@kon10/core'
 import { alterTableSQL, buildTablePlan, undeclaredColumns } from './generator.js'
 
 const entity: Entity = {

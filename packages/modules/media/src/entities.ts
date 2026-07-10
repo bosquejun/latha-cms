@@ -1,4 +1,4 @@
-import { relationship, stampFields, text, number, type Entity, type FieldsRecord } from '@latha/core'
+import { relationship, stampFields, text, number, type Entity, type FieldsRecord } from '@kon10/core'
 
 export const MEDIA_SLUG = 'media'
 
@@ -24,13 +24,12 @@ export const DEFAULT_ALLOWED_MIME_TYPES = [
   'application/pdf',
 ]
 
-/** The media entity plus its stamped upload policy. */
 export type MediaEntity = Entity & { upload: UploadPolicy }
 
 /**
- * Built directly (not via `@latha/content`'s `Collection()`) — media must not
+ * Built directly (not via `@kon10/content`'s `Collection()`) — media must not
  * depend on the content module (lateral module-to-module import), same as
- * `@latha/users` builds its raw `Entity` by hand.
+ * `@kon10/users` builds its raw `Entity` by hand.
  */
 export function buildMediaEntity(policy?: Partial<UploadPolicy>): MediaEntity {
   const fields: FieldsRecord = {

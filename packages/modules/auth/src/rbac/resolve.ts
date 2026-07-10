@@ -12,8 +12,8 @@
  * immediately (the session token only carries the user id).
  */
 
-import type { LathaInstance } from '@latha/core'
-import { cached } from '@latha/cache'
+import type { Kon10Instance } from '@kon10/core'
+import { cached } from '@kon10/cache'
 import { AUTH_CACHE_TTL_SECONDS, roleIdKey, roleNameKey } from '../cache.js'
 import { getCatalog, type RbacCatalog } from './catalog.js'
 import { ROLES_SLUG } from './entities.js'
@@ -44,22 +44,22 @@ function keysFromRole(
 
 /** Load a role document by its unique name. */
 async function roleByName(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   name: string,
 ): Promise<Record<string, unknown> | null> {
-  return cached(latha, roleNameKey(name), AUTH_CACHE_TTL_SECONDS, async () => {
-    const rows = await latha.db.find(ROLES_SLUG, { where: { name }, limit: 1 })
+  return cached(kon10, roleNameKey(name), AUTH_CACHE_TTL_SECONDS, async () => {
+    const rows = await kon10.db.find(ROLES_SLUG, { where: { name }, limit: 1 })
     return rows[0] ?? null
   })
 }
 
 /** The permission keys granted by a role, looked up by name. */
 export async function getRolePermissions(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   name: string,
 ): Promise<string[]> {
-  const role = await roleByName(latha, name)
-  return role ? keysFromRole(getCatalog(latha), role) : []
+  const role = await roleByName(kon10, name)
+  return role ? keysFromRole(getCatalog(kon10), role) : []
 }
 
 /**
@@ -69,16 +69,16 @@ export async function getRolePermissions(
  * API keys carry exactly their roles).
  */
 export async function resolveRoleGrants(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   roleIds: string[],
 ): Promise<ResolvedGrants> {
-  const catalog = getCatalog(latha)
+  const catalog = getCatalog(kon10)
   const roles: string[] = []
   const permissions = new Set<string>()
 
   for (const roleId of roleIds) {
-    const role = await cached(latha, roleIdKey(roleId), AUTH_CACHE_TTL_SECONDS, () =>
-      latha.db.findOne(ROLES_SLUG, roleId),
+    const role = await cached(kon10, roleIdKey(roleId), AUTH_CACHE_TTL_SECONDS, () =>
+      kon10.db.findOne(ROLES_SLUG, roleId),
     )
     if (!role) continue
     if (typeof role.name === 'string') roles.push(role.name)
@@ -90,15 +90,15 @@ export async function resolveRoleGrants(
 
 /** Resolve `{ roles, permissions }` for a logged-in user document. */
 export async function resolveUserPermissions(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   userDoc: Record<string, unknown>,
 ): Promise<ResolvedGrants> {
   const roleIds = Array.isArray(userDoc.roles) ? (userDoc.roles as string[]) : []
-  const { roles, permissions: keys } = await resolveRoleGrants(latha, roleIds)
+  const { roles, permissions: keys } = await resolveRoleGrants(kon10, roleIds)
   const permissions = new Set(keys)
 
   // Every logged-in user implicitly carries the Authenticated baseline.
-  for (const key of await getRolePermissions(latha, AUTHENTICATED_ROLE)) {
+  for (const key of await getRolePermissions(kon10, AUTHENTICATED_ROLE)) {
     permissions.add(key)
   }
   if (!roles.includes(AUTHENTICATED_ROLE)) roles.push(AUTHENTICATED_ROLE)
@@ -115,11 +115,11 @@ export interface PublicPrincipal {
 
 /** Build the principal applied to unauthenticated requests. */
 export async function getPublicPrincipal(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
 ): Promise<PublicPrincipal> {
   return {
     id: '__public__',
     roles: [PUBLIC_ROLE],
-    permissions: await getRolePermissions(latha, PUBLIC_ROLE),
+    permissions: await getRolePermissions(kon10, PUBLIC_ROLE),
   }
 }

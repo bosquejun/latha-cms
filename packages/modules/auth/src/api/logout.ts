@@ -2,7 +2,7 @@
  * `POST auth/logout` — clear the session cookie. Public: logging out never
  * requires already being logged in.
  */
-import type { ModuleRoute, ModuleRouteContext } from '@latha/core'
+import type { ModuleRoute, ModuleRouteContext } from '@kon10/core'
 import { resolveAuthOptions } from '../config.js'
 import { serializeSetCookie } from '../cookie.js'
 

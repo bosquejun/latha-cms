@@ -1,5 +1,5 @@
 /**
- * @latha/core — types, `defineConfig()`, module registry, hook engine,
+ * @kon10/core — types, `defineConfig()`, module registry, hook engine,
  * access evaluator, and the Zod schema builder.
  *
  * This package is the kernel. It has no knowledge of any specific database,
@@ -77,7 +77,7 @@ export {
 export { z } from 'zod'
 
 // Bootstrap
-export { defineConfig, bootstrapLatha } from './bootstrap/index.js'
+export { defineConfig, bootstrapKon10 } from './bootstrap/index.js'
 
 // Operations (local API)
 export * as operations from './operations/index.js'

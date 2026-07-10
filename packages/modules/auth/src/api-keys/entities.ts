@@ -16,8 +16,8 @@ import {
   stampFields,
   text,
   type Entity,
-} from '@latha/core'
-import { invalidate } from '@latha/cache'
+} from '@kon10/core'
+import { invalidate } from '@kon10/cache'
 import { apiKeyHashKey } from '../cache.js'
 import { ROLES_SLUG } from '../rbac/entities.js'
 
@@ -31,7 +31,7 @@ export const apiKeysEntity: Entity = {
     area: 'settings',
     group: 'Access',
     order: 40,
-    // Managed through the API Keys settings page (`@latha/auth/admin`).
+    // Managed through the API Keys settings page (`@kon10/auth/admin`).
     hidden: true,
     useAsTitle: 'name',
     defaultColumns: ['name', 'prefix', 'enabled'],
@@ -41,7 +41,7 @@ export const apiKeysEntity: Entity = {
     name: text({ required: true }),
     // SHA-256 of the full token; the token itself is never stored.
     keyHash: text({ required: true, unique: true, meta: { hidden: true } }),
-    // Identifying head of the token (`latha_Ab12Cd34`), safe to display.
+    // Identifying head of the token (`kon10_Ab12Cd34`), safe to display.
     prefix: text({ required: true }),
     roles: relationship({
       to: ROLES_SLUG,

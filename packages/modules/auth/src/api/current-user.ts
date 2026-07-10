@@ -3,7 +3,7 @@
  * for an anonymous caller. Public: this route *is* how a caller finds out
  * whether it has a session.
  */
-import type { ModuleRoute, ModuleRouteContext } from '@latha/core'
+import type { ModuleRoute, ModuleRouteContext } from '@kon10/core'
 import { getSessionUser } from '../service.js'
 import { resolveAuthOptions } from '../config.js'
 import { toSessionUser } from './session-user.js'

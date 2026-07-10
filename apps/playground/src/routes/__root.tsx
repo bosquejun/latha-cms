@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-/// <reference types="@latha/start/virtual" />
+/// <reference types="@kon10/start/virtual" />
 import {
   HeadContent,
   Outlet,
@@ -7,15 +7,15 @@ import {
   createRootRoute,
 } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
-import { LathaProvider } from '@latha/start'
-import { mergeExtensions } from '@latha/admin-sdk'
-import { adminExtensions as baseExtensions } from 'virtual:latha/admin-extensions'
+import { Kon10Provider } from '@kon10/start'
+import { mergeExtensions } from '@kon10/admin-sdk'
+import { adminExtensions as baseExtensions } from 'virtual:kon10/admin-extensions'
 import { FileTextIcon, FileStackIcon, FolderTreeIcon } from 'lucide-animated'
 import appCss from '../styles.css?url'
 
 // Content-module entity kinds → animated sidebar icons. Lives here (not in
 // admin-sdk or start) because icon choices are an app-level concern: this app
-// uses @latha/content and picks the icons it wants for each kind.
+// uses @kon10/content and picks the icons it wants for each kind.
 const adminExtensions = mergeExtensions([
   baseExtensions,
   { kindIcons: { collection: FileTextIcon, document: FileStackIcon, taxonomy: FolderTreeIcon } },
@@ -26,7 +26,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'LathaCMS Playground' },
+      { title: 'Kon10 Playground' },
     ],
     links: [{ rel: 'stylesheet', href: appCss }],
   }),
@@ -36,9 +36,9 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
-      <LathaProvider basePath="/admin" loginPath="/login" extensions={adminExtensions}>
+      <Kon10Provider basePath="/admin" loginPath="/login" extensions={adminExtensions}>
         <Outlet />
-      </LathaProvider>
+      </Kon10Provider>
     </RootDocument>
   )
 }

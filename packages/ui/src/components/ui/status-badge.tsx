@@ -23,9 +23,9 @@ const STATUS_VARIANT: Record<string, BadgeVariant> = {
 }
 
 /**
- * Semantic Badge color for a status string — the single source of truth shared
- * by `StatusBadge` and other status-aware controls (e.g. the admin segmented
- * status picker). Unrecognized statuses map to `secondary`.
+ * Semantic Badge color for a status string — the single source of truth
+ * shared by `StatusBadge` and other status-aware controls. Unrecognized
+ * statuses map to `secondary`.
  */
 export function statusVariant(status: string): BadgeVariant {
   return STATUS_VARIANT[status.toLowerCase()] ?? 'secondary'

@@ -1,7 +1,7 @@
 {
-  "name": "@latha/core",
+  "name": "@kon10/core",
   "version": "0.0.0",
-  "description": "LathaCMS kernel — types, defineConfig, module registry, hook engine, access evaluator, Zod schema builder.",
+  "description": "Kon10 kernel — types, defineConfig, module registry, hook engine, access evaluator, Zod schema builder.",
   "type": "module",
   "license": "MIT",
   "exports": {

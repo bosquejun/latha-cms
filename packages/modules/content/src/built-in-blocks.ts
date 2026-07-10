@@ -5,24 +5,24 @@
  * field sets by hand. You can mix built-in blocks with custom ones:
  *
  * ```ts
- * import { blocks, heroBlock, ctaBlock, richTextBlock } from '@latha/content'
+ * import { blocks, heroBlock, ctaBlock, richTextBlock } from '@kon10/content'
  *
  * content: blocks({ blocks: [heroBlock, ctaBlock, richTextBlock] })
  * ```
  */
 
-import { z, text, richtext, select, array } from '@latha/core'
-import type { AnyFieldDef, FieldMeta } from '@latha/core'
+import { z, text, richtext, select, array } from '@kon10/core'
+import type { AnyFieldDef, FieldMeta } from '@kon10/core'
 import type { BlockInput } from './builders.js'
 
 /**
  * A reference to a `media` doc, by id. `type: 'media'` is owned by
- * `@latha/media` — this module must not import it (see the separation-of-
+ * `@kon10/media` — this module must not import it (see the separation-of-
  * concerns table in CLAUDE.md), so the field is written as the raw
- * registered-type literal instead of `@latha/media`'s `media()` builder. The
+ * registered-type literal instead of `@kon10/media`'s `media()` builder. The
  * field type registry resolves `'media'` to the real config/data schema and
  * the admin picker resolves it to `MediaField` purely by string discriminant
- * at runtime, so this works as long as the app loads `@latha/media` — the
+ * at runtime, so this works as long as the app loads `@kon10/media` — the
  * cast is needed because `'media'` isn't a known `FieldType` in this
  * package's own type graph.
  */

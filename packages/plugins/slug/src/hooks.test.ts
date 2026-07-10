@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import type { DBAdapter, Doc, LathaInstance } from '@latha/core'
+import type { DBAdapter, Doc, Kon10Instance } from '@kon10/core'
 import {
   createSlugHooks,
   ensureUniqueSlug,
@@ -57,7 +57,7 @@ const hookArgs = {
   principal: null,
   operation: 'create' as const,
   slug: 'posts',
-  cms: {} as unknown as LathaInstance,
+  cms: {} as unknown as Kon10Instance,
 }
 
 test('beforeCreate generates a unique slug from the template', async () => {

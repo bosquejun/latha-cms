@@ -1,5 +1,5 @@
 /**
- * Delivery-API read-through caching: `CacheModule` wired onto a `LathaInstance`
+ * Delivery-API read-through caching: `CacheModule` wired onto a `Kon10Instance`
  * is consulted by `handleDeliveryRequest` for successful (200) reads, scoped
  * per caller identity, and skippable per entity via `entity.api.cache`.
  */
@@ -17,9 +17,9 @@ import {
   type JsonValue,
   type Query,
   type ResolvedConfig,
-} from '@latha/core'
-import { AuthModule, createApiKey } from '@latha/auth'
-import { CacheModule, inMemoryCache } from '@latha/cache'
+} from '@kon10/core'
+import { AuthModule, createApiKey } from '@kon10/auth'
+import { CacheModule, inMemoryCache } from '@kon10/cache'
 import { handleDeliveryRequest } from './api.js'
 import { getRuntime } from './runtime.js'
 import type { ApiResponse } from './envelope.js'
@@ -119,8 +119,8 @@ const hitConfig: ResolvedConfig = defineConfig({
 })
 
 before(async () => {
-  const latha = await getRuntime(hitConfig)
-  await latha.db.create('widget', { name: 'Gadget' })
+  const kon10 = await getRuntime(hitConfig)
+  await kon10.db.create('widget', { name: 'Gadget' })
 })
 
 test('cache miss then hit returns the same body, even after an uncached write', async () => {
@@ -131,8 +131,8 @@ test('cache miss then hit returns the same body, even after an uncached write', 
 
   // Write directly to the db, bypassing the cache — proves staleness within
   // TTL is the expected v1 tradeoff (no invalidation-on-write yet).
-  const latha = await getRuntime(hitConfig)
-  await latha.db.create('widget', { name: 'Widget2' })
+  const kon10 = await getRuntime(hitConfig)
+  await kon10.db.create('widget', { name: 'Widget2' })
 
   const second = await handleDeliveryRequest(hitConfig, new Request('http://cms.test/api/v1/widgets'))
   const secondBody = (await second.json()) as ApiResponse<Doc[]>
@@ -162,13 +162,13 @@ const spyConfig: ResolvedConfig = defineConfig({
 })
 
 test('requests with different Authorization headers get different cache keys', async () => {
-  const latha = await getRuntime(spyConfig)
-  const cache = latha.cache as ReturnType<typeof spyCache>
-  await latha.db.create('identity-widget', { name: 'Gadget' })
+  const kon10 = await getRuntime(spyConfig)
+  const cache = kon10.cache as ReturnType<typeof spyCache>
+  await kon10.db.create('identity-widget', { name: 'Gadget' })
 
-  const adminRole = (await latha.db.find('roles', { where: { name: 'admin' }, limit: 1 }))[0]!
-  const keyA = await createApiKey(latha, { name: 'a', roles: [adminRole.id] })
-  const keyB = await createApiKey(latha, { name: 'b', roles: [adminRole.id] })
+  const adminRole = (await kon10.db.find('roles', { where: { name: 'admin' }, limit: 1 }))[0]!
+  const keyA = await createApiKey(kon10, { name: 'a', roles: [adminRole.id] })
+  const keyB = await createApiKey(kon10, { name: 'b', roles: [adminRole.id] })
 
   const resA = await handleDeliveryRequest(
     spyConfig,
@@ -181,7 +181,7 @@ test('requests with different Authorization headers get different cache keys', a
   assert.equal(resA.status, 200)
   assert.equal(resB.status, 200)
 
-  // Each request also warms @latha/auth's own per-identity caches (the
+  // Each request also warms @kon10/auth's own per-identity caches (the
   // api-key doc, the shared admin role) on the same shared cache instance —
   // by design, but orthogonal to what this test is proving. Only the
   // delivery-cache keys (one per distinct caller identity) are relevant here.
@@ -200,10 +200,10 @@ const optOutConfig: ResolvedConfig = defineConfig({
 })
 
 test('an entity with api.cache: false is never read through or written to the cache', async () => {
-  const latha = await getRuntime(optOutConfig)
-  const cache = latha.cache as ReturnType<typeof spyCache>
-  await latha.db.create('widget', { name: 'Gadget' })
-  await latha.db.create('uncached-widget', { name: 'Sprocket' })
+  const kon10 = await getRuntime(optOutConfig)
+  const cache = kon10.cache as ReturnType<typeof spyCache>
+  await kon10.db.create('widget', { name: 'Gadget' })
+  await kon10.db.create('uncached-widget', { name: 'Sprocket' })
 
   await handleDeliveryRequest(optOutConfig, new Request('http://cms.test/api/v1/widgets/widget'))
   assert.equal(cache.setKeys.length, 1)
@@ -212,7 +212,7 @@ test('an entity with api.cache: false is never read through or written to the ca
     optOutConfig,
     new Request('http://cms.test/api/v1/widgets/uncached-widget'),
   )
-  // Anonymous principal resolution (@latha/auth's getPublicPrincipal) also
+  // Anonymous principal resolution (@kon10/auth's getPublicPrincipal) also
   // reads through the same shared cache instance on every request — that's
   // by design (one cms.cache serves every module), but it means only the
   // delivery-cache keys are relevant to this assertion, not the raw total.

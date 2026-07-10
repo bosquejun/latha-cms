@@ -1,5 +1,5 @@
 /**
- * LathaAdmin — the entire admin UI behind a single catch-all route.
+ * Kon10Admin — the entire admin UI behind a single catch-all route.
  *
  * Mount it at `<basePath>/$` (e.g. `/admin/$`). It guards the session, derives
  * the sidebar/views from the config (via the RPC client), and routes
@@ -32,13 +32,13 @@ import {
   PermissionsProvider,
   AdminNavigateProvider,
   useCan,
-  useLatha,
+  useKon10,
   useAsync,
   type EntityDescriptor,
   type NavItem,
   type NavSection,
-} from '@latha/admin-sdk'
-import { Button, Card, CardHeader, CardTitle, CardDescription, ConfirmDialog, Pagination, toast } from '@latha/ui'
+} from '@kon10/admin-sdk'
+import { Button, Card, CardHeader, CardTitle, CardDescription, ConfirmDialog, Pagination, toast } from '@kon10/ui'
 import {
   Plus,
   Settings,
@@ -50,7 +50,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from 'lucide-animated'
-import type { SidebarIcon } from '@latha/admin-sdk'
+import type { SidebarIcon } from '@kon10/admin-sdk'
 import { UserMenu } from './UserMenu.js'
 
 function RouterLink({ href, className, children, onClick }: SidebarLinkProps) {
@@ -287,8 +287,8 @@ function Centered({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function LathaAdmin() {
-  const { client, basePath, loginPath, extensions } = useLatha()
+export function Kon10Admin() {
+  const { client, basePath, loginPath, extensions } = useKon10()
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const { theme, setTheme } = useTheme()
@@ -330,7 +330,7 @@ export function LathaAdmin() {
         sections={inSettings ? settingsSections : mainSections}
         currentPath={pathname}
         LinkComponent={RouterLink}
-        brand="LathaCMS"
+        brand="Kon10"
         showDashboard={!inSettings}
         sidebarHeader={inSettings ? <SettingsBackHeader basePath={basePath} /> : undefined}
         sidebarFooter={
@@ -425,7 +425,7 @@ const SPAN_CLASS: Record<number, string> = {
 }
 
 function Dashboard({ nav }: { nav: NavSection[] }) {
-  const { client } = useLatha()
+  const { client } = useKon10()
   const { dashboardWidgets, kindIcons } = useExtensions()
   const items = nav.flatMap((section) => section.items)
   return (
@@ -469,7 +469,7 @@ function DashboardWidget({ widget }: { widget: DashboardWidgetExtension }) {
   )
 }
 
-function StatCount({ client, item }: { client: ReturnType<typeof useLatha>['client']; item: NavItem }) {
+function StatCount({ client, item }: { client: ReturnType<typeof useKon10>['client']; item: NavItem }) {
   const count = useAsync(
     () => {
       // The page envelope carries the total — no need to download every row.
@@ -489,7 +489,7 @@ function StatCount({ client, item }: { client: ReturnType<typeof useLatha>['clie
 const LIST_PAGE_SIZE = 25
 
 function ListView({ slug, base, segment }: { slug: string; base: string; segment: string }) {
-  const { client } = useLatha()
+  const { client } = useKon10()
   const can = useCan()
   const ext = useExtensions()
   const [offset, setOffset] = useState(0)
@@ -509,7 +509,7 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
   const total = rows.data?.total ?? 0
   const newHref = `${base}/${segment}/${slug}/new`
   // A module may register a full list-view replacement for this slug (e.g.
-  // @latha/media's thumbnail grid) — falls back to the generic table.
+  // @kon10/media's thumbnail grid) — falls back to the generic table.
   const ListComponent = ext.listRendererFor(slug)?.Component ?? EntityList
   return (
     <>
@@ -587,7 +587,7 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
 }
 
 function CreateView({ slug, base, segment }: { slug: string; base: string; segment: string }) {
-  const { client } = useLatha()
+  const { client } = useKon10()
   const navigate = useNavigate()
   const entity = useAsync(() => client.entity(slug), [slug])
 
@@ -615,7 +615,7 @@ function CreateView({ slug, base, segment }: { slug: string; base: string; segme
 }
 
 function EditView({ slug, id, base, segment }: { slug: string; id: string; base: string; segment: string }) {
-  const { client } = useLatha()
+  const { client } = useKon10()
   const can = useCan()
   const navigate = useNavigate()
   const entity = useAsync(() => client.entity(slug), [slug])
@@ -672,7 +672,7 @@ function EditView({ slug, id, base, segment }: { slug: string; id: string; base:
 }
 
 function GlobalView({ slug }: { slug: string }) {
-  const { client } = useLatha()
+  const { client } = useKon10()
   const entity = useAsync(() => client.entity(slug), [slug])
   const value = useAsync(() => client.getGlobal(slug), [slug])
 
@@ -706,12 +706,10 @@ function SettingsView({
   page?: SettingsPageExtension
   params: string[]
 }) {
-  const { extensions } = useLatha()
+  const { extensions } = useKon10()
 
-  // A specific settings page.
   if (page) return <page.Component path={page.path} params={params} />
 
-  // The settings index — lists registered settings pages.
   const pages = extensions.settings
   return (
     <>
@@ -739,7 +737,7 @@ function SettingsCard({
   page: SettingsPageExtension
   Icon: LucideIcon
 }) {
-  const { basePath } = useLatha()
+  const { basePath } = useKon10()
   return (
     // A plain <a>, not the typed <Link>: `page.path` is a runtime value from
     // extension config, not one of the router's statically-known routes.

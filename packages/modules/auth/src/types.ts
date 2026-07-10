@@ -1,13 +1,13 @@
 /**
  * Auth-owned principal + adapter types.
  *
- * These used to live in `@latha/core`, but the kernel is auth-agnostic: it only
- * knows an opaque `principal`. `@latha/auth` is the module that gives that
+ * These used to live in `@kon10/core`, but the kernel is auth-agnostic: it only
+ * knows an opaque `principal`. `@kon10/auth` is the module that gives that
  * principal a concrete shape (`AuthUser`) and casts to it inside its access
  * functions and the RBAC guard.
  */
 
-/** The authenticated user — the principal `@latha/auth` threads through ops. */
+/** The authenticated user — the principal `@kon10/auth` threads through ops. */
 export interface AuthUser {
   id: string
   email?: string | null

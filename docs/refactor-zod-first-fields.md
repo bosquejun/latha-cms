@@ -5,7 +5,7 @@
 `packages/core/src/types/field.ts` defines TypeScript interfaces (`TextField`, `NumberField`, `TaxonomyField`, `MediaField`, …) and `packages/core/src/schema/builder.ts` contains a hardcoded switch that turns those interfaces into Zod schemas. This is wrong in two ways:
 
 1. **Direction is inverted.** TypeScript interfaces are the source of truth; Zod schemas mirror them. The correct direction is Zod → `z.infer<>` → TypeScript types.
-2. **Core knows about module-specific field types.** `TaxonomyField` belongs to `@latha/content`. `MediaField` belongs to `@latha/media`. Neither belongs in the kernel.
+2. **Core knows about module-specific field types.** `TaxonomyField` belongs to `@kon10/content`. `MediaField` belongs to `@kon10/media`. Neither belongs in the kernel.
 
 ## Goal
 
@@ -19,7 +19,7 @@
 
 ## Architecture
 
-### The Registry Contract (in `@latha/core`)
+### The Registry Contract (in `@kon10/core`)
 
 ```ts
 // packages/core/src/fields/registry.ts
@@ -88,7 +88,7 @@ Modules augment at their own boundary:
 
 ```ts
 // packages/modules/content/src/fields.ts
-import type { BaseFieldConfig } from '@latha/core'
+import type { BaseFieldConfig } from '@kon10/core'
 
 export interface TaxonomyFieldConfig extends BaseFieldConfig {
   type: 'taxonomy'
@@ -96,7 +96,7 @@ export interface TaxonomyFieldConfig extends BaseFieldConfig {
   many?: boolean
 }
 
-declare module '@latha/core' {
+declare module '@kon10/core' {
   interface FieldTypeMap {
     taxonomy: TaxonomyFieldConfig
   }
@@ -153,7 +153,7 @@ The phantom type system (`__out`, `__present`, `Built<>`, `InferDoc`) stays — 
 - `media()` and `taxonomy()` builders are **deleted** from this file
 - Builder option types derive from the Zod config schemas rather than the TS interfaces
 
-### Step 5 — Move `taxonomy` field type to `@latha/content`
+### Step 5 — Move `taxonomy` field type to `@kon10/content`
 
 ```
 packages/modules/content/src/fields/
@@ -163,16 +163,16 @@ packages/modules/content/src/fields/
 
 `ContentModule.onInit` calls the registration. The `taxonomy()` builder moves here too.
 
-### Step 6 — Move `media` field type to `@latha/media`
+### Step 6 — Move `media` field type to `@kon10/media`
 
 Same pattern as taxonomy. `MediaModule.onInit` registers the field type.
 
-### Step 7 — Update `LathaInstance`
+### Step 7 — Update `Kon10Instance`
 
-Add `registerFieldType` to `LathaInstance` so modules can access it via `cms`:
+Add `registerFieldType` to `Kon10Instance` so modules can access it via `cms`:
 
 ```ts
-interface LathaInstance {
+interface Kon10Instance {
   // ...existing...
   registerFieldType(entry: FieldTypeEntry): void
 }

@@ -1,7 +1,7 @@
 {
-  "name": "@latha/start",
+  "name": "@kon10/start",
   "version": "0.0.0",
-  "description": "LathaCMS integration for TanStack Start — runtime, RPC dispatcher, client, and admin UI.",
+  "description": "Kon10 integration for TanStack Start — runtime, RPC dispatcher, client, and admin UI.",
   "type": "module",
   "license": "MIT",
   "exports": {
@@ -71,22 +71,22 @@
     "test": "tsc -p tsconfig.json && node --test 'dist/**/*.test.js'"
   },
   "peerDependencies": {
-    "@latha/admin-sdk": "workspace:*",
-    "@latha/auth": "workspace:*",
-    "@latha/content": "workspace:*",
-    "@latha/core": "workspace:*",
-    "@latha/ui": "workspace:*",
+    "@kon10/admin-sdk": "workspace:*",
+    "@kon10/auth": "workspace:*",
+    "@kon10/content": "workspace:*",
+    "@kon10/core": "workspace:*",
+    "@kon10/ui": "workspace:*",
     "@tanstack/react-router": "^1.168.0",
     "@tanstack/react-start": "^1.168.0",
     "react": "^18 || ^19"
   },
   "devDependencies": {
-    "@latha/admin-sdk": "workspace:*",
-    "@latha/auth": "workspace:*",
-    "@latha/cache": "workspace:*",
-    "@latha/content": "workspace:*",
-    "@latha/core": "workspace:*",
-    "@latha/ui": "workspace:*",
+    "@kon10/admin-sdk": "workspace:*",
+    "@kon10/auth": "workspace:*",
+    "@kon10/cache": "workspace:*",
+    "@kon10/content": "workspace:*",
+    "@kon10/core": "workspace:*",
+    "@kon10/ui": "workspace:*",
     "@tanstack/react-router": "^1.168.0",
     "@tanstack/react-start": "^1.168.0",
     "@tanstack/virtual-file-routes": "^1.162.0",

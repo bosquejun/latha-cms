@@ -2,25 +2,25 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Let a LathaCMS module ship its own admin UI through the same folder convention an app uses, discovered automatically from `latha.config`, and migrate the auth `RolesPermissions` screen out of `@latha/start` as the first consumer.
+**Goal:** Let a Kon10 module ship its own admin UI through the same folder convention an app uses, discovered automatically from `kon10.config`, and migrate the auth `RolesPermissions` screen out of `@kon10/start` as the first consumer.
 
-**Architecture:** A module declares a serializable client-entrypoint string (`admin.ui`) on its server `Module` object. The `@latha/start` Vite plugin evaluates `latha.config` at build time, reads those strings, and statically imports each module's `./admin` barrel — merging module-contributed extensions with the app's own `src/admin/` folder (app wins on conflict) into the existing `AdminExtensions` registry. A new shared `collectAdminExtensions` helper in `@latha/admin-sdk` holds the glob-assembly logic so apps, module barrels, and the plugin all share one implementation.
+**Architecture:** A module declares a serializable client-entrypoint string (`admin.ui`) on its server `Module` object. The `@kon10/start` Vite plugin evaluates `kon10.config` at build time, reads those strings, and statically imports each module's `./admin` barrel — merging module-contributed extensions with the app's own `src/admin/` folder (app wins on conflict) into the existing `AdminExtensions` registry. A new shared `collectAdminExtensions` helper in `@kon10/admin-sdk` holds the glob-assembly logic so apps, module barrels, and the plugin all share one implementation.
 
 **Tech Stack:** TypeScript (NodeNext), React 19, TanStack Start + Vite, pnpm workspaces, `node:test`.
 
 ## Global Constraints
 
-- `@latha/start/src` must contain **no** auth-domain code — no references to `roles`/`scopes`/`permissions`/`admin:access`/superadmin matrix logic. (Verified by grep in the final task.)
-- `@latha/auth`'s **main** entry (`dist/index.js`) must stay server-only: it imports only `@latha/core` and Node built-ins, never React / `@latha/ui` / `@latha/admin-sdk` / `@latha/start`. Client deps live solely behind the `./admin` subpath.
-- `RelationshipField.tsx` stays in `@latha/start` (generic core field renderer). Do not move it.
-- Module admin UI imports framework symbols only from **public** entrypoints (`@latha/start`, `@latha/admin-sdk`, `@latha/ui`), never start-internal `../context.js` / `../hooks.js`.
-- The server route keeps reaching the config through the existing `virtual:latha/config` re-export — do not change that path.
+- `@kon10/start/src` must contain **no** auth-domain code — no references to `roles`/`scopes`/`permissions`/`admin:access`/superadmin matrix logic. (Verified by grep in the final task.)
+- `@kon10/auth`'s **main** entry (`dist/index.js`) must stay server-only: it imports only `@kon10/core` and Node built-ins, never React / `@kon10/ui` / `@kon10/admin-sdk` / `@kon10/start`. Client deps live solely behind the `./admin` subpath.
+- `RelationshipField.tsx` stays in `@kon10/start` (generic core field renderer). Do not move it.
+- Module admin UI imports framework symbols only from **public** entrypoints (`@kon10/start`, `@kon10/admin-sdk`, `@kon10/ui`), never start-internal `../context.js` / `../hooks.js`.
+- The server route keeps reaching the config through the existing `virtual:kon10/config` re-export — do not change that path.
 - Build-time config evaluation reads `modules[].admin.ui` only; it must never bootstrap an instance or run `onInit`/`onReady`/`seed`.
 - TDD, DRY, YAGNI, frequent commits. Run `pnpm -w typecheck` before any "done" claim.
 
 ---
 
-### Task 1: `collectAdminExtensions` + `mergeExtensions` in `@latha/admin-sdk`
+### Task 1: `collectAdminExtensions` + `mergeExtensions` in `@kon10/admin-sdk`
 
 Extract the glob-assembly logic (currently string-templated inside the Start Vite plugin) into a shared, unit-tested helper, plus an app-over-module merge helper.
 
@@ -85,7 +85,7 @@ test('mergeExtensions concatenates distinct keys', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pnpm --filter @latha/admin-sdk exec tsc -p tsconfig.json && node --test packages/admin-sdk/dist/extensions/collect.test.js`
+Run: `pnpm --filter @kon10/admin-sdk exec tsc -p tsconfig.json && node --test packages/admin-sdk/dist/extensions/collect.test.js`
 Expected: FAIL — `collect.js` does not exist / `collectAdminExtensions is not a function`.
 
 - [ ] **Step 3: Write minimal implementation**
@@ -191,7 +191,7 @@ export {
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pnpm --filter @latha/admin-sdk exec tsc -p tsconfig.json && node --test packages/admin-sdk/dist/extensions/collect.test.js`
+Run: `pnpm --filter @kon10/admin-sdk exec tsc -p tsconfig.json && node --test packages/admin-sdk/dist/extensions/collect.test.js`
 Expected: PASS (3 tests).
 
 - [ ] **Step 5: Commit**
@@ -203,7 +203,7 @@ git commit -m "feat(admin-sdk): shared collectAdminExtensions + mergeExtensions"
 
 ---
 
-### Task 2: Add `ui` to `ModuleAdminConfig` in `@latha/core`
+### Task 2: Add `ui` to `ModuleAdminConfig` in `@kon10/core`
 
 The only core change: a serializable string pointer to a module's admin barrel.
 
@@ -223,14 +223,14 @@ import assert from 'node:assert/strict'
 import type { Module } from './config.js'
 
 test('Module.admin accepts a ui specifier string', () => {
-  const m: Module = { name: 'auth', admin: { ui: '@latha/auth/admin' } }
-  assert.equal(m.admin?.ui, '@latha/auth/admin')
+  const m: Module = { name: 'auth', admin: { ui: '@kon10/auth/admin' } }
+  assert.equal(m.admin?.ui, '@kon10/auth/admin')
 })
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pnpm --filter @latha/core exec tsc -p tsconfig.json --noEmit`
+Run: `pnpm --filter @kon10/core exec tsc -p tsconfig.json --noEmit`
 Expected: FAIL — TS2353 "Object literal may only specify known properties, and 'ui' does not exist in type 'ModuleAdminConfig'".
 
 - [ ] **Step 3: Write minimal implementation**
@@ -242,7 +242,7 @@ export interface ModuleAdminConfig {
   nav?: ModuleNavConfig
   /**
    * Bare import specifier for this module's admin-UI barrel (e.g.
-   * '@latha/auth/admin'). The Start Vite plugin statically imports and merges
+   * '@kon10/auth/admin'). The Start Vite plugin statically imports and merges
    * it into the admin extension registry at build time. A serializable string —
    * never a component. Omit for backend-only modules.
    */
@@ -252,7 +252,7 @@ export interface ModuleAdminConfig {
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pnpm --filter @latha/core exec tsc -p tsconfig.json && node --test packages/core/dist/types/config.admin-ui.test.js`
+Run: `pnpm --filter @kon10/core exec tsc -p tsconfig.json && node --test packages/core/dist/types/config.admin-ui.test.js`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -264,9 +264,9 @@ git commit -m "feat(core): Module.admin.ui specifier for module admin-UI barrels
 
 ---
 
-### Task 3: Export `useAsync` from `@latha/start` public surface
+### Task 3: Export `useAsync` from `@kon10/start` public surface
 
-Module UI needs `useAsync` from a public entrypoint. `JsonDoc` and `useLatha` are already public; this adds `useAsync`.
+Module UI needs `useAsync` from a public entrypoint. `JsonDoc` and `useKon10` are already public; this adds `useAsync`.
 
 **Files:**
 - Modify: `packages/start/src/index.ts` (add export)
@@ -274,7 +274,7 @@ Module UI needs `useAsync` from a public entrypoint. `JsonDoc` and `useLatha` ar
 
 **Interfaces:**
 - Consumes: `useAsync`, `AsyncState` from `./hooks.js` (existing).
-- Produces: `@latha/start` re-exports `useAsync` and `type AsyncState`.
+- Produces: `@kon10/start` re-exports `useAsync` and `type AsyncState`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -284,14 +284,14 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import * as start from './index.js'
 
-test('@latha/start re-exports useAsync', () => {
+test('@kon10/start re-exports useAsync', () => {
   assert.equal(typeof start.useAsync, 'function')
 })
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pnpm --filter @latha/start exec tsc -p tsconfig.json && node --test packages/start/dist/public-surface.test.js`
+Run: `pnpm --filter @kon10/start exec tsc -p tsconfig.json && node --test packages/start/dist/public-surface.test.js`
 Expected: FAIL — `start.useAsync` is `undefined`.
 
 - [ ] **Step 3: Write minimal implementation**
@@ -303,7 +303,7 @@ export { useAsync, type AsyncState } from './hooks.js'
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pnpm --filter @latha/start exec tsc -p tsconfig.json && node --test packages/start/dist/public-surface.test.js`
+Run: `pnpm --filter @kon10/start exec tsc -p tsconfig.json && node --test packages/start/dist/public-surface.test.js`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -317,7 +317,7 @@ git commit -m "feat(start): export useAsync from the public surface for module U
 
 ### Task 4: Create the auth admin-UI folder + barrel + `./admin` export
 
-Move `RolesPermissions` into `@latha/auth`'s new client folder, register it as a settings extension, expose `@latha/auth/admin`, and keep the server entry React-free via a separate client build.
+Move `RolesPermissions` into `@kon10/auth`'s new client folder, register it as a settings extension, expose `@kon10/auth/admin`, and keep the server entry React-free via a separate client build.
 
 **Files:**
 - Create: `packages/modules/auth/src/admin/settings/roles-permissions.tsx` (migrated from `packages/start/src/settings/RolesPermissions.tsx`)
@@ -328,28 +328,28 @@ Move `RolesPermissions` into `@latha/auth`'s new client folder, register it as a
 - Modify: `packages/modules/auth/src/module.ts` (add `admin.ui`)
 
 **Interfaces:**
-- Consumes: `useLatha`, `useAsync`, `type JsonDoc` from `@latha/start`; `PageHeader`, `defineSettingsConfig`, `collectAdminExtensions` from `@latha/admin-sdk`; UI primitives from `@latha/ui`; icons from `lucide-react`.
-- Produces: `@latha/auth/admin` default-exports nothing; named-exports `adminExtensions: AdminExtensions`. The settings file default-exports the `RolesPermissions` component and named-exports `config` (a `SettingsPageConfig` via `defineSettingsConfig`).
+- Consumes: `useKon10`, `useAsync`, `type JsonDoc` from `@kon10/start`; `PageHeader`, `defineSettingsConfig`, `collectAdminExtensions` from `@kon10/admin-sdk`; UI primitives from `@kon10/ui`; icons from `lucide-react`.
+- Produces: `@kon10/auth/admin` default-exports nothing; named-exports `adminExtensions: AdminExtensions`. The settings file default-exports the `RolesPermissions` component and named-exports `config` (a `SettingsPageConfig` via `defineSettingsConfig`).
 
 - [ ] **Step 1: Create the migrated settings component**
 
 Copy the full body of `packages/start/src/settings/RolesPermissions.tsx` into `packages/modules/auth/src/admin/settings/roles-permissions.tsx` with these exact changes:
-- Update the file header comment to note it lives in `@latha/auth` and is registered as a settings extension.
+- Update the file header comment to note it lives in `@kon10/auth` and is registered as a settings extension.
 - Replace the two start-internal imports:
 
 ```ts
 // REMOVE:
-//   import { useLatha } from '../context.js'
+//   import { useKon10 } from '../context.js'
 //   import { useAsync } from '../hooks.js'
 //   import type { JsonDoc } from '../rpc.js'
 // ADD:
-import { useLatha, useAsync, type JsonDoc } from '@latha/start'
+import { useKon10, useAsync, type JsonDoc } from '@kon10/start'
 ```
 
-- Keep `import { PageHeader } from '@latha/admin-sdk'` but add the config helper:
+- Keep `import { PageHeader } from '@kon10/admin-sdk'` but add the config helper:
 
 ```ts
-import { PageHeader, defineSettingsConfig } from '@latha/admin-sdk'
+import { PageHeader, defineSettingsConfig } from '@kon10/admin-sdk'
 import { ChevronDown, Plus, ShieldCheck, Trash2 } from 'lucide-react'
 ```
 
@@ -364,21 +364,21 @@ export const config = defineSettingsConfig({
 })
 ```
 
-- Everything else (the matrix logic, `ToggleRow`, the `@latha/ui` imports) is copied verbatim.
+- Everything else (the matrix logic, `ToggleRow`, the `@kon10/ui` imports) is copied verbatim.
 
 - [ ] **Step 2: Create the barrel**
 
 ```ts
 // packages/modules/auth/src/admin/index.ts
 /**
- * @latha/auth/admin — the auth module's admin-UI barrel.
+ * @kon10/auth/admin — the auth module's admin-UI barrel.
  *
  * Collects this module's `src/admin/**` convention folders (same shape an app
  * uses under its own `src/admin/`) into a single `AdminExtensions`, which the
- * Start Vite plugin merges into the admin registry when `@latha/auth` is present
- * in `latha.config`. Client-only — never imported by the server entry.
+ * Start Vite plugin merges into the admin registry when `@kon10/auth` is present
+ * in `kon10.config`. Client-only — never imported by the server entry.
  */
-import { collectAdminExtensions, type AdminExtensions } from '@latha/admin-sdk'
+import { collectAdminExtensions, type AdminExtensions } from '@kon10/admin-sdk'
 
 export const adminExtensions: AdminExtensions = collectAdminExtensions({
   widgets: import.meta.glob('./widgets/**/*.{tsx,jsx,ts,js}', { eager: true }),
@@ -393,7 +393,7 @@ export const adminExtensions: AdminExtensions = collectAdminExtensions({
 
 ```ts
 // packages/modules/auth/src/module.ts — update the admin field in the returned Module
-    admin: { nav: { area: 'settings', label: 'Access', order: 90 }, ui: '@latha/auth/admin' },
+    admin: { nav: { area: 'settings', label: 'Access', order: 90 }, ui: '@kon10/auth/admin' },
 ```
 
 - [ ] **Step 4: Split the TypeScript builds (server stays React-free)**
@@ -450,9 +450,9 @@ Create `packages/modules/auth/tsconfig.admin.json` for the client build:
 ```jsonc
 // packages/modules/auth/package.json
 {
-  "name": "@latha/auth",
+  "name": "@kon10/auth",
   "version": "0.0.0",
-  "description": "LathaCMS auth — session-based authentication, password hashing, AuthModule, and admin UI.",
+  "description": "Kon10 auth — session-based authentication, password hashing, AuthModule, and admin UI.",
   "type": "module",
   "license": "MIT",
   "exports": {
@@ -477,25 +477,25 @@ Create `packages/modules/auth/tsconfig.admin.json` for the client build:
     "test": "tsc -p tsconfig.json && node --test dist/"
   },
   "peerDependencies": {
-    "@latha/core": "workspace:*",
-    "@latha/admin-sdk": "workspace:*",
-    "@latha/start": "workspace:*",
-    "@latha/ui": "workspace:*",
+    "@kon10/core": "workspace:*",
+    "@kon10/admin-sdk": "workspace:*",
+    "@kon10/start": "workspace:*",
+    "@kon10/ui": "workspace:*",
     "react": "^18 || ^19",
     "lucide-react": "^0.469.0"
   },
   "peerDependenciesMeta": {
-    "@latha/admin-sdk": { "optional": true },
-    "@latha/start": { "optional": true },
-    "@latha/ui": { "optional": true },
+    "@kon10/admin-sdk": { "optional": true },
+    "@kon10/start": { "optional": true },
+    "@kon10/ui": { "optional": true },
     "react": { "optional": true },
     "lucide-react": { "optional": true }
   },
   "devDependencies": {
-    "@latha/core": "workspace:*",
-    "@latha/admin-sdk": "workspace:*",
-    "@latha/start": "workspace:*",
-    "@latha/ui": "workspace:*",
+    "@kon10/core": "workspace:*",
+    "@kon10/admin-sdk": "workspace:*",
+    "@kon10/start": "workspace:*",
+    "@kon10/ui": "workspace:*",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "react": "^19.0.0",
@@ -505,38 +505,38 @@ Create `packages/modules/auth/tsconfig.admin.json` for the client build:
 }
 ```
 
-> The client deps are `optional` peers so backend-only consumers of `@latha/auth` (server entry) install nothing extra; only apps that pull `@latha/auth/admin` provide them (they already do via `@latha/start`).
+> The client deps are `optional` peers so backend-only consumers of `@kon10/auth` (server entry) install nothing extra; only apps that pull `@kon10/auth/admin` provide them (they already do via `@kon10/start`).
 
 - [ ] **Step 6: Install + build the package**
 
 Run: `pnpm install`
-Then: `pnpm --filter @latha/auth build`
-Expected: both `tsc` invocations succeed; `packages/modules/auth/dist/admin/index.js` and `dist/admin/settings/roles-permissions.js` exist; `dist/index.js` (server) still imports only `@latha/core` (verify next step).
+Then: `pnpm --filter @kon10/auth build`
+Expected: both `tsc` invocations succeed; `packages/modules/auth/dist/admin/index.js` and `dist/admin/settings/roles-permissions.js` exist; `dist/index.js` (server) still imports only `@kon10/core` (verify next step).
 
 - [ ] **Step 7: Verify server entry stayed React-free**
 
-Run: `grep -REl "react|@latha/ui|@latha/admin-sdk|@latha/start" packages/modules/auth/dist/index.js packages/modules/auth/dist/module.js packages/modules/auth/dist/rbac 2>/dev/null || echo CLEAN`
+Run: `grep -REl "react|@kon10/ui|@kon10/admin-sdk|@kon10/start" packages/modules/auth/dist/index.js packages/modules/auth/dist/module.js packages/modules/auth/dist/rbac 2>/dev/null || echo CLEAN`
 Expected: `CLEAN` (no client imports leaked into the server build).
 
 - [ ] **Step 8: Commit**
 
 ```bash
 git add packages/modules/auth/src/admin packages/modules/auth/tsconfig.json packages/modules/auth/tsconfig.admin.json packages/modules/auth/package.json packages/modules/auth/src/module.ts pnpm-lock.yaml
-git commit -m "feat(auth): ship RolesPermissions as @latha/auth/admin module UI"
+git commit -m "feat(auth): ship RolesPermissions as @kon10/auth/admin module UI"
 ```
 
 ---
 
 ### Task 5: Extend the Start Vite plugin to discover + merge module UI
 
-Evaluate `latha.config` at build, collect `modules[].admin.ui` specifiers, and generate `virtual:latha/admin-extensions` that statically imports each module barrel and merges it with the app's own `src/admin/` glob — via the shared helpers from Task 1.
+Evaluate `kon10.config` at build, collect `modules[].admin.ui` specifiers, and generate `virtual:kon10/admin-extensions` that statically imports each module barrel and merges it with the app's own `src/admin/` glob — via the shared helpers from Task 1.
 
 **Files:**
 - Modify: `packages/start/src/vite.ts` (`adminExtensionsPlugin`, `buildModuleSource`)
 - Test: `packages/start/src/vite.admin-extensions.test.ts`
 
 **Interfaces:**
-- Consumes: `collectAdminExtensions`, `mergeExtensions` from `@latha/admin-sdk` (referenced inside the generated module source, not imported by the plugin itself); a function to read module UI specifiers from the config.
+- Consumes: `collectAdminExtensions`, `mergeExtensions` from `@kon10/admin-sdk` (referenced inside the generated module source, not imported by the plugin itself); a function to read module UI specifiers from the config.
 - Produces:
   - `async function readModuleUiSpecifiers(load: (id: string) => Promise<unknown>, configPath: string): Promise<string[]>` — loads the config module, reads `default.modules[].admin?.ui`, returns the de-duped string list (order preserved).
   - Updated `adminExtensionsPlugin(dir, configPath)` signature; updated `buildModuleSource(base, specifiers)` that emits the merged virtual module.
@@ -554,19 +554,19 @@ test('readModuleUiSpecifiers extracts and de-dupes module admin.ui strings', asy
     default: {
       modules: [
         { name: 'users' },
-        { name: 'auth', admin: { ui: '@latha/auth/admin' } },
-        { name: 'auth2', admin: { ui: '@latha/auth/admin' } }, // dup
+        { name: 'auth', admin: { ui: '@kon10/auth/admin' } },
+        { name: 'auth2', admin: { ui: '@kon10/auth/admin' } }, // dup
         { name: 'content', admin: { nav: { area: 'main' } } }, // no ui
       ],
     },
   })
-  const specs = await readModuleUiSpecifiers(fakeLoad, 'virtual:latha/config')
-  assert.deepEqual(specs, ['@latha/auth/admin'])
+  const specs = await readModuleUiSpecifiers(fakeLoad, 'virtual:kon10/config')
+  assert.deepEqual(specs, ['@kon10/auth/admin'])
 })
 
 test('buildModuleSource imports each specifier and merges with the app glob', () => {
-  const src = buildModuleSource('/src/admin', ['@latha/auth/admin'])
-  assert.match(src, /from '@latha\/auth\/admin'/)
+  const src = buildModuleSource('/src/admin', ['@kon10/auth/admin'])
+  assert.match(src, /from '@kon10\/auth\/admin'/)
   assert.match(src, /import\.meta\.glob\('\/src\/admin\/settings/)
   assert.match(src, /mergeExtensions/)
   assert.match(src, /collectAdminExtensions/)
@@ -576,7 +576,7 @@ test('buildModuleSource imports each specifier and merges with the app glob', ()
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pnpm --filter @latha/start exec tsc -p tsconfig.json && node --test packages/start/dist/vite.admin-extensions.test.js`
+Run: `pnpm --filter @kon10/start exec tsc -p tsconfig.json && node --test packages/start/dist/vite.admin-extensions.test.js`
 Expected: FAIL — `readModuleUiSpecifiers` not exported.
 
 - [ ] **Step 3: Implement in `vite.ts`**
@@ -588,7 +588,7 @@ Add the exported reader:
 interface ModuleLike { admin?: { ui?: string } }
 
 /**
- * Load the app's `latha.config` and read each module's `admin.ui` specifier.
+ * Load the app's `kon10.config` and read each module's `admin.ui` specifier.
  * Reads static descriptor strings only — never bootstraps an instance. `load`
  * is Vite's SSR module loader (`server.ssrLoadModule`) at serve time, or a
  * direct `import()` wrapper at build time.
@@ -620,7 +620,7 @@ function buildModuleSource(base: string, specifiers: string[]): string {
   const moduleList = specifiers.map((_, i) => `mod${i}`).join(', ')
 
   return `
-import { collectAdminExtensions, mergeExtensions } from '@latha/admin-sdk'
+import { collectAdminExtensions, mergeExtensions } from '@kon10/admin-sdk'
 ${moduleImports}
 
 const appExtensions = collectAdminExtensions({
@@ -646,7 +646,7 @@ function adminExtensionsPlugin(dir: string, configPath: string): VitePluginLike 
   let server: { ssrLoadModule: (id: string) => Promise<unknown> } | undefined
 
   return {
-    name: 'latha:admin-extensions',
+    name: 'kon10:admin-extensions',
     // Vite calls configureServer with the dev server; cache it for SSR loads.
     // (Add configureServer to VitePluginLike — see Step 4.)
     configureServer(s: { ssrLoadModule: (id: string) => Promise<unknown> }) {
@@ -672,10 +672,10 @@ function adminExtensionsPlugin(dir: string, configPath: string): VitePluginLike 
 }
 ```
 
-In `lathaStart()`, update the call site and pass `configPath`:
+In `kon10Start()`, update the call site and pass `configPath`:
 
 ```ts
-// in lathaStart(), where adminExtensionsPlugin is pushed:
+// in kon10Start(), where adminExtensionsPlugin is pushed:
     extra.push(adminExtensionsPlugin(options.admin?.dir ?? 'src/admin', configPath))
 ```
 
@@ -699,7 +699,7 @@ interface VitePluginLike {
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `pnpm --filter @latha/start exec tsc -p tsconfig.json && node --test packages/start/dist/vite.admin-extensions.test.js`
+Run: `pnpm --filter @kon10/start exec tsc -p tsconfig.json && node --test packages/start/dist/vite.admin-extensions.test.js`
 Expected: PASS (2 tests).
 
 - [ ] **Step 6: Commit**
@@ -711,7 +711,7 @@ git commit -m "feat(start): discover + merge module admin UI in the vite plugin"
 
 ---
 
-### Task 6: Remove auth-specific content from `@latha/start`
+### Task 6: Remove auth-specific content from `@kon10/start`
 
 Delete the migrated component and its hardcoded special-case; verify `start/src` is auth-free.
 
@@ -751,7 +751,7 @@ git rm packages/start/src/settings/RolesPermissions.tsx
 
 - [ ] **Step 4: Typecheck + auth-free guard**
 
-Run: `pnpm --filter @latha/start exec tsc -p tsconfig.json --noEmit`
+Run: `pnpm --filter @kon10/start exec tsc -p tsconfig.json --noEmit`
 Expected: PASS (no unresolved `RolesPermissions`).
 
 Run: `grep -REn "admin:access|superadmin|permission matrix|RolesPermissions|scopes" packages/start/src || echo CLEAN`
@@ -768,11 +768,11 @@ git commit -m "refactor(start): drop auth-specific RolesPermissions and its spec
 
 ### Task 7: Full integration — typecheck, build, and verify the playground
 
-Prove the end-to-end path: workspace typechecks, auth's UI is discovered from the playground config, and the roles screen renders from `@latha/auth`.
+Prove the end-to-end path: workspace typechecks, auth's UI is discovered from the playground config, and the roles screen renders from `@kon10/auth`.
 
 **Files:**
-- Modify (only if needed): `apps/playground/latha.config.ts` — no change expected (auth already present).
-- Verify: `apps/playground/src/routes/__root.tsx` still consumes `adminExtensions` from `virtual:latha/admin-extensions` (unchanged).
+- Modify (only if needed): `apps/playground/kon10.config.ts` — no change expected (auth already present).
+- Verify: `apps/playground/src/routes/__root.tsx` still consumes `adminExtensions` from `virtual:kon10/admin-extensions` (unchanged).
 
 **Interfaces:**
 - Consumes: every prior task.
@@ -784,13 +784,13 @@ Expected: PASS across all packages (core, admin-sdk, start, auth incl. `tsconfig
 
 - [ ] **Step 2: Build the affected packages**
 
-Run: `pnpm --filter @latha/core --filter @latha/admin-sdk --filter @latha/auth --filter @latha/start build`
+Run: `pnpm --filter @kon10/core --filter @kon10/admin-sdk --filter @kon10/auth --filter @kon10/start build`
 Expected: PASS; `packages/modules/auth/dist/admin/index.js` present.
 
 - [ ] **Step 3: Build the playground (exercises the vite plugin's config eval + merge)**
 
 Run: `pnpm --filter playground build`
-Expected: PASS. The generated `virtual:latha/admin-extensions` imports `@latha/auth/admin`; build emits no "failed to resolve '@latha/auth/admin'" error.
+Expected: PASS. The generated `virtual:kon10/admin-extensions` imports `@kon10/auth/admin`; build emits no "failed to resolve '@kon10/auth/admin'" error.
 
 - [ ] **Step 4: Manual smoke (dev server)**
 

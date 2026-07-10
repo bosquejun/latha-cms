@@ -1,6 +1,6 @@
 /** Topbar — full-width sticky bar: burger + brand (left), slot (right). */
 import type { ReactNode } from 'react'
-import { Button } from '@latha/ui'
+import { Button } from '@kon10/ui'
 import { Menu } from 'lucide-react'
 
 export interface TopbarProps {
@@ -9,7 +9,7 @@ export interface TopbarProps {
   children?: ReactNode
 }
 
-export function Topbar({ brand = 'LathaCMS', onMenuClick, children }: TopbarProps) {
+export function Topbar({ brand = 'Kon10', onMenuClick, children }: TopbarProps) {
   return (
     <header className="sticky top-0 z-40 flex h-(--header-height) items-center justify-between gap-group border-b border-border bg-background px-sidebar">
       <div className="flex min-w-0 items-center gap-inline">

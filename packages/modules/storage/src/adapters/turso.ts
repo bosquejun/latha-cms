@@ -10,7 +10,7 @@
  */
 
 import { createClient, type Client } from '@libsql/client'
-import type { DBAdapter, Doc, Entity, Query } from '@latha/core'
+import type { DBAdapter, Doc, Entity, Query } from '@kon10/core'
 import {
   alterTableSQL,
   buildTablePlan,
@@ -75,7 +75,7 @@ class TursoAdapter implements DBAdapter {
     }
     for (const name of undeclaredColumns(plan, existing)) {
       console.warn(
-        `[latha] table "${plan.table}" has a column "${name}" that no field declares; it is left untouched.`,
+        `[kon10] table "${plan.table}" has a column "${name}" that no field declares; it is left untouched.`,
       )
     }
   }

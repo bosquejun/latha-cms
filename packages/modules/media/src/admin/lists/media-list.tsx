@@ -1,17 +1,17 @@
 /**
  * Media Library list view — a thumbnail grid instead of the generic table.
  * Registered for the `media` entity slug via `defineEntityListConfig`, so
- * `@latha/admin-sdk`'s `EntityList` (and `@latha/start`'s `ListView`) never
+ * `@kon10/admin-sdk`'s `EntityList` (and `@kon10/start`'s `ListView`) never
  * need to know media exists — the same extension-first pattern as the
  * `media` field renderer.
  */
 import { useState } from 'react'
-import { Button, ConfirmDialog } from '@latha/ui'
+import { Button, ConfirmDialog } from '@kon10/ui'
 import {
   EmptyState,
   defineEntityListConfig,
   type EntityListProps,
-} from '@latha/admin-sdk'
+} from '@kon10/admin-sdk'
 
 export const config = defineEntityListConfig({ slug: 'media' })
 

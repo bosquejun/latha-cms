@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { bootstrapLatha, defineConfig } from '../bootstrap/index.js'
+import { bootstrapKon10, defineConfig } from '../bootstrap/index.js'
 import type { DBAdapter, StorageAdapter } from './adapter.js'
 
 function fakeDb(): DBAdapter {
@@ -20,16 +20,16 @@ test('a module can register a storage adapter via registerStorageAdapter', async
     async upload() { return { url: '/x', key: 'x' } },
     async delete() {},
   }
-  const latha = await bootstrapLatha(
+  const kon10 = await bootstrapKon10(
     defineConfig({
       db: fakeDb(),
       modules: [{ name: 'media', onInit: (cms) => cms.registerStorageAdapter(storage) }],
     }),
   )
-  assert.equal(latha.storage, storage)
+  assert.equal(kon10.storage, storage)
 })
 
 test('storage is undefined when no module registers one', async () => {
-  const latha = await bootstrapLatha(defineConfig({ db: fakeDb(), modules: [] }))
-  assert.equal(latha.storage, undefined)
+  const kon10 = await bootstrapKon10(defineConfig({ db: fakeDb(), modules: [] }))
+  assert.equal(kon10.storage, undefined)
 })

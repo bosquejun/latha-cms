@@ -16,7 +16,7 @@
  * admins refine roles in the UI. An app can override via `AuthModule({ roles })`.
  */
 
-import type { LathaInstance } from '@latha/core'
+import type { Kon10Instance } from '@kon10/core'
 import { getCatalog, type RbacCatalog } from './catalog.js'
 import { ROLES_SLUG } from './entities.js'
 import {
@@ -97,18 +97,18 @@ export function defaultRoles(catalog: RbacCatalog, extraSensitive: string[] = []
 
 /** Seed roles into the DB when the `roles` table is empty. */
 export async function seedRoles(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   roles: RoleSeed[],
 ): Promise<void> {
-  if ((await latha.db.count(ROLES_SLUG)) > 0) return
+  if ((await kon10.db.count(ROLES_SLUG)) > 0) return
 
-  const catalog = getCatalog(latha)
+  const catalog = getCatalog(kon10)
   for (const role of roles) {
     const permissionIds = role.permissions
       .map((key) => catalog?.permissionIdByKey.get(key))
       .filter((id): id is string => typeof id === 'string')
 
-    await latha.db.create(ROLES_SLUG, {
+    await kon10.db.create(ROLES_SLUG, {
       name: role.name,
       label: role.label ?? role.name,
       description: role.description ?? '',
@@ -120,9 +120,9 @@ export async function seedRoles(
 
 /** Look up a role document by its unique name. */
 export async function getRoleByName(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   name: string,
 ): Promise<(Record<string, unknown> & { id: string }) | null> {
-  const rows = await latha.db.find(ROLES_SLUG, { where: { name }, limit: 1 })
+  const rows = await kon10.db.find(ROLES_SLUG, { where: { name }, limit: 1 })
   return rows[0] ?? null
 }

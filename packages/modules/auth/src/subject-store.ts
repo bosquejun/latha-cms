@@ -6,15 +6,15 @@
  * entity (the `users` collection by default), but an app can point it at a
  * different entity (`AuthModule({ usersSlug })`) or supply a wholly custom
  * store (`AuthModule({ subjectStore })`) — e.g. an external identity provider —
- * so `@latha/auth` can run without `@latha/users` at all.
+ * so `@kon10/auth` can run without `@kon10/users` at all.
  *
  * The resolved store is cached per instance (set in `AuthModule.onInit`) so the
- * stateless service helpers can reach it with only a `LathaInstance`.
+ * stateless service helpers can reach it with only a `Kon10Instance`.
  */
 
-import { operations } from '@latha/core'
-import type { LathaInstance } from '@latha/core'
-import { cached } from '@latha/cache'
+import { operations } from '@kon10/core'
+import type { Kon10Instance } from '@kon10/core'
+import { cached } from '@kon10/cache'
 import { AUTH_CACHE_TTL_SECONDS, userIdKey } from './cache.js'
 
 /** The default entity slug a subject store reads from. */
@@ -40,24 +40,24 @@ export interface SubjectStore {
 
 // Run lookups as the system principal (superadmin) so auth's own reads are
 // never blocked by the RBAC guard or per-entity access predicates.
-const systemCtx = (latha: LathaInstance) => ({
-  cms: latha,
+const systemCtx = (kon10: Kon10Instance) => ({
+  cms: kon10,
   principal: { id: '__system__', permissions: ['*'] },
 })
 
 /**
  * A `SubjectStore` backed by a CMS entity. The entity must carry `email`,
- * `passwordHash`, and (for RBAC) `roles` fields — exactly what `@latha/users`
+ * `passwordHash`, and (for RBAC) `roles` fields — exactly what `@kon10/users`
  * contributes.
  */
 export function entitySubjectStore(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   slug: string = DEFAULT_USERS_SLUG,
 ): SubjectStore {
   const ensure = () => {
-    if (!latha.getEntity(slug)) {
+    if (!kon10.getEntity(slug)) {
       throw new Error(
-        `Auth subject store: no "${slug}" entity. Install @latha/users, ` +
+        `Auth subject store: no "${slug}" entity. Install @kon10/users, ` +
           `set AuthModule({ usersSlug }), or pass a custom AuthModule({ subjectStore }).`,
       )
     }
@@ -65,7 +65,7 @@ export function entitySubjectStore(
   return {
     async findByEmail(email) {
       ensure()
-      const rows = await operations.find(systemCtx(latha), slug, {
+      const rows = await operations.find(systemCtx(kon10), slug, {
         where: { email },
         limit: 1,
       })
@@ -73,24 +73,24 @@ export function entitySubjectStore(
     },
     async findById(id) {
       ensure()
-      return cached(latha, userIdKey(slug, id), AUTH_CACHE_TTL_SECONDS, async () => {
-        return (await operations.findOne(systemCtx(latha), slug, id)) as Subject | null
+      return cached(kon10, userIdKey(slug, id), AUTH_CACHE_TTL_SECONDS, async () => {
+        return (await operations.findOne(systemCtx(kon10), slug, id)) as Subject | null
       })
     },
   }
 }
 
-const stores = new WeakMap<LathaInstance, SubjectStore>()
+const stores = new WeakMap<Kon10Instance, SubjectStore>()
 
 /** Register the subject store for an instance (from `AuthModule.onInit`). */
-export function setSubjectStore(latha: LathaInstance, store: SubjectStore): void {
-  stores.set(latha, store)
+export function setSubjectStore(kon10: Kon10Instance, store: SubjectStore): void {
+  stores.set(kon10, store)
 }
 
 /**
  * The subject store for an instance. Falls back to a default entity store
  * over the `users` collection if none was registered.
  */
-export function getSubjectStore(latha: LathaInstance): SubjectStore {
-  return stores.get(latha) ?? entitySubjectStore(latha)
+export function getSubjectStore(kon10: Kon10Instance): SubjectStore {
+  return stores.get(kon10) ?? entitySubjectStore(kon10)
 }

@@ -7,7 +7,7 @@
  * renderers stay simple and independently testable.
  */
 
-import type { Field } from '@latha/core'
+import type { Field } from '@kon10/core'
 import type { ReactNode } from 'react'
 
 export interface FieldControlProps {

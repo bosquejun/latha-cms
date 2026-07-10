@@ -1,12 +1,11 @@
-import { Field as FieldWrap, Input, Textarea } from '@latha/ui'
+import { Field as FieldWrap, Input, Textarea } from '@kon10/ui'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 
 /**
- * Fallback for field types without a dedicated Phase 3 renderer
- * (media, relationship, taxonomy, group, array). Scalar references render as a
- * text input; structured values render as a JSON textarea. These get richer,
- * purpose-built editors in later phases (media library, relationship picker).
+ * Fallback for field types without a dedicated renderer (media, relationship,
+ * taxonomy, group, array). Scalar references render as a text input;
+ * structured values render as a JSON textarea.
  */
 export function FallbackField(props: FieldControlProps) {
   const { field, id, value, onChange, onBlur, error } = props

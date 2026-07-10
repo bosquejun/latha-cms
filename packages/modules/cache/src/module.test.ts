@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { bootstrapLatha, defineConfig } from '@latha/core'
-import type { CacheAdapter, DBAdapter } from '@latha/core'
+import { bootstrapKon10, defineConfig } from '@kon10/core'
+import type { CacheAdapter, DBAdapter } from '@kon10/core'
 import { CacheModule } from './module.js'
 
 function fakeDb(): DBAdapter {
@@ -16,15 +16,15 @@ function fakeDb(): DBAdapter {
   }
 }
 
-test('CacheModule registers its adapter onto latha.cache', async () => {
+test('CacheModule registers its adapter onto kon10.cache', async () => {
   const cache: CacheAdapter = {
     async get() { return undefined },
     async set() {},
     async delete() {},
     async has() { return false },
   }
-  const latha = await bootstrapLatha(
+  const kon10 = await bootstrapKon10(
     defineConfig({ db: fakeDb(), modules: [CacheModule({ cache })] }),
   )
-  assert.equal(latha.cache, cache)
+  assert.equal(kon10.cache, cache)
 })

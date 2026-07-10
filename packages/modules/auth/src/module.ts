@@ -1,7 +1,7 @@
 /**
  * AuthModule — session auth + RBAC.
  *
- * Auth owns authorization in LathaCMS. It:
+ * Auth owns authorization in Kon10. It:
  *   - contributes the `roles` / `scopes` / `permissions` entities,
  *   - registers an RBAC guard into the kernel's generic guard seam (`onInit`),
  *   - registers a `SubjectStore` (the pluggable identity source) (`onInit`),
@@ -13,13 +13,13 @@
  * the app via the exported service helpers.
  *
  * Auth does NOT depend on the users module. By default it reads identities from
- * the `users` collection (which `@latha/users` provides), but you can point it
+ * the `users` collection (which `@kon10/users` provides), but you can point it
  * at another entity via `usersSlug`, or supply a custom `subjectStore`
  * (e.g. an external IdP) — so auth can run standalone.
  */
 
-import type { LathaInstance, Module } from '@latha/core'
-import { invalidate } from '@latha/cache'
+import type { Kon10Instance, Module } from '@kon10/core'
+import { invalidate } from '@kon10/cache'
 import { userIdKey } from './cache.js'
 import { DEFAULT_COOKIE_NAME } from './service.js'
 import { apiKeysEntity } from './api-keys/entities.js'
@@ -38,7 +38,7 @@ import {
 export interface AuthModuleConfig {
   /** HMAC secret used to sign session tokens. */
   secret: string
-  /** Session cookie name. Defaults to `latha_session`. */
+  /** Session cookie name. Defaults to `kon10_session`. */
   cookieName?: string
   /** Session lifetime in seconds. */
   sessionTtlSeconds?: number
@@ -54,15 +54,15 @@ export interface AuthModuleConfig {
    */
   usersSlug?: string
   /**
-   * Custom identity source. Supply this to run auth without `@latha/users`
+   * Custom identity source. Supply this to run auth without `@kon10/users`
    * (e.g. an external identity provider). Overrides `usersSlug`.
    */
-  subjectStore?: (latha: LathaInstance) => SubjectStore
+  subjectStore?: (kon10: Kon10Instance) => SubjectStore
 }
 
 export function AuthModule(config: AuthModuleConfig): Module {
   // `secret`/`cookieName`/`sessionTtlSeconds` are resolved from the environment
-  // at request time (`resolveAuthOptions()`, shared with `@latha/start`'s
+  // at request time (`resolveAuthOptions()`, shared with `@kon10/start`'s
   // principal resolution) — kept here for API symmetry with the rest of the
   // config, not read directly.
   void config.secret
@@ -72,40 +72,40 @@ export function AuthModule(config: AuthModuleConfig): Module {
     name: 'auth',
     capabilities: ['auth', 'rbac'],
     entities: [...rbacEntities, apiKeysEntity],
-    admin: { nav: { area: 'settings', label: 'Access', order: 90 }, ui: '@latha/auth/admin' },
+    admin: { nav: { area: 'settings', label: 'Access', order: 90 }, ui: '@kon10/auth/admin' },
     routes: {
       login: loginRoute,
       logout: logoutRoute,
       'current-user': currentUserRoute,
     },
 
-    onInit(latha) {
+    onInit(kon10) {
       // Register the identity source (custom, a configured entity, or the
       // default `users` collection).
       setSubjectStore(
-        latha,
+        kon10,
         config.subjectStore
-          ? config.subjectStore(latha)
-          : entitySubjectStore(latha, config.usersSlug),
+          ? config.subjectStore(kon10)
+          : entitySubjectStore(kon10, config.usersSlug),
       )
       // Plug RBAC into the kernel's generic authorization seam.
-      latha.registerGuard(createRbacGuard())
+      kon10.registerGuard(createRbacGuard())
 
       // Invalidate the cached subject doc the moment it changes, so a
       // deactivated/edited account never keeps resolving from a stale cache
       // entry. Only possible for the built-in entity-backed store — a custom
-      // `subjectStore` has no entity for `@latha/auth` to hook into, so it's
+      // `subjectStore` has no entity for `@kon10/auth` to hook into, so it's
       // left uncached beyond the defense-in-depth TTL.
       if (!config.subjectStore) {
         const usersSlug = config.usersSlug ?? DEFAULT_USERS_SLUG
-        const usersEntity = latha.getEntity(usersSlug)
+        const usersEntity = kon10.getEntity(usersSlug)
         if (usersEntity) {
           const invalidateUser = async ({
             data,
             cms,
           }: {
             data: Record<string, unknown>
-            cms: LathaInstance
+            cms: Kon10Instance
           }) => {
             await invalidate(cms, userIdKey(usersSlug, String(data.id)))
             return data
@@ -117,10 +117,10 @@ export function AuthModule(config: AuthModuleConfig): Module {
       }
     },
 
-    async onReady(latha) {
+    async onReady(kon10) {
       // Sync the scope/permission catalog from the live entity set, then seed
       // the default roles if none exist yet.
-      const catalog = await syncCatalog(latha)
+      const catalog = await syncCatalog(kon10)
       // Protect the identity store from default editor/viewer grants. When a
       // custom subjectStore is supplied we don't know the slug (it may not be a
       // CMS entity), so nothing extra is withheld; the app can pass `roles`
@@ -129,7 +129,7 @@ export function AuthModule(config: AuthModuleConfig): Module {
         ? []
         : [config.usersSlug ?? DEFAULT_USERS_SLUG]
       const roles = config.roles ?? defaultRoles(catalog, identitySlugs)
-      await seedRoles(latha, roles)
+      await seedRoles(kon10, roles)
     },
   }
 }

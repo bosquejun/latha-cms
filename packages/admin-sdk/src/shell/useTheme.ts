@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react'
 
 export type Theme = 'light' | 'dark'
-const STORAGE_KEY = 'latha-theme'
+const STORAGE_KEY = 'kon10-theme'
 
 export function useTheme(): { theme: Theme; setTheme: (t: Theme) => void } {
   const [theme, setThemeState] = useState<Theme>('light')

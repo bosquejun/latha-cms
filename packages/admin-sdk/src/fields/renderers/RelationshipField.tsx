@@ -6,16 +6,16 @@
  * Select with a `(None)` sentinel; `many` relationships use `ManyDocPicker`
  * below — removable chips for the current selection, a filter once the list
  * gets long, and a bordered, scrollable checkbox list, mirroring
- * `@latha/content`'s `TaxonomyField` so every `relationship()` field scales the
+ * `@kon10/content`'s `TaxonomyField` so every `relationship()` field scales the
  * same way a taxonomy picker does. If the list read is denied (RBAC
  * deny-by-default), it degrades to a raw-id input so the field is still
  * editable — the server remains authoritative.
  */
 import { useState, type ReactNode } from 'react'
 import { X } from 'lucide-react'
-import { Badge, Checkbox, cn, Field as FieldWrap, Input, Select, Spinner } from '@latha/ui'
+import { Badge, Checkbox, cn, Field as FieldWrap, Input, Select, Spinner } from '@kon10/ui'
 import { humanize } from '../../schema.js'
-import { useLatha } from '../../client/context.js'
+import { useKon10 } from '../../client/context.js'
 import { useAsync } from '../../client/hooks.js'
 import type { JsonDoc } from '../../client/rpc.js'
 import type { FieldControlProps } from '../types.js'
@@ -121,7 +121,7 @@ function ManyDocPicker({
 }
 
 export function RelationshipField({ field, id, value, onChange, onBlur, error }: FieldControlProps) {
-  const { client } = useLatha()
+  const { client } = useKon10()
   const to = String((field as Record<string, unknown>).to ?? '')
   const many = (field as Record<string, unknown>).many === true
 

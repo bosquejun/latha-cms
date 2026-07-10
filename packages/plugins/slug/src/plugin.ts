@@ -22,7 +22,7 @@
  * slug fields nested in group/array are out of scope.
  */
 
-import type { AnyEntity, LathaInstance, Plugin } from '@latha/core'
+import type { AnyEntity, Kon10Instance, Plugin } from '@kon10/core'
 import { slugFieldEntry } from './field.js'
 import { createSlugHooks, type SlugHookTarget, type SlugNestedTarget } from './hooks.js'
 import { compileTokens, parseTemplate } from './template.js'
@@ -89,8 +89,8 @@ function compileNested(
 export function slugPlugin(): Plugin {
   return {
     name: 'slug',
-    admin: { ui: '@latha/slug/admin' },
-    onInit(cms: LathaInstance) {
+    admin: { ui: '@kon10/slug/admin' },
+    onInit(cms: Kon10Instance) {
       cms.registerFieldType(slugFieldEntry)
 
       for (const entity of cms.entities) {

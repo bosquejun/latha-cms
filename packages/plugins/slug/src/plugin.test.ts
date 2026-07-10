@@ -5,8 +5,8 @@ import {
   type AnyEntity,
   type FieldTypeEntry,
   type HookFn,
-  type LathaInstance,
-} from '@latha/core'
+  type Kon10Instance,
+} from '@kon10/core'
 import { slugFieldConfigSchema } from './field.js'
 import { slugPlugin } from './plugin.js'
 
@@ -39,7 +39,7 @@ const pages: AnyEntity = {
   ],
 }
 
-function fakeCms(entities: AnyEntity[]): LathaInstance {
+function fakeCms(entities: AnyEntity[]): Kon10Instance {
   return {
     entities,
     db: {},
@@ -48,7 +48,7 @@ function fakeCms(entities: AnyEntity[]): LathaInstance {
     registerFieldType: (entry: FieldTypeEntry) => {
       if (!fieldRegistry.has('slug')) fieldRegistry.register(entry)
     },
-  } as unknown as LathaInstance
+  } as unknown as Kon10Instance
 }
 
 // One boot for the whole file's happy-path assertions.

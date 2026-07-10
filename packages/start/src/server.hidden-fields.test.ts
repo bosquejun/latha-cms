@@ -3,9 +3,9 @@
  * public delivery API does (`api.test.ts`) — the browser is the client on
  * both surfaces, and the admin form's own field filtering only controls
  * rendering, not what's already sitting in the JSON response it received.
- * Regression coverage for the motivating case: `@latha/users`' `passwordHash`
+ * Regression coverage for the motivating case: `@kon10/users`' `passwordHash`
  * (mirrored here as a local entity, matching `api.test.ts`'s pattern, so this
- * package doesn't need a devDependency on `@latha/users` for one test).
+ * package doesn't need a devDependency on `@kon10/users` for one test).
  */
 import { test, before } from 'node:test'
 import assert from 'node:assert/strict'
@@ -18,9 +18,9 @@ import {
   type Doc,
   type Entity,
   type Query,
-} from '@latha/core'
-import { AuthModule, createSessionToken, resolveAuthOptions } from '@latha/auth'
-import { handleLathaRequest } from './server.js'
+} from '@kon10/core'
+import { AuthModule, createSessionToken, resolveAuthOptions } from '@kon10/auth'
+import { handleKon10Request } from './server.js'
 import { getRuntime } from './runtime.js'
 
 function memoryAdapter(): DBAdapter {
@@ -61,7 +61,7 @@ function memoryAdapter(): DBAdapter {
   }
 }
 
-// Mirrors `@latha/users`' shape at the `users` slug (the default subject-store
+// Mirrors `@kon10/users`' shape at the `users` slug (the default subject-store
 // entity) without depending on that package — same pattern `api.test.ts` uses
 // for its own hidden-field coverage.
 const usersEntity: Entity = {
@@ -88,9 +88,9 @@ let cookie: string
 let userId: string
 
 before(async () => {
-  const latha = await getRuntime(config)
-  const adminRole = (await latha.db.find('roles', { where: { name: 'admin' }, limit: 1 }))[0]!
-  const user = await latha.db.create('users', {
+  const kon10 = await getRuntime(config)
+  const adminRole = (await kon10.db.find('roles', { where: { name: 'admin' }, limit: 1 }))[0]!
+  const user = await kon10.db.create('users', {
     email: 'admin@test.dev',
     passwordHash: 'super-secret-hash',
     roles: [adminRole.id],
@@ -102,10 +102,10 @@ before(async () => {
 })
 
 function rpc(body: Record<string, unknown>) {
-  return handleLathaRequest(
+  return handleKon10Request(
     config,
     body,
-    new Request('http://localhost/__latha/rpc', { headers: { cookie } }),
+    new Request('http://localhost/__kon10/rpc', { headers: { cookie } }),
   )
 }
 

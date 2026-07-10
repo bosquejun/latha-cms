@@ -3,7 +3,7 @@
  * group/array item's values for a nested field, or the whole entity's values
  * for a top-level one. Fields with no `showIf` are always visible.
  */
-import type { Field } from '@latha/core'
+import type { Field } from '@kon10/core'
 
 export function isFieldVisible(field: Field, siblingValues: Record<string, unknown>): boolean {
   const condition = field.meta?.showIf

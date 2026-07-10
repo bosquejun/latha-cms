@@ -1,7 +1,7 @@
 {
-  "name": "@latha/admin-sdk",
+  "name": "@kon10/admin-sdk",
   "version": "0.0.0",
-  "description": "LathaCMS admin SDK — CMS-aware shell, field renderers, and auto-generated views.",
+  "description": "Kon10 admin SDK — CMS-aware shell, field renderers, and auto-generated views.",
   "type": "module",
   "license": "MIT",
   "exports": {
@@ -39,13 +39,13 @@
     "zod": "^4.4.3"
   },
   "peerDependencies": {
-    "@latha/core": "workspace:*",
-    "@latha/ui": "workspace:*",
+    "@kon10/core": "workspace:*",
+    "@kon10/ui": "workspace:*",
     "react": "^18 || ^19"
   },
   "devDependencies": {
-    "@latha/core": "workspace:*",
-    "@latha/ui": "workspace:*",
+    "@kon10/core": "workspace:*",
+    "@kon10/ui": "workspace:*",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "react": "^19.0.0",

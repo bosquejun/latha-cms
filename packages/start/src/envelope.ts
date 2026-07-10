@@ -1,5 +1,5 @@
 /**
- * The response envelope for the public delivery API (`@latha/start/api`) —
+ * The response envelope for the public delivery API (`@kon10/start/api`) —
  * every response, success or failure, is shaped the same way so a client
  * never has to branch on transport before it can branch on outcome:
  *
@@ -14,7 +14,7 @@
  * responses are built with `apiSuccess()` / `apiFailure()` so every call site
  * produces an envelope that satisfies the same schema.
  */
-import { z } from '@latha/core'
+import { z } from '@kon10/core'
 
 /** Stable, machine-readable failure codes the delivery API can return. */
 export const API_ERROR_CODES = {

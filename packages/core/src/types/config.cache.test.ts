@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { bootstrapLatha, defineConfig } from '../bootstrap/index.js'
+import { bootstrapKon10, defineConfig } from '../bootstrap/index.js'
 import type { CacheAdapter, DBAdapter } from './adapter.js'
 
 function fakeDb(): DBAdapter {
@@ -22,16 +22,16 @@ test('a module can register a cache adapter via registerCacheAdapter', async () 
     async delete() {},
     async has() { return false },
   }
-  const latha = await bootstrapLatha(
+  const kon10 = await bootstrapKon10(
     defineConfig({
       db: fakeDb(),
       modules: [{ name: 'cache', onInit: (cms) => cms.registerCacheAdapter(cache) }],
     }),
   )
-  assert.equal(latha.cache, cache)
+  assert.equal(kon10.cache, cache)
 })
 
 test('cache is undefined when no module registers one', async () => {
-  const latha = await bootstrapLatha(defineConfig({ db: fakeDb(), modules: [] }))
-  assert.equal(latha.cache, undefined)
+  const kon10 = await bootstrapKon10(defineConfig({ db: fakeDb(), modules: [] }))
+  assert.equal(kon10.cache, undefined)
 })

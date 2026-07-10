@@ -1,8 +1,8 @@
 /**
- * @latha/slug — template-based slug generation as a core `Plugin`.
+ * @kon10/slug — template-based slug generation as a core `Plugin`.
  *
  * ```ts
- * import { slug, slugPlugin } from '@latha/slug'
+ * import { slug, slugPlugin } from '@kon10/slug'
  *
  * defineConfig({
  *   plugins: [slugPlugin()],
@@ -16,17 +16,17 @@
  * })
  * ```
  *
- * The admin renderer ships client-side via `@latha/slug/admin`
+ * The admin renderer ships client-side via `@kon10/slug/admin`
  * (`Plugin.admin.ui`); the field type itself is registered server-side in
  * `slugPlugin().onInit` — client-side validation falls back to `z.unknown()`
  * by design (same as `media`/`taxonomy`), the path regex runs on the server.
  */
 
-import type { BaseFieldConfig } from '@latha/core'
+import type { BaseFieldConfig } from '@kon10/core'
 import type { SlugToken } from './template.js'
 
 // Augment core's FieldTypeMap so consumers get the slug field type.
-declare module '@latha/core' {
+declare module '@kon10/core' {
   interface FieldTypeMap {
     slug: BaseFieldConfig & {
       type: 'slug'

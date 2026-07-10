@@ -8,9 +8,9 @@ import { fieldMetaSchema } from './meta.js'
  * `stampFields` but are invisible to `JSON.stringify`, so the live schema is
  * server-memory only — it never crosses the RPC wire. `buildDocumentSchema`
  * prefers it over the registered type's `buildDataSchema`, and
- * `@latha/start`'s `describe()` converts it to JSON Schema for the client.
+ * `@kon10/start`'s `describe()` converts it to JSON Schema for the client.
  */
-export const kDataSchema: unique symbol = Symbol('latha.kDataSchema')
+export const kDataSchema: unique symbol = Symbol('kon10.kDataSchema')
 
 /** Read a field config's live data schema, if a builder attached one. */
 export function liveDataSchema(field: Record<string, unknown>): z.ZodType | undefined {

@@ -3,8 +3,8 @@
  *
  * `defineConfig()` is the entry point referenced from `cms.config.ts`. It
  * applies defaults and plugin `extendConfig` transforms and returns a
- * `ResolvedConfig`. `bootstrapLatha()` turns that config into a live
- * `LathaInstance`: it builds the module registry, resolves dependency order,
+ * `ResolvedConfig`. `bootstrapKon10()` turns that config into a live
+ * `Kon10Instance`: it builds the module registry, resolves dependency order,
  * runs `onInit` → `migrate` → `onReady`, and exposes entity lookups.
  */
 
@@ -16,9 +16,9 @@ import type { CacheAdapter, StorageAdapter } from '../types/adapter.js'
 import type { Entity } from '../types/entity.js'
 import type { Guard } from '../types/guard.js'
 import type {
-  LathaInstance,
+  Kon10Instance,
   Module,
-  LathaConfig,
+  Kon10Config,
   ResolvedConfig,
 } from '../types/config.js'
 
@@ -28,10 +28,10 @@ const DEFAULT_ADMIN_PATH = '/admin'
  * Normalize a user config: apply defaults and run plugin `extendConfig`
  * transforms in declaration order.
  */
-export function defineConfig(config: LathaConfig): ResolvedConfig {
+export function defineConfig(config: Kon10Config): ResolvedConfig {
   const plugins = config.plugins ?? []
 
-  let working: LathaConfig = config
+  let working: Kon10Config = config
   for (const plugin of plugins) {
     if (plugin.extendConfig) working = plugin.extendConfig(working)
   }
@@ -43,7 +43,7 @@ export function defineConfig(config: LathaConfig): ResolvedConfig {
   }
 }
 
-class Latha implements LathaInstance {
+class Kon10 implements Kon10Instance {
   readonly config: ResolvedConfig
   readonly db: ResolvedConfig['db']
   storage?: StorageAdapter
@@ -82,27 +82,20 @@ class Latha implements LathaInstance {
   }
 
   async boot(): Promise<this> {
-    // 1. Register + resolve module order.
     this.registry.registerAll(this.config.modules)
     this.modules = this.registry.resolve()
 
-    // 2. Collect entities and index them by slug.
     this.entities = this.registry.collectEntities()
     for (const entity of this.entities) this.entityIndex.set(entity.slug, entity)
 
-    // 3. Connect the database.
     await this.db.connect?.()
 
-    // 4. onInit (resolved order).
     for (const module of this.modules) await module.onInit?.(this)
 
-    // 5. Plugin onInit.
     for (const plugin of this.config.plugins) await plugin.onInit?.(this)
 
-    // 6. Migrate schema for every entity.
     await this.db.migrate(this.entities)
 
-    // 7. onReady (resolved order).
     for (const module of this.modules) await module.onReady?.(this)
 
     this.ready = true
@@ -110,10 +103,10 @@ class Latha implements LathaInstance {
   }
 }
 
-/** Build and initialize a `LathaInstance` from a resolved config. */
-export async function bootstrapLatha(
+/** Build and initialize a `Kon10Instance` from a resolved config. */
+export async function bootstrapKon10(
   config: ResolvedConfig,
-): Promise<LathaInstance> {
-  const latha = new Latha(config)
-  return latha.boot()
+): Promise<Kon10Instance> {
+  const kon10 = new Kon10(config)
+  return kon10.boot()
 }

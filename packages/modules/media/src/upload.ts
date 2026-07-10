@@ -1,7 +1,7 @@
 /**
  * The media module's upload endpoint. Binary payloads can't go through the
  * JSON-only admin RPC, so this is a dedicated route the module declares on
- * itself (`MediaModule().routes`) — the runner (`@latha/start`) discovers and
+ * itself (`MediaModule().routes`) — the runner (`@kon10/start`) discovers and
  * mounts it generically, with no media-specific knowledge of its own.
  *
  * `requireAdmin` on the route entry covers the "may this caller use the admin
@@ -9,7 +9,7 @@
  * `create`) is still enforced by `operations.create` below, same as any other
  * collection write.
  */
-import { operations, type ModuleRoute, type ModuleRouteContext, type OperationContext } from '@latha/core'
+import { operations, type ModuleRoute, type ModuleRouteContext, type OperationContext } from '@kon10/core'
 import { MEDIA_SLUG, type MediaEntity } from './entities.js'
 
 function toJson<T>(v: T): T {
@@ -27,7 +27,7 @@ function mimeMatches(allowed: string, actual: string): boolean {
 async function handleUpload({ cms, principal, request }: ModuleRouteContext): Promise<Response> {
   if (!cms.storage) {
     throw new Error(
-      '[latha] No storage adapter configured — add MediaModule({ storage: ... }) to your modules.',
+      '[kon10] No storage adapter configured — add MediaModule({ storage: ... }) to your modules.',
     )
   }
 

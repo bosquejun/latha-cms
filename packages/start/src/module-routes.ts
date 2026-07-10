@@ -1,20 +1,20 @@
 /**
  * Generic dispatcher for module-contributed HTTP routes.
  *
- * `@latha/start` mounts this once and never needs module-specific knowledge to
+ * `@kon10/start` mounts this once and never needs module-specific knowledge to
  * serve it: it resolves the caller, looks up `<moduleName>/<path>` against
  * that module's declared `routes`, applies the route's `requireAdmin` gate
  * (the one check a module can't perform itself without importing an auth
  * package), and calls the handler. Everything else — what the route does,
  * which entity it touches — is the module's business, not this runner's.
  */
-import type { ModuleRoute, ResolvedConfig } from '@latha/core'
-import { hasPermission, ADMIN_ACCESS } from '@latha/auth'
+import type { ModuleRoute, ResolvedConfig } from '@kon10/core'
+import { hasPermission, ADMIN_ACCESS } from '@kon10/auth'
 import { getRuntime } from './runtime.js'
 import { resolvePrincipal } from './server.js'
 
 /** Where the runner mounts module-contributed routes, one module per segment. */
-export const DEFAULT_MODULE_ROUTES_PATH = '/__latha/modules'
+export const DEFAULT_MODULE_ROUTES_PATH = '/__kon10/modules'
 
 function json(status: number, body: unknown): Response {
   return Response.json(body, { status })
@@ -33,8 +33,8 @@ export async function handleModuleRoute(
   const [moduleName, ...pathParts] = segments as [string, ...string[]]
   const path = pathParts.join('/')
 
-  const latha = await getRuntime(config)
-  const module = latha.modules.find((m) => m.name === moduleName)
+  const kon10 = await getRuntime(config)
+  const module = kon10.modules.find((m) => m.name === moduleName)
   const entry = module?.routes?.[path]
   if (!entry) return json(404, { error: 'Not found.' })
 
@@ -42,17 +42,16 @@ export async function handleModuleRoute(
   const route = candidates.find((r) => r.method === request.method)
   if (!route) return json(405, { error: 'Method not allowed.' })
 
-  const { principal } = await resolvePrincipal(latha, request)
+  const { principal } = await resolvePrincipal(kon10, request)
   if (route.requireAdmin && !hasPermission(principal, ADMIN_ACCESS)) {
     return json(403, { error: 'Forbidden.' })
   }
 
   try {
-    return await route.handler({ cms: latha, principal, request })
+    return await route.handler({ cms: kon10, principal, request })
   } catch (err) {
     // Policy rejections and access denials are client errors, not server
-    // faults — surface the message with a 4xx, same contract module route
-    // handlers relied on when this lived in `dispatchLathaUpload`.
+    // faults — surface the message with a 4xx.
     const status = err instanceof Error && err.name === 'AccessDeniedError' ? 403 : 400
     const message = err instanceof Error ? err.message : 'Request failed.'
     return json(status, { error: message })

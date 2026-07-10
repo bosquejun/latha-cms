@@ -1,5 +1,5 @@
 /**
- * LathaProvider / useLatha — makes the client + mount paths available to the
+ * Kon10Provider / useKon10 — makes the client + mount paths available to the
  * admin components without prop-drilling.
  *
  * It also hosts the admin extension system: any `extensions` passed in are
@@ -16,10 +16,10 @@ import {
   type ExtensionRegistry,
 } from '../extensions/index.js'
 import { registerFieldRenderer } from '../fields/registry.js'
-import { createLathaClient, type LathaClient } from './client.js'
+import { createKon10Client, type Kon10Client } from './client.js'
 
-export interface LathaContextValue {
-  client: LathaClient
+export interface Kon10ContextValue {
+  client: Kon10Client
   /** Base path the admin is mounted under. Defaults to `/admin`. */
   basePath: string
   /** Where to send unauthenticated users. Defaults to `/login`. */
@@ -28,35 +28,35 @@ export interface LathaContextValue {
   extensions: ExtensionRegistry
 }
 
-const LathaContext = createContext<LathaContextValue | null>(null)
+const Kon10Context = createContext<Kon10ContextValue | null>(null)
 
-export interface LathaProviderProps {
+export interface Kon10ProviderProps {
   /**
-   * The RPC client. Optional — defaults to `createLathaClient()`, which talks to
+   * The RPC client. Optional — defaults to `createKon10Client()`, which talks to
    * the framework's RPC route. Pass one only to customize the transport.
    */
-  client?: LathaClient
+  client?: Kon10Client
   basePath?: string
   loginPath?: string
   /**
    * Admin UI extensions — custom widgets, pages, dashboard widgets, settings
    * pages, field renderers, and nav links. Pass the object exported by the
-   * `virtual:latha/admin-extensions` module (auto-collected from `src/admin/`)
+   * `virtual:kon10/admin-extensions` module (auto-collected from `src/admin/`)
    * or build one by hand with `defineAdminExtensions`.
    */
   extensions?: AdminExtensions
   children: ReactNode
 }
 
-export function LathaProvider({
+export function Kon10Provider({
   client,
   basePath = '/admin',
   loginPath = '/login',
   extensions,
   children,
-}: LathaProviderProps) {
+}: Kon10ProviderProps) {
   // Default to the framework's RPC client; pass one only to customize transport.
-  const resolved = useMemo(() => client ?? createLathaClient(), [client])
+  const resolved = useMemo(() => client ?? createKon10Client(), [client])
 
   // Build the registry once per extensions object, and apply field-renderer
   // overrides as a side effect of that same memo (idempotent: registering the
@@ -69,22 +69,22 @@ export function LathaProvider({
     return reg
   }, [extensions])
 
-  const value = useMemo<LathaContextValue>(
+  const value = useMemo<Kon10ContextValue>(
     () => ({ client: resolved, basePath, loginPath, extensions: registry }),
     [resolved, basePath, loginPath, registry],
   )
 
   return (
-    <LathaContext.Provider value={value}>
+    <Kon10Context.Provider value={value}>
       <ExtensionsProvider extensions={registry}>{children}</ExtensionsProvider>
-    </LathaContext.Provider>
+    </Kon10Context.Provider>
   )
 }
 
-export function useLatha(): LathaContextValue {
-  const ctx = useContext(LathaContext)
+export function useKon10(): Kon10ContextValue {
+  const ctx = useContext(Kon10Context)
   if (!ctx) {
-    throw new Error('useLatha must be used within a <LathaProvider>.')
+    throw new Error('useKon10 must be used within a <Kon10Provider>.')
   }
   return ctx
 }
@@ -98,9 +98,9 @@ type AdminNavigate = (href: string) => void
 const AdminNavigateContext = createContext<AdminNavigate | null>(null)
 
 /**
- * Provide client-side navigation to admin extensions. The framework layer
- * (e.g. `@latha/start`'s `LathaAdmin`) wraps the admin tree with this,
- * bridging its router. Extension pages stay router-agnostic.
+ * Provide client-side navigation to admin extensions so extension pages
+ * stay router-agnostic while the host app's router does the actual
+ * navigating.
  */
 export function AdminNavigateProvider({
   navigate,
@@ -150,7 +150,7 @@ export function PermissionsProvider({
   )
 }
 
-/** Client-safe permission match (mirrors `@latha/auth`'s `matchesPermission`). */
+/** Client-safe permission match (mirrors `@kon10/auth`'s `matchesPermission`). */
 function permissionMatches(granted: string, required: string): boolean {
   if (granted === '*') return true
   if (granted === required) return true

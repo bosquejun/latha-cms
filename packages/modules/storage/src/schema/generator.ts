@@ -1,7 +1,7 @@
 /**
  * Schema generator — Entity[] → SQLite table plans.
  *
- * LathaCMS entities are dynamic, so rather than a static Drizzle schema we
+ * Kon10 entities are dynamic, so rather than a static Drizzle schema we
  * derive a `TablePlan` per entity describing its columns and how to
  * (de)serialize each one. The Turso adapter uses these plans to emit
  * `CREATE TABLE` statements and to marshal values to/from SQLite.
@@ -13,8 +13,8 @@
  *   group | array | *(many)                                                  → TEXT (JSON)
  */
 
-import { buildZodSchema } from '@latha/core'
-import type { Entity, Field } from '@latha/core'
+import { buildZodSchema } from '@kon10/core'
+import type { Entity, Field } from '@kon10/core'
 
 export type ColumnKind = 'text' | 'integer' | 'real' | 'boolean' | 'json'
 
@@ -170,7 +170,6 @@ function pgTypeForKind(kind: ColumnKind): string {
   }
 }
 
-/** Render the DDL column type for a kind in the given dialect. */
 function ddlTypeForColumn(col: ColumnPlan, dialect: Dialect): string {
   return dialect === 'postgres' ? pgTypeForKind(col.kind) : col.sqlType
 }
@@ -181,8 +180,8 @@ function timestampType(dialect: Dialect): string {
 }
 
 /**
- * Produce a `CREATE TABLE IF NOT EXISTS` statement from a plan. Defaults to the
- * SQLite dialect (the original behaviour); pass `'postgres'` for Postgres DDL.
+ * Produce a `CREATE TABLE IF NOT EXISTS` statement from a plan. Defaults to
+ * SQLite; pass `'postgres'` for Postgres DDL.
  */
 export function createTableSQL(plan: TablePlan, dialect: Dialect = 'sqlite'): string {
   const lines: string[] = ['"id" TEXT PRIMARY KEY NOT NULL']

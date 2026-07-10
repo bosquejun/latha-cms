@@ -1,5 +1,5 @@
 /**
- * @latha/cache — CacheAdapter implementations.
+ * @kon10/cache — CacheAdapter implementations.
  *
  * `inMemoryCache()` is single-process only (dev, tests, or a single-instance
  * deploy); `redisCache()` is the shared-cache option for anything running

@@ -7,7 +7,7 @@
  */
 
 import { type ReactNode } from 'react'
-import { cn } from '@latha/ui'
+import { cn } from '@kon10/ui'
 
 export interface WidgetLayoutProps {
   /** Left auxiliary panel. */

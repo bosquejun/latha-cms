@@ -1,11 +1,11 @@
 /**
  * Role-resolution caching: `getRolePermissions`/`resolveRoleGrants` read
- * through `latha.cache` when one is registered, and `rolesEntity`'s
+ * through `kon10.cache` when one is registered, and `rolesEntity`'s
  * afterUpdate/afterDelete hooks invalidate immediately on change.
  */
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import type { CacheAdapter, Doc, JsonValue, LathaInstance, Query } from '@latha/core'
+import type { CacheAdapter, Doc, JsonValue, Kon10Instance, Query } from '@kon10/core'
 import { getRolePermissions, resolveRoleGrants } from './resolve.js'
 import { rolesEntity } from './entities.js'
 
@@ -32,7 +32,7 @@ function spyCache(): CacheAdapter & { getCalls: number; setCalls: number } {
 }
 
 /** Minimal fake instance: an in-memory `roles` table, no catalog. */
-function fakeLatha(cache?: CacheAdapter): LathaInstance {
+function fakeKon10(cache?: CacheAdapter): Kon10Instance {
   const rows = new Map<string, Doc>()
   let seq = 0
   const db = {
@@ -63,79 +63,79 @@ function fakeLatha(cache?: CacheAdapter): LathaInstance {
     },
     async migrate() {},
   }
-  return { db, cache } as unknown as LathaInstance
+  return { db, cache } as unknown as Kon10Instance
 }
 
 test('getRolePermissions caches the role-by-name lookup', async () => {
   const cache = spyCache()
-  const latha = fakeLatha(cache)
-  await latha.db.create('roles', { name: 'public', permissions: [] })
+  const kon10 = fakeKon10(cache)
+  await kon10.db.create('roles', { name: 'public', permissions: [] })
 
-  await getRolePermissions(latha, 'public')
+  await getRolePermissions(kon10, 'public')
   assert.equal(cache.setCalls, 1)
 
-  await getRolePermissions(latha, 'public')
+  await getRolePermissions(kon10, 'public')
   assert.equal(cache.setCalls, 1, 'second call served from cache')
   assert.equal(cache.getCalls, 2)
 })
 
 test('resolveRoleGrants caches each role-by-id lookup', async () => {
   const cache = spyCache()
-  const latha = fakeLatha(cache)
-  const role = await latha.db.create('roles', { name: 'editor', permissions: [] })
+  const kon10 = fakeKon10(cache)
+  const role = await kon10.db.create('roles', { name: 'editor', permissions: [] })
 
-  await resolveRoleGrants(latha, [role.id])
+  await resolveRoleGrants(kon10, [role.id])
   assert.equal(cache.setCalls, 1)
 
-  await resolveRoleGrants(latha, [role.id])
+  await resolveRoleGrants(kon10, [role.id])
   assert.equal(cache.setCalls, 1, 'second call served from cache')
 })
 
 test('renaming a role invalidates both its old name and id cache entries immediately', async () => {
   const cache = spyCache()
-  const latha = fakeLatha(cache)
-  const role = await latha.db.create('roles', { name: 'editor', permissions: [] })
+  const kon10 = fakeKon10(cache)
+  const role = await kon10.db.create('roles', { name: 'editor', permissions: [] })
 
-  await getRolePermissions(latha, 'editor')
-  await resolveRoleGrants(latha, [role.id])
+  await getRolePermissions(kon10, 'editor')
+  await resolveRoleGrants(kon10, [role.id])
   assert.equal(cache.setCalls, 2)
 
-  const updated = await latha.db.update('roles', role.id, { name: 'author' })
+  const updated = await kon10.db.update('roles', role.id, { name: 'author' })
   await rolesEntity.hooks!.afterUpdate![0]!({
     data: updated as Record<string, unknown>,
     previousDoc: role as Record<string, unknown>,
     principal: null,
     operation: 'update',
     slug: 'roles',
-    cms: latha,
+    cms: kon10,
   })
 
   // The old name no longer resolves to any role, so nothing gets re-cached under it.
-  await getRolePermissions(latha, 'editor')
+  await getRolePermissions(kon10, 'editor')
   assert.equal(cache.setCalls, 2, 'stale name entry was invalidated, not repopulated')
 
   // The new name resolves fresh and caches under its own key.
-  await getRolePermissions(latha, 'author')
+  await getRolePermissions(kon10, 'author')
   assert.equal(cache.setCalls, 3)
 })
 
 test('deleting a role invalidates its cached id and name entries immediately', async () => {
   const cache = spyCache()
-  const latha = fakeLatha(cache)
-  const role = await latha.db.create('roles', { name: 'viewer', permissions: [] })
+  const kon10 = fakeKon10(cache)
+  const role = await kon10.db.create('roles', { name: 'viewer', permissions: [] })
 
-  const beforeDelete = await resolveRoleGrants(latha, [role.id])
+  const beforeDelete = await resolveRoleGrants(kon10, [role.id])
   assert.deepEqual(beforeDelete.roles, ['viewer'], 'sanity check: the role resolves before deletion')
 
-  await latha.db.delete('roles', role.id)
+  await kon10.db.delete('roles', role.id)
   await rolesEntity.hooks!.afterDelete![0]!({
     data: role as Record<string, unknown>,
     principal: null,
     operation: 'delete',
     slug: 'roles',
-    cms: latha,
+    cms: kon10,
   })
 
-  const grants = await resolveRoleGrants(latha, [role.id])
+  const grants = await resolveRoleGrants(kon10, [role.id])
   assert.deepEqual(grants, { roles: [], permissions: [] }, 'deleted role no longer resolves, cache not stale')
 })

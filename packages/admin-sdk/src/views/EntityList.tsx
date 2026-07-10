@@ -22,7 +22,7 @@ import {
   TH,
   THead,
   TR,
-} from '@latha/ui'
+} from '@kon10/ui'
 import { Pencil, Trash2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { humanize } from '../schema.js'
@@ -61,7 +61,6 @@ function renderCell(value: unknown, fieldType?: string): ReactNode {
     return (
       <Badge variant={value ? 'default' : 'secondary'}>{String(value)}</Badge>
     )
-  // Select / status values render as a color-coded status pill.
   if (fieldType === 'select' && typeof value === 'string')
     return <StatusBadge status={value} />
   // Dates are stored as ISO strings — show a locale date, not the raw timestamp.

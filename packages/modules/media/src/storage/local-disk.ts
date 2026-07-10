@@ -2,13 +2,13 @@
  * Local-disk `StorageAdapter` — writes into the app's own `public/` directory
  * so Vite/TanStack Start serve the file back at `publicPath` with no extra
  * routing. Dev-only: there's no persistent disk on serverless deploys, so
- * production apps should configure an R2/S3-compatible adapter instead (a
- * later phase — not built here).
+ * production apps should configure an R2/S3-compatible adapter instead
+ * (see `s3Storage`).
  */
 import { randomUUID } from 'node:crypto'
 import { mkdir, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import type { StorageAdapter } from '@latha/core'
+import type { StorageAdapter } from '@kon10/core'
 
 export interface LocalDiskStorageOptions {
   /** Directory files are written to, e.g. `./public/uploads`. */

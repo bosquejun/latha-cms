@@ -6,7 +6,7 @@ import path from 'node:path'
 import { localDiskStorage } from './local-disk.js'
 
 test('localDiskStorage writes the file and returns a url/key', async () => {
-  const dir = await mkdtemp(path.join(tmpdir(), 'latha-media-'))
+  const dir = await mkdtemp(path.join(tmpdir(), 'kon10-media-'))
   const storage = localDiskStorage({ dir, publicPath: '/uploads' })
   const file = new File([new Uint8Array([1, 2, 3])], 'photo.jpg', { type: 'image/jpeg' })
 
@@ -22,7 +22,7 @@ test('localDiskStorage writes the file and returns a url/key', async () => {
 })
 
 test('delete is idempotent for a missing key', async () => {
-  const dir = await mkdtemp(path.join(tmpdir(), 'latha-media-'))
+  const dir = await mkdtemp(path.join(tmpdir(), 'kon10-media-'))
   const storage = localDiskStorage({ dir })
   await storage.delete('nonexistent-key') // must not throw
 })

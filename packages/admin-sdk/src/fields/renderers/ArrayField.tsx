@@ -14,13 +14,12 @@
  * is tracked by index and kept in sync with `items` across add/remove/move,
  * the same operations already applied to the value array itself.
  *
- * Like `group`, errors surface at the array level only — per-item plumbing is
- * a follow-up alongside group's.
+ * Like `group`, errors surface at the array level only, not per-item.
  */
 import { useState } from 'react'
-import { Button, Card, CardContent, cn } from '@latha/ui'
+import { Button, Card, CardContent, cn } from '@kon10/ui'
 import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
-import type { Field } from '@latha/core'
+import type { Field } from '@kon10/core'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 import { getFieldRenderer } from '../registry.js'

@@ -5,7 +5,7 @@
  * view) or a list (`'many'`, standard CRUD), optionally `hierarchical` (a
  * self-referential parent field, for "many" entities that support nesting).
  * That's the entirety of what the kernel needs to know — it has no concept of
- * "Collection", "Document", or "Taxonomy". Those are `@latha/content`'s
+ * "Collection", "Document", or "Taxonomy". Those are `@kon10/content`'s
  * vocabulary, layered on top via type aliases and factory functions that
  * produce this shape.
  */
@@ -96,7 +96,7 @@ export interface Entity<TDoc = Record<string, unknown>> {
 /**
  * An `Entity` with its document shape erased, for contexts that hold many
  * entities of mutually unrelated `TDoc`s side by side — the module registry,
- * `LathaInstance.entities`, `DBAdapter.migrate()`. `EntityAccess`/`EntityHooks`
+ * `Kon10Instance.entities`, `DBAdapter.migrate()`. `EntityAccess`/`EntityHooks`
  * use `TDoc` in both parameter and return position, so `Entity<TDoc>` is
  * invariant in `TDoc`: there is no subtype relationship between
  * `Entity<Specific>` and `Entity<Record<string, unknown>>` in either

@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { bootstrapLatha, defineConfig, type DBAdapter, type LathaInstance } from '@latha/core'
+import { bootstrapKon10, defineConfig, type DBAdapter, type Kon10Instance } from '@kon10/core'
 import { MediaModule } from './module.js'
 import { uploadRoute } from './upload.js'
 import { MEDIA_SLUG } from './entities.js'
@@ -32,12 +32,12 @@ const fakeStorage = {
   async delete() {},
 }
 
-async function bootMedia(): Promise<LathaInstance> {
+async function bootMedia(): Promise<Kon10Instance> {
   const config = defineConfig({
     db: fakeDb(),
     modules: [MediaModule({ storage: fakeStorage, allowedMimeTypes: ['image/*'], maxFileSize: 1024 })],
   })
-  return bootstrapLatha(config)
+  return bootstrapKon10(config)
 }
 
 // Booted once and shared: the field-type registry is a process-wide
@@ -46,7 +46,7 @@ async function bootMedia(): Promise<LathaInstance> {
 const cms = await bootMedia()
 
 test('uploadRoute rejects a request with no file', async () => {
-  const request = new Request('http://localhost/__latha/modules/media/upload', {
+  const request = new Request('http://localhost/__kon10/modules/media/upload', {
     method: 'POST',
     body: new FormData(),
   })
@@ -59,7 +59,7 @@ test('uploadRoute rejects a request with no file', async () => {
 test('uploadRoute rejects a disallowed MIME type', async () => {
   const form = new FormData()
   form.append('file', new File([new Uint8Array([1])], 'a.pdf', { type: 'application/pdf' }))
-  const request = new Request('http://localhost/__latha/modules/media/upload', { method: 'POST', body: form })
+  const request = new Request('http://localhost/__kon10/modules/media/upload', { method: 'POST', body: form })
   await assert.rejects(
     async () => uploadRoute.handler({ cms, principal: {}, request }),
     /not allowed for upload/,
@@ -69,7 +69,7 @@ test('uploadRoute rejects a disallowed MIME type', async () => {
 test('uploadRoute rejects a file over the configured size limit', async () => {
   const form = new FormData()
   form.append('file', new File([new Uint8Array(2048)], 'a.png', { type: 'image/png' }))
-  const request = new Request('http://localhost/__latha/modules/media/upload', { method: 'POST', body: form })
+  const request = new Request('http://localhost/__kon10/modules/media/upload', { method: 'POST', body: form })
   await assert.rejects(
     async () => uploadRoute.handler({ cms, principal: {}, request }),
     /upload limit/,
@@ -80,7 +80,7 @@ test('uploadRoute stores the file and creates the media doc', async () => {
   const form = new FormData()
   form.append('file', new File([new Uint8Array([1, 2, 3])], 'a.png', { type: 'image/png' }))
   form.append('alt', 'A picture')
-  const request = new Request('http://localhost/__latha/modules/media/upload', { method: 'POST', body: form })
+  const request = new Request('http://localhost/__kon10/modules/media/upload', { method: 'POST', body: form })
 
   const res = await uploadRoute.handler({ cms, principal: {}, request })
   assert.equal(res.status, 200)

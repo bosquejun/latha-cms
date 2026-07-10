@@ -2,8 +2,8 @@
  * Server-only RPC dispatcher.
  *
  * The consuming app exposes ONE server function that forwards to
- * `handleLathaRequest`. Session/cookie handling lives entirely in
- * `@latha/auth` (`getSessionUser` reads the `Cookie` header straight off the
+ * `handleKon10Request`. Session/cookie handling lives entirely in
+ * `@kon10/auth` (`getSessionUser` reads the `Cookie` header straight off the
  * `Request` — no framework-specific cookie API); this module just carries the
  * `Request` through. It's still server-only business logic, so it must only
  * be reached via a dynamic `import()` inside a server-function handler —
@@ -17,11 +17,11 @@ import {
   z,
   type Entity,
   type EntityAccess,
-  type LathaInstance,
+  type Kon10Instance,
   type Module,
   type OperationContext,
   type ResolvedConfig,
-} from '@latha/core'
+} from '@kon10/core'
 import {
   getSessionUser,
   getPublicPrincipal,
@@ -29,12 +29,12 @@ import {
   hasPermission,
   ADMIN_ACCESS,
   type AuthUser,
-} from '@latha/auth'
-import { AccessDeniedError } from '@latha/core'
-import type { JsonValue } from '@latha/core'
+} from '@kon10/auth'
+import { AccessDeniedError } from '@kon10/core'
+import type { JsonValue } from '@kon10/core'
 import { getRuntime } from './runtime.js'
-import { humanize, LathaRpcInputSchema } from '@latha/admin-sdk'
-import type { EntityDescriptor, NavItem, NavSection } from '@latha/admin-sdk'
+import { humanize, Kon10RpcInputSchema } from '@kon10/admin-sdk'
+import type { EntityDescriptor, NavItem, NavSection } from '@kon10/admin-sdk'
 import { hiddenFieldNames, projectDoc } from './hidden-fields.js'
 
 /** Force a value to its JSON-serializable form via a structural round-trip. */
@@ -97,20 +97,20 @@ async function canReadEntity(
 
 /** Build the sidebar sections: entities grouped by their module's nav section. */
 async function navOf(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   basePath: string,
   principal: unknown,
 ): Promise<NavSection[]> {
   // Map each entity slug to its contributing module (for default nav grouping).
   const moduleOf = new Map<string, Module>()
-  for (const module of latha.modules) {
+  for (const module of kon10.modules) {
     for (const entity of module.entities ?? []) moduleOf.set(entity.slug, module)
   }
 
   interface SectionAcc extends NavSection {}
   const sections = new Map<string, SectionAcc>()
 
-  for (const entity of latha.entities) {
+  for (const entity of kon10.entities) {
     if (entity.admin?.hidden) continue
     if (!(await canReadEntity(entity, principal))) continue
     const module = moduleOf.get(entity.slug)
@@ -202,8 +202,8 @@ type PublicPrincipal = Awaited<ReturnType<typeof getPublicPrincipal>>
  * grants — so edits to the Public role in the matrix UI apply immediately
  * instead of waiting for a server restart.
  */
-export async function resolveAnonymousPrincipal(latha: LathaInstance): Promise<PublicPrincipal> {
-  return getPublicPrincipal(latha)
+export async function resolveAnonymousPrincipal(kon10: Kon10Instance): Promise<PublicPrincipal> {
+  return getPublicPrincipal(kon10)
 }
 
 /**
@@ -214,17 +214,17 @@ export async function resolveAnonymousPrincipal(latha: LathaInstance): Promise<P
  * Shared by the RPC dispatcher and the generic module-route dispatcher so
  * every transport authenticates identically.
  *
- * Session resolution itself (`getSessionUser`) is `@latha/auth`'s: it reads
+ * Session resolution itself (`getSessionUser`) is `@kon10/auth`'s: it reads
  * the `Cookie` header directly off `request`, so this runner never touches a
  * framework-specific cookie API.
  */
 export async function resolvePrincipal(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   request: Request,
 ): Promise<{ sessionUser: AuthUser | null; principal: AuthUser | PublicPrincipal }> {
-  const sessionUser = await getSessionUser(request, resolveAuthOptions(), latha)
+  const sessionUser = await getSessionUser(request, resolveAuthOptions(), kon10)
   const principal: AuthUser | PublicPrincipal =
-    sessionUser ?? (await resolveAnonymousPrincipal(latha))
+    sessionUser ?? (await resolveAnonymousPrincipal(kon10))
   return { sessionUser, principal }
 }
 
@@ -232,59 +232,59 @@ export async function resolvePrincipal(
  * Dispatch one RPC request and coerce the result to a JSON-serializable value.
  *
  * This is the default handler body for the app's single server function. Import
- * it lazily inside the handler (`await import('@latha/start/server')`) so this
+ * it lazily inside the handler (`await import('@kon10/start/server')`) so this
  * module's server-only imports never reach the client bundle. `request` is
  * needed for session resolution (`resolvePrincipal`) — a hand-written
  * `createServerFn` wiring its own call to this must supply it (e.g. via
  * `getRequest()` from `@tanstack/react-start/server`).
  */
-export async function dispatchLathaRpc(
+export async function dispatchKon10Rpc(
   config: ResolvedConfig,
   rawInput: unknown,
   request: Request,
 ): Promise<JsonValue> {
-  return (await handleLathaRequest(config, rawInput, request)) as JsonValue
+  return (await handleKon10Request(config, rawInput, request)) as JsonValue
 }
 
 /** Dispatch a single RPC request against the running instance. */
-export async function handleLathaRequest(
+export async function handleKon10Request(
   config: ResolvedConfig,
   rawInput: unknown,
   request: Request,
 ): Promise<unknown> {
-  const parseResult = LathaRpcInputSchema.safeParse(rawInput)
+  const parseResult = Kon10RpcInputSchema.safeParse(rawInput)
   if (!parseResult.success) {
     throw new Error(`Invalid RPC input: ${parseResult.error.message}`)
   }
   const input = parseResult.data
-  const latha = await getRuntime(config)
+  const kon10 = await getRuntime(config)
   const basePath = config.adminPath || '/admin'
 
-  const { principal } = await resolvePrincipal(latha, request)
+  const { principal } = await resolvePrincipal(kon10, request)
 
-  // Every remaining action is admin-only — login/logout/currentUser moved to
-  // @latha/auth's own routes (see `ModuleRoute`), which run without a session
-  // by definition and so can't sit behind this gate.
+  // Every remaining action is admin-only. Login/logout/currentUser run
+  // without a session by definition (they live under @kon10/auth's own
+  // routes, see `ModuleRoute`), so they can't sit behind this gate.
   if (!hasPermission(principal, ADMIN_ACCESS)) {
     throw new AccessDeniedError('read', 'admin')
   }
 
-  const opCtx: OperationContext = { cms: latha, principal, context: { enforce: true } }
+  const opCtx: OperationContext = { cms: kon10, principal, context: { enforce: true } }
 
   // `meta.hidden` fields (credential material like `passwordHash`/`keyHash`)
   // must never reach the browser — not even here, where the admin form just
   // omits them from rendering. Mirrors the delivery API's `projectDoc`.
   const project = (slug: string, doc: Record<string, unknown>) => {
-    const entity = latha.getEntity(slug)
+    const entity = kon10.getEntity(slug)
     const hidden = entity ? hiddenFieldNames(entity) : new Set<string>()
     return projectDoc(hidden, toJson(doc))
   }
 
   switch (input.action) {
     case 'nav':
-      return navOf(latha, basePath, principal)
+      return navOf(kon10, basePath, principal)
     case 'entity': {
-      const entity = latha.getEntity(input.slug)
+      const entity = kon10.getEntity(input.slug)
       return entity ? describe(entity) : null
     }
     case 'list':

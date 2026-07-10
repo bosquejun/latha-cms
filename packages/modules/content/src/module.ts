@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod'
-import { type Module, type AnyEntity, type LathaInstance } from '@latha/core'
+import { type Module, type AnyEntity, type Kon10Instance } from '@kon10/core'
 import type { BlockDefinition } from './builders.js'
 
 export interface ContentModuleConfig {
@@ -52,10 +52,10 @@ export function ContentModule(config: ContentModuleConfig): Module {
   return {
     name: 'content',
     capabilities: ['content'],
-    admin: { nav: { label: 'Content', order: 10, collapsible: true }, ui: '@latha/content/admin' },
+    admin: { nav: { label: 'Content', order: 10, collapsible: true }, ui: '@kon10/content/admin' },
     api: config.apiPrefix ? { prefix: config.apiPrefix } : undefined,
     entities: config.entities,
-    onInit(cms: LathaInstance) {
+    onInit(cms: Kon10Instance) {
       cms.registerFieldType({
         configSchema: taxonomyFieldConfigSchema,
         buildDataSchema: (config) =>

@@ -1,9 +1,8 @@
 /**
- * @latha/storage — DBAdapter implementations.
+ * @kon10/storage — DBAdapter implementations.
  *
  * Turso (SQLite over libsql) is the default and works locally via `file:` URLs.
- * Postgres (`postgresAdapter`, also serves Supabase) is supported too; MySQL
- * lands in a later phase.
+ * Postgres (`postgresAdapter`, also serves Supabase) is supported too.
  */
 
 export { tursoAdapter, type TursoAdapterOptions } from './adapters/turso.js'

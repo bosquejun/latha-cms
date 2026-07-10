@@ -1,14 +1,14 @@
 /**
  * `resolvePrincipal` coverage: anonymous requests resolve to the Public
  * principal, and a valid session cookie resolves to the actual user.
- * `getSessionUser` (from `@latha/auth`) reads the `Cookie` header straight off
+ * `getSessionUser` (from `@kon10/auth`) reads the `Cookie` header straight off
  * the `Request` it's given — no framework-specific ambient request context
  * needed, so this runs under plain `node:test`.
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  bootstrapLatha,
+  bootstrapKon10,
   defineConfig,
   operations,
   stampFields,
@@ -18,11 +18,11 @@ import {
   type Doc,
   type Entity,
   type JsonValue,
-  type LathaInstance,
+  type Kon10Instance,
   type Query,
-} from '@latha/core'
-import { AuthModule, createSessionToken, resolveAuthOptions } from '@latha/auth'
-import { CacheModule } from '@latha/cache'
+} from '@kon10/core'
+import { AuthModule, createSessionToken, resolveAuthOptions } from '@kon10/auth'
+import { CacheModule } from '@kon10/cache'
 import { resolvePrincipal } from './server.js'
 
 function fakeDb(): DBAdapter {
@@ -62,7 +62,7 @@ function fakeDb(): DBAdapter {
   }
 }
 
-async function bootAuth(): Promise<LathaInstance> {
+async function bootAuth(): Promise<Kon10Instance> {
   const config = defineConfig({
     db: fakeDb(),
     modules: [
@@ -79,7 +79,7 @@ async function bootAuth(): Promise<LathaInstance> {
       }),
     ],
   })
-  return bootstrapLatha(config)
+  return bootstrapKon10(config)
 }
 
 const cms = await bootAuth()
@@ -87,7 +87,7 @@ const cms = await bootAuth()
 test('resolvePrincipal resolves the anonymous Public principal with no session cookie', async () => {
   const { sessionUser, principal } = await resolvePrincipal(
     cms,
-    new Request('http://localhost/__latha/rpc'),
+    new Request('http://localhost/__kon10/rpc'),
   )
   assert.equal(sessionUser, null)
   assert.equal((principal as { id: string }).id, '__public__')
@@ -96,7 +96,7 @@ test('resolvePrincipal resolves the anonymous Public principal with no session c
 test('resolvePrincipal resolves the signed-in user from a valid session cookie', async () => {
   const opts = resolveAuthOptions()
   const token = await createSessionToken({ sub: 'u1' }, opts.secret, opts.sessionTtlSeconds)
-  const request = new Request('http://localhost/__latha/rpc', {
+  const request = new Request('http://localhost/__kon10/rpc', {
     headers: { cookie: `${opts.cookieName}=${token}` },
   })
 
@@ -106,8 +106,8 @@ test('resolvePrincipal resolves the signed-in user from a valid session cookie',
 })
 
 test('resolvePrincipal ignores an invalid session cookie (falls back to Public)', async () => {
-  const request = new Request('http://localhost/__latha/rpc', {
-    headers: { cookie: 'latha_session=garbage' },
+  const request = new Request('http://localhost/__kon10/rpc', {
+    headers: { cookie: 'kon10_session=garbage' },
   })
   const { sessionUser, principal } = await resolvePrincipal(cms, request)
   assert.equal(sessionUser, null)
@@ -143,7 +143,7 @@ const usersEntity: Entity = {
   fields: stampFields({ email: text({ required: true }) }),
 }
 
-async function bootAuthWithCache(cache: CacheAdapter): Promise<LathaInstance> {
+async function bootAuthWithCache(cache: CacheAdapter): Promise<Kon10Instance> {
   const config = defineConfig({
     db: fakeDb(),
     modules: [
@@ -152,10 +152,10 @@ async function bootAuthWithCache(cache: CacheAdapter): Promise<LathaInstance> {
       CacheModule({ cache }),
     ],
   })
-  return bootstrapLatha(config)
+  return bootstrapKon10(config)
 }
 
-const systemCtx = (cms: LathaInstance) => ({
+const systemCtx = (cms: Kon10Instance) => ({
   cms,
   principal: { id: '__system__', permissions: ['*'] },
 })
@@ -167,7 +167,7 @@ test('a session resolves the user from cache on the second request', async () =>
 
   const opts = resolveAuthOptions()
   const token = await createSessionToken({ sub: 'u1' }, opts.secret, opts.sessionTtlSeconds)
-  const request = new Request('http://localhost/__latha/rpc', {
+  const request = new Request('http://localhost/__kon10/rpc', {
     headers: { cookie: `${opts.cookieName}=${token}` },
   })
 
@@ -188,7 +188,7 @@ test('updating the user invalidates the cached session lookup immediately', asyn
 
   const opts = resolveAuthOptions()
   const token = await createSessionToken({ sub: 'u1' }, opts.secret, opts.sessionTtlSeconds)
-  const request = new Request('http://localhost/__latha/rpc', {
+  const request = new Request('http://localhost/__kon10/rpc', {
     headers: { cookie: `${opts.cookieName}=${token}` },
   })
 

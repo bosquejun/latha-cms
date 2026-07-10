@@ -2,11 +2,11 @@
  * Example widget — a help link pinned to the start of the admin topbar.
  *
  * A file under `src/admin/widgets/` becomes a widget when it exports a default
- * component plus a `config` declaring its zone(s). The `lathaStart()` Vite
+ * component plus a `config` declaring its zone(s). The `kon10Start()` Vite
  * plugin auto-collects it; no manual registration.
  */
 
-import { defineWidgetConfig, type WidgetContext } from '@latha/start'
+import { defineWidgetConfig, type WidgetContext } from '@kon10/start'
 import { LifeBuoy } from 'lucide-react'
 
 export const config = defineWidgetConfig({ zone: 'shell.topbar.start' })

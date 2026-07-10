@@ -1,12 +1,12 @@
 # RBAC — Roles, Scopes & Permissions
 
-Authorization in LathaCMS is **role-based access control (RBAC)**, owned by
-`@latha/auth`. It is dynamic and database-backed: the *catalog* of what can be
+Authorization in Kon10 is **role-based access control (RBAC)**, owned by
+`@kon10/auth`. It is dynamic and database-backed: the *catalog* of what can be
 granted is derived from your config, while *roles* and *who has them* are data
 you manage in the admin UI.
 
-> The kernel (`@latha/core`) knows nothing about users, roles, or permissions.
-> It exposes a generic **guard seam** and an opaque **principal**; `@latha/auth`
+> The kernel (`@kon10/core`) knows nothing about users, roles, or permissions.
+> It exposes a generic **guard seam** and an opaque **principal**; `@kon10/auth`
 > plugs RBAC into that seam. See [Frameworks](./frameworks.md) for the request
 > flow.
 
@@ -14,7 +14,7 @@ you manage in the admin UI.
 
 ## The three entities
 
-`@latha/auth` contributes three entities (all in the admin **Settings → Access**
+`@kon10/auth` contributes three entities (all in the admin **Settings → Access**
 area):
 
 | Entity | Editable? | What it is |
@@ -70,11 +70,11 @@ superadmin. Refine roles freely in the admin UI.
   can't enter the admin. Build a public/headless API with it:
 
   ```ts
-  import { getPublicPrincipal } from '@latha/auth'
+  import { getPublicPrincipal } from '@kon10/auth'
   createContentApi({
-    getLatha,
+    getKon10,
     enforce: true,
-    getPrincipal: () => sessionUser ?? getPublicPrincipal(latha),
+    getPrincipal: () => sessionUser ?? getPublicPrincipal(kon10),
   })
   ```
 
@@ -156,10 +156,10 @@ immediately.
 
 ## Running auth without the users module
 
-Auth does not hard-depend on `@latha/users`. It resolves identities through a
+Auth does not hard-depend on `@kon10/users`. It resolves identities through a
 pluggable **subject store**:
 
-- **Default:** reads the `users` collection (what `@latha/users` provides).
+- **Default:** reads the `users` collection (what `@kon10/users` provides).
 - **Different collection:** `AuthModule({ usersSlug: 'accounts' })`.
 - **Custom source (no users module):** supply a `subjectStore` returning
   `findByEmail` / `findById`, e.g. an external identity provider:

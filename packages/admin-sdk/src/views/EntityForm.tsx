@@ -8,7 +8,7 @@
  * validation layer, running on blur and on every change after a failed
  * submit. Each field renders through the renderer registry behind an RHF
  * `<Controller>`, so renderers stay form-library-agnostic.
- * Fields marked `field.meta?.sidebar` move to the 1/3 right panel; the rest
+ * Fields marked `field.meta?.sidebar` move to the right panel; the rest
  * fill the main column. A sticky toolbar floats below the topbar so the
  * section tabs, the unsaved-changes status, and Save stay reachable
  * regardless of form length.
@@ -21,7 +21,7 @@
  * (inactive ones hidden) so react-hook-form never unregisters a field just
  * because its tab isn't visible, and each tab shows a badge counting its fields
  * with validation errors so problems on a hidden tab stay visible. With no
- * groups declared the main column renders flat, exactly as before.
+ * groups declared, the main column renders flat with no tab strip.
  *
  * Within a tab (or the flat main column), a main-column field carrying
  * `field.meta?.width === 'half'` pairs with the next `'half'` field into a
@@ -31,8 +31,8 @@
 import { useMemo, useState } from 'react'
 import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import type { Field } from '@latha/core'
-import { Button, Tabs, toast } from '@latha/ui'
+import type { Field } from '@kon10/core'
+import { Button, Tabs, toast } from '@kon10/ui'
 import { Trash2 } from 'lucide-react'
 import { useId } from 'react'
 import { buildFormSchema } from '../fields/formSchema.js'
@@ -194,7 +194,7 @@ export function EntityForm({
   const sidebarFields = visibleFields.filter((f) => f.meta?.sidebar && !f.meta?.hidden)
 
   // Split the main column into tab groups. A single group means no field
-  // declared `meta.group`, so we render flat (no tab strip) — unchanged layout.
+  // declared `meta.group`, so we render flat with no tab strip.
   const groups = useMemo(() => groupFields(mainFields), [mainFields])
   const tabbed = groups.length > 1
   const [activeTab, setActiveTab] = useState(groups[0]?.key)
@@ -227,7 +227,6 @@ export function EntityForm({
     )
   }
 
-  /** Render a field list as rows, pairing adjacent `meta.width: 'half'` fields. */
   const renderFieldRows = (fieldsToRender: Field[]) =>
     layoutRows(fieldsToRender).map((row) => {
       if (row.length === 2) {

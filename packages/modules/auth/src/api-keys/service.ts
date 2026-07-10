@@ -7,8 +7,8 @@
  * key revocation take effect immediately.
  */
 
-import type { LathaInstance } from '@latha/core'
-import { cached } from '@latha/cache'
+import type { Kon10Instance } from '@kon10/core'
+import { cached } from '@kon10/cache'
 import { AUTH_CACHE_TTL_SECONDS, apiKeyHashKey } from '../cache.js'
 import { resolveRoleGrants } from '../rbac/resolve.js'
 import { API_KEYS_SLUG } from './entities.js'
@@ -41,11 +41,11 @@ export interface CreateApiKeyInput {
  * Returns the plaintext token exactly once; only its hash is stored.
  */
 export async function createApiKey(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   input: CreateApiKeyInput,
 ): Promise<{ id: string; token: string }> {
   const token = generateApiKeyToken()
-  const doc = await latha.db.create(API_KEYS_SLUG, {
+  const doc = await kon10.db.create(API_KEYS_SLUG, {
     name: input.name,
     keyHash: await hashApiKeyToken(token),
     prefix: apiKeyDisplayPrefix(token),
@@ -61,13 +61,13 @@ export async function createApiKey(
  * is malformed, unknown, disabled, or expired.
  */
 export async function verifyApiKeyToken(
-  latha: LathaInstance,
+  kon10: Kon10Instance,
   token: string,
 ): Promise<ApiKeyPrincipal | null> {
   if (!token.startsWith(API_KEY_TOKEN_PREFIX)) return null
   const keyHash = await hashApiKeyToken(token)
-  const doc = await cached(latha, apiKeyHashKey(keyHash), AUTH_CACHE_TTL_SECONDS, async () => {
-    const rows = await latha.db.find(API_KEYS_SLUG, { where: { keyHash }, limit: 1 })
+  const doc = await cached(kon10, apiKeyHashKey(keyHash), AUTH_CACHE_TTL_SECONDS, async () => {
+    const rows = await kon10.db.find(API_KEYS_SLUG, { where: { keyHash }, limit: 1 })
     return rows[0] ?? null
   })
   if (!doc || doc.enabled === false) return null
@@ -76,7 +76,7 @@ export async function verifyApiKeyToken(
     if (!Number.isNaN(expiry.getTime()) && expiry.getTime() <= Date.now()) return null
   }
   const roleIds = Array.isArray(doc.roles) ? (doc.roles as string[]) : []
-  const { roles, permissions } = await resolveRoleGrants(latha, roleIds)
+  const { roles, permissions } = await resolveRoleGrants(kon10, roleIds)
   return {
     id: `apikey:${doc.id}`,
     kind: 'api-key',

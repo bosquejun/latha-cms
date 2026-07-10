@@ -28,37 +28,37 @@ importers:
 
   apps/playground:
     dependencies:
-      '@latha/admin-sdk':
+      '@kon10/admin-sdk':
         specifier: workspace:*
         version: link:../../packages/admin-sdk
-      '@latha/auth':
+      '@kon10/auth':
         specifier: workspace:*
         version: link:../../packages/modules/auth
-      '@latha/cache':
+      '@kon10/cache':
         specifier: workspace:*
         version: link:../../packages/modules/cache
-      '@latha/content':
+      '@kon10/content':
         specifier: workspace:*
         version: link:../../packages/modules/content
-      '@latha/core':
+      '@kon10/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@latha/media':
+      '@kon10/media':
         specifier: workspace:*
         version: link:../../packages/modules/media
-      '@latha/slug':
+      '@kon10/slug':
         specifier: workspace:*
         version: link:../../packages/plugins/slug
-      '@latha/start':
+      '@kon10/start':
         specifier: workspace:*
         version: link:../../packages/start
-      '@latha/storage':
+      '@kon10/storage':
         specifier: workspace:*
         version: link:../../packages/modules/storage
-      '@latha/ui':
+      '@kon10/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      '@latha/users':
+      '@kon10/users':
         specifier: workspace:*
         version: link:../../packages/modules/users
       '@tanstack/react-router':
@@ -156,10 +156,10 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@latha/core':
+      '@kon10/core':
         specifier: workspace:*
         version: link:../core
-      '@latha/ui':
+      '@kon10/ui':
         specifier: workspace:*
         version: link:../ui
       '@types/node':
@@ -190,16 +190,16 @@ importers:
 
   packages/modules/auth:
     devDependencies:
-      '@latha/admin-sdk':
+      '@kon10/admin-sdk':
         specifier: workspace:*
         version: link:../../admin-sdk
-      '@latha/cache':
+      '@kon10/cache':
         specifier: workspace:*
         version: link:../cache
-      '@latha/core':
+      '@kon10/core':
         specifier: workspace:*
         version: link:../../core
-      '@latha/ui':
+      '@kon10/ui':
         specifier: workspace:*
         version: link:../../ui
       '@types/node':
@@ -227,7 +227,7 @@ importers:
         specifier: ^5.11.1
         version: 5.11.1
     devDependencies:
-      '@latha/core':
+      '@kon10/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -243,13 +243,13 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@latha/admin-sdk':
+      '@kon10/admin-sdk':
         specifier: workspace:*
         version: link:../../admin-sdk
-      '@latha/core':
+      '@kon10/core':
         specifier: workspace:*
         version: link:../../core
-      '@latha/ui':
+      '@kon10/ui':
         specifier: workspace:*
         version: link:../../ui
       '@types/node':
@@ -274,13 +274,13 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@latha/admin-sdk':
+      '@kon10/admin-sdk':
         specifier: workspace:*
         version: link:../../admin-sdk
-      '@latha/core':
+      '@kon10/core':
         specifier: workspace:*
         version: link:../../core
-      '@latha/ui':
+      '@kon10/ui':
         specifier: workspace:*
         version: link:../../ui
       '@types/node':
@@ -308,7 +308,7 @@ importers:
         specifier: ^3.4.5
         version: 3.4.9
     devDependencies:
-      '@latha/core':
+      '@kon10/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -320,7 +320,7 @@ importers:
 
   packages/modules/users:
     devDependencies:
-      '@latha/core':
+      '@kon10/core':
         specifier: workspace:*
         version: link:../../core
       typescript:
@@ -333,16 +333,16 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@latha/admin-sdk':
+      '@kon10/admin-sdk':
         specifier: workspace:*
         version: link:../../admin-sdk
-      '@latha/core':
+      '@kon10/core':
         specifier: workspace:*
         version: link:../../core
-      '@latha/start':
+      '@kon10/start':
         specifier: workspace:*
         version: link:../../start
-      '@latha/ui':
+      '@kon10/ui':
         specifier: workspace:*
         version: link:../../ui
       '@types/node':
@@ -373,22 +373,22 @@ importers:
         specifier: ^0.469.0
         version: 0.469.0(react@19.2.7)
     devDependencies:
-      '@latha/admin-sdk':
+      '@kon10/admin-sdk':
         specifier: workspace:*
         version: link:../admin-sdk
-      '@latha/auth':
+      '@kon10/auth':
         specifier: workspace:*
         version: link:../modules/auth
-      '@latha/cache':
+      '@kon10/cache':
         specifier: workspace:*
         version: link:../modules/cache
-      '@latha/content':
+      '@kon10/content':
         specifier: workspace:*
         version: link:../modules/content
-      '@latha/core':
+      '@kon10/core':
         specifier: workspace:*
         version: link:../core
-      '@latha/ui':
+      '@kon10/ui':
         specifier: workspace:*
         version: link:../ui
       '@tanstack/react-router':

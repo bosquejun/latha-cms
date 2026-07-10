@@ -6,8 +6,8 @@
  * bail out for entities it doesn't care about.
  */
 
-import { defineWidgetConfig, type WidgetContext } from '@latha/start'
-import { Card, CardHeader, CardTitle, CardContent } from '@latha/ui'
+import { defineWidgetConfig, type WidgetContext } from '@kon10/start'
+import { Card, CardHeader, CardTitle, CardContent } from '@kon10/ui'
 
 export const config = defineWidgetConfig({ zone: 'form.sidebar.before' })
 
@@ -16,7 +16,6 @@ interface EntityLike {
 }
 
 export default function PostTips({ entity, recordId }: WidgetContext) {
-  // Only show on the `posts` collection.
   if ((entity as EntityLike)?.slug !== 'posts') return null
   return (
     <Card>

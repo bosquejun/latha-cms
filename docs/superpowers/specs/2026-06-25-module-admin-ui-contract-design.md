@@ -5,7 +5,7 @@
 
 ## Problem
 
-`@latha/start` is meant to be the generic, CMS-agnostic TanStack Start
+`@kon10/start` is meant to be the generic, CMS-agnostic TanStack Start
 integration: runtime, RPC dispatcher, client, provider, and the *generic* admin
 shell. It currently leaks auth-module-specific content:
 
@@ -16,12 +16,12 @@ shell. It currently leaks auth-module-specific content:
   `AdminView` that intercepts the `roles` slug and renders `<RolesPermissions />`
   instead of the auto-generated list/form.
 
-The deeper issue is not "one misplaced file." It is that **a LathaCMS module
+The deeper issue is not "one misplaced file." It is that **a Kon10 module
 has no way to ship its own admin UI**. Modules are backend-first today
-(`@latha/auth` is server-only, its single dependency is `@latha/core`), but a
+(`@kon10/auth` is server-only, its single dependency is `@kon10/core`), but a
 module should be *end-to-end*: able to contribute admin components, widgets,
 pages, sidebar items, settings pages, field renderers, and UI routes as a
-first-class part of the module — without `@latha/start` knowing anything about
+first-class part of the module — without `@kon10/start` knowing anything about
 the specific module.
 
 `RolesPermissions` is simply the first concrete consumer of that missing
@@ -37,11 +37,11 @@ module/app extension convention for consistency, but that is out of scope here.)
 
 ## Goals
 
-1. Remove all auth-specific content and special-cases from `@latha/start`.
+1. Remove all auth-specific content and special-cases from `@kon10/start`.
 2. Define **one consistent, folder-based customization convention** used
    identically by an app (e.g. the playground) and by a module package.
 3. Let a module ship admin UI that is discovered automatically when the module
-   is present in `latha.config` — no per-app re-export wiring, no separate
+   is present in `kon10.config` — no per-app re-export wiring, no separate
    opt-in list.
 4. Keep server code and client UI cleanly separated; the server `Module` object
    never carries React components (it is loaded server-side and feeds RPC as
@@ -62,7 +62,7 @@ module/app extension convention for consistency, but that is out of scope here.)
 ## The Convention (one shape, two locations)
 
 The app already customizes the admin through a folder convention that the Vite
-plugin globs into `virtual:latha/admin-extensions`:
+plugin globs into `virtual:kon10/admin-extensions`:
 
 ```
 apps/playground/src/admin/
@@ -97,7 +97,7 @@ collects its own folder using the same glob shape and exposes a single
 
 ```ts
 // packages/modules/auth/src/admin/index.ts
-import { collectAdminExtensions } from '@latha/admin-sdk'
+import { collectAdminExtensions } from '@kon10/admin-sdk'
 
 export const adminExtensions = collectAdminExtensions({
   widgets:    import.meta.glob('./widgets/**/*.{tsx,jsx,ts,js}',    { eager: true }),
@@ -108,7 +108,7 @@ export const adminExtensions = collectAdminExtensions({
 })
 ```
 
-`collectAdminExtensions` is a new, small, **shared** helper in `@latha/admin-sdk`
+`collectAdminExtensions` is a new, small, **shared** helper in `@kon10/admin-sdk`
 that contains the exact assembly logic currently inlined as a string inside the
 Vite plugin's `buildModuleSource`. Extracting it means apps and modules share one
 implementation, and the plugin can emit a call to it instead of duplicating the
@@ -118,7 +118,7 @@ barrel.
 ## Discovery (build-time, zero app config)
 
 The app does **not** maintain an `adminModules` list. Discovery is derived from
-the modules already present in `latha.config`, resolved at build time by the
+the modules already present in `kon10.config`, resolved at build time by the
 Vite plugin.
 
 ### Module advertises its UI specifier
@@ -132,7 +132,7 @@ export interface ModuleAdminConfig {
   nav?: ModuleNavConfig
   /**
    * Bare import specifier for this module's admin-UI barrel (e.g.
-   * '@latha/auth/admin'). The Start Vite plugin statically imports and merges
+   * '@kon10/auth/admin'). The Start Vite plugin statically imports and merges
    * it into the admin extension registry. Omit for backend-only modules.
    */
   ui?: string
@@ -141,7 +141,7 @@ export interface ModuleAdminConfig {
 
 ```ts
 // packages/modules/auth/src/module.ts
-admin: { nav: { area: 'settings', label: 'Access', order: 90 }, ui: '@latha/auth/admin' },
+admin: { nav: { area: 'settings', label: 'Access', order: 90 }, ui: '@kon10/auth/admin' },
 ```
 
 This solves the `name → package` problem: the plugin never has to guess a
@@ -151,7 +151,7 @@ package from a module's `name: 'auth'`. The module declares its own specifier.
 
 `adminExtensionsPlugin` (in `packages/start/src/vite.ts`) is extended to:
 
-1. Load `latha.config` at build time via Vite's SSR module loader
+1. Load `kon10.config` at build time via Vite's SSR module loader
    (`server.ssrLoadModule(configPath)` in `serve`; a one-off SSR-style load in
    `build`). It reads **only** `default.modules[].admin?.ui` — the static
    descriptor strings. It never bootstraps an instance and never calls
@@ -159,7 +159,7 @@ package from a module's `name: 'auth'`. The module declares its own specifier.
    (Module factories like `AuthModule({...})` only return descriptors when
    called, so simply importing the config is safe.)
 2. Collect the de-duplicated set of `ui` specifiers.
-3. Generate `virtual:latha/admin-extensions` so it:
+3. Generate `virtual:kon10/admin-extensions` so it:
    - statically imports each module specifier's `adminExtensions` export,
    - globs the **app's** own `src/admin/` folder exactly as today,
    - merges them via a shared merge step into a single `AdminExtensions` object.
@@ -170,7 +170,7 @@ bundler when a module is absent from the config.
 
 The config is loaded at build time only to read static descriptor strings; the
 running server route still gets the config through the existing
-`virtual:latha/config` re-export (unchanged).
+`virtual:kon10/config` re-export (unchanged).
 
 ### Merge & precedence
 
@@ -181,7 +181,7 @@ and `id`/`zone` for widgets:
 1. module-contributed extensions (in module resolution order from the config),
 2. the app's own `src/admin/` extensions.
 
-So the **app always wins** over a module: an app can override `@latha/auth`'s
+So the **app always wins** over a module: an app can override `@kon10/auth`'s
 `roles` settings page by adding its own `src/admin/settings/roles.tsx`. This
 precedence is implemented in the shared merge helper, used by both the plugin
 and (for module-internal ordering) the barrel collector.
@@ -206,12 +206,12 @@ extension mounts on its path segment under the admin base (`admin.tsx`
 "add a UI route" == "contribute a `pages/` file." This keeps the surface count
 minimal (YAGNI) while satisfying the requirement.
 
-## Changes to `@latha/start`
+## Changes to `@kon10/start`
 
 - **Delete** `src/settings/RolesPermissions.tsx`.
 - **Remove** the `roles` special-case in `src/admin.tsx` `AdminView`
   (lines ~386–388) and the `RolesPermissions` import. The `roles` entity now
-  routes through the standard settings extension contributed by `@latha/auth`.
+  routes through the standard settings extension contributed by `@kon10/auth`.
 - `src/admin.tsx` keeps `registerFieldRenderer('relationship', RelationshipField)`
   — `RelationshipField` stays in `start` (generic). The relationship renderer is
   not moved into auth; auth's `fields/` folder is reserved for any genuinely
@@ -220,42 +220,42 @@ minimal (YAGNI) while satisfying the requirement.
   at the deleted settings file (none currently exported it publicly).
 - `vite.ts` gains the config-evaluation + module-merge logic described above.
 
-## Changes to `@latha/auth`
+## Changes to `@kon10/auth`
 
 - Add client UI under `src/admin/`:
   - `settings/roles-permissions.tsx` — the migrated component. Imports shift
     from `../context.js` / `../hooks.js` (start-internal) to the **public**
-    surfaces only. Concretely: `useLatha` is already public from `@latha/start`;
+    surfaces only. Concretely: `useKon10` is already public from `@kon10/start`;
     `JsonDoc` is already a public type export; `useAsync` is currently *not*
     exported, so this pass adds `useAsync` (and its result type) to
-    `@latha/start`'s public `index.ts`. The module UI imports `useLatha`,
-    `useAsync`, and `JsonDoc` solely from `@latha/start`.
+    `@kon10/start`'s public `index.ts`. The module UI imports `useKon10`,
+    `useAsync`, and `JsonDoc` solely from `@kon10/start`.
     `config = defineSettingsConfig({ path: 'roles',
     label: 'Roles & Permissions', icon: ShieldCheck })`.
   - `index.ts` — the barrel using `collectAdminExtensions` + `import.meta.glob`.
 - `package.json`:
   - add `"./admin"` export (dev → `./src/admin/index.ts`, prod → `./dist/admin/index.js`),
-  - move React / `@latha/ui` / `@latha/admin-sdk` / `@latha/start` to
+  - move React / `@kon10/ui` / `@kon10/admin-sdk` / `@kon10/start` to
     `peerDependencies` (+ `devDependencies`), mirroring how `start` declares
     them, so the **server** entry stays free of client deps and only consumers of
-    `@latha/auth/admin` pull them in.
-- `src/module.ts`: add `admin.ui: '@latha/auth/admin'`.
+    `@kon10/auth/admin` pull them in.
+- `src/module.ts`: add `admin.ui: '@kon10/auth/admin'`.
 - Server code (`module.ts`, `rbac/`, `service.ts`, …) is otherwise unchanged.
 
-## Changes to `@latha/admin-sdk`
+## Changes to `@kon10/admin-sdk`
 
 - Add and export `collectAdminExtensions(globs)` — the assembly logic currently
   string-templated in `start`'s `buildModuleSource`, plus a `mergeExtensions(...)`
   used by the plugin. Pure, framework-agnostic, unit-testable.
 
-## Changes to `@latha/core`
+## Changes to `@kon10/core`
 
 - Add the optional `ui?: string` field to `ModuleAdminConfig` (the only core
   change — a serializable string, no React).
 
 ## Changes to the playground
 
-- No new wiring required: `@latha/auth` is already in `latha.config`, so its
+- No new wiring required: `@kon10/auth` is already in `kon10.config`, so its
   `admin.ui` is discovered automatically and the Roles & Permissions settings
   page appears. The playground's own `src/admin/` (if/when it adds files)
   continues to work and overrides module UI on conflict.
@@ -263,25 +263,25 @@ minimal (YAGNI) while satisfying the requirement.
 ## Data flow (end state)
 
 ```
-latha.config.ts (modules: [AuthModule(), ...])
+kon10.config.ts (modules: [AuthModule(), ...])
         │  (build time, SSR load — read modules[].admin.ui only)
         ▼
 start/vite.ts  adminExtensionsPlugin
-        │  emits virtual:latha/admin-extensions:
-        │    import { adminExtensions as authUI } from '@latha/auth/admin'
+        │  emits virtual:kon10/admin-extensions:
+        │    import { adminExtensions as authUI } from '@kon10/auth/admin'
         │    + import.meta.glob(app 'src/admin/**')
         │    → mergeExtensions([authUI, appUI])   // app wins
         ▼
-__root.tsx  <LathaProvider extensions={adminExtensions}>
+__root.tsx  <Kon10Provider extensions={adminExtensions}>
         ▼
-LathaAdmin → ExtensionRegistry → settings/pages/fields/widgets/nav
+Kon10Admin → ExtensionRegistry → settings/pages/fields/widgets/nav
         ▼
 'roles' settings route → auth's RolesPermissions (no special-case in start)
 ```
 
 ## Testing
 
-- **Unit (`@latha/admin-sdk`):** `collectAdminExtensions` assembles each surface
+- **Unit (`@kon10/admin-sdk`):** `collectAdminExtensions` assembles each surface
   from glob maps correctly (filters by required config keys, sorts by id);
   `mergeExtensions` applies app-over-module precedence per `(surface, key)`.
 - **Unit (auth):** the migrated `RolesPermissions` exports a valid
@@ -291,21 +291,21 @@ LathaAdmin → ExtensionRegistry → settings/pages/fields/widgets/nav
   specifiers and the app glob. (Mock the SSR load.)
 - **Integration (playground, manual + typecheck):** `pnpm -w typecheck` passes;
   the playground builds; navigating to `/admin/settings/roles` renders the
-  matrix from `@latha/auth`; `@latha/start` no longer imports any auth symbol
+  matrix from `@kon10/auth`; `@kon10/start` no longer imports any auth symbol
   (`grep` guard: no `roles|permissions|scopes`-specific code in `start/src`).
 - **Regression:** existing auth `rbac/permissions.test.ts` still passes; server
-  `@latha/auth` entry still imports only `@latha/core` (no React pulled into the
+  `@kon10/auth` entry still imports only `@kon10/core` (no React pulled into the
   server bundle).
 
 ## Risks / Open considerations
 
-- **Build-time config evaluation.** Loading `latha.config` in the plugin imports
+- **Build-time config evaluation.** Loading `kon10.config` in the plugin imports
   module factories. Mitigated by only *reading descriptor strings* and never
   bootstrapping; factories return plain descriptors. If a config does heavy work
   at import time (it shouldn't), that surfaces at build — acceptable and visible.
-- **Dual module instance in dev.** The existing `latha:dev-source` plugin already
-  routes `@latha/*` through the `development` condition so the whole graph shares
-  one `context.tsx`. `@latha/auth/admin` importing `useLatha` from `@latha/start`
+- **Dual module instance in dev.** The existing `kon10:dev-source` plugin already
+  routes `@kon10/*` through the `development` condition so the whole graph shares
+  one `context.tsx`. `@kon10/auth/admin` importing `useKon10` from `@kon10/start`
   must resolve to that same source copy — it will, via the existing condition.
-- **Published consumers.** `@latha/auth/admin` must ship in `dist/` and be listed
+- **Published consumers.** `@kon10/auth/admin` must ship in `dist/` and be listed
   in `files`; the `"./admin"` export's `import` path points at `dist`.

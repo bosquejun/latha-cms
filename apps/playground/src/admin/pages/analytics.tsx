@@ -6,9 +6,9 @@
  * for anything after its mount path.
  */
 
-import { definePageConfig, type PageComponentProps } from '@latha/start'
-import { PageHeader, PageLayout } from '@latha/admin-sdk'
-import { Card, CardHeader, CardTitle, CardContent } from '@latha/ui'
+import { definePageConfig, type PageComponentProps } from '@kon10/start'
+import { PageHeader, PageLayout } from '@kon10/admin-sdk'
+import { Card, CardHeader, CardTitle, CardContent } from '@kon10/ui'
 import { BarChart3 } from 'lucide-react'
 
 export const config = definePageConfig({

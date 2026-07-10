@@ -3,7 +3,7 @@
  * `GroupField`'s nested fieldset, so `meta.width: 'half'` pairs the same way
  * whether a field sits at the top level or inside a `group()`.
  */
-import type { Field } from '@latha/core'
+import type { Field } from '@kon10/core'
 
 /** A row of one full-width field, or two paired `'half'`-width fields. */
 export type FieldRow = [Field] | [Field, Field]

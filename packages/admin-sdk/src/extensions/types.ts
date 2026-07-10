@@ -4,10 +4,10 @@
  *
  * Two authoring styles share these types:
  *  - **Explicit:** build an `AdminExtensions` object and hand it to
- *    `<LathaProvider extensions={…}>` (use `defineAdminExtensions` for inference).
+ *    `<Kon10Provider extensions={…}>` (use `defineAdminExtensions` for inference).
  *  - **Convention:** drop files under `src/admin/**`, each exporting a default
  *    component plus a `config` from one of the `define*Config` helpers. The
- *    `lathaStart()` Vite plugin assembles them into the same `AdminExtensions`.
+ *    `kon10Start()` Vite plugin assembles them into the same `AdminExtensions`.
  */
 
 import type { ComponentType } from 'react'

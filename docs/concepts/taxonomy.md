@@ -1,6 +1,6 @@
-# Taxonomy — the vocabulary of LathaCMS
+# Taxonomy — the vocabulary of Kon10
 
-LathaCMS uses a small, deliberate set of terms. Naming is consistent across the
+Kon10 uses a small, deliberate set of terms. Naming is consistent across the
 codebase: a concept has exactly one name, and that name is used everywhere
 (types, functions, files, docs). This page is the glossary.
 
@@ -13,7 +13,7 @@ codebase: a concept has exactly one name, and that name is used everywhere
 
 ## Content vocabulary
 
-These describe what you model in `latha.config.ts`. (See also the
+These describe what you model in `kon10.config.ts`. (See also the
 [Naming Conventions](../../SPEC.md#naming-conventions) table in the spec.)
 
 | Term | Meaning | Examples |
@@ -33,20 +33,20 @@ These describe what you model in `latha.config.ts`. (See also the
 ## Runtime & framework vocabulary
 
 These describe how the config becomes a running CMS and how an app talks to it.
-They live mostly in [`@latha/core`](../../packages/core) and
-[`@latha/start`](../../packages/start).
+They live mostly in [`@kon10/core`](../../packages/core) and
+[`@kon10/start`](../../packages/start).
 
 | Term | Meaning | Where |
 |---|---|---|
-| **Config** | The single source of truth. `defineConfig({...})` returns a `ResolvedConfig`. | `@latha/core` |
-| **Instance / Runtime** | The bootstrapped, seeded `LathaInstance` for a config. Memoized per config, seeded once. | `@latha/start` `runtime.ts` |
-| **RPC** | The transport for the whole admin surface: one endpoint, dispatched by an `action`. See [RPC vs API](#rpc-vs-api). | `@latha/start` |
-| **RPC action** | One member of the `LathaRpcInput` union — the "procedure" being called. | `{ action: 'list', collection }` |
-| **RPC dispatcher** | The server-only function that runs an action against the instance. | `dispatchLathaRpc` / `handleLathaRequest` (`@latha/start/server`) |
-| **RPC client** | The typed, per-procedure wrapper the admin UI calls. | `createLathaClient()` → `LathaClient` |
-| **RPC route** | The framework-owned server route that receives RPC requests. Mounted at `DEFAULT_RPC_PATH` (`/__latha/rpc`). | `@latha/start` `routes/rpc.ts` |
-| **Provider** | React context that hands the client + mount paths to the admin components. | `LathaProvider` |
-| **Vite plugin** | Injects the framework routes (`/login`, `/admin/$`, `/__latha/rpc`) and wires the app config in. | `lathaStart()` (`@latha/start/vite`) |
+| **Config** | The single source of truth. `defineConfig({...})` returns a `ResolvedConfig`. | `@kon10/core` |
+| **Instance / Runtime** | The bootstrapped, seeded `Kon10Instance` for a config. Memoized per config, seeded once. | `@kon10/start` `runtime.ts` |
+| **RPC** | The transport for the whole admin surface: one endpoint, dispatched by an `action`. See [RPC vs API](#rpc-vs-api). | `@kon10/start` |
+| **RPC action** | One member of the `Kon10RpcInput` union — the "procedure" being called. | `{ action: 'list', collection }` |
+| **RPC dispatcher** | The server-only function that runs an action against the instance. | `dispatchKon10Rpc` / `handleKon10Request` (`@kon10/start/server`) |
+| **RPC client** | The typed, per-procedure wrapper the admin UI calls. | `createKon10Client()` → `Kon10Client` |
+| **RPC route** | The framework-owned server route that receives RPC requests. Mounted at `DEFAULT_RPC_PATH` (`/__kon10/rpc`). | `@kon10/start` `routes/rpc.ts` |
+| **Provider** | React context that hands the client + mount paths to the admin components. | `Kon10Provider` |
+| **Vite plugin** | Injects the framework routes (`/login`, `/admin/$`, `/__kon10/rpc`) and wires the app config in. | `kon10Start()` (`@kon10/start/vite`) |
 
 ---
 
@@ -77,7 +77,7 @@ many resource URLs and HTTP verbs (`GET /posts`, `POST /posts`,
 **Why not call it "API"?** "API" is the umbrella term for *any* server
 interface — every endpoint is an API. It describes the *mechanism*, not the
 *style*. "RPC" describes what this specific layer **is**, which is why the whole
-vocabulary is RPC-shaped: `LathaRpcInput`, `dispatchLathaRpc`, `LathaClient`,
+vocabulary is RPC-shaped: `Kon10RpcInput`, `dispatchKon10Rpc`, `Kon10Client`,
 the `routes/rpc.ts` route.
 
 **A note on the transport.** The RPC endpoint is implemented as a TanStack Start

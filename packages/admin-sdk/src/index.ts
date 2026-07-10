@@ -1,7 +1,7 @@
 /**
- * @latha/admin-sdk — the CMS-aware admin layer.
+ * @kon10/admin-sdk — the CMS-aware admin layer.
  *
- * Builds on `@latha/ui` (design system) and `@latha/core` (kernel). Provides
+ * Builds on `@kon10/ui` (design system) and `@kon10/core` (kernel). Provides
  * the admin shell, the registry-driven sidebar, the field renderer registry,
  * and the auto-generated collection/document views. It owns no data fetching or
  * routing — the app wires those in and passes data + callbacks down.

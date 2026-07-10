@@ -9,8 +9,8 @@
  * declaration files:
  *
  * ```ts
- * // @latha/content (taxonomy field)
- * declare module '@latha/core' {
+ * // @kon10/content (taxonomy field)
+ * declare module '@kon10/core' {
  *   interface FieldTypeMap {
  *     taxonomy: BaseFieldConfig & z.infer<typeof taxonomyFieldConfigSchema>
  *   }
@@ -44,8 +44,8 @@ import type {
  * field config can carry `lexicalConfig` without depending on Lexical itself.
  *
  * ```ts
- * // in @latha/admin-sdk
- * declare module '@latha/core' {
+ * // in @kon10/admin-sdk
+ * declare module '@kon10/core' {
  *   interface RichTextExtensions {
  *     nodes?: Klass<LexicalNode>[]
  *     plugins?: ReactNode[]
@@ -82,10 +82,7 @@ export type FieldFromMap = FieldTypeMap[keyof FieldTypeMap]
 /** Union of all registered field type discriminants. */
 export type FieldTypeKey = keyof FieldTypeMap
 
-/**
- * Canonical `Field` alias — widens as modules augment `FieldTypeMap`.
- * Use this wherever the old `Field` union was used.
- */
+/** Canonical `Field` alias — widens as modules augment `FieldTypeMap`. */
 export type Field = FieldFromMap
 
 /**

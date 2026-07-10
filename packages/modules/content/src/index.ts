@@ -1,10 +1,10 @@
 /**
- * @latha/content — ContentModule and the Collection / Document / Taxonomy
+ * @kon10/content — ContentModule and the Collection / Document / Taxonomy
  * entity factories, plus the config-driven content API.
  */
 
 import type { z } from 'zod'
-import type { BaseFieldConfig } from '@latha/core'
+import type { BaseFieldConfig } from '@kon10/core'
 import type { BlockDefinition } from './builders.js'
 import type { blocksFieldConfigSchema, taxonomyFieldConfigSchema } from './module.js'
 
@@ -12,7 +12,7 @@ import type { blocksFieldConfigSchema, taxonomyFieldConfigSchema } from './modul
 // types. Each entry derives from the Zod schema registered in `module.ts` via
 // `z.infer`, so the schema stays the single source of truth for both runtime
 // validation and this compile-time type.
-declare module '@latha/core' {
+declare module '@kon10/core' {
   interface FieldTypeMap {
     taxonomy: BaseFieldConfig & z.infer<typeof taxonomyFieldConfigSchema>
     // `blocks` is loosely typed in the runtime schema (see module.ts);
@@ -30,7 +30,7 @@ export type {
 } from './entities.js'
 
 // Field builders + inference, re-exported so configs can import everything
-// they need from `@latha/content`.
+// they need from `@kon10/content`.
 export {
   z,
   text,
@@ -45,7 +45,7 @@ export {
   type AnyFieldDef,
   type FieldsRecord,
   type InferDoc,
-} from '@latha/core'
+} from '@kon10/core'
 
 // Content-module field builders — these field types are owned by this module.
 export { taxonomy, blocks, type BlockInput, type BlockDefinition } from './builders.js'

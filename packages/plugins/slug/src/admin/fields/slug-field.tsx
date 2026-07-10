@@ -16,9 +16,9 @@
  * (and cascades it to descendants) on save.
  */
 import { useEffect, useState } from 'react'
-import { Button, Field as FieldWrap, Input, InputAddon, InputGroup } from '@latha/ui'
-import { type FieldControlProps, humanize, useFieldValue } from '@latha/admin-sdk'
-import { useLatha, useAsync, type JsonDoc } from '@latha/start'
+import { Button, Field as FieldWrap, Input, InputAddon, InputGroup } from '@kon10/ui'
+import { type FieldControlProps, humanize, useFieldValue } from '@kon10/admin-sdk'
+import { useKon10, useAsync, type JsonDoc } from '@kon10/start'
 import { slugify, slugifyPath } from '../../slugify.js'
 import { renderTokenValue, type SlugToken } from '../../template.js'
 
@@ -77,7 +77,7 @@ function useTokenValues(tokens: SlugToken[]): Record<string, unknown> {
 }
 
 export default function SlugField({ field, id, value, onChange, onBlur, error }: FieldControlProps) {
-  const { client } = useLatha()
+  const { client } = useKon10()
   const tokens = ((field as { tokens?: SlugToken[] }).tokens ?? []) as SlugToken[]
   const nested = (field as { nested?: NestedConfig }).nested
   const values = useTokenValues(tokens)
@@ -92,7 +92,6 @@ export default function SlugField({ field, id, value, onChange, onBlur, error }:
     return first == null || first === '' ? undefined : String(first)
   })()
 
-  // The selected parent doc, for the URL prefix; re-fetched when it changes.
   const parentDoc = useAsync<JsonDoc | null>(
     async () => (nested && parentId ? await client.get(nested.to, parentId) : null),
     [parentId],

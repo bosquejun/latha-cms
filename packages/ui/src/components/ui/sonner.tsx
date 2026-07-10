@@ -2,16 +2,16 @@ import * as React from 'react'
 import { Toaster as Sonner, type ToasterProps } from 'sonner'
 
 /**
- * Toaster — drop-in Sonner toaster wired to the Latha design tokens.
+ * Toaster — drop-in Sonner toaster wired to the Kon10 design tokens.
  * Mount once at the app root, then call `toast(...)` from anywhere.
  *
  * @example
  * // app root
- * import { Toaster } from '@latha/ui'
+ * import { Toaster } from '@kon10/ui'
  * <Toaster />
  *
  * // anywhere in the tree
- * import { toast } from '@latha/ui'
+ * import { toast } from '@kon10/ui'
  * toast.success('Saved')
  * toast.error('Something went wrong')
  */

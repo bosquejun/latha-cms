@@ -1,24 +1,24 @@
-# Admin UI Rebrand — Repayload kit → latha-cms
+# Admin UI Rebrand — Repayload kit → kon10-cms
 
 **Date:** 2026-06-22
 **Status:** Approved (brainstorming → ready for implementation plan)
 
 ## Goal
 
-Rebrand and re-lay-out the latha-cms admin UI to match the "Repayload CMS
+Rebrand and re-lay-out the kon10-cms admin UI to match the "Repayload CMS
 Design System" UI kit (`ui_kit/index.html` + `app.jsx`/`screens.jsx`/`kit.css`
 in the claude.ai design project `3177963e-…`). The kit is the **visual spec**;
-latha-cms is the codebase. Top navbar, sidebar, and content layout must align
-with the kit while staying driven by the real latha-cms config/RPC.
+kon10-cms is the codebase. Top navbar, sidebar, and content layout must align
+with the kit while staying driven by the real kon10-cms config/RPC.
 
 ## Decisions (from brainstorming)
 
 1. **Brand-only topbar.** The kit's Organization switcher (top nav) and Website
-   switcher (sidebar) are **omitted** — latha-cms has no org/website model. The
-   topbar shows the brand mark + "LathaCMS" wordmark (left) and the user menu
+   switcher (sidebar) are **omitted** — kon10-cms has no org/website model. The
+   topbar shows the brand mark + "Kon10" wordmark (left) and the user menu
    (right). The sidebar starts directly with nav.
 2. **Full kit parity, config-driven.** Rebuild all kit screens, but mapped onto
-   real latha-cms data via the existing RPC client. Screens with no backend
+   real kon10-cms data via the existing RPC client. Screens with no backend
    equivalent (Media) become styled empty-state placeholders rather than mock
    data.
 3. **Dark mode with persistence.** Add a theme toggle in the user menu that sets
@@ -31,7 +31,7 @@ with the kit while staying driven by the real latha-cms config/RPC.
   every token the kit uses (`--header-height`, `--sidebar-width`,
   `--content-max`, `--space-*`, `--text-*`, `--radius-*`, Geist fonts, full
   `.dark` theme).
-- No changes to RPC contract, auth, or `latha.config.ts`.
+- No changes to RPC contract, auth, or `kon10.config.ts`.
 - No port of the kit's standalone CDN/Babel runtime — we use the existing
   React + TanStack Start + Tailwind setup.
 
@@ -42,10 +42,10 @@ row**, replacing the current "sidebar beside (topbar + content)" layout.
 
 Package boundaries are preserved:
 
-- `@latha/admin-sdk` — reusable, data-agnostic chrome (renders layout + slots).
-- `@latha/start` — wiring: supplies real session, nav, theme handlers, and
+- `@kon10/admin-sdk` — reusable, data-agnostic chrome (renders layout + slots).
+- `@kon10/start` — wiring: supplies real session, nav, theme handlers, and
   screen content via the RPC client.
-- `@latha/ui` — shadcn primitives (already match the kit), consumed as-is.
+- `@kon10/ui` — shadcn primitives (already match the kit), consumed as-is.
 
 ### Files
 
@@ -60,9 +60,9 @@ Package boundaries are preserved:
 | `UserMenu.tsx` | new | Avatar + email trigger → dropdown: identity header (email/role), Theme section (Sun/Moon + active dot), separator, destructive "Sign out". Closes on outside click. |
 | `PageHeader.tsx` | new | In-content title + description + actions slot. Matches kit `.kit-pagehead`. |
 | `EmptyState.tsx` | new | Dashed-border card empty state. Matches kit `.kit-empty`. |
-| `useTheme.ts` | new | `localStorage['latha-theme']` (default light), toggles `.dark` on `<html>`, persists on change. SSR-safe (applied in `useEffect`). |
+| `useTheme.ts` | new | `localStorage['kon10-theme']` (default light), toggles `.dark` on `<html>`, persists on change. SSR-safe (applied in `useEffect`). |
 
-`@latha/admin-sdk/src/index.ts` re-exports the new components/types.
+`@kon10/admin-sdk/src/index.ts` re-exports the new components/types.
 
 ## Component specs
 
@@ -122,14 +122,14 @@ Package boundaries are preserved:
 
 ### useTheme
 - `const [theme, setTheme] = useState<'light'|'dark'>('light')`.
-- On mount: read `localStorage['latha-theme']`, apply.
+- On mount: read `localStorage['kon10-theme']`, apply.
 - On change: `document.documentElement.classList.toggle('dark', t==='dark')` +
   persist. Returns `{ theme, setTheme }`.
 
-## Screens (in `@latha/start/admin.tsx`, real RPC)
+## Screens (in `@kon10/start/admin.tsx`, real RPC)
 
-All wrapped by `PageHeader`; reuse `@latha/ui` (Card, Table, Tabs, StatusBadge,
-Badge, Avatar) and `@latha/admin-sdk` views (CollectionForm/List, DocumentForm).
+All wrapped by `PageHeader`; reuse `@kon10/ui` (Card, Table, Tabs, StatusBadge,
+Badge, Avatar) and `@kon10/admin-sdk` views (CollectionForm/List, DocumentForm).
 
 | Screen | Source | Notes |
 |---|---|---|
