@@ -1,6 +1,6 @@
 /**
  * `handleModuleRoute` coverage: routing-table lookups (unknown module/path,
- * wrong method), the `requireAdmin` gate, successful dispatch, and error
+ * wrong method), the `requireStudioAccess` gate, successful dispatch, and error
  * mapping. `resolvePrincipal` takes `request` explicitly and reads the
  * `Cookie` header straight off it (via `@kon10/auth`'s `getSessionUser`) — no
  * framework-specific ambient request context needed, so all of this runs
@@ -16,9 +16,9 @@ const echoRoute: ModuleRoute = {
   handler: async ({ request }) => Response.json({ body: await request.text() }),
 }
 
-const adminOnlyRoute: ModuleRoute = {
+const studioOnlyRoute: ModuleRoute = {
   method: 'POST',
-  requireAdmin: true,
+  requireStudioAccess: true,
   handler: async () => Response.json({ ok: true }),
 }
 
@@ -42,7 +42,7 @@ function fakeConfig(modules: Module[]): ResolvedConfig {
     },
     modules,
     plugins: [],
-    adminPath: '/admin',
+    studioPath: '/studio',
   } as unknown as ResolvedConfig
 }
 
@@ -74,8 +74,8 @@ test('handleModuleRoute dispatches to the module handler on a match', async () =
   assert.deepEqual(await res.json(), { body: 'hi' })
 })
 
-test('handleModuleRoute rejects requireAdmin routes for an unauthenticated caller', async () => {
-  const mod: Module = { name: 'demo', routes: { secure: adminOnlyRoute } }
+test('handleModuleRoute rejects requireStudioAccess routes for an unauthenticated caller', async () => {
+  const mod: Module = { name: 'demo', routes: { secure: studioOnlyRoute } }
   const res = await handleModuleRoute(fakeConfig([mod]), request('/demo/secure'))
   assert.equal(res.status, 403)
 })

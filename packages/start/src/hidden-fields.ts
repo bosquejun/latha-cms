@@ -1,8 +1,8 @@
 /**
  * `meta.hidden` projection — shared by every client-facing transport (the
- * public delivery API and the admin RPC dispatcher) so credential material
+ * public delivery API and the Studio RPC dispatcher) so credential material
  * (`passwordHash`, `keyHash`, ...) never reaches the browser, not just the
- * admin form's rendering of it.
+ * Studio form's rendering of it.
  */
 import type { Entity } from '@kon10/core'
 

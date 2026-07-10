@@ -1,7 +1,7 @@
 /**
- * Kon10Admin — the entire admin UI behind a single catch-all route.
+ * Kon10Studio — the entire Studio UI behind a single catch-all route.
  *
- * Mount it at `<basePath>/$` (e.g. `/admin/$`). It guards the session, derives
+ * Mount it at `<basePath>/$` (e.g. `/studio/$`). It guards the session, derives
  * the sidebar/views from the config (via the RPC client), and routes
  * internally on the splat path. Dev-provided extensions (custom pages, settings
  * pages, dashboard widgets, nav links) are merged into the sidebar and routing;
@@ -12,7 +12,7 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import {
-  AdminShell,
+  StudioShell,
   EntityList,
   EntityForm,
   EmptyState,
@@ -21,7 +21,7 @@ import {
   Slot,
   useExtensions,
   useTheme,
-  type AdminEntity,
+  type StudioEntity,
   type DashboardWidgetExtension,
   type ExtensionRegistry,
   type PageExtension,
@@ -30,14 +30,14 @@ import {
   type SidebarSection,
   type SidebarLinkProps,
   PermissionsProvider,
-  AdminNavigateProvider,
+  StudioNavigateProvider,
   useCan,
   useKon10,
   useAsync,
   type EntityDescriptor,
   type NavItem,
   type NavSection,
-} from '@kon10/admin-sdk'
+} from '@kon10/studio-sdk'
 import { Button, Card, CardHeader, CardTitle, CardDescription, ConfirmDialog, Pagination, toast } from '@kon10/ui'
 import {
   Plus,
@@ -50,7 +50,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from 'lucide-animated'
-import type { SidebarIcon } from '@kon10/admin-sdk'
+import type { SidebarIcon } from '@kon10/studio-sdk'
 import { UserMenu } from './UserMenu.js'
 
 function RouterLink({ href, className, children, onClick }: SidebarLinkProps) {
@@ -61,7 +61,7 @@ function RouterLink({ href, className, children, onClick }: SidebarLinkProps) {
   )
 }
 
-const asEntity = (d: EntityDescriptor) => d as unknown as AdminEntity
+const asEntity = (d: EntityDescriptor) => d as unknown as StudioEntity
 
 type Route =
   | { view: 'dashboard' }
@@ -114,7 +114,7 @@ function parseRoute(
   // Settings area is a reserved segment — check before entity routing.
   if (seg[0] === 'settings') {
     const sub = seg.slice(1)
-    // Entities living in the settings area (`/admin/settings/content/users`).
+    // Entities living in the settings area (`/studio/settings/content/users`).
     const settingsEntity = parseEntitySegs(sub, cardinalities)
     if (settingsEntity) return settingsEntity
     const settingsSlug = sub[0]
@@ -287,7 +287,7 @@ function Centered({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function Kon10Admin() {
+export function Kon10Studio() {
   const { client, basePath, loginPath, extensions } = useKon10()
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
@@ -313,7 +313,7 @@ export function Kon10Admin() {
   const mainSections = buildSidebar(mainNav, mainExtras(extensions, basePath), extensions.kindIcons)
   const settingsSections = buildSidebar(settingsNav, settingsExtras(extensions, basePath), extensions.kindIcons)
 
-  // The settings area swaps the whole sidebar; the path under `/admin/settings`
+  // The settings area swaps the whole sidebar; the path under `/studio/settings`
   // decides which sidebar shows. The footer button lands on the first settings
   // entry so clicking it opens straight into a usable page.
   const settingsRoot = `${basePath}/settings`
@@ -325,8 +325,8 @@ export function Kon10Admin() {
     <PermissionsProvider permissions={session.data.permissions}>
       {/* Bridge the router so extension pages can navigate client-side
           (URL-driven master-detail views, redirects) without a router dep. */}
-      <AdminNavigateProvider navigate={(href) => void navigate({ to: href })}>
-      <AdminShell
+      <StudioNavigateProvider navigate={(href) => void navigate({ to: href })}>
+      <StudioShell
         sections={inSettings ? settingsSections : mainSections}
         currentPath={pathname}
         LinkComponent={RouterLink}
@@ -349,9 +349,9 @@ export function Kon10Admin() {
           />
         }
       >
-        <AdminView route={route} nav={mainNav} routeBase={inSettings ? settingsRoot : basePath} />
-      </AdminShell>
-      </AdminNavigateProvider>
+        <StudioView route={route} nav={mainNav} routeBase={inSettings ? settingsRoot : basePath} />
+      </StudioShell>
+      </StudioNavigateProvider>
     </PermissionsProvider>
   )
 }
@@ -387,14 +387,14 @@ function SettingsBackHeader({ basePath }: { basePath: string }) {
   )
 }
 
-function AdminView({
+function StudioView({
   route,
   nav,
   routeBase,
 }: {
   route: Route
   nav: NavSection[]
-  /** Base for entity sub-routes — `/admin` or `/admin/settings`. */
+  /** Base for entity sub-routes — `/studio` or `/studio/settings`. */
   routeBase: string
 }) {
   switch (route.view) {
@@ -713,7 +713,7 @@ function SettingsView({
   const pages = extensions.settings
   return (
     <>
-      <PageHeader title="Settings" description="Configure the admin and installed extensions." />
+      <PageHeader title="Settings" description="Configure the Studio and installed extensions." />
       {pages.length === 0 ? (
         <p className="text-small text-muted-foreground">No settings pages registered.</p>
       ) : (

@@ -1,7 +1,7 @@
 {
   "name": "@kon10/start",
   "version": "0.0.0",
-  "description": "Kon10 integration for TanStack Start — runtime, RPC dispatcher, client, and admin UI.",
+  "description": "Kon10 integration for TanStack Start — runtime, RPC dispatcher, client, and Studio UI.",
   "type": "module",
   "license": "MIT",
   "exports": {
@@ -27,10 +27,10 @@
       "development": "./src/routes/login.tsx",
       "import": "./dist/routes/login.js"
     },
-    "./routes/admin": {
-      "types": "./dist/routes/admin.d.ts",
-      "development": "./src/routes/admin.tsx",
-      "import": "./dist/routes/admin.js"
+    "./routes/studio": {
+      "types": "./dist/routes/studio.d.ts",
+      "development": "./src/routes/studio.tsx",
+      "import": "./dist/routes/studio.js"
     },
     "./routes/rpc": {
       "types": "./dist/routes/rpc.d.ts",
@@ -71,7 +71,7 @@
     "test": "tsc -p tsconfig.json && node --test 'dist/**/*.test.js'"
   },
   "peerDependencies": {
-    "@kon10/admin-sdk": "workspace:*",
+    "@kon10/studio-sdk": "workspace:*",
     "@kon10/auth": "workspace:*",
     "@kon10/content": "workspace:*",
     "@kon10/core": "workspace:*",
@@ -81,7 +81,7 @@
     "react": "^18 || ^19"
   },
   "devDependencies": {
-    "@kon10/admin-sdk": "workspace:*",
+    "@kon10/studio-sdk": "workspace:*",
     "@kon10/auth": "workspace:*",
     "@kon10/cache": "workspace:*",
     "@kon10/content": "workspace:*",

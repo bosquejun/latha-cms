@@ -1,6 +1,6 @@
 /**
  * `kon10Start()` — a thin wrapper around TanStack Start's Vite plugin that
- * injects Kon10's framework-owned routes (`/login`, the `/admin/$` catch-all,
+ * injects Kon10's framework-owned routes (`/login`, the `/studio/$` catch-all,
  * and the `/__kon10/rpc` endpoint) through TanStack's virtual file routes, and
  * wires the app's `kon10.config` into the framework's server route. A consuming
  * app keeps only its own pages and `__root.tsx` under its routes directory — no
@@ -16,7 +16,7 @@ import { createRequire } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import { physical, rootRoute, route } from '@tanstack/virtual-file-routes'
-import { DEFAULT_API_PATH, DEFAULT_RPC_PATH } from '@kon10/admin-sdk'
+import { DEFAULT_API_PATH, DEFAULT_RPC_PATH } from '@kon10/studio-sdk'
 import { DEFAULT_MODULE_ROUTES_PATH } from './module-routes.js'
 
 type TanStackStartOptions = NonNullable<Parameters<typeof tanstackStart>[0]>
@@ -91,7 +91,7 @@ function routeFile(subpath: string): string {
   return path.relative(path.resolve(process.cwd(), ROUTES_DIR), abs)
 }
 
-/** Map a built `…/dist/routes/admin.js` path to its `…/src/routes/admin.tsx`. */
+/** Map a built `…/dist/routes/studio.js` path to its `…/src/routes/studio.tsx`. */
 function toSourcePath(distAbs: string): string {
   const marker = `${path.sep}dist${path.sep}`
   const idx = distAbs.lastIndexOf(marker)
@@ -109,14 +109,14 @@ function toSourcePath(distAbs: string): string {
 export interface Kon10StartOptions {
   /** Where the sign-in screen mounts. Default `/login`. */
   loginPath?: string
-  /** Admin base path; the admin mounts as a catch-all under it. Default `/admin`. */
-  adminBasePath?: string
+  /** Studio base path; the Studio mounts as a catch-all under it. Default `/studio`. */
+  studioBasePath?: string
   /**
-   * Admin extension auto-discovery. When enabled (the default), files under the
-   * convention directory are collected into the `virtual:kon10/admin-extensions`
+   * Studio extension auto-discovery. When enabled (the default), files under the
+   * convention directory are collected into the `virtual:kon10/studio-extensions`
    * module. Pass `false` to disable, or an object to point at a custom folder.
    */
-  admin?: false | { dir?: string }
+  studio?: false | { dir?: string }
   /**
    * Path to the app's `kon10.config` module, relative to the project root.
    * Default `./kon10.config.ts`.
@@ -135,7 +135,7 @@ export function kon10Start(
   options: Kon10StartOptions = {},
 ): TanStackStartPlugins {
   const loginPath = options.loginPath ?? '/login'
-  const adminBasePath = options.adminBasePath ?? '/admin'
+  const studioBasePath = options.studioBasePath ?? '/studio'
   const configPath = options.configPath ?? './kon10.config.ts'
 
   // Paths inside `virtualRouteConfig` are resolved relative to `routesDirectory`,
@@ -144,7 +144,7 @@ export function kon10Start(
   const virtualRouteConfig = rootRoute('__root.tsx', [
     physical('', '.'),
     route(loginPath, routeFile('@kon10/start/routes/login')),
-    route(`${adminBasePath}/$`, routeFile('@kon10/start/routes/admin')),
+    route(`${studioBasePath}/$`, routeFile('@kon10/start/routes/studio')),
     route(DEFAULT_RPC_PATH, routeFile('@kon10/start/routes/rpc')),
     route(`${DEFAULT_MODULE_ROUTES_PATH}/$`, routeFile('@kon10/start/routes/modules')),
     ...(options.api === false
@@ -164,13 +164,13 @@ export function kon10Start(
 
   // Framework virtual-module plugins, appended to TanStack's array (Vite
   // flattens nested plugin arrays, keeping the single `plugins: [kon10Start()]`
-  // ergonomics): the config bridge plus, unless disabled, admin auto-discovery.
+  // ergonomics): the config bridge plus, unless disabled, Studio auto-discovery.
   const extra: VitePluginLike[] = [
     kon10DevSourcePlugin(),
     kon10ConfigPlugin(configPath),
   ]
-  if (options.admin !== false) {
-    extra.push(adminExtensionsPlugin(options.admin?.dir ?? 'src/admin', configPath))
+  if (options.studio !== false) {
+    extra.push(studioExtensionsPlugin(options.studio?.dir ?? 'src/studio', configPath))
   }
 
   return [
@@ -263,13 +263,13 @@ function kon10DevSourcePlugin(): VitePluginLike {
   }
 }
 
-const VIRTUAL_ID = 'virtual:kon10/admin-extensions'
+const VIRTUAL_ID = 'virtual:kon10/studio-extensions'
 const RESOLVED_ID = '\0' + VIRTUAL_ID
 
-interface AdminUiCarrier { admin?: { ui?: string } }
+interface StudioUiCarrier { studio?: { ui?: string } }
 
 /**
- * Load the app's `kon10.config` and read each module's and plugin's `admin.ui`
+ * Load the app's `kon10.config` and read each module's and plugin's `studio.ui`
  * specifier. Reads static descriptor strings only — never bootstraps an
  * instance. `load` is Vite's SSR module loader (`server.ssrLoadModule`) at
  * serve time, or a direct `import()` wrapper at build time.
@@ -279,11 +279,11 @@ export async function readModuleUiSpecifiers(
   configPath: string,
 ): Promise<string[]> {
   const mod = (await load(configPath)) as {
-    default?: { modules?: AdminUiCarrier[]; plugins?: AdminUiCarrier[] }
+    default?: { modules?: StudioUiCarrier[]; plugins?: StudioUiCarrier[] }
   }
   const seen = new Set<string>()
   for (const m of [...(mod.default?.modules ?? []), ...(mod.default?.plugins ?? [])]) {
-    const ui = m.admin?.ui
+    const ui = m.studio?.ui
     if (ui) seen.add(ui)
   }
   return [...seen]
@@ -341,11 +341,11 @@ async function loadSpecifiersAtBuild(
 }
 
 /**
- * Resolves `virtual:kon10/admin-extensions` to a module that statically imports
- * each module's admin UI barrel and merges it with the app's own `src/admin/`
- * glob via the shared helpers from `@kon10/admin-sdk`.
+ * Resolves `virtual:kon10/studio-extensions` to a module that statically imports
+ * each module's Studio UI barrel and merges it with the app's own `src/studio/`
+ * glob via the shared helpers from `@kon10/studio-sdk`.
  */
-function adminExtensionsPlugin(dir: string, configPath: string): VitePluginLike {
+function studioExtensionsPlugin(dir: string, configPath: string): VitePluginLike {
   const base = '/' + dir.replace(/^\.?\/*/, '').replace(/\/*$/, '')
   // Cached once; a change to the config's module list needs a dev-server restart.
   let specifiers: string[] | null = null
@@ -353,7 +353,7 @@ function adminExtensionsPlugin(dir: string, configPath: string): VitePluginLike 
   let root = process.cwd()
 
   return {
-    name: 'kon10:admin-extensions',
+    name: 'kon10:studio-extensions',
     // Capture the project root for the build-time throwaway server.
     configResolved(config: { root: string }) {
       root = config.root
@@ -377,22 +377,22 @@ function adminExtensionsPlugin(dir: string, configPath: string): VitePluginLike 
             )
           } catch (err) {
             console.warn(
-              '[kon10] admin extensions: config not loadable yet; ' +
-                'module admin UI omitted for now —',
+              '[kon10] studio extensions: config not loadable yet; ' +
+                'module Studio UI omitted for now —',
               err instanceof Error ? err.message : err,
             )
             specifiers = []
           }
         } else {
-          // Build: a failure here would silently drop module admin UI from the
+          // Build: a failure here would silently drop module Studio UI from the
           // production bundle. Fail loudly instead.
           try {
             specifiers = await loadSpecifiersAtBuild(root, configPath)
           } catch (err) {
             throw new Error(
-              '[kon10] failed to discover module admin UI at build time. ' +
-                'The admin config could not be loaded, so module-contributed UI ' +
-                '(e.g. @kon10/auth/admin) would be missing from the build. ' +
+              '[kon10] failed to discover module Studio UI at build time. ' +
+                'The Studio config could not be loaded, so module-contributed UI ' +
+                '(e.g. @kon10/auth/studio) would be missing from the build. ' +
                 `Original error: ${err instanceof Error ? err.message : String(err)}`,
               { cause: err instanceof Error ? err : undefined },
             )
@@ -409,15 +409,15 @@ export function buildModuleSource(base: string, specifiers: string[]): string {
     `import.meta.glob('${base}/${kind}/**/*.{tsx,jsx,ts,js}', { eager: true })`
 
   const moduleImports = specifiers
-    .map((spec, i) => `import { adminExtensions as mod${i} } from ${JSON.stringify(spec)}`)
+    .map((spec, i) => `import { studioExtensions as mod${i} } from ${JSON.stringify(spec)}`)
     .join('\n')
   const moduleList = specifiers.map((_, i) => `mod${i}`).join(', ')
 
   return `
-import { collectAdminExtensions, mergeExtensions } from '@kon10/admin-sdk'
+import { collectStudioExtensions, mergeExtensions } from '@kon10/studio-sdk'
 ${moduleImports}
 
-const appExtensions = collectAdminExtensions({
+const appExtensions = collectStudioExtensions({
   widgets: ${glob('widgets')},
   pages: ${glob('pages')},
   dashboard: ${glob('dashboard')},
@@ -426,6 +426,6 @@ const appExtensions = collectAdminExtensions({
 })
 
 // Modules first, app last — the app overrides module UI on key conflict.
-export const adminExtensions = mergeExtensions([${moduleList ? moduleList + ', ' : ''}appExtensions])
+export const studioExtensions = mergeExtensions([${moduleList ? moduleList + ', ' : ''}appExtensions])
 `
 }

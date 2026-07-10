@@ -5,7 +5,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Button, Card, Field, Input } from '@kon10/ui'
-import { useKon10 } from '@kon10/admin-sdk'
+import { useKon10 } from '@kon10/studio-sdk'
 
 export function Kon10Login() {
   const { client, basePath } = useKon10()

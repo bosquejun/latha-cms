@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@kon10/ui'
 import { LogOut, Moon, Sun, UserRound } from 'lucide-react'
-import type { Theme } from '@kon10/admin-sdk'
+import type { Theme } from '@kon10/studio-sdk'
 
 export interface UserMenuProps {
   email: string | null

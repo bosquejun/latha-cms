@@ -1,7 +1,7 @@
 /**
  * Framework-owned public delivery API endpoint — the read-only REST surface
  * headless consumers fetch (`GET /api/v1/:slug[/:id]`), as opposed to the
- * admin-gated RPC route.
+ * Studio-gated RPC route.
  *
  * Injected by the `kon10Start()` Vite plugin (mounted at `DEFAULT_API_PATH`;
  * pass `api: false` to disable). Server-only: config and dispatcher are pulled

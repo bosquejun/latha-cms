@@ -1,5 +1,5 @@
 /**
- * Framework-owned RPC endpoint. A single server route handles the whole admin
+ * Framework-owned RPC endpoint. A single server route handles the whole Studio
  * surface, so the consuming app needs no hand-written `createServerFn` — the
  * default client (`createKon10Client()`) just POSTs here.
  *

@@ -48,7 +48,7 @@ import {
   type ResolvedConfig,
 } from '@kon10/core'
 import { verifyApiKeyToken, API_KEY_TOKEN_PREFIX } from '@kon10/auth'
-import { DEFAULT_API_PATH } from '@kon10/admin-sdk'
+import { DEFAULT_API_PATH } from '@kon10/studio-sdk'
 import { getRuntime } from './runtime.js'
 import { resolveAnonymousPrincipal } from './server.js'
 import { hiddenFieldNames, projectDoc } from './hidden-fields.js'
@@ -317,7 +317,7 @@ export async function handleDeliveryRequest(
   const hidden = hiddenFieldNames(entity)
   // The entity's delivery constraint (e.g. `{ status: 'published' }` from a
   // drafts-enabled collection). Applied to every read on this surface — the
-  // admin RPC is the place that sees drafts.
+  // Studio RPC is the place that sees drafts.
   const constraint = entity.api?.where
 
   // Read-through cache for this entity's delivery-API reads, backed by
@@ -325,7 +325,7 @@ export async function handleDeliveryRequest(
   // `CacheModule`). The entity's own `api.cache` overrides the app-wide
   // `config.api.cache` when set — including an explicit `false`, since `??`
   // only falls through on `null`/`undefined`, never on `false`. TTL-only:
-  // a write via the admin RPC does not invalidate an already-cached entry.
+  // a write via the Studio RPC does not invalidate an already-cached entry.
   const cacheOpt = entity.api?.cache ?? config.api?.cache
   const cacheEnabled = kon10.cache !== undefined && cacheOpt !== false
   const cacheTtl = cacheOpt ? (cacheOpt.ttlSeconds ?? DEFAULT_CACHE_TTL_SECONDS) : DEFAULT_CACHE_TTL_SECONDS

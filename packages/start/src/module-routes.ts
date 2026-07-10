@@ -3,13 +3,13 @@
  *
  * `@kon10/start` mounts this once and never needs module-specific knowledge to
  * serve it: it resolves the caller, looks up `<moduleName>/<path>` against
- * that module's declared `routes`, applies the route's `requireAdmin` gate
- * (the one check a module can't perform itself without importing an auth
+ * that module's declared `routes`, applies the route's `requireStudioAccess`
+ * gate (the one check a module can't perform itself without importing an auth
  * package), and calls the handler. Everything else — what the route does,
  * which entity it touches — is the module's business, not this runner's.
  */
 import type { ModuleRoute, ResolvedConfig } from '@kon10/core'
-import { hasPermission, ADMIN_ACCESS } from '@kon10/auth'
+import { hasPermission, STUDIO_ACCESS } from '@kon10/auth'
 import { getRuntime } from './runtime.js'
 import { resolvePrincipal } from './server.js'
 
@@ -43,7 +43,7 @@ export async function handleModuleRoute(
   if (!route) return json(405, { error: 'Method not allowed.' })
 
   const { principal } = await resolvePrincipal(kon10, request)
-  if (route.requireAdmin && !hasPermission(principal, ADMIN_ACCESS)) {
+  if (route.requireStudioAccess && !hasPermission(principal, STUDIO_ACCESS)) {
     return json(403, { error: 'Forbidden.' })
   }
 

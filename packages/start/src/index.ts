@@ -2,7 +2,7 @@
  * @kon10/start — the TanStack Start integration for Kon10.
  *
  * The consuming app writes a `kon10.config.ts` and mounts `<Kon10Provider>`;
- * this package provides the typed client, the React provider, the entire admin
+ * this package provides the typed client, the React provider, the entire Studio
  * + login UI, and the RPC endpoint itself (a server route injected by
  * `kon10Start()`). No hand-written server function required — `createKon10Client()`
  * talks to that route out of the box. The server dispatcher lives at
@@ -14,7 +14,7 @@ export {
   createKon10Client,
   type Kon10Client,
   type Kon10ClientOptions,
-} from '@kon10/admin-sdk'
+} from '@kon10/studio-sdk'
 export {
   kon10RpcValidator,
   DEFAULT_RPC_PATH,
@@ -22,22 +22,22 @@ export {
   DEFAULT_LOGIN_PATH,
   DEFAULT_LOGOUT_PATH,
   DEFAULT_CURRENT_USER_PATH,
-} from '@kon10/admin-sdk'
+} from '@kon10/studio-sdk'
 export {
   Kon10Provider,
   useKon10,
   type Kon10ProviderProps,
   type Kon10ContextValue,
-} from '@kon10/admin-sdk'
-export { Kon10Admin } from './admin.js'
+} from '@kon10/studio-sdk'
+export { Kon10Studio } from './studio.js'
 export { Kon10Login } from './login.js'
-export { useAsync, type AsyncState } from '@kon10/admin-sdk'
+export { useAsync, type AsyncState } from '@kon10/studio-sdk'
 
-// Admin extension authoring surface — re-exported so apps import from one place.
+// Studio extension authoring surface — re-exported so apps import from one place.
 export {
-  ADMIN_ZONES,
-  isAdminZone,
-  defineAdminExtensions,
+  STUDIO_ZONES,
+  isStudioZone,
+  defineStudioExtensions,
   defineWidgetConfig,
   definePageConfig,
   defineDashboardWidgetConfig,
@@ -47,9 +47,9 @@ export {
   useExtensions,
   useZoneWidgets,
   registerFieldRenderer,
-  type AdminZone,
+  type StudioZone,
   type WidgetContext,
-  type AdminExtensions,
+  type StudioExtensions,
   type WidgetExtension,
   type WidgetConfig,
   type PageExtension,
@@ -65,7 +65,7 @@ export {
   type ExtensionRegistry,
   type FieldControlProps,
   type FieldRenderer,
-} from '@kon10/admin-sdk'
+} from '@kon10/studio-sdk'
 
 export type {
   Kon10RpcInput,
@@ -74,7 +74,7 @@ export type {
   SessionUser,
   NavItem,
   EntityDescriptor,
-} from '@kon10/admin-sdk'
+} from '@kon10/studio-sdk'
 
 // Delivery-API response envelope — Zod-first, importable by any client that
 // wants to validate/type a response fetched from `/api/v1/...`.

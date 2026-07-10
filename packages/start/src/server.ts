@@ -27,14 +27,14 @@ import {
   getPublicPrincipal,
   resolveAuthOptions,
   hasPermission,
-  ADMIN_ACCESS,
+  STUDIO_ACCESS,
   type AuthUser,
 } from '@kon10/auth'
 import { AccessDeniedError } from '@kon10/core'
 import type { JsonValue } from '@kon10/core'
 import { getRuntime } from './runtime.js'
-import { humanize, Kon10RpcInputSchema } from '@kon10/admin-sdk'
-import type { EntityDescriptor, NavItem, NavSection } from '@kon10/admin-sdk'
+import { humanize, Kon10RpcInputSchema } from '@kon10/studio-sdk'
+import type { EntityDescriptor, NavItem, NavSection } from '@kon10/studio-sdk'
 import { hiddenFieldNames, projectDoc } from './hidden-fields.js'
 
 /** Force a value to its JSON-serializable form via a structural round-trip. */
@@ -70,7 +70,7 @@ export function rejectUntrustedOrigin(request: Request): Response | null {
 }
 
 function labelOf(entity: Entity): string {
-  const labels = entity.admin?.labels
+  const labels = entity.studio?.labels
   if (entity.cardinality === 'single') return labels?.singular ?? humanize(entity.slug)
   return labels?.plural ?? humanize(entity.slug)
 }
@@ -111,17 +111,17 @@ async function navOf(
   const sections = new Map<string, SectionAcc>()
 
   for (const entity of kon10.entities) {
-    if (entity.admin?.hidden) continue
+    if (entity.studio?.hidden) continue
     if (!(await canReadEntity(entity, principal))) continue
     const module = moduleOf.get(entity.slug)
-    const navMeta = module?.admin?.nav
+    const navMeta = module?.studio?.nav
     // No declared group → ungrouped (empty label): the client renders it as a
     // flat, label-less list at the top rather than a one-item heading.
-    const label = entity.admin?.group ?? navMeta?.label ?? ''
+    const label = entity.studio?.group ?? navMeta?.label ?? ''
     const order = navMeta?.order ?? (label === '' ? -100 : 0)
     // `settings`-area entities live behind the Settings button and route under
-    // `/admin/settings/…` so the shell knows to show the settings sidebar.
-    const area = entity.admin?.area ?? navMeta?.area ?? 'main'
+    // `/studio/settings/…` so the shell knows to show the settings sidebar.
+    const area = entity.studio?.area ?? navMeta?.area ?? 'main'
     const routeBase = area === 'settings' ? `${basePath}/settings` : basePath
     // Keep main and settings sections distinct even if they share a label.
     const sectionKey = `${area} ${label}`
@@ -130,14 +130,14 @@ async function navOf(
     // 'content', `Taxonomy()` → 'taxonomy', `Document()` → 'documents').
     // Fall back to a cardinality-derived default for raw entity literals that
     // don't set it.
-    const segment = entity.admin?.segment ?? (entity.cardinality === 'single' ? 'documents' : 'content')
+    const segment = entity.studio?.segment ?? (entity.cardinality === 'single' ? 'documents' : 'content')
     const item: NavItem = {
       slug: entity.slug,
       kind: entity.kind ?? (entity.cardinality === 'single' ? 'document' : 'collection'),
       cardinality: entity.cardinality,
       label: labelOf(entity),
       href: `${routeBase}/${segment}/${entity.slug}`,
-      order: entity.admin?.order,
+      order: entity.studio?.order,
     }
 
     let section = sections.get(sectionKey)
@@ -190,8 +190,8 @@ function describe(entity: Entity): EntityDescriptor {
     kind: entity.kind ?? (entity.cardinality === 'single' ? 'document' : 'collection'),
     label: labelOf(entity),
     fields: describeFields(entity.fields) as unknown as EntityDescriptor['fields'],
-    useAsTitle: entity.admin?.useAsTitle,
-    defaultColumns: entity.admin?.defaultColumns,
+    useAsTitle: entity.studio?.useAsTitle,
+    defaultColumns: entity.studio?.defaultColumns,
   }
 }
 
@@ -210,7 +210,7 @@ export async function resolveAnonymousPrincipal(kon10: Kon10Instance): Promise<P
  * Resolve the caller for an incoming request: the actual logged-in user (if
  * any) and the effective principal for enforcement — the user, or the
  * synthetic Public principal for anonymous requests. Public never holds
- * `admin:access`, so callers still get blocked by an admin gate downstream.
+ * `studio:access`, so callers still get blocked by a Studio gate downstream.
  * Shared by the RPC dispatcher and the generic module-route dispatcher so
  * every transport authenticates identically.
  *
@@ -258,21 +258,21 @@ export async function handleKon10Request(
   }
   const input = parseResult.data
   const kon10 = await getRuntime(config)
-  const basePath = config.adminPath || '/admin'
+  const basePath = config.studioPath || '/studio'
 
   const { principal } = await resolvePrincipal(kon10, request)
 
-  // Every remaining action is admin-only. Login/logout/currentUser run
+  // Every remaining action is Studio-only. Login/logout/currentUser run
   // without a session by definition (they live under @kon10/auth's own
   // routes, see `ModuleRoute`), so they can't sit behind this gate.
-  if (!hasPermission(principal, ADMIN_ACCESS)) {
-    throw new AccessDeniedError('read', 'admin')
+  if (!hasPermission(principal, STUDIO_ACCESS)) {
+    throw new AccessDeniedError('read', 'studio')
   }
 
   const opCtx: OperationContext = { cms: kon10, principal, context: { enforce: true } }
 
   // `meta.hidden` fields (credential material like `passwordHash`/`keyHash`)
-  // must never reach the browser — not even here, where the admin form just
+  // must never reach the browser — not even here, where the Studio form just
   // omits them from rendering. Mirrors the delivery API's `projectDoc`.
   const project = (slug: string, doc: Record<string, unknown>) => {
     const entity = kon10.getEntity(slug)

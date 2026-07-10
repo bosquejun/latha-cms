@@ -1,7 +1,7 @@
 /**
- * The admin RPC dispatcher must strip `meta.hidden` fields exactly like the
+ * The Studio RPC dispatcher must strip `meta.hidden` fields exactly like the
  * public delivery API does (`api.test.ts`) — the browser is the client on
- * both surfaces, and the admin form's own field filtering only controls
+ * both surfaces, and the Studio form's own field filtering only controls
  * rendering, not what's already sitting in the JSON response it received.
  * Regression coverage for the motivating case: `@kon10/users`' `passwordHash`
  * (mirrored here as a local entity, matching `api.test.ts`'s pattern, so this
@@ -109,25 +109,25 @@ function rpc(body: Record<string, unknown>) {
   )
 }
 
-test('users:list never serializes passwordHash to the admin client', async () => {
+test('users:list never serializes passwordHash to the Studio client', async () => {
   const docs = (await rpc({ action: 'list', slug: 'users' })) as Doc[]
   assert.ok(docs.length > 0)
   assert.ok(docs.every((d) => !('passwordHash' in d)))
 })
 
-test('users:page never serializes passwordHash to the admin client', async () => {
+test('users:page never serializes passwordHash to the Studio client', async () => {
   const page = (await rpc({ action: 'page', slug: 'users' })) as { docs: Doc[] }
   assert.ok(page.docs.length > 0)
   assert.ok(page.docs.every((d) => !('passwordHash' in d)))
 })
 
-test('users:get never serializes passwordHash to the admin client', async () => {
+test('users:get never serializes passwordHash to the Studio client', async () => {
   const doc = (await rpc({ action: 'get', slug: 'users', id: userId })) as Doc
   assert.ok(doc)
   assert.ok(!('passwordHash' in doc))
 })
 
-test('users:update never echoes passwordHash back to the admin client', async () => {
+test('users:update never echoes passwordHash back to the Studio client', async () => {
   const doc = (await rpc({
     action: 'update',
     slug: 'users',
