@@ -7,6 +7,7 @@
  */
 
 import type { Operation } from './access.js'
+import type { LathaInstance } from './config.js'
 
 export interface HookArgs<T = Record<string, unknown>> {
   /** The mutable payload — input data for `before*`, the saved doc for `after*`. */
@@ -19,6 +20,8 @@ export interface HookArgs<T = Record<string, unknown>> {
   slug: string
   /** Previous version of the document, when available (updates). */
   previousDoc?: T
+  /** The live instance this hook is running under — e.g. to reach `cms.cache`, `cms.db`. */
+  cms: LathaInstance
 }
 
 export type HookFn<T = Record<string, unknown>> = (

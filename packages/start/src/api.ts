@@ -35,11 +35,13 @@
  * like the RPC dispatcher.
  */
 
+import { createHash } from 'node:crypto'
 import {
   AccessDeniedError,
   moduleApiPrefix,
   operations,
   type Entity,
+  type JsonValue,
   type LathaInstance,
   type Query,
   type QuerySort,
@@ -54,6 +56,7 @@ import { API_ERROR_CODES, apiFailure, apiPaginationOf, apiSuccess, type ApiRespo
 
 const LIST_DEFAULT_PAGE_SIZE = 50
 const LIST_MAX_PAGE_SIZE = 200
+const DEFAULT_CACHE_TTL_SECONDS = 60
 
 interface CorsSettings {
   cors: '*' | string[] | false
@@ -86,6 +89,18 @@ function json(
       ...extraHeaders,
     },
   })
+}
+
+/**
+ * Cache key for one delivery-API read, scoped per-caller-identity so a
+ * cached response for one API key (or anonymous) is never served to
+ * another. The raw `Authorization` header is hashed, never stored — the
+ * cache backend must not hold bearer tokens verbatim.
+ */
+function deliveryCacheKey(request: Request, url: URL): string {
+  const auth = request.headers.get('authorization') ?? 'anon'
+  const identity = createHash('sha256').update(auth).digest('hex')
+  return `delivery:${identity}:${url.pathname}${url.search}`
 }
 
 /** Field names valid in `sort` / `where` params (declared fields + implicits). */
@@ -305,6 +320,28 @@ export async function handleDeliveryRequest(
   // admin RPC is the place that sees drafts.
   const constraint = entity.api?.where
 
+  // Read-through cache for this entity's delivery-API reads, backed by
+  // whichever `CacheAdapter` a module registered (see `@latha/cache`'s
+  // `CacheModule`). The entity's own `api.cache` overrides the app-wide
+  // `config.api.cache` when set — including an explicit `false`, since `??`
+  // only falls through on `null`/`undefined`, never on `false`. TTL-only:
+  // a write via the admin RPC does not invalidate an already-cached entry.
+  const cacheOpt = entity.api?.cache ?? config.api?.cache
+  const cacheEnabled = latha.cache !== undefined && cacheOpt !== false
+  const cacheTtl = cacheOpt ? (cacheOpt.ttlSeconds ?? DEFAULT_CACHE_TTL_SECONDS) : DEFAULT_CACHE_TTL_SECONDS
+  const cacheKey = cacheEnabled ? deliveryCacheKey(request, url) : undefined
+
+  if (cacheKey) {
+    const cached = await latha.cache!.get(cacheKey)
+    if (cached !== undefined) return json(200, cached as ApiResponse<unknown>, cors)
+  }
+
+  /** Serve a success body, caching it (when enabled) before returning it. */
+  async function respond(body: ApiResponse<unknown>): Promise<Response> {
+    if (cacheKey) await latha.cache!.set(cacheKey, body as unknown as JsonValue, cacheTtl)
+    return json(200, body, cors)
+  }
+
   try {
     if (entity.cardinality === 'single') {
       if (id !== undefined) return json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors)
@@ -312,7 +349,7 @@ export async function handleDeliveryRequest(
       if (!doc || !matchesConstraint(doc, constraint)) {
         return json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors)
       }
-      return json(200, apiSuccess(projectDoc(hidden, doc)), cors)
+      return respond(apiSuccess(projectDoc(hidden, doc)))
     }
 
     if (id !== undefined) {
@@ -320,7 +357,7 @@ export async function handleDeliveryRequest(
       if (!doc || !matchesConstraint(doc, constraint)) {
         return json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors)
       }
-      return json(200, apiSuccess(projectDoc(hidden, doc)), cors)
+      return respond(apiSuccess(projectDoc(hidden, doc)))
     }
 
     const page = parseBoundedInt(url.searchParams.get('page'), 1, 1, Number.MAX_SAFE_INTEGER)
@@ -341,13 +378,11 @@ export async function handleDeliveryRequest(
       operations.find(opCtx, slug, query),
       operations.count(opCtx, slug, { where: query.where }),
     ])
-    return json(
-      200,
+    return respond(
       apiSuccess(
         docs.map((doc) => projectDoc(hidden, doc)),
         apiPaginationOf(total, page, pageSize),
       ),
-      cors,
     )
   } catch (err) {
     if (err instanceof BadRequestError) {

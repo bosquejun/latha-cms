@@ -17,6 +17,7 @@ Every package has a strict boundary. Nothing crosses it. This is not a soft guid
 | `@latha/auth` | Session handling, RBAC, guards | User entity logic, content entity logic |
 | `@latha/users` | The `users` collection, user operations | Auth session logic |
 | `@latha/media` | `MediaModule`, storage adapters, media-specific field type (`media`) | Content-specific logic |
+| `@latha/cache` | `CacheAdapter` implementations (`inMemoryCache`, `redisCache`) | Business logic — a cache adapter never knows what's being cached |
 | `@latha/admin-sdk` | Admin UI shell, field renderers, views, display hints | Business logic, persistence logic |
 | `@latha/ui` | Pure design system primitives | Any CMS knowledge whatsoever |
 | `@latha/start` | TanStack Start integration, RPC dispatcher | Business logic |

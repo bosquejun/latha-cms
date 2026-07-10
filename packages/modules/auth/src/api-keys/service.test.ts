@@ -5,7 +5,8 @@
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import type { Doc, LathaInstance, Query } from '@latha/core'
+import type { CacheAdapter, Doc, JsonValue, LathaInstance, Query } from '@latha/core'
+import { apiKeysEntity } from './entities.js'
 import { createApiKey, verifyApiKeyToken } from './service.js'
 import {
   API_KEY_TOKEN_PREFIX,
@@ -14,8 +15,31 @@ import {
   hashApiKeyToken,
 } from './token.js'
 
+/** A `CacheAdapter` that counts `get`/`set` calls, backed by a plain `Map`. */
+function spyCache(): CacheAdapter & { getCalls: number; setCalls: number } {
+  const store = new Map<string, JsonValue>()
+  return {
+    getCalls: 0,
+    setCalls: 0,
+    async get(key: string) {
+      this.getCalls++
+      return store.get(key)
+    },
+    async set(key: string, value: JsonValue) {
+      this.setCalls++
+      store.set(key, value)
+    },
+    async delete(key: string) {
+      store.delete(key)
+    },
+    async has(key: string) {
+      return store.has(key)
+    },
+  }
+}
+
 /** Minimal fake instance: an in-memory `api-keys` table, no roles/catalog. */
-function fakeLatha(): LathaInstance {
+function fakeLatha(cache?: CacheAdapter): LathaInstance {
   const rows = new Map<string, Doc>()
   let seq = 0
   const db = {
@@ -48,7 +72,7 @@ function fakeLatha(): LathaInstance {
     },
     async migrate() {},
   }
-  return { db } as unknown as LathaInstance
+  return { db, cache } as unknown as LathaInstance
 }
 
 test('generateApiKeyToken: prefixed, high-entropy, unique', () => {
@@ -120,4 +144,60 @@ test('verifyApiKeyToken: expired keys deny, future expiry allows', async () => {
   })
   assert.equal(await verifyApiKeyToken(latha, past.token), null)
   assert.ok(await verifyApiKeyToken(latha, future.token))
+})
+
+test('verifyApiKeyToken caches the resolved doc when a cache is registered', async () => {
+  const cache = spyCache()
+  const latha = fakeLatha(cache)
+  const { token } = await createApiKey(latha, { name: 'ci' })
+
+  await verifyApiKeyToken(latha, token)
+  assert.equal(cache.setCalls, 1)
+
+  await verifyApiKeyToken(latha, token)
+  assert.equal(cache.setCalls, 1, 'second call is served from cache, not recomputed')
+  assert.equal(cache.getCalls, 2)
+})
+
+test('the entity afterUpdate hook invalidates a disabled key immediately, not stale-until-TTL', async () => {
+  const cache = spyCache()
+  const latha = fakeLatha(cache)
+  const { id, token } = await createApiKey(latha, { name: 'ci' })
+
+  assert.ok(await verifyApiKeyToken(latha, token), 'caches the enabled doc')
+
+  const updated = await latha.db.update('api-keys', id, { enabled: false })
+  await apiKeysEntity.hooks!.afterUpdate![0]!({
+    data: updated as Record<string, unknown>,
+    principal: null,
+    operation: 'update',
+    slug: 'api-keys',
+    cms: latha,
+  })
+
+  assert.equal(
+    await verifyApiKeyToken(latha, token),
+    null,
+    'invalidated entry is re-fetched and denies immediately',
+  )
+})
+
+test('the entity afterDelete hook invalidates the deleted key immediately', async () => {
+  const cache = spyCache()
+  const latha = fakeLatha(cache)
+  const { id, token } = await createApiKey(latha, { name: 'ci' })
+  const doc = await latha.db.findOne('api-keys', id)
+
+  assert.ok(await verifyApiKeyToken(latha, token), 'caches the doc')
+
+  await latha.db.delete('api-keys', id)
+  await apiKeysEntity.hooks!.afterDelete![0]!({
+    data: doc as Record<string, unknown>,
+    principal: null,
+    operation: 'delete',
+    slug: 'api-keys',
+    cms: latha,
+  })
+
+  assert.equal(await verifyApiKeyToken(latha, token), null, 'deleted key denies immediately')
 })

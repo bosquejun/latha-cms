@@ -17,6 +17,7 @@ import {
   stampFields,
   text,
   z,
+  type DeliveryCacheOption,
   type Entity,
   type EntityAccess,
   type EntityAdminConfig,
@@ -47,6 +48,13 @@ export interface CollectionConfig<TDoc = Record<string, unknown>> {
    * whose saves should be live immediately.
    */
   drafts?: boolean
+  /**
+   * Per-entity override of the app-wide delivery-API cache TTL
+   * (`DeliveryApiConfig.cache`) — `false` disables read-through caching for
+   * this collection's public reads regardless of the app-wide setting; an
+   * object overrides just the TTL. Omit to inherit the app-wide default.
+   */
+  cache?: DeliveryCacheOption
 }
 
 /** The implicit publish-workflow field stamped by `Collection()` (unless overridden). */
@@ -58,20 +66,37 @@ function statusField() {
   })
 }
 
+/**
+ * Merge the drafts `where` constraint and a `cache` override into one
+ * `Entity.api` bag, omitting it entirely when neither is set — the same
+ * "no key at all when unused" contract `Entity.api` has always had.
+ */
+function buildApiConfig(opts: {
+  where?: Record<string, unknown>
+  cache?: DeliveryCacheOption
+}): Entity['api'] | undefined {
+  if (opts.where === undefined && opts.cache === undefined) return undefined
+  return {
+    ...(opts.where !== undefined ? { where: opts.where } : {}),
+    ...(opts.cache !== undefined ? { cache: opts.cache } : {}),
+  }
+}
+
 /** Define a Collection — many records, standard CRUD. */
 export function Collection<TFields extends FieldsRecord>(
   input: { fields: TFields } & CollectionConfig<InferDoc<TFields>>,
 ): Collection<InferDoc<TFields>> {
-  const { fields, drafts = true, ...rest } = input
+  const { fields, drafts = true, cache, ...rest } = input
   const withStatus: FieldsRecord =
     drafts && !('status' in fields) ? { ...fields, status: statusField() } : fields
+  const api = buildApiConfig({ where: drafts ? { status: 'published' } : undefined, cache })
   return {
     kind: 'collection',
     cardinality: 'many',
     timestamps: true,
     actions: ['read', 'create', 'update', 'delete'],
     ...rest,
-    ...(drafts ? { api: { where: { status: 'published' } } } : {}),
+    ...(api ? { api } : {}),
     admin: { segment: 'content', ...rest.admin },
     fields: stampFields(withStatus),
   }
@@ -83,19 +108,27 @@ export interface DocumentConfig<TDoc = Record<string, unknown>> {
   access?: EntityAccess<TDoc>
   hooks?: EntityHooks<TDoc>
   timestamps?: boolean
+  /**
+   * Per-entity override of the app-wide delivery-API cache TTL. A rarely-written
+   * singleton (e.g. site settings) is a good candidate for a long TTL. Omit
+   * to inherit the app-wide default; `false` disables caching entirely.
+   */
+  cache?: DeliveryCacheOption
 }
 
 /** Define a Document — a single-instance singleton (no list view). */
 export function Document<TFields extends FieldsRecord>(
   input: { fields: TFields } & DocumentConfig<InferDoc<TFields>>,
 ): Document<InferDoc<TFields>> {
-  const { fields, ...rest } = input
+  const { fields, cache, ...rest } = input
+  const api = buildApiConfig({ cache })
   return {
     kind: 'document',
     cardinality: 'single',
     timestamps: true,
     actions: ['read', 'update'],
     ...rest,
+    ...(api ? { api } : {}),
     admin: { segment: 'documents', ...rest.admin },
     fields: stampFields(fields),
   }
@@ -108,6 +141,12 @@ export interface TaxonomyInput {
   /** Extra fields beyond the implicit `name` / `slug` (and `parent`). */
   fields?: FieldsRecord
   admin?: EntityAdminConfig
+  /**
+   * Per-entity override of the app-wide delivery-API cache TTL. Terms
+   * (categories, tags) are rarely written, so a long TTL is often a good fit.
+   * Omit to inherit the app-wide default; `false` disables caching entirely.
+   */
+  cache?: DeliveryCacheOption
 }
 
 /**
@@ -124,6 +163,7 @@ export function Taxonomy(input: TaxonomyInput): Taxonomy {
     implicit.parent = text()
   }
 
+  const api = buildApiConfig({ cache: input.cache })
   return {
     kind: 'taxonomy',
     cardinality: 'many',
@@ -132,6 +172,7 @@ export function Taxonomy(input: TaxonomyInput): Taxonomy {
     timestamps: true,
     admin: { segment: 'taxonomy', ...input.admin },
     actions: ['read', 'create', 'update', 'delete'],
+    ...(api ? { api } : {}),
     fields: stampFields({ ...implicit, ...(input.fields ?? {}) }),
   }
 }

@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import type { DBAdapter, Doc } from '@latha/core'
+import type { DBAdapter, Doc, LathaInstance } from '@latha/core'
 import {
   createSlugHooks,
   ensureUniqueSlug,
@@ -51,7 +51,14 @@ function hooksFor(db: DBAdapter, targets = [{ name: 'slug', tokens: titleTokens 
   return createSlugHooks(db, 'posts', targets)
 }
 
-const hookArgs = { principal: null, operation: 'create' as const, slug: 'posts' }
+// These hooks close over `db` directly (see hooks.ts's doc comment) and never
+// read `cms` — a stub satisfies the type without needing a real instance.
+const hookArgs = {
+  principal: null,
+  operation: 'create' as const,
+  slug: 'posts',
+  cms: {} as unknown as LathaInstance,
+}
 
 test('beforeCreate generates a unique slug from the template', async () => {
   const { beforeCreate } = hooksFor(fakeDb({ posts: [] }))

@@ -15,6 +15,11 @@
  * any S3-compatible provider — Cloudflare R2, Supabase Storage, AWS S3, etc.
  * — over signed HTTP requests, no native deps either.
  *
+ * Same reasoning for the delivery-API cache: `inMemoryCache()` (used in
+ * `latha.config.ts`) is single-process, and Vercel serverless functions
+ * don't share process state across invocations, so `redisCache()` is used
+ * here instead — a real shared cache every invocation reads/writes through.
+ *
  * `vite.config.ts` picks this entrypoint only when `process.env.VERCEL` is
  * set, so `latha.config.ts` (and @libsql/client) is never part of this
  * build's module graph at all — not a runtime branch inside one bundle.
@@ -22,6 +27,7 @@
 
 import { postgresAdapter } from '@latha/storage'
 import { s3Storage } from '@latha/media'
+import { redisCache } from '@latha/cache'
 import { buildConfig } from './latha.config.base.js'
 
 export default buildConfig(
@@ -37,4 +43,5 @@ export default buildConfig(
     endpoint: process.env.S3_ENDPOINT,
     publicUrl: process.env.S3_PUBLIC_URL,
   }),
+  redisCache({ url: process.env.REDIS_URL }),
 )

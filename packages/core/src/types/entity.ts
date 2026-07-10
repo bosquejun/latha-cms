@@ -16,6 +16,9 @@ import type { EntityHooks } from './hook.js'
 
 export type Cardinality = 'many' | 'single'
 
+/** A per-entity or app-wide delivery-API cache setting: a TTL override, or `false` to disable. */
+export type DeliveryCacheOption = { ttlSeconds?: number } | false
+
 export interface EntityAdminConfig {
   /** Field name used as the row/title label in list views. */
   useAsTitle?: string
@@ -78,7 +81,16 @@ export interface Entity<TDoc = Record<string, unknown>> {
    * read of this entity is scoped to (e.g. `{ status: 'published' }` stamped
    * by a content module with drafts enabled).
    */
-  api?: { where?: Record<string, unknown> }
+  api?: {
+    where?: Record<string, unknown>
+    /**
+     * Per-entity override of `DeliveryApiConfig.cache` — `false` disables
+     * caching for this entity's delivery-API reads regardless of the
+     * app-wide setting; an object overrides just the TTL. Omit to inherit
+     * the app-wide default. Same passthrough contract as `where`.
+     */
+    cache?: DeliveryCacheOption
+  }
 }
 
 /**

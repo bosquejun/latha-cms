@@ -15,6 +15,8 @@ import {
   text,
   type Entity,
 } from '@latha/core'
+import { invalidate } from '@latha/cache'
+import { roleIdKey, roleNameKey } from '../cache.js'
 
 export const ROLES_SLUG = 'roles'
 export const SCOPES_SLUG = 'scopes'
@@ -59,6 +61,25 @@ export const rolesEntity: Entity = {
         if (data?.system) {
           throw new Error(`The "${data.name}" role is a system role and cannot be deleted.`)
         }
+        return data
+      },
+    ],
+    // Invalidate the cached role doc immediately — role/permission changes
+    // must not wait out the cache's defense-in-depth TTL.
+    afterUpdate: [
+      async ({ data, previousDoc, cms }) => {
+        await invalidate(cms, roleIdKey(String(data.id)))
+        if (typeof data.name === 'string') await invalidate(cms, roleNameKey(data.name))
+        if (typeof previousDoc?.name === 'string' && previousDoc.name !== data.name) {
+          await invalidate(cms, roleNameKey(previousDoc.name))
+        }
+        return data
+      },
+    ],
+    afterDelete: [
+      async ({ data, cms }) => {
+        await invalidate(cms, roleIdKey(String(data.id)))
+        if (typeof data.name === 'string') await invalidate(cms, roleNameKey(data.name))
         return data
       },
     ],

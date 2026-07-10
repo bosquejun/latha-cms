@@ -14,6 +14,8 @@
 
 import { operations } from '@latha/core'
 import type { LathaInstance } from '@latha/core'
+import { cached } from '@latha/cache'
+import { AUTH_CACHE_TTL_SECONDS, userIdKey } from './cache.js'
 
 /** The default entity slug a subject store reads from. */
 export const DEFAULT_USERS_SLUG = 'users'
@@ -71,7 +73,9 @@ export function entitySubjectStore(
     },
     async findById(id) {
       ensure()
-      return (await operations.findOne(systemCtx(latha), slug, id)) as Subject | null
+      return cached(latha, userIdKey(slug, id), AUTH_CACHE_TTL_SECONDS, async () => {
+        return (await operations.findOne(systemCtx(latha), slug, id)) as Subject | null
+      })
     },
   }
 }

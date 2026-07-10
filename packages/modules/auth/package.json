@@ -28,6 +28,7 @@
   },
   "peerDependencies": {
     "@latha/core": "workspace:*",
+    "@latha/cache": "workspace:*",
     "@latha/admin-sdk": "workspace:*",
     "@latha/ui": "workspace:*",
     "react": "^18 || ^19",
@@ -41,6 +42,7 @@
   },
   "devDependencies": {
     "@latha/core": "workspace:*",
+    "@latha/cache": "workspace:*",
     "@latha/admin-sdk": "workspace:*",
     "@latha/ui": "workspace:*",
     "@types/node": "^22.10.0",

@@ -8,6 +8,8 @@
  */
 
 import type { LathaInstance } from '@latha/core'
+import { cached } from '@latha/cache'
+import { AUTH_CACHE_TTL_SECONDS, apiKeyHashKey } from '../cache.js'
 import { resolveRoleGrants } from '../rbac/resolve.js'
 import { API_KEYS_SLUG } from './entities.js'
 import {
@@ -64,7 +66,10 @@ export async function verifyApiKeyToken(
 ): Promise<ApiKeyPrincipal | null> {
   if (!token.startsWith(API_KEY_TOKEN_PREFIX)) return null
   const keyHash = await hashApiKeyToken(token)
-  const doc = (await latha.db.find(API_KEYS_SLUG, { where: { keyHash }, limit: 1 }))[0]
+  const doc = await cached(latha, apiKeyHashKey(keyHash), AUTH_CACHE_TTL_SECONDS, async () => {
+    const rows = await latha.db.find(API_KEYS_SLUG, { where: { keyHash }, limit: 1 })
+    return rows[0] ?? null
+  })
   if (!doc || doc.enabled === false) return null
   if (doc.expiresAt != null && doc.expiresAt !== '') {
     const expiry = new Date(String(doc.expiresAt))

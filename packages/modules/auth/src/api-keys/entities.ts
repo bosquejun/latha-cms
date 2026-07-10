@@ -17,6 +17,8 @@ import {
   text,
   type Entity,
 } from '@latha/core'
+import { invalidate } from '@latha/cache'
+import { apiKeyHashKey } from '../cache.js'
 import { ROLES_SLUG } from '../rbac/entities.js'
 
 export const API_KEYS_SLUG = 'api-keys'
@@ -51,4 +53,20 @@ export const apiKeysEntity: Entity = {
       meta: { description: 'Optional expiry — the key stops working after this instant.' },
     }),
   }),
+  hooks: {
+    // Revoking/disabling/editing or deleting a key must take effect
+    // immediately, not wait out the cache's defense-in-depth TTL.
+    afterUpdate: [
+      async ({ data, cms }) => {
+        await invalidate(cms, apiKeyHashKey(String(data.keyHash)))
+        return data
+      },
+    ],
+    afterDelete: [
+      async ({ data, cms }) => {
+        await invalidate(cms, apiKeyHashKey(String(data.keyHash)))
+        return data
+      },
+    ],
+  },
 }

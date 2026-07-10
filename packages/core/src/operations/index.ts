@@ -135,6 +135,7 @@ export async function create(
     principal,
     operation: 'create',
     slug,
+    cms: ctx.cms,
   })
 
   const created = await ctx.cms.db.create(slug, beforeData)
@@ -144,6 +145,7 @@ export async function create(
     principal,
     operation: 'create',
     slug,
+    cms: ctx.cms,
   }) as Promise<Doc>
 }
 
@@ -176,6 +178,7 @@ export async function update(
     operation: 'update',
     slug,
     previousDoc,
+    cms: ctx.cms,
   })
 
   const updated = await ctx.cms.db.update(slug, id, beforeData)
@@ -186,6 +189,7 @@ export async function update(
     operation: 'update',
     slug,
     previousDoc,
+    cms: ctx.cms,
   }) as Promise<Doc>
 }
 
@@ -208,6 +212,7 @@ export async function destroy(
     principal,
     operation: 'delete',
     slug,
+    cms: ctx.cms,
   })
 
   await ctx.cms.db.delete(slug, id)
@@ -217,6 +222,7 @@ export async function destroy(
     principal,
     operation: 'delete',
     slug,
+    cms: ctx.cms,
   })
 }
 
@@ -277,6 +283,7 @@ export async function saveGlobal(
     operation,
     slug,
     previousDoc: existing ?? undefined,
+    cms: ctx.cms,
   })
 
   const saved = existing
@@ -289,5 +296,6 @@ export async function saveGlobal(
     operation,
     slug,
     previousDoc: existing ?? undefined,
+    cms: ctx.cms,
   }) as Promise<Doc>
 }

@@ -13,6 +13,8 @@
  */
 
 import type { LathaInstance } from '@latha/core'
+import { cached } from '@latha/cache'
+import { AUTH_CACHE_TTL_SECONDS, roleIdKey, roleNameKey } from '../cache.js'
 import { getCatalog, type RbacCatalog } from './catalog.js'
 import { ROLES_SLUG } from './entities.js'
 import { AUTHENTICATED_ROLE, PUBLIC_ROLE } from './permissions.js'
@@ -45,8 +47,10 @@ async function roleByName(
   latha: LathaInstance,
   name: string,
 ): Promise<Record<string, unknown> | null> {
-  const rows = await latha.db.find(ROLES_SLUG, { where: { name }, limit: 1 })
-  return rows[0] ?? null
+  return cached(latha, roleNameKey(name), AUTH_CACHE_TTL_SECONDS, async () => {
+    const rows = await latha.db.find(ROLES_SLUG, { where: { name }, limit: 1 })
+    return rows[0] ?? null
+  })
 }
 
 /** The permission keys granted by a role, looked up by name. */
@@ -73,7 +77,9 @@ export async function resolveRoleGrants(
   const permissions = new Set<string>()
 
   for (const roleId of roleIds) {
-    const role = await latha.db.findOne(ROLES_SLUG, roleId)
+    const role = await cached(latha, roleIdKey(roleId), AUTH_CACHE_TTL_SECONDS, () =>
+      latha.db.findOne(ROLES_SLUG, roleId),
+    )
     if (!role) continue
     if (typeof role.name === 'string') roles.push(role.name)
     for (const key of keysFromRole(catalog, role)) permissions.add(key)

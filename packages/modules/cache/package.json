@@ -1,0 +1,35 @@
+{
+  "name": "@latha/cache",
+  "version": "0.0.0",
+  "description": "LathaCMS cache — CacheAdapter implementations (in-memory, Redis).",
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "development": "./src/index.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsc -p tsconfig.json && node --test 'dist/**/*.test.js'"
+  },
+  "dependencies": {
+    "ioredis": "^5.11.1"
+  },
+  "peerDependencies": {
+    "@latha/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@latha/core": "workspace:*",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2"
+  }
+}
