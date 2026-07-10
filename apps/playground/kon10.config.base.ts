@@ -146,16 +146,16 @@ export function buildConfig(
           Document({
             slug: 'site-settings',
             // Lives in the settings sidebar (behind the Settings button)
-            // rather than the main content nav — same `admin.area` used by
+            // rather than the main content nav — same `studio.area` used by
             // `@kon10/users`' `users` entity and `@kon10/auth`'s RBAC/API-key
             // entities. It's still a `ContentModule` `Document` (a singleton
             // needs `Document()`'s persistence/operations), but display
-            // placement is an orthogonal `admin` concern. `group: ''`
+            // placement is an orthogonal `studio` concern. `group: ''`
             // overrides ContentModule's default "Content" nav label so it
             // sits flat in the settings sidebar (like `users`) instead of
             // nesting under a one-item "Content" folder.
-            admin: { area: 'settings', group: '' },
-            // Written rarely (only from the admin), read on nearly every public
+            studio: { area: 'settings', group: '' },
+            // Written rarely (only from the Studio), read on nearly every public
             // page load — a long TTL on the delivery-API cache trades a bit of
             // staleness after an edit for far fewer reads hitting the db.
             cache: { ttlSeconds: 3600 },
@@ -177,7 +177,7 @@ export function buildConfig(
                 meta: {
                   group: 'Branding',
                   width: 'half',
-                  description: 'Shown in the admin topbar and public site header.',
+                  description: 'Shown in the Studio topbar and public site header.',
                 },
               }),
               favicon: media({
@@ -189,7 +189,7 @@ export function buildConfig(
               }),
 
               // Public-site theme tokens, named after the shadcn/ui CSS
-              // variables this admin's own design system already runs on
+              // variables this Studio's own design system already runs on
               // (@kon10/ui/src/styles/globals.css: --background, --foreground,
               // --primary, --secondary, --accent) — a curated subset rather
               // than all ~15 shadcn tokens, since most of those (card, popover,
@@ -263,7 +263,7 @@ export function buildConfig(
 
           Document({
             slug: 'landing-page',
-            admin: { group: 'Globals', order: 15 },
+            studio: { group: 'Globals', order: 15 },
             fields: {
               // A flexible, ordered page builder — same `blocks()` field type
               // `pages.content` uses below, so editors compose the landing
@@ -304,7 +304,7 @@ export function buildConfig(
 
           Document({
             slug: 'navigation',
-            admin: { group: 'Globals', order: 16 },
+            studio: { group: 'Globals', order: 16 },
             fields: {
               items: array({
                 fields: {
@@ -326,7 +326,7 @@ export function buildConfig(
 
           Document({
             slug: 'footer',
-            admin: { group: 'Globals', order: 17 },
+            studio: { group: 'Globals', order: 17 },
             // Social links are deliberately NOT duplicated here — the public
             // site reads them from `site-settings.social` (single source of
             // truth). Duplicating the same handles/URLs into a second
@@ -346,7 +346,7 @@ export function buildConfig(
 
           Collection({
             slug: 'posts',
-            admin: { order: 10, useAsTitle: 'title', defaultColumns: ['title', 'status', 'publishedAt'] },
+            studio: { order: 10, useAsTitle: 'title', defaultColumns: ['title', 'status', 'publishedAt'] },
             // `read`/`create` stay on the RBAC default (deny-by-default + the
             // posts:* permissions). `update`/`delete` get an explicit ownership
             // predicate: the `author` role only ever holds posts:create/read, so
@@ -392,7 +392,7 @@ export function buildConfig(
               excerpt: text({ meta: { group: 'Content', multiline: true, description: 'Short summary shown in listings.' } }),
               content: richtext({ meta: { group: 'Content' } }),
               // Zod-first escape hatch: full schema validation server-side,
-              // mirrored to the admin form via jsonSchema.
+              // mirrored to the Studio form via jsonSchema.
               contactEmail: text({ schema: z.email(), meta: { group: 'SEO & Meta', label: 'Contact Email' } }),
               views: number({ integer: true, defaultValue: 0, meta: { group: 'SEO & Meta' } }),
               seo: group({
@@ -420,14 +420,14 @@ export function buildConfig(
             },
           }),
 
-          Taxonomy({ slug: 'categories', hierarchical: true, admin: { order: 20 } }),
+          Taxonomy({ slug: 'categories', hierarchical: true, studio: { order: 20 } }),
 
           // Flat taxonomy (no parent) — the posts `tags` field references it.
-          Taxonomy({ slug: 'tags', admin: { order: 25 } }),
+          Taxonomy({ slug: 'tags', studio: { order: 25 } }),
 
           Collection({
             slug: 'pages',
-            admin: { order: 15, useAsTitle: 'title', defaultColumns: ['title', 'status'] },
+            studio: { order: 15, useAsTitle: 'title', defaultColumns: ['title', 'status'] },
             fields: {
               title: text({ required: true }),
               // Nested pages: pick a parent and this page's URL nests under
@@ -471,7 +471,7 @@ export function buildConfig(
         console.log('[kon10] seeded admin: admin@kon10.dev / password')
       }
 
-      // Seed the `author` role: admin access plus posts:create/posts:read only —
+      // Seed the `author` role: Studio access plus posts:create/posts:read only —
       // no blanket posts:update/posts:delete, so the posts `access` predicates
       // above fall back to the id === doc.author ownership check for holders of
       // this role. AuthModule's own default-role seeding has already run and
@@ -479,7 +479,7 @@ export function buildConfig(
       // before `seed` runs), so permission keys are already resolvable to ids.
       if (!(await getRoleByName(kon10, 'author'))) {
         const catalog = getCatalog(kon10)
-        const permissionIds = ['admin:access', 'posts:create', 'posts:read']
+        const permissionIds = ['studio:access', 'posts:create', 'posts:read']
           .map((key) => catalog?.permissionIdByKey.get(key))
           .filter((id): id is string => typeof id === 'string')
         await kon10.db.create('roles', {

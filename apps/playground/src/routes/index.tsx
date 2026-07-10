@@ -18,12 +18,12 @@ function LandingPage() {
         <code className="rounded bg-muted px-1.5 py-0.5 text-sm">
           kon10.config.ts
         </code>{' '}
-        plus a one-line server endpoint and two mount points — the admin UI,
+        plus a one-line server endpoint and two mount points — the Studio UI,
         API, and auth all come from <code className="rounded bg-muted px-1.5 py-0.5 text-sm">@kon10/start</code>.
       </p>
       <Button asChild>
-        <Link to="/admin/$" params={{ _splat: '' }}>
-          Open the admin →
+        <Link to="/studio/$" params={{ _splat: '' }}>
+          Open the Studio →
         </Link>
       </Button>
     </main>

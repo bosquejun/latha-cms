@@ -3,16 +3,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Scan the design system + admin SDK sources for utility classes.
+/* Scan the design system + Studio SDK sources for utility classes.
    Paths are relative to this file: packages/ui/src/styles/. */
 @source "../..";
-@source "../../../admin-sdk/src";
+@source "../../../studio-sdk/src";
 @source "../../../start/src";
 @source "../../../modules";
 
 /* ---------------------------------------------------------------------------
  * Webfonts — Geist Sans + Geist Mono (Vercel's open-source typeface).
- * Self-hosted variable woff2 so the admin renders identically with no CDN.
+ * Self-hosted variable woff2 so the Studio renders identically with no CDN.
  * ------------------------------------------------------------------------- */
 @font-face {
   font-family: 'Geist';
@@ -326,7 +326,7 @@
     background: var(--primary);
     color: var(--primary-foreground);
   }
-  /* Thin, unobtrusive scrollbars to match the clean admin aesthetic. */
+  /* Thin, unobtrusive scrollbars to match the clean Studio aesthetic. */
   * {
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;

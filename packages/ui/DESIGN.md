@@ -32,7 +32,7 @@ also produce `gap-*` and `m-*`.)
 
 ## Container awareness
 
-Padded block containers (e.g. `Card`, `AdminShell <main>`) declare their
+Padded block containers (e.g. `Card`, `StudioShell <main>`) declare their
 horizontal padding as an inheritable CSS variable:
 
 ```
@@ -71,7 +71,7 @@ the size utility as needed.
 ## Compliance
 
 **All non-primitive components must use semantic tokens** — shell components,
-module pages, admin views, custom widgets, and playground files.
+module pages, Studio views, custom widgets, and playground files.
 
 **Exempt:** `packages/ui/src/components/ui/` — shadcn primitive atoms (button,
 input, badge, card, etc.). Their internal padding is part of their visual design

@@ -12,7 +12,7 @@ export interface FieldProps {
 
 /**
  * Vertical label + control + helper/error wrapper. A small composite over the
- * shadcn Label primitive — CMS-agnostic, used by admin field renderers.
+ * shadcn Label primitive — CMS-agnostic, used by Studio field renderers.
  */
 export function Field({
   htmlFor,

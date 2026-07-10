@@ -1,13 +1,13 @@
 /**
- * Example custom page — a full admin route with its own sidebar entry.
+ * Example custom page — a full Studio route with its own sidebar entry.
  *
- * Files under `src/admin/pages/` mount at `<adminBase>/<config.path>` and add a
+ * Files under `src/studio/pages/` mount at `<studioBase>/<config.path>` and add a
  * sidebar link under `config.group`. The component receives the splat `params`
  * for anything after its mount path.
  */
 
 import { definePageConfig, type PageComponentProps } from '@kon10/start'
-import { PageHeader, PageLayout } from '@kon10/admin-sdk'
+import { PageHeader, PageLayout } from '@kon10/studio-sdk'
 import { Card, CardHeader, CardTitle, CardContent } from '@kon10/ui'
 import { BarChart3 } from 'lucide-react'
 
@@ -26,7 +26,7 @@ export default function Analytics({ params }: PageComponentProps) {
     <>
       <PageHeader
         title="Analytics"
-        description="A custom page mounted at /admin/analytics."
+        description="A custom page mounted at /studio/analytics."
       />
       <PageLayout>
         <Card>

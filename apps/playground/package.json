@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@kon10/admin-sdk": "workspace:*",
+    "@kon10/studio-sdk": "workspace:*",
     "@kon10/auth": "workspace:*",
     "@kon10/cache": "workspace:*",
     "@kon10/content": "workspace:*",

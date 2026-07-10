@@ -1,7 +1,7 @@
 /**
- * Example widget — a help link pinned to the start of the admin topbar.
+ * Example widget — a help link pinned to the start of the Studio topbar.
  *
- * A file under `src/admin/widgets/` becomes a widget when it exports a default
+ * A file under `src/studio/widgets/` becomes a widget when it exports a default
  * component plus a `config` declaring its zone(s). The `kon10Start()` Vite
  * plugin auto-collects it; no manual registration.
  */

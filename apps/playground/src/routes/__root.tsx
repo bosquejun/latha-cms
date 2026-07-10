@@ -8,15 +8,15 @@ import {
 } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { Kon10Provider } from '@kon10/start'
-import { mergeExtensions } from '@kon10/admin-sdk'
-import { adminExtensions as baseExtensions } from 'virtual:kon10/admin-extensions'
+import { mergeExtensions } from '@kon10/studio-sdk'
+import { studioExtensions as baseExtensions } from 'virtual:kon10/studio-extensions'
 import { FileTextIcon, FileStackIcon, FolderTreeIcon } from 'lucide-animated'
 import appCss from '../styles.css?url'
 
 // Content-module entity kinds → animated sidebar icons. Lives here (not in
-// admin-sdk or start) because icon choices are an app-level concern: this app
+// studio-sdk or start) because icon choices are an app-level concern: this app
 // uses @kon10/content and picks the icons it wants for each kind.
-const adminExtensions = mergeExtensions([
+const studioExtensions = mergeExtensions([
   baseExtensions,
   { kindIcons: { collection: FileTextIcon, document: FileStackIcon, taxonomy: FolderTreeIcon } },
 ])
@@ -36,7 +36,7 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
-      <Kon10Provider basePath="/admin" loginPath="/login" extensions={adminExtensions}>
+      <Kon10Provider basePath="/studio" loginPath="/login" extensions={studioExtensions}>
         <Outlet />
       </Kon10Provider>
     </RootDocument>

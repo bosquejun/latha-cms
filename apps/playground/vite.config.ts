@@ -19,7 +19,7 @@ export default defineConfig(({ command }) => ({
     tsConfigPaths({ projects: ['./tsconfig.json'] }),
     tailwindcss(),
     // kon10Start() wraps tanstackStart() and injects the framework's /login and
-    // /admin/$ routes, so this app needs no route files for them. In the
+    // /studio/$ routes, so this app needs no route files for them. In the
     // monorepo it also serves @kon10/* packages from source for instant HMR;
     // that is a no-op for apps that install @kon10/start from npm.
     //
@@ -36,7 +36,7 @@ export default defineConfig(({ command }) => ({
     // its own deploy adapters; Nitro is what actually produces a deployable
     // `.output`/`.vercel/output` tree (auto-detecting the host from the
     // build environment). Restricted to `command === 'build'` because its
-    // dev-mode environment setup collides with @kon10/start's admin-UI
+    // dev-mode environment setup collides with @kon10/start's Studio-UI
     // config loader (`ssrLoadModule` crashes with "invoke was called before
     // connect") — `vite dev` doesn't need Nitro at all, so this sidesteps
     // that rather than fighting it.
