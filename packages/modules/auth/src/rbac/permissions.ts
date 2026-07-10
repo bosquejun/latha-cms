@@ -7,14 +7,14 @@
  *   - `"*:<action>"` — an action across every scope.
  *
  * Scopes are derived from entities that declare `entity.actions`, plus the
- * built-in `admin` scope whose `access` action (`admin:access`) gates entry
- * to the admin UI.
+ * built-in `studio` scope whose `access` action (`studio:access`) gates entry
+ * to the Studio UI.
  */
 
 import type { AuthUser } from '../types.js'
 
-/** The permission that gates access to the admin surface at all. */
-export const ADMIN_ACCESS = 'admin:access'
+/** The permission that gates access to the Studio surface at all. */
+export const STUDIO_ACCESS = 'studio:access'
 
 /** The superadmin permission key — matches everything. */
 export const SUPERADMIN = '*'

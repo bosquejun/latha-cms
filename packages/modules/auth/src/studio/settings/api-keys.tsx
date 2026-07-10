@@ -2,7 +2,7 @@
  * API Keys — mint and revoke bearer credentials for the delivery API.
  *
  * Lives in @kon10/auth (the module that owns the `api-keys` entity) and is
- * registered as a settings extension via the @kon10/auth/admin barrel, like
+ * registered as a settings extension via the @kon10/auth/studio barrel, like
  * Roles & Permissions. The generic CRUD form can't manage keys: creating one
  * means generating a secret and showing it exactly once.
  *
@@ -45,7 +45,7 @@ import {
   useKon10,
   useAsync,
   type JsonDoc,
-} from '@kon10/admin-sdk'
+} from '@kon10/studio-sdk'
 import { KeyRound, Plus, Trash2 } from 'lucide-react'
 import {
   apiKeyDisplayPrefix,

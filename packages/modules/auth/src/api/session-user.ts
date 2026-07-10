@@ -1,6 +1,6 @@
 /**
  * The client-facing session shape — a stripped-down `AuthUser` safe to put on
- * the wire. Duck-typed rather than imported from `@kon10/admin-sdk` (an
+ * the wire. Duck-typed rather than imported from `@kon10/studio-sdk` (an
  * optional peer dependency here): the JSON wire format is what actually
  * enforces the contract, not the type import.
  */

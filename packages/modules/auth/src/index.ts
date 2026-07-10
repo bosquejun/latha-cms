@@ -4,7 +4,7 @@
  * Provides the AuthModule (RBAC entities, the RBAC guard, catalog sync, default
  * role seeding), edge-friendly password hashing, signed session tokens, the
  * service helpers an app uses for login / logout / route guards, and the
- * permission helpers the framework layer uses to gate the admin surface.
+ * permission helpers the framework layer uses to gate the Studio surface.
  */
 
 export { AuthModule, getCatalog, type AuthModuleConfig } from './module.js'
@@ -61,7 +61,7 @@ export {
   matchesPermission,
   permissionsOf,
   permissionKey,
-  ADMIN_ACCESS,
+  STUDIO_ACCESS,
   SUPERADMIN,
   PUBLIC_ROLE,
   AUTHENTICATED_ROLE,

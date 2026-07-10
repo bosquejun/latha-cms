@@ -27,11 +27,11 @@ export const apiKeysEntity: Entity = {
   cardinality: 'many',
   slug: API_KEYS_SLUG,
   actions: ['read', 'create', 'update', 'delete'],
-  admin: {
+  studio: {
     area: 'settings',
     group: 'Access',
     order: 40,
-    // Managed through the API Keys settings page (`@kon10/auth/admin`).
+    // Managed through the API Keys settings page (`@kon10/auth/studio`).
     hidden: true,
     useAsTitle: 'name',
     defaultColumns: ['name', 'prefix', 'enabled'],

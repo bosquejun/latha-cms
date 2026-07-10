@@ -1,7 +1,7 @@
 /**
  * API key token helpers — generation, hashing, display prefix.
  *
- * Client-safe (pure Web Crypto): the admin UI generates a token in the
+ * Client-safe (pure Web Crypto): the Studio UI generates a token in the
  * browser and stores only its hash via the standard create RPC, so the
  * plaintext never even transits the server outside the request that uses it.
  *

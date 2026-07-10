@@ -2,10 +2,10 @@
  * Permission catalog — derived from the live config, synced into the DB.
  *
  * The catalog (scopes + permissions) is authoritative *from code*: one scope
- * per entity that declares `entity.actions`, plus the built-in `admin` scope
+ * per entity that declares `entity.actions`, plus the built-in `studio` scope
  * and the superadmin `*`. Entities without `actions` are excluded — each module
  * controls which operations are grantable on its own entities. At boot we
- * upsert into `scopes`/`permissions` and prune stale rows so the admin UI
+ * upsert into `scopes`/`permissions` and prune stale rows so the Studio UI
  * always shows current permissions. Roles (the grants) remain hand-managed
  * data — only the catalog is synced.
  *
@@ -13,7 +13,7 @@
  */
 
 import type { Doc, Kon10Instance } from '@kon10/core'
-import { ADMIN_ACCESS, SUPERADMIN, permissionKey } from './permissions.js'
+import { STUDIO_ACCESS, SUPERADMIN, permissionKey } from './permissions.js'
 import { PERMISSIONS_SLUG, SCOPES_SLUG } from './entities.js'
 
 export interface ScopeRecord {
@@ -84,12 +84,12 @@ function buildDesired(kon10: Kon10Instance): {
     }
   }
 
-  // Built-in admin entry gate.
-  scopes.push({ key: 'admin', label: 'Admin', module: 'auth' })
+  // Built-in Studio entry gate.
+  scopes.push({ key: 'studio', label: 'Studio', module: 'auth' })
   permissions.push({
-    key: ADMIN_ACCESS,
-    label: 'Access the admin UI',
-    scope: 'admin',
+    key: STUDIO_ACCESS,
+    label: 'Access the Studio',
+    scope: 'studio',
     action: 'access',
     module: 'auth',
   })

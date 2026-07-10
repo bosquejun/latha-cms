@@ -11,11 +11,11 @@
   },
   "references": [
     { "path": "../../core" },
-    { "path": "../../admin-sdk" }
+    { "path": "../../studio-sdk" }
   ],
   "include": [
-    "src/admin/**/*.ts",
-    "src/admin/**/*.tsx",
+    "src/studio/**/*.ts",
+    "src/studio/**/*.tsx",
     "src/api-keys/token.ts",
     "src/crypto.ts"
   ],

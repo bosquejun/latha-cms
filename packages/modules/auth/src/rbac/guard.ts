@@ -2,7 +2,7 @@
  * The RBAC guard — registered into the kernel's generic guard seam.
  *
  * It enforces permissions only when the caller opted in via `context.enforce`
- * (the admin RPC layer sets it; the public local API does not — so headless
+ * (the Studio RPC layer sets it; the public local API does not — so headless
  * reads stay allow-by-default). When an entity declares its own explicit
  * `access` predicate for the operation, that predicate is authoritative and the
  * guard defers to it. Otherwise the guard is deny-by-default: the principal must

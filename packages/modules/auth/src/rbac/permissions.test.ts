@@ -19,7 +19,7 @@ test('matchesPermission: exact match', () => {
 
 test('matchesPermission: superadmin matches everything', () => {
   assert.equal(matchesPermission('*', 'posts:delete'), true)
-  assert.equal(matchesPermission('*', 'admin:access'), true)
+  assert.equal(matchesPermission('*', 'studio:access'), true)
 })
 
 test('matchesPermission: scope and action wildcards', () => {
@@ -30,10 +30,10 @@ test('matchesPermission: scope and action wildcards', () => {
 })
 
 test('hasPermission: reads the principal permission set', () => {
-  const viewer = { id: 'u1', permissions: ['admin:access', 'posts:read'] }
+  const viewer = { id: 'u1', permissions: ['studio:access', 'posts:read'] }
   assert.equal(hasPermission(viewer, 'posts:read'), true)
   assert.equal(hasPermission(viewer, 'posts:update'), false)
-  assert.equal(hasPermission(viewer, 'admin:access'), true)
+  assert.equal(hasPermission(viewer, 'studio:access'), true)
 })
 
 test('hasPermission: anonymous / malformed principals deny', () => {

@@ -2,11 +2,11 @@
  * Roles & Permissions — the Strapi-style access matrix (client-aware).
  *
  * Lives in @kon10/auth and is registered as a settings extension via the
- * @kon10/auth/admin barrel.
+ * @kon10/auth/studio barrel.
  *
  * Left: the role list with description and permission count.
  * Right: the selected role's permission matrix — rows = scopes (grouped by
- * module), columns = read/create/update/delete — plus the `admin:access` and
+ * module), columns = read/create/update/delete — plus the `studio:access` and
  * superadmin (`*`) toggles. Includes column/module bulk-select, scope search,
  * and a confirmation modal for destructive actions.
  *
@@ -41,11 +41,11 @@ import {
   PageLayout,
   defineSettingsConfig,
   useKon10,
-  useAdminNavigate,
+  useStudioNavigate,
   useAsync,
   type JsonDoc,
   type PageComponentProps,
-} from '@kon10/admin-sdk'
+} from '@kon10/studio-sdk'
 import {
   ChevronDown,
   ChevronLeft,
@@ -63,8 +63,8 @@ const ACTION_COLUMNS = ['read', 'create', 'update', 'delete'] as const
 type Action = (typeof ACTION_COLUMNS)[number]
 
 const SUPERADMIN_KEY = '*'
-const ADMIN_ACCESS_KEY = 'admin:access'
-const NON_MATRIX_SCOPES = new Set([SUPERADMIN_KEY, 'admin', 'scopes'])
+const STUDIO_ACCESS_KEY = 'studio:access'
+const NON_MATRIX_SCOPES = new Set([SUPERADMIN_KEY, 'studio', 'scopes'])
 
 interface PermLite {
   id: string
@@ -285,7 +285,7 @@ function ToggleRow({
 
 export default function RolesPermissions({ params }: PageComponentProps) {
   const { client, basePath } = useKon10()
-  const navigate = useAdminNavigate()
+  const navigate = useStudioNavigate()
   const roles = useAsync(() => client.list('roles'), [])
   const scopes = useAsync(() => client.list('scopes'), [])
   const permissions = useAsync(() => client.list('permissions'), [])
@@ -404,7 +404,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
   )
 
   const superId = permByKey.get(SUPERADMIN_KEY)?.id
-  const adminAccessId = permByKey.get(ADMIN_ACCESS_KEY)?.id
+  const studioAccessId = permByKey.get(STUDIO_ACCESS_KEY)?.id
   const isSuper = superId ? checked.has(superId) : false
 
   const original = useMemo(
@@ -740,11 +740,11 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                 />
                 <ToggleRow
                   icon={<ShieldCheck className="size-4 text-muted-foreground" />}
-                  title="Access the admin UI"
-                  description="Required to sign in to the admin. Leave off for Public and API-only roles."
-                  checked={adminAccessId ? checked.has(adminAccessId) : false}
-                  onChange={(on) => toggle(adminAccessId, on)}
-                  disabled={!adminAccessId || isSuper}
+                  title="Access the Studio"
+                  description="Required to sign in to the Studio. Leave off for Public and API-only roles."
+                  checked={studioAccessId ? checked.has(studioAccessId) : false}
+                  onChange={(on) => toggle(studioAccessId, on)}
+                  disabled={!studioAccessId || isSuper}
                 />
               </Card>
 

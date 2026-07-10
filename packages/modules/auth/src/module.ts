@@ -45,7 +45,7 @@ export interface AuthModuleConfig {
   /**
    * Default roles to seed on first run (empty `roles` table). Permissions are
    * permission keys (wildcards allowed). Omit to use the built-in
-   * admin/editor/viewer starter set.
+   * admin/editor/viewer starter set (see `defaultRoles` in `rbac/seed.ts`).
    */
   roles?: RoleSeed[]
   /**
@@ -72,7 +72,7 @@ export function AuthModule(config: AuthModuleConfig): Module {
     name: 'auth',
     capabilities: ['auth', 'rbac'],
     entities: [...rbacEntities, apiKeysEntity],
-    admin: { nav: { area: 'settings', label: 'Access', order: 90 }, ui: '@kon10/auth/admin' },
+    studio: { nav: { area: 'settings', label: 'Access', order: 90 }, ui: '@kon10/auth/studio' },
     routes: {
       login: loginRoute,
       logout: logoutRoute,

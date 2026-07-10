@@ -1,7 +1,7 @@
 /**
  * RBAC entities — `roles`, `scopes`, `permissions`.
  *
- * All three live in the admin `settings` area under an "Access" section.
+ * All three live in the Studio `settings` area under an "Access" section.
  * `roles` is editable (admins create roles and assign permissions). `scopes`
  * and `permissions` are a catalog: they are synced from the live config at boot
  * (see `catalog.ts`), so they are effectively read-only references the role
@@ -29,13 +29,13 @@ export const rolesEntity: Entity = {
   cardinality: 'many',
   slug: ROLES_SLUG,
   actions: ['read', 'create', 'update', 'delete'],
-  admin: {
+  studio: {
     area: 'settings',
     group: ACCESS_GROUP,
     order: 10,
-    // Managed through the Roles & Permissions matrix (the `@kon10/auth/admin`
+    // Managed through the Roles & Permissions matrix (the `@kon10/auth/studio`
     // settings page), not its own nav entry or the auto-generated list/form —
-    // the matrix enforces the admin:access / superadmin semantics the raw CRUD
+    // the matrix enforces the studio:access / superadmin semantics the raw CRUD
     // form would bypass.
     hidden: true,
     useAsTitle: 'name',
@@ -91,7 +91,7 @@ export const scopesEntity: Entity = {
   cardinality: 'many',
   slug: SCOPES_SLUG,
   actions: ['read'],
-  admin: {
+  studio: {
     area: 'settings',
     group: ACCESS_GROUP,
     order: 20,
@@ -113,7 +113,7 @@ export const permissionsEntity: Entity = {
   cardinality: 'many',
   slug: PERMISSIONS_SLUG,
   actions: ['read'],
-  admin: {
+  studio: {
     area: 'settings',
     group: ACCESS_GROUP,
     order: 30,

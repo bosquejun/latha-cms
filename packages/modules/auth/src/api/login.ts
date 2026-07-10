@@ -1,7 +1,7 @@
 /**
  * `POST auth/login` — verify credentials and start a session.
  *
- * Public (no `requireAdmin`): a caller isn't logged in yet by definition. Sets
+ * Public (no `requireStudioAccess`): a caller isn't logged in yet by definition. Sets
  * the session cookie directly on the returned `Response` — no framework
  * cookie helper needed, so this route runs the same whether the runner is
  * TanStack Start or anything else that speaks Fetch `Request`/`Response`.

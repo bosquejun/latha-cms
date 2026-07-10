@@ -4,14 +4,14 @@
  * On first run (empty `roles` table) we seed a Strapi-style starter set,
  * computed against the live catalog so the grants reference real permissions:
  *   - `admin`         — superadmin (`*`). System, non-deletable.
- *   - `editor`        — admin access + read/create/update on non-sensitive scopes.
- *   - `viewer`        — admin access + read on non-sensitive scopes.
+ *   - `editor`        — Studio access + read/create/update on non-sensitive scopes.
+ *   - `viewer`        — Studio access + read on non-sensitive scopes.
  *   - `public`        — permissions for anonymous requests. System, empty by
  *                       default; admins grant public reads in the matrix UI.
  *   - `authenticated` — baseline for every logged-in user. System, empty by
  *                       default.
  *
- * Auth-owned scopes (roles, scopes, permissions, admin) and the identity-store
+ * Auth-owned scopes (roles, scopes, permissions, studio) and the identity-store
  * scope are reserved for the superadmin. These are only starting points —
  * admins refine roles in the UI. An app can override via `AuthModule({ roles })`.
  */
@@ -20,7 +20,7 @@ import type { Kon10Instance } from '@kon10/core'
 import { getCatalog, type RbacCatalog } from './catalog.js'
 import { ROLES_SLUG } from './entities.js'
 import {
-  ADMIN_ACCESS,
+  STUDIO_ACCESS,
   AUTHENTICATED_ROLE,
   PUBLIC_ROLE,
   SUPERADMIN,
@@ -37,7 +37,7 @@ export interface RoleSeed {
 }
 
 /** Auth-owned scopes that are always reserved for the superadmin. */
-const AUTH_SENSITIVE = new Set(['roles', 'scopes', 'permissions', 'api-keys', 'admin', '*'])
+const AUTH_SENSITIVE = new Set(['roles', 'scopes', 'permissions', 'api-keys', 'studio', '*'])
 
 /**
  * Built-in default roles, computed against the live catalog.
@@ -68,7 +68,7 @@ export function defaultRoles(catalog: RbacCatalog, extraSensitive: string[] = []
       label: 'Editor',
       description: 'Create and edit content.',
       permissions: [
-        ADMIN_ACCESS,
+        STUDIO_ACCESS,
         ...editable.flatMap((s) => [`${s}:read`, `${s}:create`, `${s}:update`]),
       ],
     },
@@ -76,7 +76,7 @@ export function defaultRoles(catalog: RbacCatalog, extraSensitive: string[] = []
       name: 'viewer',
       label: 'Viewer',
       description: 'Read-only access to content.',
-      permissions: [ADMIN_ACCESS, ...editable.map((s) => `${s}:read`)],
+      permissions: [STUDIO_ACCESS, ...editable.map((s) => `${s}:read`)],
     },
     {
       name: PUBLIC_ROLE,
