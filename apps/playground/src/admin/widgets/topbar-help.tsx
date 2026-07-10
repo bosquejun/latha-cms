@@ -14,7 +14,7 @@ export const config = defineWidgetConfig({ zone: 'shell.topbar.start' })
 export default function TopbarHelp(_props: WidgetContext) {
   return (
     <a
-      href="https://github.com/bosquejun/kon10-cms"
+      href="https://github.com/bosquejun/latha-cms"
       target="_blank"
       rel="noreferrer"
       aria-label="Help"
