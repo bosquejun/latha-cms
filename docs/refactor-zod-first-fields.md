@@ -180,9 +180,9 @@ interface Kon10Instance {
 
 ### Step 8 — Update consumers
 
-- `packages/admin-sdk/src/fields/registry.tsx` — renderer registry already keyed by `FieldType` string; no structural change, but `media` and `taxonomy` renderers must be registered by their modules' admin extensions rather than hardcoded
+- `packages/studio-sdk/src/fields/registry.tsx` — renderer registry already keyed by `FieldType` string; no structural change, but `media` and `taxonomy` renderers must be registered by their modules' Studio extensions rather than hardcoded
 - `packages/modules/storage/src/schema/generator.ts` — uses `Field` union; update imports
-- `packages/start/src/admin.tsx` — uses `Field` type for form rendering; update imports
+- `packages/start/src/studio.tsx` — uses `Field` type for form rendering; update imports
 - All `FieldAdminConfig` references → `FieldMeta`, `field.admin` → `field.meta`
 
 ---

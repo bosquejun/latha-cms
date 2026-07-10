@@ -3,7 +3,7 @@
 Authorization in Kon10 is **role-based access control (RBAC)**, owned by
 `@kon10/auth`. It is dynamic and database-backed: the *catalog* of what can be
 granted is derived from your config, while *roles* and *who has them* are data
-you manage in the admin UI.
+you manage in the Studio UI.
 
 > The kernel (`@kon10/core`) knows nothing about users, roles, or permissions.
 > It exposes a generic **guard seam** and an opaque **principal**; `@kon10/auth`
@@ -14,12 +14,12 @@ you manage in the admin UI.
 
 ## The three entities
 
-`@kon10/auth` contributes three entities (all in the admin **Settings → Access**
+`@kon10/auth` contributes three entities (all in the Studio **Settings → Access**
 area):
 
 | Entity | Editable? | What it is |
 |---|---|---|
-| **Scope** | Catalog (synced) | A resource that can be acted on. One per entity (`posts`, `users`, …), plus the built-in `admin` scope and the superadmin `*`. |
+| **Scope** | Catalog (synced) | A resource that can be acted on. One per entity (`posts`, `users`, …), plus the built-in `studio` scope and the superadmin `*`. |
 | **Permission** | Catalog (synced) | A grantable `"<scope>:<action>"` pair, e.g. `posts:update`. |
 | **Role** | You create | A named bundle of permissions. Users hold **many** roles; effective permissions are the union. |
 
@@ -51,23 +51,23 @@ set is seeded (override via `AuthModule({ roles })`):
 | Role | System | Permissions |
 |---|---|---|
 | `admin` | ✓ | `*` (superadmin) |
-| `editor` | | `admin:access` + read/create/update on non-sensitive scopes |
-| `viewer` | | `admin:access` + read on non-sensitive scopes |
+| `editor` | | `studio:access` + read/create/update on non-sensitive scopes |
+| `viewer` | | `studio:access` + read on non-sensitive scopes |
 | `public` | ✓ | empty — grant public reads in the matrix |
 | `authenticated` | ✓ | empty — baseline for every logged-in user |
 
 **System roles** (`admin`, `public`, `authenticated`) can't be deleted (a
 `beforeDelete` hook enforces it), but their permissions are editable. Sensitive
-scopes (`users`, `roles`, `scopes`, `permissions`, `admin`) are reserved for the
-superadmin. Refine roles freely in the admin UI.
+scopes (`users`, `roles`, `scopes`, `permissions`, `studio`) are reserved for the
+superadmin. Refine roles freely in the Studio UI.
 
 ### Public & Authenticated
 
 - **`public`** governs **unauthenticated** requests. An anonymous caller
   resolves to a synthetic principal carrying the Public role's permissions, so
   you grant public access by toggling permissions on Public — instead of
-  hardcoding `access: read: () => true`. Public never holds `admin:access`, so it
-  can't enter the admin. Build a public/headless API with it:
+  hardcoding `access: read: () => true`. Public never holds `studio:access`, so it
+  can't enter the Studio. Build a public/headless API with it:
 
   ```ts
   import { getPublicPrincipal } from '@kon10/auth'
@@ -96,7 +96,7 @@ The RBAC guard (registered by `AuthModule`) enforces permissions, with two
 important rules:
 
 1. **Deny-by-default — but only when enforcing.** The guard checks a caller
-   `context.enforce` flag. The admin RPC layer sets it, so the admin surface is
+   `context.enforce` flag. The Studio RPC layer sets it, so the Studio surface is
    deny-by-default: a write requires the matching `"<slug>:<action>"`
    permission. The **public local API** (`createContentApi` without `enforce`)
    leaves it off, so headless reads stay allow-by-default — the headless
@@ -114,12 +114,12 @@ important rules:
    ```
 
 On top of per-operation checks, the RPC dispatcher applies a single top-level
-gate: every admin action (everything except `login`/`logout`/`currentUser`)
-requires an authenticated principal holding `admin:access`.
+gate: every Studio action (everything except `login`/`logout`/`currentUser`)
+requires an authenticated principal holding `studio:access`.
 
 ---
 
-## In the admin UI
+## In the Studio UI
 
 - The session carries the user's resolved `roles` and effective `permissions`.
 - The sidebar only lists entities the user can **read**.
@@ -128,7 +128,7 @@ requires an authenticated principal holding `admin:access`.
   write).
 - **Settings → Access** is a dedicated **Roles & Permissions matrix** (rows =
   scopes, columns = read/create/update/delete, grouped by module, plus the
-  `admin:access` and superadmin toggles). Create/delete roles there; system
+  `studio:access` and superadmin toggles). Create/delete roles there; system
   roles show a badge and can't be deleted. The `scopes`/`permissions` catalog is
   surfaced through this page rather than its own nav entries.
 - Assigning roles to a user uses the relationship field picker on the user form.

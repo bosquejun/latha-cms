@@ -21,7 +21,7 @@ array form.
 
 One sentence version: *Zod in, JSON out.* Builders may take rich Zod input,
 but the `Field` config that `stampFields` produces — the thing the registry
-validates, the storage generator reads, and `describe()` ships to the admin
+validates, the storage generator reads, and `describe()` ships to the Studio
 client — stays pure JSON-serializable data.
 
 ## Why not Zod instances all the way down
@@ -30,7 +30,7 @@ It is tempting to store the `ZodEnum` in the field config and have
 `buildDataSchema` just return it. Three hard constraints rule this out:
 
 1. **The wire boundary.** `describe()` (`packages/start/src/server.ts`) sends
-   `entity.fields` to the admin client over RPC, and responses pass through
+   `entity.fields` to the Studio client over RPC, and responses pass through
    `JSON.parse(JSON.stringify(...))`. A Zod instance does not survive this —
    and the select renderer genuinely needs `options: string[]` to draw a
    dropdown. Any design that puts Zod instances in the canonical config must
@@ -132,7 +132,7 @@ normalization line is version-stable.
 
 Everything downstream is untouched: `selectFieldConfigSchema` keeps
 `options: z.array(z.string())`, the registry's `buildDataSchema` keeps
-rebuilding `z.enum` from the literal array, the admin renderer keeps reading
+rebuilding `z.enum` from the literal array, the Studio renderer keeps reading
 `options: string[]`, the wire format doesn't change. The blast radius is one
 builder plus call sites.
 
@@ -153,7 +153,7 @@ Mechanics:
   first-class `z.toJSONSchema(schema)` and ships the result on the field
   descriptor as `jsonSchema`. That captures everything JSON Schema can
   express — min/max, patterns, `format: 'email'`, `multipleOf` — with zero
-  bespoke introspection code to maintain. The admin client reads it for form
+  bespoke introspection code to maintain. The Studio client reads it for form
   hints and lightweight pre-validation. Constraints JSON Schema can't carry
   (custom `.refine`/`.transform` — Zod skips or errors on these depending on
   the `unrepresentable` option; use `'any'` to degrade gracefully) simply
@@ -182,7 +182,7 @@ Mechanics:
 `relationship`, `group`, `array`, `blocks`, and module types (`taxonomy`,
 `media`) describe graph/storage/UI semantics — target entity slugs, nesting,
 upload behavior — that a Zod value schema cannot express and that the storage
-generator and admin renderers consume structurally. `group`/`array` already
+generator and Studio renderers consume structurally. `group`/`array` already
 compose builders that resolve to Zod underneath. Forcing Zod syntax onto
 these would be cosmetic, not semantic.
 
@@ -199,7 +199,7 @@ The workspace currently pins `zod ^3.24.1` everywhere except
 `@kon10/content`, which already pins `^3.25.76` — a latent dual-instance
 hazard (two zod copies break `instanceof` checks and schema identity).
 Phase 0 unifies every package on one latest `zod ^4.x` pin: `@kon10/core`,
-`@kon10/admin-sdk`, `@kon10/content`, `@kon10/media`, `apps/playground`.
+`@kon10/studio-sdk`, `@kon10/content`, `@kon10/media`, `apps/playground`.
 
 Known v4 breakages in this codebase (from an audit of current usage):
 
@@ -208,7 +208,7 @@ Known v4 breakages in this codebase (from an audit of current usage):
 | `core/src/fields/registry.ts:25` | `typeLiteral._def.value` | public `.value` getter on `ZodLiteral` |
 | `core/src/fields/registry.ts:75`, `content/src/module.ts:71` | `.merge(other)` | `.extend(other.shape)` (merge is removed) |
 | `registry.ts:17,73`, `builtins.ts:97`, `content/src/module.ts:64` | `z.ZodTypeAny` | `z.ZodType` |
-| `builtins.ts:54,59`, `admin-sdk/src/client/rpc.ts`, `content/src/module.ts:39` | `z.record(z.unknown())` | `z.record(z.string(), z.unknown())` (key schema required) |
+| `builtins.ts:54,59`, `studio-sdk/src/client/rpc.ts`, `content/src/module.ts:39` | `z.record(z.unknown())` | `z.record(z.string(), z.unknown())` (key schema required) |
 | `registry.ts:76` | `ZodDiscriminatedUnionOption<'type'>` cast | type removed; v4's looser `discriminatedUnion` typing should drop the cast entirely |
 | `media/src/module.test.ts:41` | `cover._def.typeName === 'ZodString'` | `cover instanceof z.ZodString` |
 

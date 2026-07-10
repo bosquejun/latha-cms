@@ -28,9 +28,6 @@ importers:
 
   apps/playground:
     dependencies:
-      '@kon10/admin-sdk':
-        specifier: workspace:*
-        version: link:../../packages/admin-sdk
       '@kon10/auth':
         specifier: workspace:*
         version: link:../../packages/modules/auth
@@ -55,6 +52,9 @@ importers:
       '@kon10/storage':
         specifier: workspace:*
         version: link:../../packages/modules/storage
+      '@kon10/studio-sdk':
+        specifier: workspace:*
+        version: link:../../packages/studio-sdk
       '@kon10/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -114,67 +114,6 @@ importers:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.9.3)(vite@7.3.5(@types/node@26.0.0)(jiti@2.7.0)(lightningcss@1.32.0))
 
-  packages/admin-sdk:
-    dependencies:
-      '@hookform/resolvers':
-        specifier: ^5.4.0
-        version: 5.4.0(react-hook-form@7.80.0(react@19.2.7))(zod@4.4.3)
-      '@lexical/history':
-        specifier: ^0.46.0
-        version: 0.46.0(typescript@5.9.3)
-      '@lexical/link':
-        specifier: ^0.46.0
-        version: 0.46.0(typescript@5.9.3)
-      '@lexical/list':
-        specifier: ^0.46.0
-        version: 0.46.0(typescript@5.9.3)
-      '@lexical/react':
-        specifier: ^0.46.0
-        version: 0.46.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3)(yjs@13.6.31)
-      '@lexical/rich-text':
-        specifier: ^0.46.0
-        version: 0.46.0(typescript@5.9.3)
-      '@lexical/selection':
-        specifier: ^0.46.0
-        version: 0.46.0(typescript@5.9.3)
-      '@lexical/utils':
-        specifier: ^0.46.0
-        version: 0.46.0(typescript@5.9.3)
-      lexical:
-        specifier: ^0.46.0
-        version: 0.46.0(typescript@5.9.3)
-      lucide-animated:
-        specifier: ^1.0.5
-        version: 1.0.5(motion@12.42.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)
-      lucide-react:
-        specifier: ^0.469.0
-        version: 0.469.0(react@19.2.7)
-      react-hook-form:
-        specifier: ^7.80.0
-        version: 7.80.0(react@19.2.7)
-      zod:
-        specifier: ^4.4.3
-        version: 4.4.3
-    devDependencies:
-      '@kon10/core':
-        specifier: workspace:*
-        version: link:../core
-      '@kon10/ui':
-        specifier: workspace:*
-        version: link:../ui
-      '@types/node':
-        specifier: ^22.10.0
-        version: 22.20.0
-      '@types/react':
-        specifier: ^19.0.0
-        version: 19.2.17
-      react:
-        specifier: ^19.0.0
-        version: 19.2.7
-      typescript:
-        specifier: ^5.7.2
-        version: 5.9.3
-
   packages/core:
     dependencies:
       zod:
@@ -190,15 +129,15 @@ importers:
 
   packages/modules/auth:
     devDependencies:
-      '@kon10/admin-sdk':
-        specifier: workspace:*
-        version: link:../../admin-sdk
       '@kon10/cache':
         specifier: workspace:*
         version: link:../cache
       '@kon10/core':
         specifier: workspace:*
         version: link:../../core
+      '@kon10/studio-sdk':
+        specifier: workspace:*
+        version: link:../../studio-sdk
       '@kon10/ui':
         specifier: workspace:*
         version: link:../../ui
@@ -243,12 +182,12 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@kon10/admin-sdk':
-        specifier: workspace:*
-        version: link:../../admin-sdk
       '@kon10/core':
         specifier: workspace:*
         version: link:../../core
+      '@kon10/studio-sdk':
+        specifier: workspace:*
+        version: link:../../studio-sdk
       '@kon10/ui':
         specifier: workspace:*
         version: link:../../ui
@@ -274,12 +213,12 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@kon10/admin-sdk':
-        specifier: workspace:*
-        version: link:../../admin-sdk
       '@kon10/core':
         specifier: workspace:*
         version: link:../../core
+      '@kon10/studio-sdk':
+        specifier: workspace:*
+        version: link:../../studio-sdk
       '@kon10/ui':
         specifier: workspace:*
         version: link:../../ui
@@ -333,15 +272,15 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@kon10/admin-sdk':
-        specifier: workspace:*
-        version: link:../../admin-sdk
       '@kon10/core':
         specifier: workspace:*
         version: link:../../core
       '@kon10/start':
         specifier: workspace:*
         version: link:../../start
+      '@kon10/studio-sdk':
+        specifier: workspace:*
+        version: link:../../studio-sdk
       '@kon10/ui':
         specifier: workspace:*
         version: link:../../ui
@@ -373,9 +312,6 @@ importers:
         specifier: ^0.469.0
         version: 0.469.0(react@19.2.7)
     devDependencies:
-      '@kon10/admin-sdk':
-        specifier: workspace:*
-        version: link:../admin-sdk
       '@kon10/auth':
         specifier: workspace:*
         version: link:../modules/auth
@@ -388,6 +324,9 @@ importers:
       '@kon10/core':
         specifier: workspace:*
         version: link:../core
+      '@kon10/studio-sdk':
+        specifier: workspace:*
+        version: link:../studio-sdk
       '@kon10/ui':
         specifier: workspace:*
         version: link:../ui
@@ -397,6 +336,67 @@ importers:
       '@tanstack/react-start':
         specifier: ^1.168.0
         version: 1.168.26(crossws@0.4.9(srvx@0.11.20))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@7.3.5(@types/node@26.0.0)(jiti@2.7.0)(lightningcss@1.32.0))
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.17
+      react:
+        specifier: ^19.0.0
+        version: 19.2.7
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/studio-sdk:
+    dependencies:
+      '@hookform/resolvers':
+        specifier: ^5.4.0
+        version: 5.4.0(react-hook-form@7.80.0(react@19.2.7))(zod@4.4.3)
+      '@lexical/history':
+        specifier: ^0.46.0
+        version: 0.46.0(typescript@5.9.3)
+      '@lexical/link':
+        specifier: ^0.46.0
+        version: 0.46.0(typescript@5.9.3)
+      '@lexical/list':
+        specifier: ^0.46.0
+        version: 0.46.0(typescript@5.9.3)
+      '@lexical/react':
+        specifier: ^0.46.0
+        version: 0.46.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3)(yjs@13.6.31)
+      '@lexical/rich-text':
+        specifier: ^0.46.0
+        version: 0.46.0(typescript@5.9.3)
+      '@lexical/selection':
+        specifier: ^0.46.0
+        version: 0.46.0(typescript@5.9.3)
+      '@lexical/utils':
+        specifier: ^0.46.0
+        version: 0.46.0(typescript@5.9.3)
+      lexical:
+        specifier: ^0.46.0
+        version: 0.46.0(typescript@5.9.3)
+      lucide-animated:
+        specifier: ^1.0.5
+        version: 1.0.5(motion@12.42.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)
+      lucide-react:
+        specifier: ^0.469.0
+        version: 0.469.0(react@19.2.7)
+      react-hook-form:
+        specifier: ^7.80.0
+        version: 7.80.0(react@19.2.7)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@kon10/core':
+        specifier: workspace:*
+        version: link:../core
+      '@kon10/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@types/node':
+        specifier: ^22.10.0
+        version: 22.20.0
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.17

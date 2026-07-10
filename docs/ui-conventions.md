@@ -1,8 +1,8 @@
-# Admin UI Conventions
+# Studio UI Conventions
 
 The authoritative rules for buttons, destructive actions, confirmations, and
-empty states across the admin. `@kon10/ui` supplies the primitives; every view
-in `@kon10/admin-sdk`, `@kon10/start`, and module admin extensions follows the
+empty states across the Studio. `@kon10/ui` supplies the primitives; every view
+in `@kon10/studio-sdk`, `@kon10/start`, and module Studio extensions follows the
 same vocabulary so screens read as one product.
 
 ---
@@ -48,7 +48,7 @@ never `window.confirm`, never a hand-rolled overlay.
 
 ## Empty states
 
-Zero-data screens render `EmptyState` from `@kon10/admin-sdk` — a dashed card
+Zero-data screens render `EmptyState` from `@kon10/studio-sdk` — a dashed card
 with an icon in a muted circle, a title, an optional description, and an
 optional action. Never a bare `<p>` or an ad-hoc dashed box.
 
@@ -63,7 +63,7 @@ optional action. Never a bare `<p>` or an ad-hoc dashed box.
 ## Loading & feedback
 
 - **Page/panel-level initial loads** render `LoadingState` from
-  `@kon10/admin-sdk` — a centered spinner with an accessible status role —
+  `@kon10/studio-sdk` — a centered spinner with an accessible status role —
   never a bare `Loading…` paragraph. Views with a known layout (e.g. the roles
   master-detail) may render `Skeleton`s instead.
 - **In-flight button work** uses the Button `loading` prop (spinner + disable),
@@ -72,7 +72,7 @@ optional action. Never a bare `<p>` or an ad-hoc dashed box.
   saved.", "Deleted.", "Role created.") unless the UI already shows the result
   modally (e.g. the one-time API-key token dialog). Failures surface with
   `toast.error` carrying the server message. The `Toaster` is mounted once, in
-  `AdminShell`.
+  `StudioShell`.
 - **Field-level fetches** (relationship options, media doc lookups) show a
   small inline `Spinner` in place of the control.
 

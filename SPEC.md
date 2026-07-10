@@ -33,8 +33,8 @@ kon10cms/
 ├── packages/
 │   ├── core/                          # @kon10/core — types, defineConfig, module registry, hook engine, access evaluator
 │   ├── ui/                            # @kon10/ui — design system, primitives, tokens (no CMS knowledge)
-│   ├── admin-sdk/                     # @kon10/admin-sdk — CMS-aware admin layer, field renderers, shell, registry-driven views
-│   ├── start/                         # @kon10/start — TanStack Start integration: runtime, RPC dispatcher, client, mountable admin UI
+│   ├── studio-sdk/                    # @kon10/studio-sdk — CMS-aware Studio layer, field renderers, shell, registry-driven views
+│   ├── start/                         # @kon10/start — TanStack Start integration: runtime, RPC dispatcher, client, mountable Studio UI
 │   └── modules/                       # all first-party modules live here
 │       ├── content/                   # @kon10/content — ContentModule, Collection, Document, Taxonomy
 │       ├── auth/                      # @kon10/auth — AuthModule, session handling
@@ -56,8 +56,8 @@ kon10cms/
 | Framework | TanStack Start | Vinxi/Nitro under the hood |
 | Routing | TanStack Router | File-based, fully type-safe |
 | Server API | TanStack Start `createServerFn` | Replaces REST handlers |
-| Data fetching | TanStack Query | Admin UI data layer |
-| Forms | TanStack Form | Admin form engine |
+| Data fetching | TanStack Query | Studio UI data layer |
+| Forms | TanStack Form | Studio form engine |
 | Validation | Zod | Single source of truth — fields → API validation + form validation + TS types |
 | ORM | Drizzle | Schema-first, adapter-friendly |
 | Default DB | Turso (SQLite) | Serverless, free tier, edge-ready |
@@ -69,10 +69,10 @@ kon10cms/
 
 ## Core Principles
 
-1. **Config is the source of truth.** Everything — routes, DB schema, admin UI, validation, TypeScript types — derives from `cms.config.ts`.
+1. **Config is the source of truth.** Everything — routes, DB schema, Studio UI, validation, TypeScript types — derives from `cms.config.ts`.
 2. **Zod is the bridge.** Field definitions compile to Zod schemas. Zod schemas drive API validation, TanStack Form validation, and TS type inference simultaneously.
 3. **Modules, not collections.** The top-level mental model is modules. Collections live inside ContentModule.
-4. **Headless by default.** The admin UI is one consumer of the same server functions that power the public API. No special treatment.
+4. **Headless by default.** The Studio UI is one consumer of the same server functions that power the public API. No special treatment.
 5. **Adapter-based.** DB, storage, and auth are all swappable via adapter interfaces. Nothing in the kernel is tied to a specific vendor.
 6. **TanStack-native.** Server functions, routing, forms, and queries all use TanStack primitives. No Express, no custom server.
 
@@ -123,7 +123,7 @@ export default defineConfig({
         // Many records — standard CRUD list
         Collection({
           slug: 'pages',
-          admin: { useAsTitle: 'title' },
+          studio: { useAsTitle: 'title' },
           fields: [
             { name: 'title', type: 'text', required: true },
             { name: 'slug', type: 'text', unique: true, required: true },
@@ -137,7 +137,7 @@ export default defineConfig({
 
         Collection({
           slug: 'posts',
-          admin: { useAsTitle: 'title' },
+          studio: { useAsTitle: 'title' },
           access: {
             read: () => true,
             create: ({ user }) => !!user,
@@ -152,9 +152,9 @@ export default defineConfig({
             { name: 'title', type: 'text', required: true },
             { name: 'slug', type: 'text', unique: true },
             { name: 'content', type: 'richtext' },
-            { name: 'status', type: 'select', options: ['draft', 'published'], admin: { sidebar: true } },
-            { name: 'author', type: 'relationship', to: 'users', admin: { sidebar: true } },
-            { name: 'category', type: 'taxonomy', to: 'categories', admin: { sidebar: true } },
+            { name: 'status', type: 'select', options: ['draft', 'published'], studio: { sidebar: true } },
+            { name: 'author', type: 'relationship', to: 'users', studio: { sidebar: true } },
+            { name: 'category', type: 'taxonomy', to: 'categories', studio: { sidebar: true } },
           ],
         }),
 
@@ -234,7 +234,7 @@ interface Module {
   routes?: ModuleRoutes
   entities?: EntityDefinition[]
   capabilities?: string[]
-  adminPages?: AdminPage[]
+  studioPages?: StudioPage[]
 }
 ```
 
@@ -280,8 +280,8 @@ interface Plugin {
 |---|---|---|
 | `packages/core` | `@kon10/core` | `defineConfig()`, types, module registry, hook engine, access evaluator, Zod schema builder |
 | `packages/ui` | `@kon10/ui` | Design system — buttons, inputs, tables, modals, typography, tokens. No CMS knowledge. Usable standalone. |
-| `packages/admin-sdk` | `@kon10/admin-sdk` | CMS-aware admin layer — field renderers, shell layout, sidebar (registry-driven), collection list/form views. Builds on `@kon10/ui`. |
-| `packages/start` | `@kon10/start` | TanStack Start integration — runtime, RPC dispatcher + server route, typed client, provider, mountable admin UI. The framework-integration layer. See [docs/concepts/frameworks](./docs/concepts/frameworks.md). |
+| `packages/studio-sdk` | `@kon10/studio-sdk` | CMS-aware Studio layer — field renderers, shell layout, sidebar (registry-driven), collection list/form views. Builds on `@kon10/ui`. |
+| `packages/start` | `@kon10/start` | TanStack Start integration — runtime, RPC dispatcher + server route, typed client, provider, mountable Studio UI. The framework-integration layer. See [docs/concepts/frameworks](./docs/concepts/frameworks.md). |
 | `packages/modules/content` | `@kon10/content` | `ContentModule`, `Collection()`, `Document()`, `Taxonomy()` |
 | `packages/modules/auth` | `@kon10/auth` | `AuthModule`, session handling, login/logout |
 | `packages/modules/users` | `@kon10/users` | `UsersModule`, roles, permissions |
@@ -292,7 +292,7 @@ interface Plugin {
 
 ## ContentModule Entities
 
-| Entity | Description | Admin view |
+| Entity | Description | Studio view |
 |---|---|---|
 | `Collection` | Many records, standard CRUD | List + create + edit |
 | `Document` | Single instance, no list | Edit form only (singleton) |
@@ -318,34 +318,34 @@ Modules declare `dependsOn: ['auth', 'users']` and the kernel topologically sort
 
 ---
 
-## Admin UI Routes (TanStack Router)
+## Studio UI Routes (TanStack Router)
 
 ```
-/admin/                                  → dashboard
-/admin/content/$collectionSlug/          → collection list
-/admin/content/$collectionSlug/new       → create form
-/admin/content/$collectionSlug/$id       → edit form
-/admin/documents/$documentSlug/          → singleton edit form
-/admin/taxonomy/$taxonomySlug/           → taxonomy manager
-/admin/media/                            → media library
-/admin/users/                            → user list
-/admin/users/$id                         → user edit
-/admin/settings/                         → CMS settings
+/studio/                                  → dashboard
+/studio/content/$collectionSlug/          → collection list
+/studio/content/$collectionSlug/new       → create form
+/studio/content/$collectionSlug/$id       → edit form
+/studio/documents/$documentSlug/          → singleton edit form
+/studio/taxonomy/$taxonomySlug/           → taxonomy manager
+/studio/media/                            → media library
+/studio/users/                            → user list
+/studio/users/$id                         → user edit
+/studio/settings/                         → CMS settings
 ```
 
 Four route templates cover everything: **list**, **create**, **edit**, **singleton**. The `$collectionSlug` / `$documentSlug` params resolve config from the module registry at load time.
 
 ---
 
-## Field Admin Config
+## Field Studio Config
 
 Fields can declare sidebar placement:
 
 ```ts
-{ name: 'status', type: 'select', options: ['draft', 'published'], admin: { sidebar: true } }
+{ name: 'status', type: 'select', options: ['draft', 'published'], studio: { sidebar: true } }
 ```
 
-Admin form layout:
+Studio form layout:
 - **Main area (2/3 width):** content fields (title, content, slug, groups)
 - **Sidebar (1/3 width):** meta fields (status, author, publish date, taxonomy, SEO)
 
@@ -391,12 +391,12 @@ Build in phases — do not skip ahead. Each phase must be working end-to-end bef
 - [ ] Access control evaluator
 - [ ] Hook engine (before/after lifecycle)
 
-### Phase 3 — Admin UI Shell
+### Phase 3 — Studio UI Shell
 - [ ] `@kon10/ui` package setup (Tailwind + shadcn/ui base, design tokens, primitives)
-- [ ] `@kon10/admin-sdk` package setup — depends on `@kon10/ui` and `@kon10/core`
-- [ ] Admin shell layout (sidebar + topbar) in `admin-sdk`
+- [ ] `@kon10/studio-sdk` package setup — depends on `@kon10/ui` and `@kon10/core`
+- [ ] Studio shell layout (sidebar + topbar) in `studio-sdk`
 - [ ] Sidebar derived from module registry
-- [ ] TanStack Router admin routes
+- [ ] TanStack Router Studio routes
 - [ ] Field renderer registry
 - [ ] Auto-generated collection list view (table)
 - [ ] Auto-generated collection form (TanStack Form + Zod)
@@ -405,7 +405,7 @@ Build in phases — do not skip ahead. Each phase must be working end-to-end bef
 ### Phase 4 — Auth + Users
 - [ ] `@kon10/auth` — session-based auth, login/logout
 - [ ] `@kon10/users` — user management, role system
-- [ ] Auth middleware on admin routes and server functions
+- [ ] Auth middleware on Studio routes and server functions
 
 ### Phase 5 — Media
 - [ ] `@kon10/media` — MediaModule
@@ -470,10 +470,10 @@ packages/ui/src/
     ├── Badge.tsx
     └── ...             ← pure, CMS-unaware primitives
 
-packages/admin-sdk/src/
+packages/studio-sdk/src/
 ├── index.ts
 ├── shell/
-│   ├── AdminShell.tsx  ← depends on @kon10/ui + @kon10/core registry
+│   ├── StudioShell.tsx ← depends on @kon10/ui + @kon10/core registry
 │   ├── Sidebar.tsx     ← derived from module registry
 │   └── Topbar.tsx
 ├── views/
@@ -507,13 +507,13 @@ packages/modules/storage/src/
 ## Notes for Claude Code
 
 - Always start from `SPEC.md` for context.
-- Phase 1 first — no admin UI until the kernel works end-to-end.
+- Phase 1 first — no Studio UI until the kernel works end-to-end.
 - The entry point is `defineConfig()` from `@kon10/core` — not `defineCMS`.
 - Zod is the single validation layer. Do not add separate validation logic anywhere.
 - All DB access goes through `DBAdapter` from `@kon10/storage` — never call Drizzle directly from app code.
-- The admin surface is one **RPC** layer — a single action-dispatched endpoint, not a REST API. In `@kon10/start` it is served by a framework-owned **server route** (`/__kon10/rpc`); apps can also route it through their own `createServerFn`. See [docs/concepts/taxonomy → RPC vs API](./docs/concepts/taxonomy.md#rpc-vs-api) and [frameworks](./docs/concepts/frameworks.md). Keep the dispatcher in `packages/` so it stays reusable.
+- The Studio surface is one **RPC** layer — a single action-dispatched endpoint, not a REST API. In `@kon10/start` it is served by a framework-owned **server route** (`/__kon10/rpc`); apps can also route it through their own `createServerFn`. See [docs/concepts/taxonomy → RPC vs API](./docs/concepts/taxonomy.md#rpc-vs-api) and [frameworks](./docs/concepts/frameworks.md). Keep the dispatcher in `packages/` so it stays reusable.
 - All modules live under `packages/modules/*` — never at the root of `packages/`.
-- Admin UI is split into two packages: `@kon10/ui` (dumb design system, no CMS knowledge) and `@kon10/admin-sdk` (CMS-aware, builds on top of `@kon10/ui`). Never put CMS logic in `@kon10/ui`.
+- Studio UI is split into two packages: `@kon10/ui` (dumb design system, no CMS knowledge) and `@kon10/studio-sdk` (CMS-aware, builds on top of `@kon10/ui`). Never put CMS logic in `@kon10/ui`.
 - Keep `apps/playground` thin — it should only wire together packages, not contain business logic.
 - Prefer explicit types over inference where it aids readability in core packages.
 - When in doubt, refer to how Payload CMS v3 solves the same problem — then do it the TanStack way.

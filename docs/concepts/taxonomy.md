@@ -40,19 +40,19 @@ They live mostly in [`@kon10/core`](../../packages/core) and
 |---|---|---|
 | **Config** | The single source of truth. `defineConfig({...})` returns a `ResolvedConfig`. | `@kon10/core` |
 | **Instance / Runtime** | The bootstrapped, seeded `Kon10Instance` for a config. Memoized per config, seeded once. | `@kon10/start` `runtime.ts` |
-| **RPC** | The transport for the whole admin surface: one endpoint, dispatched by an `action`. See [RPC vs API](#rpc-vs-api). | `@kon10/start` |
+| **RPC** | The transport for the whole Studio surface: one endpoint, dispatched by an `action`. See [RPC vs API](#rpc-vs-api). | `@kon10/start` |
 | **RPC action** | One member of the `Kon10RpcInput` union — the "procedure" being called. | `{ action: 'list', collection }` |
 | **RPC dispatcher** | The server-only function that runs an action against the instance. | `dispatchKon10Rpc` / `handleKon10Request` (`@kon10/start/server`) |
-| **RPC client** | The typed, per-procedure wrapper the admin UI calls. | `createKon10Client()` → `Kon10Client` |
+| **RPC client** | The typed, per-procedure wrapper the Studio UI calls. | `createKon10Client()` → `Kon10Client` |
 | **RPC route** | The framework-owned server route that receives RPC requests. Mounted at `DEFAULT_RPC_PATH` (`/__kon10/rpc`). | `@kon10/start` `routes/rpc.ts` |
-| **Provider** | React context that hands the client + mount paths to the admin components. | `Kon10Provider` |
-| **Vite plugin** | Injects the framework routes (`/login`, `/admin/$`, `/__kon10/rpc`) and wires the app config in. | `kon10Start()` (`@kon10/start/vite`) |
+| **Provider** | React context that hands the client + mount paths to the Studio components. | `Kon10Provider` |
+| **Vite plugin** | Injects the framework routes (`/login`, `/studio/$`, `/__kon10/rpc`) and wires the app config in. | `kon10Start()` (`@kon10/start/vite`) |
 
 ---
 
 ## RPC vs API
 
-The admin surface is an **RPC** layer, not a REST API — and the names reflect
+The Studio surface is an **RPC** layer, not a REST API — and the names reflect
 that.
 
 **What RPC means here.** There is exactly one endpoint. Every request names a

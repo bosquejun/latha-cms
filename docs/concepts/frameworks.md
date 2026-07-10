@@ -17,12 +17,12 @@ A complete Kon10 app has just **three** integration touchpoints:
 
 ```
 your-app/
-├── kon10.config.ts          1. WHAT your CMS is (schema, db, auth, admin)
+├── kon10.config.ts          1. WHAT your CMS is (schema, db, auth, studio)
 ├── vite.config.ts           2. kon10Start()         — the plugin
 └── src/routes/__root.tsx     3. <Kon10Provider>      — the mount
 ```
 
-Everything else (`/login`, the admin UI, and the RPC endpoint) is provided by
+Everything else (`/login`, the Studio UI, and the RPC endpoint) is provided by
 the package. There is **no hand-written server function and no RPC file**.
 
 ### 1. `kon10.config.ts` — the source of truth
@@ -42,7 +42,7 @@ export default defineConfig({ plugins: [ …, kon10Start(), viteReact() ] })
 `kon10Start()` wraps TanStack Start's Vite plugin and:
 
 - injects three framework routes via TanStack's **virtual file routes** —
-  `/login`, `/admin/$`, and the RPC endpoint `/__kon10/rpc`;
+  `/login`, `/studio/$`, and the RPC endpoint `/__kon10/rpc`;
 - resolves `virtual:kon10/config` to the app's `kon10.config` module, so the RPC
   route can reach the config without the app importing anything.
 
@@ -51,7 +51,7 @@ export default defineConfig({ plugins: [ …, kon10Start(), viteReact() ] })
 ```ts
 import { Kon10Provider } from '@kon10/start'
 
-<Kon10Provider basePath="/admin" loginPath="/login">
+<Kon10Provider basePath="/studio" loginPath="/login">
   <Outlet />
 </Kon10Provider>
 ```
@@ -63,7 +63,7 @@ framework RPC route. Pass one only to customize the transport (see below).
 
 ## The RPC endpoint is a server route
 
-The whole admin surface is served by **one** TanStack Start server route, owned
+The whole Studio surface is served by **one** TanStack Start server route, owned
 by the package ([`routes/rpc.ts`](../../packages/start/src/routes/rpc.ts)):
 
 ```ts
@@ -92,7 +92,7 @@ while the *transport* is a server route.
 
 ## The typed client
 
-The admin components never touch the server directly — they call a
+The Studio components never touch the server directly — they call a
 [`Kon10Client`](../../packages/start/src/client.ts), one method per RPC action:
 
 ```ts
@@ -102,7 +102,7 @@ await kon10.create('posts', { title: 'Hi' })
 ```
 
 `createKon10Client()` defaults to a `fetch` transport against the RPC route, so
-no app wiring is needed. All admin data-loading happens client-side (in effects /
+no app wiring is needed. All Studio data-loading happens client-side (in effects /
 event handlers), so a relative-URL `fetch` is safe during SSR.
 
 ---
@@ -142,14 +142,14 @@ precisely so it is never pulled into a client-reachable import graph.
 
 A framework-integration package is responsible for:
 
-1. **Routes** — login, the admin catch-all, and the RPC endpoint, injected so
+1. **Routes** — login, the Studio catch-all, and the RPC endpoint, injected so
    the app writes none of them.
 2. **The RPC transport** — receive a request, dispatch one `Kon10RpcInput`
    against the runtime, return JSON.
 3. **The client** — a `Kon10Client` bound to that transport.
 4. **The runtime** — bootstrap + seed one `Kon10Instance` per config, memoized.
-5. **The provider** — make the client + mount paths available to the admin UI.
+5. **The provider** — make the client + mount paths available to the Studio UI.
 
 Anything CMS-generic (schema, access, hooks, operations) stays in `@kon10/core`;
-anything UI-generic stays in `@kon10/ui` / `@kon10/admin-sdk`. The adapter is the
+anything UI-generic stays in `@kon10/ui` / `@kon10/studio-sdk`. The adapter is the
 thin, framework-specific seam between them.
