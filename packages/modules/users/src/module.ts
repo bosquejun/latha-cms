@@ -2,9 +2,9 @@
  * UsersModule — contributes the `users` collection and a role system.
  *
  * Users are an ordinary collection so they get the same storage, validation,
- * admin list/form, and access pipeline as any other entity. The password is
+ * Studio list/form, and access pipeline as any other entity. The password is
  * never stored in the clear: only a `passwordHash` column exists, and it is
- * hidden from the admin UI. Hashing itself lives in `@kon10/auth` — this module
+ * hidden from the Studio UI. Hashing itself lives in `@kon10/auth` — this module
  * only persists whatever hash it is given, keeping storage and crypto separate.
  */
 
@@ -21,7 +21,7 @@ export interface UsersModuleConfig {
 export function UsersModule(config: UsersModuleConfig = {}): Module {
   const fields = stampFields({
     // The login identity — the zod-first escape hatch (`schema`) enforces
-    // real email format server-side, mirrored to the admin form via jsonSchema.
+    // real email format server-side, mirrored to the Studio form via jsonSchema.
     email: text({ required: true, unique: true, schema: z.email() }),
     name: text(),
     // RBAC roles (defined by @kon10/auth). A user holds many; effective
@@ -42,7 +42,7 @@ export function UsersModule(config: UsersModuleConfig = {}): Module {
       {
         cardinality: 'many',
         slug: USERS_SLUG,
-        admin: {
+        studio: {
           // Lives in the settings sidebar (behind the Settings button) rather
           // than the main nav.
           area: 'settings',

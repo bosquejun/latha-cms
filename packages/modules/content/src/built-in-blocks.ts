@@ -21,7 +21,7 @@ import type { BlockInput } from './builders.js'
  * concerns table in CLAUDE.md), so the field is written as the raw
  * registered-type literal instead of `@kon10/media`'s `media()` builder. The
  * field type registry resolves `'media'` to the real config/data schema and
- * the admin picker resolves it to `MediaField` purely by string discriminant
+ * the Studio picker resolves it to `MediaField` purely by string discriminant
  * at runtime, so this works as long as the app loads `@kon10/media` — the
  * cast is needed because `'media'` isn't a known `FieldType` in this
  * package's own type graph.

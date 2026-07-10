@@ -1,11 +1,11 @@
 /**
  * The media module's upload endpoint. Binary payloads can't go through the
- * JSON-only admin RPC, so this is a dedicated route the module declares on
+ * JSON-only Studio RPC, so this is a dedicated route the module declares on
  * itself (`MediaModule().routes`) — the runner (`@kon10/start`) discovers and
  * mounts it generically, with no media-specific knowledge of its own.
  *
- * `requireAdmin` on the route entry covers the "may this caller use the admin
- * surface at all" gate; RBAC on the `media` collection itself (who may
+ * `requireStudioAccess` on the route entry covers the "may this caller use the
+ * Studio surface at all" gate; RBAC on the `media` collection itself (who may
  * `create`) is still enforced by `operations.create` below, same as any other
  * collection write.
  */
@@ -69,6 +69,6 @@ async function handleUpload({ cms, principal, request }: ModuleRouteContext): Pr
 
 export const uploadRoute: ModuleRoute = {
   method: 'POST',
-  requireAdmin: true,
+  requireStudioAccess: true,
   handler: handleUpload,
 }

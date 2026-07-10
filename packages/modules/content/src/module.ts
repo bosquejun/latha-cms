@@ -52,7 +52,7 @@ export function ContentModule(config: ContentModuleConfig): Module {
   return {
     name: 'content',
     capabilities: ['content'],
-    admin: { nav: { label: 'Content', order: 10, collapsible: true }, ui: '@kon10/content/admin' },
+    studio: { nav: { label: 'Content', order: 10, collapsible: true }, ui: '@kon10/content/studio' },
     api: config.apiPrefix ? { prefix: config.apiPrefix } : undefined,
     entities: config.entities,
     onInit(cms: Kon10Instance) {

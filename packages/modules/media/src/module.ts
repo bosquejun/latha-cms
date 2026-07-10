@@ -23,7 +23,7 @@ export function MediaModule(config: MediaModuleConfig): Module {
   return {
     name: 'media',
     capabilities: ['media'],
-    admin: { nav: { label: 'Media', order: 25 }, ui: '@kon10/media/admin' },
+    studio: { nav: { label: 'Media', order: 25 }, ui: '@kon10/media/studio' },
     entities: [
       buildMediaEntity({
         maxFileSize: config.maxFileSize,

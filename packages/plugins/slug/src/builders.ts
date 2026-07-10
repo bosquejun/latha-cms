@@ -1,6 +1,6 @@
 /**
  * The `slug()` field builder. A dedicated field type (not `text()` with a
- * hook) so `@kon10/slug/admin` can register its live-preview renderer and
+ * hook) so `@kon10/slug/studio` can register its live-preview renderer and
  * `slugPlugin` can find the fields to attach generation hooks to.
  */
 

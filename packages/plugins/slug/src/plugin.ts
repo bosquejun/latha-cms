@@ -5,7 +5,7 @@
  * At `onInit` (after all module onInits, before migrate) it:
  * 1. registers the `slug` field type,
  * 2. compiles each slug field's `from` template against its sibling fields,
- *    stamping the result onto the field config (`tokens`) so the admin
+ *    stamping the result onto the field config (`tokens`) so the Studio
  *    renderer interprets the exact same tokens, and
  * 3. unshifts beforeCreate/beforeUpdate hooks (closing over `cms.db` for
  *    uniqueness checks) so user-authored hooks observe the final slug.
@@ -15,7 +15,7 @@
  * full-path field the hooks maintain, flips the slug field's own `unique`
  * off (the leaf is only sibling-unique; the path column carries the UNIQUE
  * backstop), stamps the resolved nested config (`pathField`, `to`) for the
- * admin renderer, and wires the afterUpdate descendant-path cascade.
+ * Studio renderer, and wires the afterUpdate descendant-path cascade.
  *
  * Detection is by field *type* `'slug'`, never by field name — an entity's
  * hand-rolled `slug: text()` field is left alone. Top-level fields only:
@@ -30,7 +30,7 @@ import { compileTokens, parseTemplate } from './template.js'
 /**
  * Validate a slug field's `nested` config against its entity, inject the
  * plugin-owned path field, and stamp the resolved config back onto the field
- * for the admin renderer. Returns the resolved hook target. Throws at boot on
+ * for the Studio renderer. Returns the resolved hook target. Throws at boot on
  * misconfiguration — config errors, surfaced early.
  */
 function compileNested(
@@ -70,14 +70,14 @@ function compileNested(
     )
   }
 
-  // The derived full URL: hidden from the admin form, UNIQUE at the column
+  // The derived full URL: hidden from the Studio form, UNIQUE at the column
   // level as the concurrent-write backstop (never `required` — it is filled
   // by the same hooks that fill the slug, after validation).
   fields.push({ name: pathField, type: 'text', unique: true, meta: { hidden: true } })
 
   // The leaf segment is only unique among siblings — no UNIQUE column.
   field.unique = false
-  // Stamp the resolved config so the admin renderer can fetch the selected
+  // Stamp the resolved config so the Studio renderer can fetch the selected
   // parent (`to`) and read its path (`pathField`) without re-deriving.
   field.nested = { parent: nested.parent, pathField, to: entity.slug }
   // A single-valued self-referential parent is exactly what the flag means.
@@ -89,7 +89,7 @@ function compileNested(
 export function slugPlugin(): Plugin {
   return {
     name: 'slug',
-    admin: { ui: '@kon10/slug/admin' },
+    studio: { ui: '@kon10/slug/studio' },
     onInit(cms: Kon10Instance) {
       cms.registerFieldType(slugFieldEntry)
 

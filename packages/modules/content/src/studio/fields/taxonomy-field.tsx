@@ -1,7 +1,7 @@
 /**
  * `taxonomy` field renderer — a term picker for a content taxonomy.
  *
- * Lives in `@kon10/content/admin` (not the SDK) because the `taxonomy` field
+ * Lives in `@kon10/content/studio` (not the SDK) because the `taxonomy` field
  * type is owned by this module. Single taxonomies render a Select with the
  * term tree flattened + indented by depth; `many` taxonomies render the
  * `ManyTermPicker` below — removable chips for the current selection, a filter
@@ -16,7 +16,7 @@ import {
   useKon10,
   useAsync,
   type JsonDoc,
-} from '@kon10/admin-sdk'
+} from '@kon10/studio-sdk'
 import { flattenTermTree, indentLabel } from '../../term-tree.js'
 
 export const config = { type: 'taxonomy' }

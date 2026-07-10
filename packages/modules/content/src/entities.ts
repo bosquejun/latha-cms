@@ -2,7 +2,7 @@
  * Entity factories — `Collection()`, `Document()`, `Taxonomy()`.
  *
  * These are thin, typed constructors that stamp the structural `cardinality`
- * the kernel needs — plus the opaque `kind` tag the admin layer displays —
+ * the kernel needs — plus the opaque `kind` tag the Studio layer displays —
  * onto a config object. Fields are declared as a record of builder calls (`text()`,
  * `select()`, …); the factory infers the document type from them — which then
  * types the `access` and `hooks` callbacks — and stamps each record key as the
@@ -20,7 +20,7 @@ import {
   type DeliveryCacheOption,
   type Entity,
   type EntityAccess,
-  type EntityAdminConfig,
+  type EntityStudioConfig,
   type EntityHooks,
   type FieldsRecord,
   type InferDoc,
@@ -33,14 +33,14 @@ export type Taxonomy = Entity & { cardinality: 'many' }
 
 export interface CollectionConfig<TDoc = Record<string, unknown>> {
   slug: string
-  admin?: EntityAdminConfig
+  studio?: EntityStudioConfig
   access?: EntityAccess<TDoc>
   hooks?: EntityHooks<TDoc>
   timestamps?: boolean
   /**
    * Draft/publish workflow. Enabled by default: the collection carries a
    * `status` select (`draft` | `published`, new records start as drafts) and
-   * the public delivery API serves only published records — the admin surface
+   * the public delivery API serves only published records — the Studio surface
    * always sees everything. Declare your own `status` field to restyle it
    * (the delivery filter still applies), or pass `false` for collections
    * whose saves should be live immediately.
@@ -95,14 +95,14 @@ export function Collection<TFields extends FieldsRecord>(
     actions: ['read', 'create', 'update', 'delete'],
     ...rest,
     ...(api ? { api } : {}),
-    admin: { segment: 'content', ...rest.admin },
+    studio: { segment: 'content', ...rest.studio },
     fields: stampFields(withStatus),
   }
 }
 
 export interface DocumentConfig<TDoc = Record<string, unknown>> {
   slug: string
-  admin?: Omit<EntityAdminConfig, 'useAsTitle' | 'defaultColumns'>
+  studio?: Omit<EntityStudioConfig, 'useAsTitle' | 'defaultColumns'>
   access?: EntityAccess<TDoc>
   hooks?: EntityHooks<TDoc>
   timestamps?: boolean
@@ -127,7 +127,7 @@ export function Document<TFields extends FieldsRecord>(
     actions: ['read', 'update'],
     ...rest,
     ...(api ? { api } : {}),
-    admin: { segment: 'documents', ...rest.admin },
+    studio: { segment: 'documents', ...rest.studio },
     fields: stampFields(fields),
   }
 }
@@ -138,7 +138,7 @@ export interface TaxonomyInput {
   hierarchical?: boolean
   /** Extra fields beyond the implicit `name` / `slug` (and `parent`). */
   fields?: FieldsRecord
-  admin?: EntityAdminConfig
+  studio?: EntityStudioConfig
   /**
    * Per-entity override of the app-wide delivery-API cache TTL. Terms
    * (categories, tags) are rarely written, so a long TTL is often a good fit.
@@ -168,7 +168,7 @@ export function Taxonomy(input: TaxonomyInput): Taxonomy {
     slug: input.slug,
     hierarchical: input.hierarchical,
     timestamps: true,
-    admin: { segment: 'taxonomy', ...input.admin },
+    studio: { segment: 'taxonomy', ...input.studio },
     actions: ['read', 'create', 'update', 'delete'],
     ...(api ? { api } : {}),
     fields: stampFields({ ...implicit, ...(input.fields ?? {}) }),

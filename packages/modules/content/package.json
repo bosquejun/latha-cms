@@ -10,10 +10,10 @@
       "development": "./src/index.ts",
       "import": "./dist/index.js"
     },
-    "./admin": {
-      "types": "./dist/admin/index.d.ts",
-      "development": "./src/admin/index.ts",
-      "import": "./dist/admin/index.js"
+    "./studio": {
+      "types": "./dist/studio/index.d.ts",
+      "development": "./src/studio/index.ts",
+      "import": "./dist/studio/index.js"
     }
   },
   "main": "./dist/index.js",
@@ -22,25 +22,25 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json && tsc -p tsconfig.admin.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.studio.json",
     "dev": "tsc -p tsconfig.json --watch",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.admin.json --noEmit",
-    "test": "tsc -p tsconfig.json && tsc -p tsconfig.admin.json && node --test 'dist/**/*.test.js'"
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.studio.json --noEmit",
+    "test": "tsc -p tsconfig.json && tsc -p tsconfig.studio.json && node --test 'dist/**/*.test.js'"
   },
   "peerDependencies": {
     "@kon10/core": "workspace:*",
-    "@kon10/admin-sdk": "workspace:*",
+    "@kon10/studio-sdk": "workspace:*",
     "@kon10/ui": "workspace:*",
     "react": "^18 || ^19"
   },
   "peerDependenciesMeta": {
-    "@kon10/admin-sdk": { "optional": true },
+    "@kon10/studio-sdk": { "optional": true },
     "@kon10/ui": { "optional": true },
     "react": { "optional": true }
   },
   "devDependencies": {
     "@kon10/core": "workspace:*",
-    "@kon10/admin-sdk": "workspace:*",
+    "@kon10/studio-sdk": "workspace:*",
     "@kon10/ui": "workspace:*",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",

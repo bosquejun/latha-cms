@@ -11,8 +11,8 @@
   },
   "references": [
     { "path": "../../core" },
-    { "path": "../../admin-sdk" }
+    { "path": "../../studio-sdk" }
   ],
-  "include": ["src/admin/**/*.ts", "src/admin/**/*.tsx", "src/term-tree.ts"],
+  "include": ["src/studio/**/*.ts", "src/studio/**/*.tsx", "src/term-tree.ts"],
   "exclude": ["dist", "node_modules"]
 }

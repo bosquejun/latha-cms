@@ -17,7 +17,7 @@
  */
 import { useEffect, useState } from 'react'
 import { Button, Field as FieldWrap, Input, InputAddon, InputGroup } from '@kon10/ui'
-import { type FieldControlProps, humanize, useFieldValue } from '@kon10/admin-sdk'
+import { type FieldControlProps, humanize, useFieldValue } from '@kon10/studio-sdk'
 import { useKon10, useAsync, type JsonDoc } from '@kon10/start'
 import { slugify, slugifyPath } from '../../slugify.js'
 import { renderTokenValue, type SlugToken } from '../../template.js'

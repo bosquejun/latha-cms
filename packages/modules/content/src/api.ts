@@ -41,7 +41,7 @@ export interface ContentApiOptions {
   getPrincipal?: () => Promise<unknown>
   /**
    * Opt into guard enforcement (e.g. RBAC) by threading `{ enforce: true }` to
-   * every operation. The admin RPC layer sets this; the public/headless path
+   * every operation. The Studio RPC layer sets this; the public/headless path
    * leaves it off so reads stay allow-by-default.
    */
   enforce?: boolean

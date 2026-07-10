@@ -1,6 +1,6 @@
 /**
  * `media` field renderer — a dropzone with upload progress and a rich preview.
- * Lives in `@kon10/media/admin` (not `@kon10/admin-sdk`) so the SDK stays
+ * Lives in `@kon10/media/studio` (not `@kon10/studio-sdk`) so the SDK stays
  * ignorant of what "media" means; registered by `type`, same mechanism as any
  * module field renderer.
  *
@@ -18,7 +18,7 @@ import {
   useKon10,
   useAsync,
   type JsonDoc,
-} from '@kon10/admin-sdk'
+} from '@kon10/studio-sdk'
 
 export const config = { type: 'media' }
 

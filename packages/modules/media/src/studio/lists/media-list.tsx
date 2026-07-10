@@ -1,7 +1,7 @@
 /**
  * Media Library list view — a thumbnail grid instead of the generic table.
  * Registered for the `media` entity slug via `defineEntityListConfig`, so
- * `@kon10/admin-sdk`'s `EntityList` (and `@kon10/start`'s `ListView`) never
+ * `@kon10/studio-sdk`'s `EntityList` (and `@kon10/start`'s `ListView`) never
  * need to know media exists — the same extension-first pattern as the
  * `media` field renderer.
  */
@@ -11,7 +11,7 @@ import {
   EmptyState,
   defineEntityListConfig,
   type EntityListProps,
-} from '@kon10/admin-sdk'
+} from '@kon10/studio-sdk'
 
 export const config = defineEntityListConfig({ slug: 'media' })
 

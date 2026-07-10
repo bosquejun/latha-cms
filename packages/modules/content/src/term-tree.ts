@@ -5,8 +5,8 @@
  * just yields depth-0 rows in input order. Terms whose `parent` doesn't resolve
  * to a known term are treated as roots so nothing is dropped.
  *
- * Lives at the package root (not under `src/admin`) so the server tsconfig — the
- * one with Node types — compiles it and its `node:test` suite; `tsconfig.admin.json`
+ * Lives at the package root (not under `src/studio`) so the server tsconfig — the
+ * one with Node types — compiles it and its `node:test` suite; `tsconfig.studio.json`
  * also includes it so the taxonomy renderer can import it in the client bundle.
  */
 

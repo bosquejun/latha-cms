@@ -36,7 +36,7 @@ export const slugFieldConfigSchema = z.object({
       /** Name of the injected full-path field. Default `'path'`. */
       pathField: z.string().optional(),
       /**
-       * The entity's own slug, stamped by `slugPlugin` at onInit so the admin
+       * The entity's own slug, stamped by `slugPlugin` at onInit so the Studio
        * renderer knows where to fetch the selected parent. Not hand-written.
        */
       to: z.string().optional(),

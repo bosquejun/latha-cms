@@ -14,7 +14,7 @@
  * the sibling fields are known, and stamps the result onto the field config
  * (`tokens`). Ref tokens get `via` (the target entity's slug) resolved from
  * the sibling relationship/taxonomy/media field, so both the server hook and
- * the admin renderer can interpret the same tokens without re-deriving
+ * the Studio renderer can interpret the same tokens without re-deriving
  * anything. `resolveTokens` renders the raw string; callers `slugifyPath` it.
  */
 

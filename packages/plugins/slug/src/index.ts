@@ -16,8 +16,8 @@
  * })
  * ```
  *
- * The admin renderer ships client-side via `@kon10/slug/admin`
- * (`Plugin.admin.ui`); the field type itself is registered server-side in
+ * The Studio renderer ships client-side via `@kon10/slug/studio`
+ * (`Plugin.studio.ui`); the field type itself is registered server-side in
  * `slugPlugin().onInit` — client-side validation falls back to `z.unknown()`
  * by design (same as `media`/`taxonomy`), the path regex runs on the server.
  */

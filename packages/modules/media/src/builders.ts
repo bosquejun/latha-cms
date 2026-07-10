@@ -1,6 +1,6 @@
 /**
  * The `media()` field builder. A dedicated field type (not
- * `relationship({ to: 'media' })`) so `@kon10/media/admin` can register its
+ * `relationship({ to: 'media' })`) so `@kon10/media/studio` can register its
  * own upload/picker renderer without teaching the generic relationship
  * renderer anything about media — same rationale as `taxonomy`.
  */

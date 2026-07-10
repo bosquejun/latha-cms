@@ -10,7 +10,7 @@
  *   is resolved from the template. An empty result leaves the field unset.
  * - update: untouched unless the payload carries the slug key — retitling a
  *   published post never silently rewrites its URL. Regeneration is an
- *   explicit admin affordance that submits a new value.
+ *   explicit Studio affordance that submits a new value.
  * - uniqueness: `-2`, `-3`… suffixes on collision, excluding the doc itself
  *   on update. The DB UNIQUE column stays as the concurrent-write backstop.
  *

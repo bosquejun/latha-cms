@@ -5,7 +5,7 @@ export const MEDIA_SLUG = 'media'
 /**
  * Server-side upload policy, enforced by the upload dispatcher before any
  * bytes reach the storage adapter. Attached to the media entity as an opaque
- * passthrough (same contract as `kind`/`admin`) so the framework layer can
+ * passthrough (same contract as `kind`/`studio`) so the framework layer can
  * read it without depending on this package.
  */
 export interface UploadPolicy {
@@ -48,7 +48,7 @@ export function buildMediaEntity(policy?: Partial<UploadPolicy>): MediaEntity {
     slug: MEDIA_SLUG,
     timestamps: true,
     actions: ['read', 'create', 'update', 'delete'],
-    admin: {
+    studio: {
       segment: 'content',
       useAsTitle: 'filename',
       defaultColumns: ['filename', 'mimeType', 'size'],
