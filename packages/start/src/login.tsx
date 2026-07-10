@@ -36,7 +36,7 @@ export function Kon10Login() {
       <div className="w-full max-w-[380px]">
         <div className="mb-[22px] flex items-center justify-center gap-2.5">
           <span className="grid size-8 place-items-center rounded-[var(--radius-md)] bg-primary text-base font-semibold text-primary-foreground">
-            L
+            K
           </span>
           <span className="text-lg font-semibold tracking-tight">Kon10</span>
         </div>
