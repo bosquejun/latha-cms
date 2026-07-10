@@ -2,10 +2,10 @@
  * Access evaluator.
  *
  * Given an entity's access map and a context, decide whether an operation
- * is permitted. The default policy is deny-by-default for writes and
- * allow-by-default for reads is intentionally NOT used: when no access
- * function is declared for an operation, the operation is allowed. Modules
- * that need stricter defaults supply explicit access functions.
+ * is permitted. A stricter default (deny-by-default for writes, allow-by-default
+ * for reads) is intentionally NOT used: when no access function is declared
+ * for an operation, it is allowed. Modules that need stricter defaults
+ * supply explicit access functions.
  */
 
 import type {

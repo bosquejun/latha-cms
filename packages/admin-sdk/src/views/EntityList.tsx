@@ -61,7 +61,6 @@ function renderCell(value: unknown, fieldType?: string): ReactNode {
     return (
       <Badge variant={value ? 'default' : 'secondary'}>{String(value)}</Badge>
     )
-  // Select / status values render as a color-coded status pill.
   if (fieldType === 'select' && typeof value === 'string')
     return <StatusBadge status={value} />
   // Dates are stored as ISO strings — show a locale date, not the raw timestamp.

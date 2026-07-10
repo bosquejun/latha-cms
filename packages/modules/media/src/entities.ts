@@ -24,7 +24,6 @@ export const DEFAULT_ALLOWED_MIME_TYPES = [
   'application/pdf',
 ]
 
-/** The media entity plus its stamped upload policy. */
 export type MediaEntity = Entity & { upload: UploadPolicy }
 
 /**

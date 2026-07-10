@@ -60,7 +60,6 @@ function moduleOfEntities(kon10: Kon10Instance): Map<string, string> {
   return out
 }
 
-/** Compute the desired catalog from the live entity set. */
 function buildDesired(kon10: Kon10Instance): {
   scopes: ScopeRecord[]
   permissions: PermissionRecord[]
@@ -118,12 +117,10 @@ async function syncTable<T extends { key: string }>(
   const byKey = new Map(existing.map((row) => [row.key as string, row]))
   const desiredKeys = new Set(desired.map((d) => d.key))
 
-  // Prune rows no longer in the catalog.
   for (const row of existing) {
     if (!desiredKeys.has(row.key as string)) await kon10.db.delete(slug, row.id)
   }
 
-  // Upsert each desired row.
   const result: Doc[] = []
   for (const entry of desired) {
     const found = byKey.get(entry.key)

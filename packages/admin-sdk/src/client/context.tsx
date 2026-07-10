@@ -98,9 +98,9 @@ type AdminNavigate = (href: string) => void
 const AdminNavigateContext = createContext<AdminNavigate | null>(null)
 
 /**
- * Provide client-side navigation to admin extensions. The framework layer
- * (e.g. `@kon10/start`'s `Kon10Admin`) wraps the admin tree with this,
- * bridging its router. Extension pages stay router-agnostic.
+ * Provide client-side navigation to admin extensions so extension pages
+ * stay router-agnostic while the host app's router does the actual
+ * navigating.
  */
 export function AdminNavigateProvider({
   navigate,

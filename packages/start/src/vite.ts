@@ -385,7 +385,7 @@ function adminExtensionsPlugin(dir: string, configPath: string): VitePluginLike 
           }
         } else {
           // Build: a failure here would silently drop module admin UI from the
-          // production bundle (the bug we just fixed). Fail loudly instead.
+          // production bundle. Fail loudly instead.
           try {
             specifiers = await loadSpecifiersAtBuild(root, configPath)
           } catch (err) {

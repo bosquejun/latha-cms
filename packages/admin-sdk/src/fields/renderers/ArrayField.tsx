@@ -14,8 +14,7 @@
  * is tracked by index and kept in sync with `items` across add/remove/move,
  * the same operations already applied to the value array itself.
  *
- * Like `group`, errors surface at the array level only — per-item plumbing is
- * a follow-up alongside group's.
+ * Like `group`, errors surface at the array level only, not per-item.
  */
 import { useState } from 'react'
 import { Button, Card, CardContent, cn } from '@kon10/ui'

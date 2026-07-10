@@ -708,10 +708,8 @@ function SettingsView({
 }) {
   const { extensions } = useKon10()
 
-  // A specific settings page.
   if (page) return <page.Component path={page.path} params={params} />
 
-  // The settings index — lists registered settings pages.
   const pages = extensions.settings
   return (
     <>

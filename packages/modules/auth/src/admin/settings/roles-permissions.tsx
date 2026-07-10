@@ -2,7 +2,7 @@
  * Roles & Permissions — the Strapi-style access matrix (client-aware).
  *
  * Lives in @kon10/auth and is registered as a settings extension via the
- * @kon10/auth/admin barrel. Migrated from @kon10/start.
+ * @kon10/auth/admin barrel.
  *
  * Left: the role list with description and permission count.
  * Right: the selected role's permission matrix — rows = scopes (grouped by
@@ -65,7 +65,6 @@ type Action = (typeof ACTION_COLUMNS)[number]
 const SUPERADMIN_KEY = '*'
 const ADMIN_ACCESS_KEY = 'admin:access'
 const NON_MATRIX_SCOPES = new Set([SUPERADMIN_KEY, 'admin', 'scopes'])
-
 
 interface PermLite {
   id: string
@@ -344,7 +343,6 @@ export default function RolesPermissions({ params }: PageComponentProps) {
     return [...groups.entries()]
   }, [scopeRows])
 
-  // Scope rows filtered by the search query
   const filteredModuleGroups = useMemo<Array<[string, ScopeLite[]]>>(() => {
     const q = filterQuery.trim().toLowerCase()
     if (!q) return moduleGroups
@@ -361,7 +359,6 @@ export default function RolesPermissions({ params }: PageComponentProps) {
       .filter(([, rows]) => rows.length > 0)
   }, [moduleGroups, filterQuery])
 
-  // Permission states per module (unfiltered — for bulk selects)
   const moduleState = useMemo<Map<string, ModuleState>>(() => {
     return new Map(
       moduleGroups.map(([mod, rows]) => {
@@ -384,7 +381,6 @@ export default function RolesPermissions({ params }: PageComponentProps) {
     )
   }, [moduleGroups, permByKey, checked])
 
-  // Permission states per action column (unfiltered)
   const columnState = useMemo<Record<Action, ColumnState>>(
     () =>
       Object.fromEntries(
@@ -418,7 +414,6 @@ export default function RolesPermissions({ params }: PageComponentProps) {
   const dirty =
     checked.size !== original.size || [...checked].some((id) => !original.has(id))
 
-  // Toggle a single permission
   const toggle = (id: string | undefined, on?: boolean) => {
     if (!id) return
     setChecked((prev) => {
@@ -430,7 +425,6 @@ export default function RolesPermissions({ params }: PageComponentProps) {
     })
   }
 
-  // Bulk-toggle all permissions in an action column
   const toggleColumn = (action: Action, on: boolean) => {
     const perms = columnState[action].perms
     setChecked((prev) => {
@@ -440,7 +434,6 @@ export default function RolesPermissions({ params }: PageComponentProps) {
     })
   }
 
-  // Bulk-toggle all permissions in a module group
   const toggleModulePerms = (mod: string, on: boolean) => {
     const state = moduleState.get(mod)
     if (!state) return
@@ -451,7 +444,6 @@ export default function RolesPermissions({ params }: PageComponentProps) {
     })
   }
 
-  // Collapse/expand a module section in the accordion
   const toggleSection = (mod: string) =>
     setCollapsed((prev) => {
       const next = new Set(prev)
@@ -459,7 +451,6 @@ export default function RolesPermissions({ params }: PageComponentProps) {
       return next
     })
 
-  // Navigate within the roles area, prompting when there are unsaved changes
   const go = (href: string) => {
     if (dirty) setPendingNav(href)
     else navigate(href)
@@ -520,7 +511,6 @@ export default function RolesPermissions({ params }: PageComponentProps) {
         description="Define what each role can do. Public applies to anonymous requests; Authenticated is the baseline for every logged-in user."
       />
 
-      {/* Delete confirmation */}
       <ConfirmDialog
         open={pendingDelete !== null}
         onOpenChange={(open) => !open && setPendingDelete(null)}
@@ -587,7 +577,6 @@ export default function RolesPermissions({ params }: PageComponentProps) {
             /* On phones the list *is* the page when no role param is set;
                opening a role hides it in favour of the detail subpage. */
             <div className={cn('flex flex-col gap-inline', detailOpen && 'max-lg:hidden')}>
-            {/* Sidebar header */}
             <div className="flex items-center justify-between px-stack">
               <div className="flex items-center gap-inline">
                 <span className="text-small font-semibold text-foreground">
@@ -602,7 +591,6 @@ export default function RolesPermissions({ params }: PageComponentProps) {
               )}
             </div>
 
-            {/* Role list */}
             <Card className="p-inline">
               {roleList.length > 0 ? (
                 <div className="flex flex-col gap-0.5">
@@ -622,7 +610,6 @@ export default function RolesPermissions({ params }: PageComponentProps) {
               )}
             </Card>
 
-            {/* Inline create form */}
             {creating && (
               <Card className="p-group">
                 <p className="mb-inline text-small font-medium">New role</p>
@@ -679,7 +666,6 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                 <ChevronLeft className="size-4" /> All roles
               </button>
 
-              {/* Role header */}
               <div className="flex flex-wrap items-start justify-between gap-card-gap">
                 <div>
                   <div>
@@ -728,7 +714,6 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                 </div>
               </div>
 
-              {/* Special permission toggles */}
               <Card
                 className={cn(
                   'divide-y divide-border overflow-hidden p-0',
@@ -763,14 +748,12 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                 />
               </Card>
 
-              {/* Permission matrix */}
               <Card
                 className={cn(
                   'overflow-hidden p-0',
                   isSuper && 'pointer-events-none opacity-40',
                 )}
               >
-                {/* Search bar */}
                 <div className="border-b border-border p-group">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -809,7 +792,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                         </TH>
                       ))}
                     </TR>
-                    {/* Row 2 — bulk-select checkboxes with room to breathe */}
+                    {/* Row 2 — bulk-select checkboxes */}
                     <TR>
                       <TH className="py-group font-normal text-muted-foreground max-sm:px-3">
                         Select all
@@ -844,14 +827,12 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                         const modSt = moduleState.get(mod)
                         return (
                           <Fragment key={mod}>
-                            {/* Module group header */}
                             <TR className="bg-muted/30 hover:bg-muted/40">
                               <TD
                                 colSpan={1 + ACTION_COLUMNS.length}
                                 className="py-inline max-sm:px-3"
                               >
                                 <div className="flex items-center gap-inline">
-                                  {/* Accordion toggle */}
                                   <button
                                     type="button"
                                     onClick={() => toggleSection(mod)}
@@ -865,13 +846,11 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                                     />
                                     {mod || 'Other'}
                                   </button>
-                                  {/* Granted / total count */}
                                   {modSt && (
                                     <span className="text-caption text-muted-foreground">
                                       {modSt.checkedCount}/{modSt.perms.length}
                                     </span>
                                   )}
-                                  {/* Bulk-select the whole module */}
                                   {modSt && (
                                     <BulkCheckbox
                                       checked={modSt.allChecked}
@@ -886,7 +865,6 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                               </TD>
                             </TR>
 
-                            {/* Scope rows */}
                             {open &&
                               rows.map((scope) => (
                                 <TR

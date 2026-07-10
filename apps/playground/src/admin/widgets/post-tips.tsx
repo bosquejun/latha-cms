@@ -16,7 +16,6 @@ interface EntityLike {
 }
 
 export default function PostTips({ entity, recordId }: WidgetContext) {
-  // Only show on the `posts` collection.
   if ((entity as EntityLike)?.slug !== 'posts') return null
   return (
     <Card>

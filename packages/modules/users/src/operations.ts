@@ -22,7 +22,6 @@ export interface CreateUserInput {
   [key: string]: unknown
 }
 
-/** Create a user with an already-hashed password. */
 export function createUser(
   kon10: Kon10Instance,
   input: CreateUserInput,

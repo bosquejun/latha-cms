@@ -92,7 +92,6 @@ export default function SlugField({ field, id, value, onChange, onBlur, error }:
     return first == null || first === '' ? undefined : String(first)
   })()
 
-  // The selected parent doc, for the URL prefix; re-fetched when it changes.
   const parentDoc = useAsync<JsonDoc | null>(
     async () => (nested && parentId ? await client.get(nested.to, parentId) : null),
     [parentId],

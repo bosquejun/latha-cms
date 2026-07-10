@@ -246,7 +246,6 @@ export default function ApiKeys() {
         }}
       />
 
-      {/* One-time token reveal. */}
       <Dialog open={mintedToken !== null} onOpenChange={(open) => !open && setMintedToken(null)}>
         <DialogContent>
           <DialogHeader>
@@ -267,7 +266,6 @@ export default function ApiKeys() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete confirmation. */}
       <ConfirmDialog
         open={confirmDelete !== null}
         onOpenChange={(open) => !open && setConfirmDelete(null)}

@@ -27,7 +27,6 @@ export function flattenTermTree(terms: Term[]): FlatTerm[] {
   const byParent = new Map<string | null, Term[]>()
   const ids = new Set(terms.map((t) => t.id))
   for (const term of terms) {
-    // A parent that isn't present in the list is treated as "no parent".
     const key = term.parent && ids.has(term.parent) ? term.parent : null
     const bucket = byParent.get(key)
     if (bucket) bucket.push(term)

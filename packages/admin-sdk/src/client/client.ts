@@ -65,7 +65,6 @@ export interface Kon10ClientOptions {
   serverFn?: Kon10ServerFn
 }
 
-/** POST one RPC action to the endpoint and return its JSON result. */
 async function fetchRpc<T>(endpoint: string, data: Kon10RpcInput): Promise<T> {
   const res = await fetch(endpoint, {
     method: 'POST',
@@ -93,7 +92,6 @@ async function fetchJson<T>(endpoint: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>
 }
 
-/** POST a file (+ extra fields) to the upload endpoint as multipart form data. */
 async function fetchUpload(
   endpoint: string,
   file: File,

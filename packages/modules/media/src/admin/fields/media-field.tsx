@@ -42,7 +42,6 @@ function UploadIcon({ className }: { className?: string }) {
   )
 }
 
-/** Generic file glyph shown in the preview for non-image media. */
 function FileIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -144,7 +143,6 @@ export default function MediaField({ field, id, value, onChange, onBlur, error }
         </div>
       ) : url ? (
         <div className="flex flex-col gap-2 rounded-md border border-input bg-background p-2">
-          {/* Preview spans the full field width; the actions sit below it. */}
           {isImage ? (
             <img
               src={url}

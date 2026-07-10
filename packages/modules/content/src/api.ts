@@ -21,7 +21,6 @@ import type {
   Query,
 } from '@kon10/core'
 
-/** A JSON-serializable document. */
 export type JsonDoc = { id: string } & Record<string, JsonValue>
 
 export interface JsonTermNode {

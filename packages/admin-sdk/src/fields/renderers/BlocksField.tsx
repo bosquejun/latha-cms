@@ -117,7 +117,6 @@ export function BlocksField({
 
   return (
     <div className="flex flex-col gap-field">
-      {/* Field label row */}
       <div className="flex items-center gap-inline">
         <p className="text-sm font-medium">
           {fieldLabel}
@@ -139,7 +138,6 @@ export function BlocksField({
         )}
       </div>
 
-      {/* Empty state */}
       {items.length === 0 && blockDefs.length > 0 && !showPicker && (
         <div className="flex flex-col items-center gap-3 rounded-lg border-2 border-dashed border-border py-10">
           <Layers className="h-8 w-8 text-muted-foreground/40" aria-hidden />
@@ -156,7 +154,6 @@ export function BlocksField({
         </div>
       )}
 
-      {/* Block list */}
       {items.length > 0 && (
         <div className="flex flex-col gap-3">
           {items.map((item, index) => {
@@ -174,24 +171,20 @@ export function BlocksField({
                     aria-hidden
                   />
 
-                  {/* Block type badge */}
                   <Badge variant="secondary" className="shrink-0 text-xs">
                     {def.label}
                   </Badge>
 
-                  {/* Collapsed preview */}
                   {isCollapsed && preview && (
                     <span className="min-w-0 truncate text-sm text-muted-foreground">
                       {preview}
                     </span>
                   )}
 
-                  {/* Position counter */}
                   <span className="ml-auto shrink-0 text-caption text-muted-foreground">
                     {index + 1}&thinsp;/&thinsp;{items.length}
                   </span>
 
-                  {/* Action controls */}
                   <div className="flex shrink-0 items-center gap-0.5">
                     <Button
                       type="button"
@@ -269,7 +262,6 @@ export function BlocksField({
         </div>
       )}
 
-      {/* Block type picker / Add block button */}
       {blockDefs.length > 0 && (
         <div>
           {showPicker ? (

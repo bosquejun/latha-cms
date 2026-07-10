@@ -170,7 +170,6 @@ function pgTypeForKind(kind: ColumnKind): string {
   }
 }
 
-/** Render the DDL column type for a kind in the given dialect. */
 function ddlTypeForColumn(col: ColumnPlan, dialect: Dialect): string {
   return dialect === 'postgres' ? pgTypeForKind(col.kind) : col.sqlType
 }
@@ -181,8 +180,8 @@ function timestampType(dialect: Dialect): string {
 }
 
 /**
- * Produce a `CREATE TABLE IF NOT EXISTS` statement from a plan. Defaults to the
- * SQLite dialect (the original behaviour); pass `'postgres'` for Postgres DDL.
+ * Produce a `CREATE TABLE IF NOT EXISTS` statement from a plan. Defaults to
+ * SQLite; pass `'postgres'` for Postgres DDL.
  */
 export function createTableSQL(plan: TablePlan, dialect: Dialect = 'sqlite'): string {
   const lines: string[] = ['"id" TEXT PRIMARY KEY NOT NULL']

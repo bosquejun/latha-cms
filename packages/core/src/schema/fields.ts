@@ -234,7 +234,6 @@ export function number<const O extends NumberOpts = {}>(
   )
 }
 
-/** Boolean toggle. */
 export function boolean<const O extends BooleanOpts = {}>(
   opts?: O,
 ): Built<BooleanField, boolean, IsPresent<O>> {

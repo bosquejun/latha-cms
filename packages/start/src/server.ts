@@ -262,9 +262,9 @@ export async function handleKon10Request(
 
   const { principal } = await resolvePrincipal(kon10, request)
 
-  // Every remaining action is admin-only — login/logout/currentUser moved to
-  // @kon10/auth's own routes (see `ModuleRoute`), which run without a session
-  // by definition and so can't sit behind this gate.
+  // Every remaining action is admin-only. Login/logout/currentUser run
+  // without a session by definition (they live under @kon10/auth's own
+  // routes, see `ModuleRoute`), so they can't sit behind this gate.
   if (!hasPermission(principal, ADMIN_ACCESS)) {
     throw new AccessDeniedError('read', 'admin')
   }

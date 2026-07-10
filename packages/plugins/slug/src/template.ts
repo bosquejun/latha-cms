@@ -140,7 +140,6 @@ export interface TokenContext {
   data: Record<string, unknown>
   previousDoc?: Record<string, unknown>
   db: TokenDb
-  /** Reserved for future localized slugs — unused in v1. */
   locale?: string
 }
 

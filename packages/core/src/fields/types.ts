@@ -82,10 +82,7 @@ export type FieldFromMap = FieldTypeMap[keyof FieldTypeMap]
 /** Union of all registered field type discriminants. */
 export type FieldTypeKey = keyof FieldTypeMap
 
-/**
- * Canonical `Field` alias — widens as modules augment `FieldTypeMap`.
- * Use this wherever the old `Field` union was used.
- */
+/** Canonical `Field` alias — widens as modules augment `FieldTypeMap`. */
 export type Field = FieldFromMap
 
 /**

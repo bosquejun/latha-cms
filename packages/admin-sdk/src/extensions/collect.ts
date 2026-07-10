@@ -2,8 +2,7 @@
  * Shared admin-extension assembly. Turns convention-folder glob maps (from
  * `import.meta.glob(..., { eager: true })`) into a typed `AdminExtensions`,
  * and merges several `AdminExtensions` with later-source-wins precedence.
- * Used by the app folder scan, module `./admin` barrels, and the Start Vite
- * plugin — one implementation, no duplication.
+ * One implementation shared across every source of admin extensions.
  */
 import type {
   AdminExtensions,

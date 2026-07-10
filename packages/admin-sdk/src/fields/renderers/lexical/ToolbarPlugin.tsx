@@ -153,7 +153,6 @@ export function ToolbarPlugin() {
 
   return (
     <div className="flex flex-wrap items-center gap-0.5 border-b border-input px-2 py-1.5">
-      {/* History */}
       <Button
         type="button"
         size="icon"
@@ -177,7 +176,6 @@ export function ToolbarPlugin() {
 
       <Separator orientation="vertical" className="mx-1 h-5" />
 
-      {/* Inline formatting */}
       <Button
         type="button"
         size="icon"
@@ -231,7 +229,6 @@ export function ToolbarPlugin() {
 
       <Separator orientation="vertical" className="mx-1 h-5" />
 
-      {/* Block types */}
       <Button
         type="button"
         size="icon"
@@ -275,7 +272,6 @@ export function ToolbarPlugin() {
 
       <Separator orientation="vertical" className="mx-1 h-5" />
 
-      {/* Lists */}
       <Button
         type="button"
         size="icon"
@@ -311,7 +307,6 @@ export function ToolbarPlugin() {
 
       <Separator orientation="vertical" className="mx-1 h-5" />
 
-      {/* Link & media */}
       <Button
         type="button"
         size="icon"

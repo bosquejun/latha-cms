@@ -33,7 +33,6 @@ export function loginBlocked(email: string, now = Date.now()): boolean {
   return entry.count >= MAX_FAILURES
 }
 
-/** Record a failed attempt for this email. */
 export function recordLoginFailure(email: string, now = Date.now()): void {
   const key = keyFor(email)
   const entry = failures.get(key)

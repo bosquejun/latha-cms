@@ -41,7 +41,6 @@ export function getFieldRenderer(type: string): FieldRenderer {
   return registry.get(type) ?? FallbackField
 }
 
-/** Override or add a renderer for a field type. */
 export function registerFieldRenderer(type: string, renderer: FieldRenderer): void {
   registry.set(type, renderer)
 }

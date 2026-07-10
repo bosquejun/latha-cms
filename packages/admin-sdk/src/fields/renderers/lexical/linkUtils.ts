@@ -1,5 +1,7 @@
-/** Prefix a bare host (`example.com`) with https:// so links resolve. Leaves
- *  absolute URLs, anchors, mailto/tel, and root-relative paths untouched. */
+/**
+ * Prefix a bare host (`example.com`) with https:// so links resolve. Leaves
+ * absolute URLs, anchors, mailto/tel, and root-relative paths untouched.
+ */
 export function normalizeUrl(url: string): string {
   const trimmed = url.trim()
   if (trimmed === '') return ''

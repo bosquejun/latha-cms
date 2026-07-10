@@ -82,27 +82,20 @@ class Kon10 implements Kon10Instance {
   }
 
   async boot(): Promise<this> {
-    // 1. Register + resolve module order.
     this.registry.registerAll(this.config.modules)
     this.modules = this.registry.resolve()
 
-    // 2. Collect entities and index them by slug.
     this.entities = this.registry.collectEntities()
     for (const entity of this.entities) this.entityIndex.set(entity.slug, entity)
 
-    // 3. Connect the database.
     await this.db.connect?.()
 
-    // 4. onInit (resolved order).
     for (const module of this.modules) await module.onInit?.(this)
 
-    // 5. Plugin onInit.
     for (const plugin of this.config.plugins) await plugin.onInit?.(this)
 
-    // 6. Migrate schema for every entity.
     await this.db.migrate(this.entities)
 
-    // 7. onReady (resolved order).
     for (const module of this.modules) await module.onReady?.(this)
 
     this.ready = true

@@ -51,8 +51,7 @@ export async function handleModuleRoute(
     return await route.handler({ cms: kon10, principal, request })
   } catch (err) {
     // Policy rejections and access denials are client errors, not server
-    // faults — surface the message with a 4xx, same contract module route
-    // handlers relied on when this lived in `dispatchKon10Upload`.
+    // faults — surface the message with a 4xx.
     const status = err instanceof Error && err.name === 'AccessDeniedError' ? 403 : 400
     const message = err instanceof Error ? err.message : 'Request failed.'
     return json(status, { error: message })

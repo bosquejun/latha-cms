@@ -26,9 +26,7 @@ import {
   type InferDoc,
 } from '@kon10/core'
 
-/** Many records, standard CRUD list — `cardinality: 'many'`. */
 export type Collection<TDoc = Record<string, unknown>> = Entity<TDoc> & { cardinality: 'many' }
-/** A single-instance singleton, no list view — `cardinality: 'single'`. */
 export type Document<TDoc = Record<string, unknown>> = Entity<TDoc> & { cardinality: 'single' }
 /** Hierarchical or flat grouping — `cardinality: 'many'`. */
 export type Taxonomy = Entity & { cardinality: 'many' }

@@ -31,7 +31,6 @@ export function UsersModule(config: UsersModuleConfig = {}): Module {
       many: true,
       meta: { sidebar: true, description: 'Roles assigned to this user.' },
     }),
-    // Write-only credential material — never shown in the admin UI.
     passwordHash: text({ meta: { hidden: true } }),
     ...(config.fields ?? {}),
   })

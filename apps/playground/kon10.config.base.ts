@@ -200,8 +200,7 @@ export function buildConfig(
               // a derived scale for free without asking anyone to pick five
               // colors. The other four stay labeled after their CSS variable,
               // tucked behind `meta.advanced` for whoever wants to override
-              // them by hand. Fields only for now — reading these back into
-              // the public site's actual CSS variables is a follow-up.
+              // them by hand.
               palette: group({
                 fields: {
                   primaryColor: text({
@@ -445,7 +444,6 @@ export function buildConfig(
               content: blocks({
                 blocks: [heroBlock, richTextBlock, ctaBlock, imageBlock, featuresBlock],
               }),
-              // Repeatable fieldset — exercises the `array` renderer.
               faqs: array({
                 fields: {
                   question: text({ required: true }),

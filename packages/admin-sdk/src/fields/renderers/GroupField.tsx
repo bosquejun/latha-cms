@@ -8,8 +8,7 @@
  * subfields stay absent rather than persisting `''`.
  *
  * Errors surface only at the group level — react-hook-form nests subfield
- * errors under `group.child`, but the Controller sits at `group`. Acceptable
- * while group subfields are optional; per-child error plumbing is a follow-up.
+ * errors under `group.child`, but the Controller sits at `group`.
  *
  * Children pair into a two-up row wherever consecutive ones carry
  * `meta.width: 'half'` (see `layoutRows`) — the same rule `EntityForm` uses

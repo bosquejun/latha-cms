@@ -1,7 +1,7 @@
 /**
  * The Kon10 client surface — the typed RPC client, the React provider/hooks,
- * and the client-safe RPC contract types. Moved here from `@kon10/start` so
- * both `@kon10/start` and `@kon10/auth/admin` can consume it without a cycle.
+ * and the client-safe RPC contract types, so both `@kon10/start` and
+ * `@kon10/auth/admin` can consume it without a dependency cycle.
  */
 
 export { createKon10Client, type Kon10Client, type Kon10ClientOptions } from './client.js'
