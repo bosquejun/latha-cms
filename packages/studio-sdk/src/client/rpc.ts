@@ -100,6 +100,8 @@ export interface EntityDescriptor {
   fields: JsonValue
   useAsTitle?: string
   defaultColumns?: string[]
+  /** Form width override from the entity config (`studio.formWidth`). */
+  formWidth?: 'full' | 'narrow'
 }
 
 /** The single server function signature the app wires up. */

@@ -2,11 +2,11 @@
  * Kon10Studio — the entire Studio UI behind a single catch-all route.
  *
  * Mount it at `<basePath>/$` (e.g. `/studio/$`). It guards the session, derives
- * the sidebar/views from the config (via the RPC client), and routes
+ * the navigation/views from the config (via the RPC client), and routes
  * internally on the splat path. Dev-provided extensions (custom pages, settings
- * pages, dashboard widgets, nav links) are merged into the sidebar and routing;
- * injection-zone widgets render through the `<Slot>`s baked into the shell and
- * views. The consuming app writes none of this.
+ * pages, dashboard widgets, nav links) are merged into the navigation and
+ * routing; injection-zone widgets render through the `<Slot>`s baked into the
+ * shell and views. The consuming app writes none of this.
  */
 
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
@@ -15,6 +15,7 @@ import {
   StudioShell,
   EntityList,
   EntityForm,
+  useFormWidth,
   EmptyState,
   LoadingState,
   PageHeader,
@@ -26,9 +27,10 @@ import {
   type ExtensionRegistry,
   type PageExtension,
   type SettingsPageExtension,
-  type SidebarItem,
-  type SidebarSection,
-  type SidebarLinkProps,
+  type NavLinkProps,
+  type ShellNavGroup,
+  type ShellNavItem,
+  type ShellNavSubItem,
   PermissionsProvider,
   StudioNavigateProvider,
   useCan,
@@ -40,20 +42,16 @@ import {
 } from '@kon10/studio-sdk'
 import { Button, Card, CardHeader, CardTitle, CardDescription, ConfirmDialog, Pagination, toast } from '@kon10/ui'
 import {
+  LayoutDashboard,
   Plus,
   Settings,
   type LucideIcon,
 } from 'lucide-react'
-import {
-  FolderOpenIcon,
-  SettingsIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-} from 'lucide-animated'
-import type { SidebarIcon } from '@kon10/studio-sdk'
+import { SettingsIcon } from 'lucide-animated'
+import type { NavIcon } from '@kon10/studio-sdk'
 import { UserMenu } from './UserMenu.js'
 
-function RouterLink({ href, className, children, onClick }: SidebarLinkProps) {
+function RouterLink({ href, className, children, onClick }: NavLinkProps) {
   return (
     <Link to={href} className={className} onClick={onClick}>
       {children}
@@ -62,6 +60,19 @@ function RouterLink({ href, className, children, onClick }: SidebarLinkProps) {
 }
 
 const asEntity = (d: EntityDescriptor) => d as unknown as StudioEntity
+
+/**
+ * Narrow-form pages center the WHOLE page — header, toolbar, and fields — as
+ * one unit, so the wrapper lives here around `PageHeader` + `EntityForm`
+ * rather than inside the form (see `useFormWidth`). The data attribute is the
+ * marker `StudioShell` watches via `:has()` to cap and center <main> together
+ * with the section rail, so the rail joins the centered group instead of
+ * staying pinned to the viewport edge.
+ */
+const FORM_PAGE_NARROW = {
+  className: 'mx-auto w-full max-w-content-narrow',
+  'data-form-width': 'narrow',
+} as const
 
 type Route =
   | { view: 'dashboard' }
@@ -141,7 +152,7 @@ function parseRoute(
 const ORDER_UNGROUPED = -100
 const ORDER_EXT_GROUP = 100
 
-interface RawItem extends SidebarItem {
+interface RawItem extends ShellNavSubItem {
   order: number
 }
 
@@ -149,12 +160,10 @@ interface RawSection {
   key: string
   label: string
   order: number
-  collapsible?: boolean
-  defaultCollapsed?: boolean
   items: RawItem[]
 }
 
-/** A non-entity sidebar entry (custom page, nav link, or settings page). */
+/** A non-entity nav entry (custom page, nav link, or settings page). */
 interface ExtraEntry {
   key: string
   href: string
@@ -167,27 +176,26 @@ interface ExtraEntry {
 }
 
 /**
- * Assemble one sidebar from server entity sections plus extension-contributed
- * `extras`. Used identically for the main and the settings sidebars — only the
- * inputs differ — so both share the same grouping and ordering behaviour.
+ * Group entity sections plus extension-contributed `extras` into ordered
+ * sections — the shared first pass for both the main tab strip and the
+ * Settings tab's panel list.
  *
  * Ordering is uniform: every top-level entry (a group, or a single ungrouped
  * item) carries an `order`, and items within a group carry their own `order`.
  * Lower sorts first. Groups merge by label; ungrouped items each become their
  * own headless entry so they can be positioned freely among the groups.
  */
-function buildSidebar(nav: NavSection[], extras: ExtraEntry[], kindIcons: Partial<Record<string, SidebarIcon>>): SidebarSection[] {
+function buildNavSections(nav: NavSection[], extras: ExtraEntry[], kindIcons: Partial<Record<string, NavIcon>>): RawSection[] {
   const groups = new Map<string, RawSection>()
   const singles: RawSection[] = []
 
-  const groupFor = (label: string, order: number, extra?: Partial<RawSection>) => {
+  const groupFor = (label: string, order: number) => {
     let section = groups.get(label)
     if (!section) {
-      section = { key: `grp:${label}`, label, order, items: [], ...extra }
+      section = { key: `grp:${label}`, label, order, items: [] }
       groups.set(label, section)
     } else {
       section.order = Math.min(section.order, order)
-      if (extra?.collapsible) section.collapsible = true
     }
     return section
   }
@@ -205,10 +213,7 @@ function buildSidebar(nav: NavSection[], extras: ExtraEntry[], kindIcons: Partia
       order: item.order ?? 0,
     }))
     if (section.label) {
-      groupFor(section.label, section.order, {
-        collapsible: section.collapsible,
-        defaultCollapsed: section.defaultCollapsed,
-      }).items.push(...items)
+      groupFor(section.label, section.order).items.push(...items)
     } else {
       for (const item of items) single(`e:${item.key}`, { ...item, order: item.order || ORDER_UNGROUPED })
     }
@@ -231,19 +236,59 @@ function buildSidebar(nav: NavSection[], extras: ExtraEntry[], kindIcons: Partia
   const sections = [...groups.values(), ...singles]
   for (const section of sections) section.items.sort((a, b) => a.order - b.order)
   sections.sort((a, b) => a.order - b.order || a.label.localeCompare(b.label))
-
-  return sections.map((section) => ({
-    key: section.key,
-    label: section.label || undefined,
-    collapsible: section.collapsible,
-    defaultCollapsed: section.defaultCollapsed,
-    // A collapsible group renders as a menu row, so give it a leading folder icon.
-    icon: section.collapsible ? FolderOpenIcon : undefined,
-    items: section.items,
-  }))
+  return sections
 }
 
-/** Flatten the extension registry into the extras for the main sidebar. */
+/**
+ * Second pass for the main area: sections become top-level tabs. A labelled
+ * group (Content, Globals) becomes a tab that links to its first item and
+ * carries the items as SectionSidebar sub-items; a headless single-item
+ * section becomes a plain full-width tab.
+ */
+function sectionsToTabs(sections: RawSection[]): ShellNavItem[] {
+  return sections.flatMap((section): ShellNavItem[] => {
+    const first = section.items[0]
+    if (!first) return []
+    if (!section.label) {
+      return [{
+        key: section.key,
+        href: first.href,
+        label: first.label,
+        icon: first.icon,
+        external: first.external,
+      }]
+    }
+    return [{
+      key: section.key,
+      href: first.href,
+      label: section.label,
+      // The tab wears its first item's icon — Content reads as its collections.
+      icon: first.icon,
+      subItems: [{ items: section.items }],
+    }]
+  })
+}
+
+/**
+ * The Settings tab's sub-items: every settings-area section becomes a group
+ * in its SectionSidebar (labelled sections keep their heading; consecutive
+ * headless singles merge into one plain list).
+ */
+function sectionsToGroups(sections: RawSection[]): ShellNavGroup[] {
+  const groups: ShellNavGroup[] = []
+  for (const section of sections) {
+    if (section.label) {
+      groups.push({ label: section.label, items: section.items })
+    } else {
+      const last = groups[groups.length - 1]
+      if (last && !last.label) last.items.push(...section.items)
+      else groups.push({ items: [...section.items] })
+    }
+  }
+  return groups
+}
+
+/** Flatten the extension registry into the extras for the main navigation. */
 function mainExtras(ext: ExtensionRegistry, basePath: string): ExtraEntry[] {
   return [
     ...ext.pages
@@ -268,7 +313,7 @@ function mainExtras(ext: ExtensionRegistry, basePath: string): ExtraEntry[] {
   ]
 }
 
-/** Settings pages become the extras for the settings sidebar. */
+/** Settings pages become the extras for the Settings tab's panel list. */
 function settingsExtras(ext: ExtensionRegistry, basePath: string): ExtraEntry[] {
   return ext.settings.map((page) => ({
     key: `settings:${page.path}`,
@@ -310,16 +355,36 @@ export function Kon10Studio() {
   const mainNav = navSections.filter((section) => section.area !== 'settings')
   const settingsNav = navSections.filter((section) => section.area === 'settings')
 
-  const mainSections = buildSidebar(mainNav, mainExtras(extensions, basePath), extensions.kindIcons)
-  const settingsSections = buildSidebar(settingsNav, settingsExtras(extensions, basePath), extensions.kindIcons)
+  const mainSections = buildNavSections(mainNav, mainExtras(extensions, basePath), extensions.kindIcons)
+  const settingsSections = buildNavSections(settingsNav, settingsExtras(extensions, basePath), extensions.kindIcons)
 
-  // The settings area swaps the whole sidebar; the path under `/studio/settings`
-  // decides which sidebar shows. The footer button lands on the first settings
-  // entry so clicking it opens straight into a usable page.
+  // Settings is just another tab: it links to its first panel, owns the whole
+  // `/studio/settings` subtree, and lists its panels in a SectionSidebar.
   const settingsRoot = `${basePath}/settings`
   const inSettings = pathname === settingsRoot || pathname.startsWith(`${settingsRoot}/`)
-  const firstSettingsHref = settingsSections[0]?.items[0]?.href ?? settingsRoot
-  const hasSettings = settingsSections.length > 0
+  const settingsGroups = sectionsToGroups(settingsSections)
+  const firstSettingsHref = settingsGroups[0]?.items[0]?.href ?? settingsRoot
+
+  const navItems: ShellNavItem[] = [
+    {
+      key: '__dashboard',
+      href: basePath,
+      label: 'Dashboard',
+      icon: LayoutDashboard,
+      exact: true,
+    },
+    ...sectionsToTabs(mainSections),
+    ...(settingsGroups.length > 0
+      ? [{
+          key: '__settings',
+          href: firstSettingsHref,
+          label: 'Settings',
+          icon: SettingsIcon,
+          match: settingsRoot,
+          subItems: settingsGroups,
+        }]
+      : []),
+  ]
 
   return (
     <PermissionsProvider permissions={session.data.permissions}>
@@ -327,15 +392,10 @@ export function Kon10Studio() {
           (URL-driven master-detail views, redirects) without a router dep. */}
       <StudioNavigateProvider navigate={(href) => void navigate({ to: href })}>
       <StudioShell
-        sections={inSettings ? settingsSections : mainSections}
+        navItems={navItems}
         currentPath={pathname}
         LinkComponent={RouterLink}
         brand="Kon10"
-        showDashboard={!inSettings}
-        sidebarHeader={inSettings ? <SettingsBackHeader basePath={basePath} /> : undefined}
-        sidebarFooter={
-          !inSettings && hasSettings ? <SettingsNavButton href={firstSettingsHref} /> : undefined
-        }
         userMenu={
           <UserMenu
             email={session.data.email}
@@ -353,37 +413,6 @@ export function Kon10Studio() {
       </StudioShell>
       </StudioNavigateProvider>
     </PermissionsProvider>
-  )
-}
-
-/** Footer entry in the main sidebar that opens the settings area. */
-function SettingsNavButton({ href }: { href: string }) {
-  return (
-    <div className="border-t border-sidebar-border pt-3">
-      <Link
-        to={href}
-        className="flex items-center justify-between gap-2.5 rounded-md border border-transparent px-3 py-1.5 text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent/60 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground"
-      >
-        <span className="flex items-center gap-2.5">
-          <SettingsIcon />
-          Settings
-        </span>
-        <ChevronRightIcon />
-      </Link>
-    </div>
-  )
-}
-
-/** Header of the settings sidebar: a back chevron + the "Settings" title. */
-function SettingsBackHeader({ basePath }: { basePath: string }) {
-  return (
-    <Link
-      to={basePath}
-      className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-semibold text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground"
-    >
-      <ChevronLeftIcon />
-      Settings
-    </Link>
   )
 }
 
@@ -590,6 +619,7 @@ function CreateView({ slug, base, segment }: { slug: string; base: string; segme
   const { client } = useKon10()
   const navigate = useNavigate()
   const entity = useAsync(() => client.entity(slug), [slug])
+  const formWidth = useFormWidth(entity.data, entity.data ? asEntity(entity.data).fields : [])
 
   if (entity.loading) return <LoadingState />
   if (!entity.data) return <p className="text-small text-muted-foreground">Entity not found.</p>
@@ -597,7 +627,7 @@ function CreateView({ slug, base, segment }: { slug: string; base: string; segme
   const toList = () => navigate({ to: `${base}/${segment}/${slug}` })
 
   return (
-    <>
+    <div {...(formWidth === 'narrow' ? FORM_PAGE_NARROW : {})}>
       <PageHeader title={`New ${entity.data.label.toLowerCase()}`} />
       <EntityForm
         fields={asEntity(entity.data).fields}
@@ -610,7 +640,7 @@ function CreateView({ slug, base, segment }: { slug: string; base: string; segme
         }}
         onCancel={toList}
       />
-    </>
+    </div>
   )
 }
 
@@ -622,6 +652,7 @@ function EditView({ slug, id, base, segment }: { slug: string; id: string; base:
   const doc = useAsync(() => client.get(slug, id), [slug, id])
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const formWidth = useFormWidth(entity.data, entity.data ? asEntity(entity.data).fields : [])
 
   if (entity.loading || doc.loading) return <LoadingState />
   if (!entity.data) return <p className="text-small text-muted-foreground">Entity not found.</p>
@@ -630,7 +661,7 @@ function EditView({ slug, id, base, segment }: { slug: string; id: string; base:
   const toList = () => navigate({ to: `${base}/${segment}/${slug}` })
 
   return (
-    <>
+    <div {...(formWidth === 'narrow' ? FORM_PAGE_NARROW : {})}>
       <PageHeader title={`Edit ${entity.data.label.toLowerCase()}`} />
       <EntityForm
         fields={asEntity(entity.data).fields}
@@ -667,7 +698,7 @@ function EditView({ slug, id, base, segment }: { slug: string; id: string; base:
           }
         }}
       />
-    </>
+    </div>
   )
 }
 
@@ -675,12 +706,13 @@ function GlobalView({ slug }: { slug: string }) {
   const { client } = useKon10()
   const entity = useAsync(() => client.entity(slug), [slug])
   const value = useAsync(() => client.getGlobal(slug), [slug])
+  const formWidth = useFormWidth(entity.data, entity.data ? asEntity(entity.data).fields : [])
 
   if (entity.loading || value.loading) return <LoadingState />
   if (!entity.data) return <p className="text-small text-muted-foreground">Entity not found.</p>
 
   return (
-    <>
+    <div {...(formWidth === 'narrow' ? FORM_PAGE_NARROW : {})}>
       <Slot zone="global.before" entity={entity.data} />
       <PageHeader title={entity.data.label} />
       <EntityForm
@@ -695,7 +727,7 @@ function GlobalView({ slug }: { slug: string }) {
         }}
       />
       <Slot zone="global.after" entity={entity.data} />
-    </>
+    </div>
   )
 }
 

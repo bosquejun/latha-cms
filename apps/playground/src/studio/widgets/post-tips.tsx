@@ -2,21 +2,21 @@
  * Example widget — an entity-scoped panel in the create/edit form sidebar.
  *
  * Entity-scoped zones (`form.*`, `list.*`, `document.*`) hand the widget the
- * current `entity` (and `recordId` on edit), so a widget can tailor itself or
- * bail out for entities it doesn't care about.
+ * current `entity` (and `recordId` on edit). Declare `entities` in the config
+ * to scope the widget — the registry filters it out for other entities, and
+ * views rely on that for layout (a form with no applicable sidebar widgets
+ * doesn't reserve the sidebar column at all).
  */
 
 import { defineWidgetConfig, type WidgetContext } from '@kon10/start'
 import { Card, CardHeader, CardTitle, CardContent } from '@kon10/ui'
 
-export const config = defineWidgetConfig({ zone: 'form.sidebar.before' })
+export const config = defineWidgetConfig({
+  zone: 'form.sidebar.before',
+  entities: ['posts'],
+})
 
-interface EntityLike {
-  slug?: string
-}
-
-export default function PostTips({ entity, recordId }: WidgetContext) {
-  if ((entity as EntityLike)?.slug !== 'posts') return null
+export default function PostTips({ recordId }: WidgetContext) {
   return (
     <Card>
       <CardHeader>

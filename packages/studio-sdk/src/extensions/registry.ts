@@ -15,11 +15,15 @@ import type {
   SettingsPageExtension,
   WidgetExtension,
 } from './types.js'
-import type { SidebarIcon } from '../shell/Sidebar.js'
+import type { NavIcon } from '../shell/nav.js'
 
 export interface ExtensionRegistry {
-  /** Widgets registered for a zone, in render order. */
-  widgetsForZone(zone: StudioZone): WidgetExtension[]
+  /**
+   * Widgets registered for a zone, in render order. Pass the current entity
+   * slug for entity-scoped zones to drop widgets whose `entities` declaration
+   * excludes it (widgets without the declaration always pass).
+   */
+  widgetsForZone(zone: StudioZone, entitySlug?: string): WidgetExtension[]
   /** Custom pages, sorted. */
   readonly pages: PageExtension[]
   /** Dashboard widgets, sorted. */
@@ -39,7 +43,7 @@ export interface ExtensionRegistry {
   /** Resolve a custom list-view renderer for an entity slug. */
   listRendererFor(slug: string): EntityListRendererExtension | undefined
   /** Icons for entity kinds contributed by modules/apps (e.g. collection → FileTextIcon). */
-  readonly kindIcons: Partial<Record<string, SidebarIcon>>
+  readonly kindIcons: Partial<Record<string, NavIcon>>
   /** True when nothing has been registered (lets hosts skip extension chrome). */
   readonly isEmpty: boolean
 }
@@ -85,7 +89,14 @@ export function createExtensionRegistry(
     widgetsByZone.size === 0
 
   return {
-    widgetsForZone: (zone) => widgetsByZone.get(zone) ?? EMPTY_WIDGETS,
+    widgetsForZone: (zone, entitySlug) => {
+      const widgets = widgetsByZone.get(zone) ?? EMPTY_WIDGETS
+      if (entitySlug == null || widgets.length === 0) return widgets
+      const scoped = widgets.filter(
+        (w) => w.entities == null || w.entities.includes(entitySlug),
+      )
+      return scoped.length === widgets.length ? widgets : scoped
+    },
     pages,
     dashboardWidgets,
     settings,

@@ -42,6 +42,13 @@ export interface EntityStudioConfig {
   /** Sort order within its sidebar section (lower first). Default 0. */
   order?: number
   /**
+   * Width of this entity's create/edit form in the Studio: `'full'` spans the
+   * content column, `'narrow'` caps it at the reading-width tier. Omit to let
+   * the form decide — full when it renders a sidebar, narrow otherwise. Like
+   * `segment`, an opaque passthrough the kernel never reads.
+   */
+  formWidth?: 'full' | 'narrow'
+  /**
    * URL segment used to build Studio hrefs for this entity's list/edit views
    * (e.g. `'content'` → `/studio/content/<slug>`, `'taxonomy'` →
    * `/studio/taxonomy/<slug>`, `'documents'` → `/studio/documents/<slug>`).

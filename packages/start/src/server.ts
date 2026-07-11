@@ -192,6 +192,7 @@ function describe(entity: Entity): EntityDescriptor {
     fields: describeFields(entity.fields) as unknown as EntityDescriptor['fields'],
     useAsTitle: entity.studio?.useAsTitle,
     defaultColumns: entity.studio?.defaultColumns,
+    formWidth: entity.studio?.formWidth,
   }
 }
 

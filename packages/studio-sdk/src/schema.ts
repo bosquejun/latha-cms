@@ -27,6 +27,8 @@ export interface StudioEntity {
   useAsTitle?: string
   /** Columns shown by default in the list view. */
   defaultColumns?: string[]
+  /** Form width override from the entity config (`studio.formWidth`). */
+  formWidth?: 'full' | 'narrow'
 }
 
 /** Turn a slug or field name into a human label: `site_name` → `Site name`. */
@@ -56,6 +58,7 @@ export function describeEntity(entity: Entity): StudioEntity {
     fields: entity.fields,
     useAsTitle: entity.studio?.useAsTitle,
     defaultColumns: entity.studio?.defaultColumns,
+    formWidth: entity.studio?.formWidth,
   }
 }
 

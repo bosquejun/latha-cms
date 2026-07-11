@@ -1,7 +1,8 @@
 /**
  * useTheme — light/dark with localStorage persistence.
  *
- * Toggles `.dark` on <html>. SSR-safe: initial state is 'light' and the
+ * Dark is the default theme (the unprefixed `:root` token scope); light is
+ * opt-in via `.light` on <html>. SSR-safe: initial state is 'dark' and the
  * stored preference is applied in an effect after mount, so server and first
  * client render agree.
  */
@@ -11,7 +12,7 @@ export type Theme = 'light' | 'dark'
 const STORAGE_KEY = 'kon10-theme'
 
 export function useTheme(): { theme: Theme; setTheme: (t: Theme) => void } {
-  const [theme, setThemeState] = useState<Theme>('light')
+  const [theme, setThemeState] = useState<Theme>('dark')
 
   useEffect(() => {
     const stored = (typeof localStorage !== 'undefined' &&
@@ -20,7 +21,7 @@ export function useTheme(): { theme: Theme; setTheme: (t: Theme) => void } {
   }, [])
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
+    document.documentElement.classList.toggle('light', theme === 'light')
   }, [theme])
 
   const setTheme = (t: Theme) => {

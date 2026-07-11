@@ -51,6 +51,6 @@ export function useExtensions(): ExtensionRegistry {
 }
 
 /** The widgets registered for a single zone, in render order. */
-export function useZoneWidgets(zone: StudioZone): WidgetExtension[] {
-  return useExtensions().widgetsForZone(zone)
+export function useZoneWidgets(zone: StudioZone, entitySlug?: string): WidgetExtension[] {
+  return useExtensions().widgetsForZone(zone, entitySlug)
 }

@@ -25,7 +25,10 @@ export interface SlotProps {
 }
 
 export function Slot({ zone, entity, recordId, data, className }: SlotProps) {
-  const widgets = useZoneWidgets(zone)
+  // Entity-scoped zones pass the entity descriptor; its slug lets widgets
+  // declaring `entities` be dropped here instead of each bailing at render.
+  const slug = (entity as { slug?: string } | undefined)?.slug
+  const widgets = useZoneWidgets(zone, slug)
   if (widgets.length === 0) return null
 
   const content = widgets.map((widget, index) => (

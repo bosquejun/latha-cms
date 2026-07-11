@@ -14,7 +14,7 @@ import type { ComponentType } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import type { StudioZone, WidgetContext } from './zones.js'
 import type { FieldRenderer } from '../fields/types.js'
-import type { SidebarIcon } from '../shell/Sidebar.js'
+import type { NavIcon } from '../shell/nav.js'
 import type { EntityListProps } from '../views/EntityList.js'
 
 /** A widget is any component that accepts the zone `WidgetContext`. */
@@ -24,6 +24,14 @@ export type WidgetComponent = ComponentType<WidgetContext>
 export interface WidgetConfig {
   /** One zone, or several, to render into. */
   zone: StudioZone | StudioZone[]
+  /**
+   * For entity-scoped zones (`form.*`, `list.*`, `document.*`): only render
+   * for these entity slugs. Omit to apply to every entity. Declaring this
+   * (rather than bailing inside the component) lets views make layout
+   * decisions — e.g. a form only reserves its sidebar column when some
+   * widget actually applies to the entity being edited.
+   */
+  entities?: string[]
   /** Lower renders first within a zone. Default 0. */
   order?: number
 }
@@ -130,7 +138,7 @@ export interface StudioExtensions {
   lists?: EntityListRendererExtension[]
   nav?: NavItemExtension[]
   /** Per-entity-kind sidebar icons. Keys are entity kind strings (e.g. `collection`). */
-  kindIcons?: Partial<Record<string, SidebarIcon>>
+  kindIcons?: Partial<Record<string, NavIcon>>
 }
 
 // ── Identity helpers ────────────────────────────────────────────────────────

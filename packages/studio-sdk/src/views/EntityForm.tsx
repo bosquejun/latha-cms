@@ -200,10 +200,13 @@ export function EntityForm({
   const [activeTab, setActiveTab] = useState(groups[0]?.key)
   const active = groups.some((g) => g.key === activeTab) ? activeTab : groups[0]?.key
 
+  // Scope by entity slug so a widget declared for another entity (e.g. a
+  // posts-only tips panel) doesn't make every form reserve an empty sidebar.
+  const entitySlug = (entity as { slug?: string } | undefined)?.slug
   const extensions = useExtensions()
   const hasSidebarSlots =
-    extensions.widgetsForZone('form.sidebar.before').length > 0 ||
-    extensions.widgetsForZone('form.sidebar.after').length > 0
+    extensions.widgetsForZone('form.sidebar.before', entitySlug).length > 0 ||
+    extensions.widgetsForZone('form.sidebar.after', entitySlug).length > 0
 
   const renderField = (field: Field) => {
     const Renderer = getFieldRenderer(field.type)
@@ -248,6 +251,9 @@ export function EntityForm({
 
   return (
     <FormValuesProvider store={valuesStore}>
+      {/* Width is a page concern, not the form's: the host page (see
+          `useFormWidth`) wraps the header AND this form in the narrow
+          container so title, toolbar, and fields center as one unit. */}
       <form
         onSubmit={(e) => {
           e.preventDefault()
@@ -270,7 +276,7 @@ export function EntityForm({
             sits directly above the panels it switches. From `sm` up both
             share one row — tabs left, actions right.
         ──────────────────────────────────────────────────────────────────────── */}
-        <div className="bleed-x sticky top-(--header-height) z-10 mb-page-gap flex flex-wrap items-center gap-x-3 gap-y-2.5 border-b border-border bg-background/95 px-(--container-px) py-2.5 backdrop-blur-sm max-sm:-mt-2 max-sm:py-2">
+        <div className="bleed-x sticky top-[var(--shell-top,var(--header-height))] z-10 mb-page-gap flex flex-wrap items-center gap-x-3 gap-y-2.5 border-b border-border bg-background/95 px-(--container-px) py-2.5 backdrop-blur-sm max-sm:-mt-2 max-sm:py-2">
           {tabbed ? (
             <Tabs
               className="max-w-full max-sm:order-last max-sm:w-full max-sm:[&>button]:flex-1 max-sm:[&>button]:justify-center"
@@ -393,4 +399,28 @@ export function EntityForm({
       </form>
     </FormValuesProvider>
   )
+}
+
+/**
+ * Width tier for an entity's form page. `'narrow'` means the page should cap
+ * at `--content-narrow` and center (`mx-auto w-full max-w-content-narrow`);
+ * `'full'` spans the content column. An explicit `studio.formWidth` on the
+ * entity config wins; otherwise a form earns full width only when it renders
+ * a sidebar — sidebar-flagged fields or a `form.sidebar.*` widget scoped to
+ * this entity.
+ *
+ * Lives with the page host (not inside `EntityForm`) so the wrapper can
+ * include the `PageHeader` — title, toolbar, and fields center as one unit.
+ * Call it unconditionally (it's a hook); safe to pass `undefined`/`[]` while
+ * the entity is still loading.
+ */
+export function useFormWidth(entity: unknown, fields: Field[]): 'full' | 'narrow' {
+  const extensions = useExtensions()
+  const info = entity as { slug?: string; formWidth?: 'full' | 'narrow' } | undefined
+  if (info?.formWidth) return info.formWidth
+  if (fields.some((f) => f.meta?.sidebar && !f.meta?.hidden)) return 'full'
+  const hasWidgets =
+    extensions.widgetsForZone('form.sidebar.before', info?.slug).length > 0 ||
+    extensions.widgetsForZone('form.sidebar.after', info?.slug).length > 0
+  return hasWidgets ? 'full' : 'narrow'
 }
