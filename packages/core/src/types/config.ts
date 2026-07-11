@@ -114,6 +114,8 @@ export interface ModuleNavConfig {
 export interface ModuleStudioConfig {
   /** Default sidebar section for this module's entities. */
   nav?: ModuleNavConfig
+  /** Width of this module's Studio rail + page container. Defaults to `default`. */
+  contentWidth?: 'default' | 'full'
   /**
    * Bare import specifier for this module's Studio-UI barrel (e.g.
    * '@kon10/auth/studio'). The Start Vite plugin statically imports and merges

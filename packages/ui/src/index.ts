@@ -6,7 +6,7 @@
  * `@kon10/ui/styles.css` once at the app root for the Tailwind v4 theme.
  */
 
-export { cn } from '@/lib/utils'
+export { cn } from './lib/utils.js'
 
 // Primitives (shadcn/ui)
 export { Button, buttonVariants } from './components/ui/button.js'

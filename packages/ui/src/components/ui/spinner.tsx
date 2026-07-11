@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Loader } from 'lucide-react'
 import { cva, type VariantProps } from 'class-variance-authority'
-import { cn } from '@/lib/utils'
+import { cn } from '../../lib/utils.js'
 
 const spinnerVariants = cva('animate-spin shrink-0', {
   variants: {

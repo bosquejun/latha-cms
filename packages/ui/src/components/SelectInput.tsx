@@ -5,7 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select.js'
-import { cn } from '@/lib/utils'
+import { cn } from '../lib/utils.js'
 
 export interface SelectOption {
   label: string

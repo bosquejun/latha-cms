@@ -33,7 +33,14 @@ export async function handleModuleRoute(
   const [moduleName, ...pathParts] = segments as [string, ...string[]]
   const path = pathParts.join('/')
 
-  const kon10 = await getRuntime(config)
+  let kon10
+  try {
+    kon10 = await getRuntime(config)
+  } catch (err) {
+    console.error('[kon10] runtime bootstrap failed:', err)
+    const message = err instanceof Error ? err.message : 'Runtime bootstrap failed.'
+    return json(500, { error: message })
+  }
   const module = kon10.modules.find((m) => m.name === moduleName)
   const entry = module?.routes?.[path]
   if (!entry) return json(404, { error: 'Not found.' })

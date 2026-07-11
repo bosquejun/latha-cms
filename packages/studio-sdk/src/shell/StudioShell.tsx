@@ -32,6 +32,8 @@ export interface StudioShellProps {
   LinkComponent?: ComponentType<NavLinkProps>
   brand?: string
   userMenu?: ReactNode
+  /** Width of the rail + page container. Defaults to the centered max-width tier. */
+  contentWidth?: 'default' | 'full'
   children: ReactNode
 }
 
@@ -41,12 +43,17 @@ export function StudioShell({
   LinkComponent,
   brand = 'Kon10',
   userMenu,
+  contentWidth = 'default',
   children,
 }: StudioShellProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const { activeKey, activeSubKey } = resolveActiveNav(navItems, currentPath)
   const activeItem = navItems.find((item) => item.key === activeKey)
   const hasSubNav = Boolean(activeItem?.subItems?.length)
+  const activeSubItem = activeItem?.subItems
+    ?.flatMap((group) => group.items)
+    .find((item) => item.key === activeSubKey)
+  const activeContentWidth = activeSubItem?.contentWidth ?? activeItem?.contentWidth ?? contentWidth
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground [--shell-top:var(--header-height)] lg:[--shell-top:calc(var(--header-height)+var(--subnav-height))]">
@@ -67,28 +74,29 @@ export function StudioShell({
         LinkComponent={LinkComponent}
         brand={brand}
       />
-      {/* `justify-center` + the `:has()` cap below center the rail AND the
-          page as ONE group on narrow-form pages: a page marked
-          `data-form-width="narrow"` caps <main> at the narrow tier (plus its
-          own padding), so the row centers [rail + page] together instead of
-          leaving the rail at the viewport edge with the page floating in the
-          leftover space. Pages without the marker keep `flex-1` full width —
-          the cap never binds and `justify-center` is inert. */}
-      <div className="flex min-h-0 flex-1 items-stretch justify-center">
-        {hasSubNav && activeItem ? (
-          <SectionSidebar
-            item={activeItem}
-            activeSubKey={activeSubKey}
-            LinkComponent={LinkComponent}
-          />
-        ) : null}
-        <main className="min-w-0 flex-1 p-page [--container-px:var(--space-page)] has-[[data-form-width=narrow]]:max-w-[calc(var(--content-narrow)+2*var(--space-page))]">
-          <div className="mx-auto w-full max-w-content-max">
+      <div className="min-h-0 flex-1">
+        <div
+          className={
+            activeContentWidth === 'full'
+              ? 'mx-auto flex min-h-full w-full items-stretch'
+              : 'mx-auto flex min-h-full w-full max-w-content-max items-stretch'
+          }
+        >
+          {hasSubNav && activeItem ? (
+            <SectionSidebar
+              item={activeItem}
+              activeSubKey={activeSubKey}
+              LinkComponent={LinkComponent}
+            />
+          ) : null}
+          <main className="min-w-0 flex-1 p-page [--container-px:var(--space-page)]">
+            <div className="w-full">
             <Slot zone="shell.main.before" />
             {children}
             <Slot zone="shell.main.after" />
-          </div>
-        </main>
+            </div>
+          </main>
+        </div>
       </div>
       <Toaster />
     </div>

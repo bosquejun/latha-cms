@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Eye, EyeOff } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn } from '../lib/utils.js'
 import { Input } from './ui/input.js'
 import { InputGroup, InputAddon } from './ui/input-group.js'
 

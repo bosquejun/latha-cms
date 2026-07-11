@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { cn } from '@/lib/utils'
+import { cn } from '../../lib/utils.js'
 
 const SIZE = {
   sm: 'size-7 text-[0.7rem]',

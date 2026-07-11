@@ -73,6 +73,8 @@ export interface NavItem {
   href: string
   /** Sort order within the section (lower first). */
   order?: number
+  /** Width requested by the entity's contributing module. */
+  contentWidth?: 'default' | 'full'
 }
 
 /** A sidebar section: a heading + its entity items, grouped by module/group. */

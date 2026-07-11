@@ -30,6 +30,7 @@ export interface ShellNavSubItem {
   count?: number
   /** Render a plain <a target="_blank"> and never match as active. */
   external?: boolean
+  contentWidth?: 'default' | 'full'
 }
 
 /** Sub-items are grouped; a group with no label renders as a plain list. */
@@ -45,6 +46,7 @@ export interface ShellNavItem {
   label: string
   icon?: NavIcon
   external?: boolean
+  contentWidth?: 'default' | 'full'
   /**
    * Path prefix that marks this tab active. Defaults to `href` — set it when
    * the tab links somewhere deeper than the subtree it owns (e.g. Settings

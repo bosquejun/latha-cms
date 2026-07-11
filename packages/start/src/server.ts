@@ -138,6 +138,7 @@ async function navOf(
       label: labelOf(entity),
       href: `${routeBase}/${segment}/${entity.slug}`,
       order: entity.studio?.order,
+      contentWidth: entity.studio?.contentWidth ?? module?.studio?.contentWidth,
     }
 
     let section = sections.get(sectionKey)

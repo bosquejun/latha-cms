@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-import { cn } from '@/lib/utils'
+import { cn } from '../lib/utils.js'
 import { Button } from './ui/button.js'
 
 export interface PaginationProps {

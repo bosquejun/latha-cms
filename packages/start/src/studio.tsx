@@ -211,6 +211,7 @@ function buildNavSections(nav: NavSection[], extras: ExtraEntry[], kindIcons: Pa
       label: item.label,
       icon: kindIcons[item.kind],
       order: item.order ?? 0,
+      contentWidth: item.contentWidth,
     }))
     if (section.label) {
       groupFor(section.label, section.order).items.push(...items)
@@ -256,6 +257,7 @@ function sectionsToTabs(sections: RawSection[]): ShellNavItem[] {
         label: first.label,
         icon: first.icon,
         external: first.external,
+        contentWidth: first.contentWidth,
       }]
     }
     return [{
@@ -264,6 +266,7 @@ function sectionsToTabs(sections: RawSection[]): ShellNavItem[] {
       label: section.label,
       // The tab wears its first item's icon — Content reads as its collections.
       icon: first.icon,
+      contentWidth: first.contentWidth,
       subItems: [{ items: section.items }],
     }]
   })

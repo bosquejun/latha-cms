@@ -1,4 +1,5 @@
 import { defineConfig } from 'tsup'
+import { fileURLToPath } from 'node:url'
 
 export default defineConfig({
   entry: ['src/index.ts'],
@@ -7,7 +8,7 @@ export default defineConfig({
   clean: true,
   // Resolve the `@/*` alias used by shadcn-generated components.
   esbuildOptions(options) {
-    options.alias = { '@': new URL('./src', import.meta.url).pathname }
+    options.alias = { '@': fileURLToPath(new URL('./src', import.meta.url)) }
   },
   external: ['react', 'react-dom'],
 })

@@ -158,7 +158,9 @@ export function kon10Start(
     router: {
       ...start.router,
       virtualRouteConfig,
-      importRoutesUsingAbsolutePaths: true,
+      // Relative imports avoid Windows path-encoding corruption when the app
+      // lives under a directory containing non-ASCII characters.
+      importRoutesUsingAbsolutePaths: false,
     },
   })
 

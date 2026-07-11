@@ -49,6 +49,12 @@ export interface EntityStudioConfig {
    */
   formWidth?: 'full' | 'narrow'
   /**
+   * Width of the Studio rail + page container while this entity is active.
+   * `default` uses the centered max-width tier; `full` uses the viewport width.
+   * Overrides the contributing module's `studio.contentWidth` default.
+   */
+  contentWidth?: 'default' | 'full'
+  /**
    * URL segment used to build Studio hrefs for this entity's list/edit views
    * (e.g. `'content'` → `/studio/content/<slug>`, `'taxonomy'` →
    * `/studio/taxonomy/<slug>`, `'documents'` → `/studio/documents/<slug>`).

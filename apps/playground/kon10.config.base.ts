@@ -263,7 +263,7 @@ export function buildConfig(
 
           Document({
             slug: 'landing-page',
-            studio: { group: 'Globals', order: 15 },
+            studio: { group: 'Globals', order: 15, contentWidth: 'full' },
             fields: {
               // A flexible, ordered page builder — same `blocks()` field type
               // `pages.content` uses below, so editors compose the landing
