@@ -185,7 +185,12 @@ function describeFields(fields: Entity['fields']): Entity['fields'] {
   }) as Entity['fields']
 }
 
-function describe(entity: Entity): EntityDescriptor {
+/** The module that contributed `slug`'s entity (for module-level studio defaults). */
+function moduleFor(kon10: Kon10Instance, slug: string): Module | undefined {
+  return kon10.modules.find((module) => module.entities?.some((entity) => entity.slug === slug))
+}
+
+function describe(entity: Entity, module?: Module): EntityDescriptor {
   return {
     slug: entity.slug,
     kind: entity.kind ?? (entity.cardinality === 'single' ? 'document' : 'collection'),
@@ -194,6 +199,8 @@ function describe(entity: Entity): EntityDescriptor {
     useAsTitle: entity.studio?.useAsTitle,
     defaultColumns: entity.studio?.defaultColumns,
     formWidth: entity.studio?.formWidth,
+    // Same resolution as `navOf`: entity override, else module default.
+    contentWidth: entity.studio?.contentWidth ?? module?.studio?.contentWidth,
   }
 }
 
@@ -287,7 +294,7 @@ export async function handleKon10Request(
       return navOf(kon10, basePath, principal)
     case 'entity': {
       const entity = kon10.getEntity(input.slug)
-      return entity ? describe(entity) : null
+      return entity ? describe(entity, moduleFor(kon10, entity.slug)) : null
     }
     case 'list':
       return (await operations.find(opCtx, input.slug)).map((doc) => project(input.slug, doc))

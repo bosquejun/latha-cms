@@ -404,10 +404,12 @@ export function EntityForm({
 /**
  * Width tier for an entity's form page. `'narrow'` means the page should cap
  * at `--content-narrow` and center (`mx-auto w-full max-w-content-narrow`);
- * `'full'` spans the content column. An explicit `studio.formWidth` on the
- * entity config wins; otherwise a form earns full width only when it renders
- * a sidebar — sidebar-flagged fields or a `form.sidebar.*` widget scoped to
- * this entity.
+ * `'full'` spans the content column. A `studio.contentWidth: 'full'` entity
+ * is always `'full'` — the whole point of a full-width page is covering the
+ * viewport beside the rail, so it must not re-cap itself at the narrow tier.
+ * Otherwise an explicit `studio.formWidth` on the entity config wins, and
+ * failing that a form earns full width only when it renders a sidebar —
+ * sidebar-flagged fields or a `form.sidebar.*` widget scoped to this entity.
  *
  * Lives with the page host (not inside `EntityForm`) so the wrapper can
  * include the `PageHeader` — title, toolbar, and fields center as one unit.
@@ -416,7 +418,10 @@ export function EntityForm({
  */
 export function useFormWidth(entity: unknown, fields: Field[]): 'full' | 'narrow' {
   const extensions = useExtensions()
-  const info = entity as { slug?: string; formWidth?: 'full' | 'narrow' } | undefined
+  const info = entity as
+    | { slug?: string; formWidth?: 'full' | 'narrow'; contentWidth?: 'default' | 'full' }
+    | undefined
+  if (info?.contentWidth === 'full') return 'full'
   if (info?.formWidth) return info.formWidth
   if (fields.some((f) => f.meta?.sidebar && !f.meta?.hidden)) return 'full'
   const hasWidgets =

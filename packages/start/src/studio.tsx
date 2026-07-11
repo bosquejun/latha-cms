@@ -64,14 +64,14 @@ const asEntity = (d: EntityDescriptor) => d as unknown as StudioEntity
 /**
  * Narrow-form pages center the WHOLE page — header, toolbar, and fields — as
  * one unit, so the wrapper lives here around `PageHeader` + `EntityForm`
- * rather than inside the form (see `useFormWidth`). The data attribute is the
- * marker `StudioShell` watches via `:has()` to cap and center <main> together
- * with the section rail, so the rail joins the centered group instead of
- * staying pinned to the viewport edge.
+ * rather than inside the form (see `useFormWidth`). It centers within the
+ * shell's content column; the rail + column are themselves capped and
+ * centered together by `StudioShell` (unless the active page's
+ * `contentWidth` is `'full'`, in which case `useFormWidth` never
+ * returns `'narrow'` and this wrapper is skipped).
  */
 const FORM_PAGE_NARROW = {
   className: 'mx-auto w-full max-w-content-narrow',
-  'data-form-width': 'narrow',
 } as const
 
 type Route =
@@ -266,7 +266,9 @@ function sectionsToTabs(sections: RawSection[]): ShellNavItem[] {
       label: section.label,
       // The tab wears its first item's icon — Content reads as its collections.
       icon: first.icon,
-      contentWidth: first.contentWidth,
+      // No contentWidth on the tab itself: width is a per-page setting, so
+      // each sub-item carries its own and one page's `full` never bleeds
+      // into its siblings (StudioShell reads the ACTIVE sub-item's width).
       subItems: [{ items: section.items }],
     }]
   })
