@@ -95,7 +95,7 @@ async function canReadEntity(
   return hasPermission(principal, `${entity.slug}:read`)
 }
 
-/** Build the sidebar sections: entities grouped by their module's nav section. */
+/** Build the nav sections: entities grouped by their module's nav section. */
 async function navOf(
   kon10: Kon10Instance,
   basePath: string,
@@ -119,8 +119,8 @@ async function navOf(
     // flat, label-less list at the top rather than a one-item heading.
     const label = entity.studio?.group ?? navMeta?.label ?? ''
     const order = navMeta?.order ?? (label === '' ? -100 : 0)
-    // `settings`-area entities live behind the Settings button and route under
-    // `/studio/settings/…` so the shell knows to show the settings sidebar.
+    // `settings`-area entities live under the Settings tab and route under
+    // `/studio/settings/…` so the shell lists them in its section rail.
     const area = entity.studio?.area ?? navMeta?.area ?? 'main'
     const routeBase = area === 'settings' ? `${basePath}/settings` : basePath
     // Keep main and settings sections distinct even if they share a label.
@@ -148,15 +148,12 @@ async function navOf(
         area,
         label,
         order,
-        collapsible: navMeta?.collapsible,
-        defaultCollapsed: navMeta?.defaultCollapsed,
         items: [],
       }
       sections.set(sectionKey, section)
     } else {
-      // A group spanning modules takes the earliest order and any collapsible.
+      // A group spanning modules takes the earliest order.
       section.order = Math.min(section.order, order)
-      section.collapsible = section.collapsible || navMeta?.collapsible
     }
     section.items.push(item)
   }

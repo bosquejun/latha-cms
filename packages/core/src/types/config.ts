@@ -88,16 +88,10 @@ export interface ModuleRoutes {
   [path: string]: ModuleRoute | ModuleRoute[]
 }
 
-export interface StudioPage {
-  path: string
-  label: string
-  group?: string
-}
-
-/** How a module's entities are grouped into a sidebar section by default. */
+/** How a module's entities are grouped into a nav section by default. */
 export interface ModuleNavConfig {
   /**
-   * Sidebar this module's entities belong to: the main nav (default) or the
+   * Nav area this module's entities belong to: the main nav (default) or the
    * `settings` area. An entity's own `studio.area` overrides this.
    */
   area?: 'main' | 'settings'
@@ -105,14 +99,10 @@ export interface ModuleNavConfig {
   label?: string
   /** Section sort order (lower first). Defaults to the module's resolution order. */
   order?: number
-  /** Render the section as a collapsible group. Default false (flat heading). */
-  collapsible?: boolean
-  /** Start a collapsible section collapsed. Default false (open). */
-  defaultCollapsed?: boolean
 }
 
 export interface ModuleStudioConfig {
-  /** Default sidebar section for this module's entities. */
+  /** Default nav section for this module's entities. */
   nav?: ModuleNavConfig
   /** Width of this module's Studio rail + page container. Defaults to `default`. */
   contentWidth?: 'default' | 'full'
@@ -149,8 +139,7 @@ export interface Module {
   routes?: ModuleRoutes
   entities?: AnyEntity[]
   capabilities?: string[]
-  studioPages?: StudioPage[]
-  /** Studio-UI metadata for this module (sidebar grouping). */
+  /** Studio-UI metadata for this module (nav grouping, extension barrel). */
   studio?: ModuleStudioConfig
   /** Public delivery-API mounting config for this module's entities. */
   api?: ModuleApiConfig
