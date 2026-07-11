@@ -1,7 +1,7 @@
 {
   "name": "@kon10/core",
   "version": "0.0.0",
-  "description": "Kon10 kernel — types, defineConfig, module registry, hook engine, access evaluator, Zod schema builder.",
+  "description": "Kon10 kernel \u2014 types, defineConfig, module registry, hook engine, access evaluator, Zod schema builder.",
   "type": "module",
   "license": "MIT",
   "exports": {
@@ -13,12 +13,15 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "tsc -p tsconfig.json && node --test 'dist/**/*.test.js'"
+    "test": "tsc -p tsconfig.json && node --test $(find dist -name '*.test.js' -print)",
+    "test:coverage": "tsc -p tsconfig.json && node --test --experimental-test-coverage $(find dist -name '*.test.js' -print)"
   },
   "dependencies": {
     "zod": "^4.4.3"

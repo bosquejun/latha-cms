@@ -1,7 +1,7 @@
 {
   "name": "@kon10/studio-sdk",
   "version": "0.0.0",
-  "description": "Kon10 Studio SDK — CMS-aware shell, field renderers, and auto-generated views.",
+  "description": "Kon10 Studio SDK \u2014 CMS-aware shell, field renderers, and auto-generated views.",
   "type": "module",
   "license": "MIT",
   "exports": {
@@ -21,7 +21,8 @@
     "dev": "tsc -p tsconfig.json --watch",
     "lint": "eslint src",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "tsc -p tsconfig.json && node --test 'dist/**/*.test.js'"
+    "test": "tsc -p tsconfig.json && node --test $(find dist -name '*.test.js' -print)",
+    "test:coverage": "tsc -p tsconfig.json && node --test --experimental-test-coverage $(find dist -name '*.test.js' -print)"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
