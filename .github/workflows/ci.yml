@@ -12,7 +12,7 @@ concurrency:
 jobs:
   checks:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 
@@ -26,8 +26,17 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm build
+      - name: Build packages and apps
+        run: pnpm build
 
-      - run: pnpm typecheck
+      - name: Typecheck
+        run: pnpm typecheck
 
-      - run: pnpm test
+      - name: Lint
+        run: pnpm lint
+
+      - name: Unit and integration tests
+        run: pnpm test
+
+      - name: Coverage
+        run: pnpm test:coverage

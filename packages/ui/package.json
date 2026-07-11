@@ -1,7 +1,7 @@
 {
   "name": "@kon10/ui",
   "version": "0.0.0",
-  "description": "Kon10 design system — shadcn/ui primitives and tokens. CMS-unaware.",
+  "description": "Kon10 design system \u2014 shadcn/ui primitives and tokens. CMS-unaware.",
   "type": "module",
   "license": "MIT",
   "exports": {

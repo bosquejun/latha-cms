@@ -1,7 +1,7 @@
 {
   "name": "@kon10/users",
   "version": "0.0.0",
-  "description": "Kon10 users — UsersModule, roles, and user operations.",
+  "description": "Kon10 users \u2014 UsersModule, roles, and user operations.",
   "type": "module",
   "license": "MIT",
   "exports": {
@@ -13,17 +13,22 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsc -p tsconfig.json && node --test $(find dist -name '*.test.js' -print)",
+    "test:coverage": "tsc -p tsconfig.json && node --test --experimental-test-coverage $(find dist -name '*.test.js' -print)"
   },
   "peerDependencies": {
     "@kon10/core": "workspace:*"
   },
   "devDependencies": {
     "@kon10/core": "workspace:*",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.0"
   }
 }

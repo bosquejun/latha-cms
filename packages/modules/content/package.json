@@ -1,7 +1,7 @@
 {
   "name": "@kon10/content",
   "version": "0.0.0",
-  "description": "Kon10 ContentModule — Collection, Document, Taxonomy, and the config-driven content API.",
+  "description": "Kon10 ContentModule \u2014 Collection, Document, Taxonomy, and the config-driven content API.",
   "type": "module",
   "license": "MIT",
   "exports": {
@@ -25,7 +25,8 @@
     "build": "tsc -p tsconfig.json && tsc -p tsconfig.studio.json",
     "dev": "tsc -p tsconfig.json --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.studio.json --noEmit",
-    "test": "tsc -p tsconfig.json && tsc -p tsconfig.studio.json && node --test 'dist/**/*.test.js'"
+    "test": "tsc -p tsconfig.json && tsc -p tsconfig.studio.json && node --test $(find dist -name '*.test.js' -print)",
+    "test:coverage": "tsc -p tsconfig.json && tsc -p tsconfig.studio.json && node --test --experimental-test-coverage $(find dist -name '*.test.js' -print)"
   },
   "peerDependencies": {
     "@kon10/core": "workspace:*",
@@ -34,9 +35,15 @@
     "react": "^18 || ^19"
   },
   "peerDependenciesMeta": {
-    "@kon10/studio-sdk": { "optional": true },
-    "@kon10/ui": { "optional": true },
-    "react": { "optional": true }
+    "@kon10/studio-sdk": {
+      "optional": true
+    },
+    "@kon10/ui": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@kon10/core": "workspace:*",
