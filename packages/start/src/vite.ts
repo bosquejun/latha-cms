@@ -425,6 +425,7 @@ const appExtensions = collectStudioExtensions({
   dashboard: ${glob('dashboard')},
   settings: ${glob('settings')},
   fields: ${glob('fields')},
+  lists: ${glob('lists')},
 })
 
 // Modules first, app last — the app overrides module UI on key conflict.
