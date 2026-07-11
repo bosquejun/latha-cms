@@ -86,6 +86,10 @@ export interface NavSection {
   label: string
   /** Section sort order (lower first). */
   order: number
+  /** Fold toggle on this group's heading where it renders inside a rail. */
+  collapsible?: boolean
+  /** Start folded (only meaningful when `collapsible`). */
+  defaultCollapsed?: boolean
   items: NavItem[]
 }
 

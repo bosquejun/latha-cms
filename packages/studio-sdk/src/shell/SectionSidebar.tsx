@@ -8,12 +8,15 @@
  * under the active tab in the MobileMenu sheet.
  *
  * Hosts the `shell.sidebar.top` / `shell.sidebar.bottom` extension zones so
- * widgets registered against the old sidebar keep rendering.
+ * widgets registered against the old sidebar keep rendering. A labelled group
+ * marked `collapsible` renders its heading as a fold toggle; a folded group
+ * still opens when it holds the active page.
  */
-import type { ComponentType } from 'react'
+import { useState, type ComponentType } from 'react'
+import { ChevronRight } from 'lucide-react'
 import { cn } from '@kon10/ui'
 import { Slot } from '../extensions/Slot.js'
-import type { NavLinkProps, ShellNavItem, ShellNavSubItem } from './nav.js'
+import type { NavLinkProps, ShellNavGroup, ShellNavItem, ShellNavSubItem } from './nav.js'
 
 export interface SectionSidebarProps {
   item: ShellNavItem
@@ -32,6 +35,16 @@ const subLinkClass = (active: boolean) =>
 
 export function SectionSidebar({ item, activeSubKey, LinkComponent }: SectionSidebarProps) {
   const groups = item.subItems ?? []
+  // Fold state per group label. Unset = the group's own default; an explicit
+  // user toggle always wins, but an untouched `defaultCollapsed` group still
+  // opens when it holds the active page so the current location stays visible.
+  const [toggled, setToggled] = useState<Record<string, boolean>>({})
+  const isOpen = (group: ShellNavGroup) => {
+    if (!group.collapsible || !group.label) return true
+    const user = toggled[group.label]
+    if (user != null) return user
+    return !group.defaultCollapsed || group.items.some((sub) => sub.key === activeSubKey)
+  }
 
   const renderLink = (sub: ShellNavSubItem) => {
     const active = sub.key === activeSubKey
@@ -76,16 +89,35 @@ export function SectionSidebar({ item, activeSubKey, LinkComponent }: SectionSid
         <p className="px-2.5 text-label font-medium uppercase tracking-wider text-muted-foreground">
           {item.label}
         </p>
-        {groups.map((group, index) => (
-          <div key={group.label ?? index} className="flex flex-col gap-stack">
-            {group.label ? (
-              <p className="px-2.5 pb-1 text-label font-medium uppercase tracking-wider text-muted-foreground">
-                {group.label}
-              </p>
-            ) : null}
-            {group.items.map(renderLink)}
-          </div>
-        ))}
+        {groups.map((group, index) => {
+          const open = isOpen(group)
+          return (
+            <div key={group.label ?? index} className="flex flex-col gap-stack">
+              {group.label ? (
+                group.collapsible ? (
+                  <button
+                    type="button"
+                    aria-expanded={open}
+                    onClick={() =>
+                      setToggled((prev) => ({ ...prev, [group.label!]: !open }))
+                    }
+                    className="flex touch-manipulation items-center gap-1 px-2.5 pb-1 text-label font-medium uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <span>{group.label}</span>
+                    <ChevronRight
+                      className={cn('size-3 transition-transform', open && 'rotate-90')}
+                    />
+                  </button>
+                ) : (
+                  <p className="px-2.5 pb-1 text-label font-medium uppercase tracking-wider text-muted-foreground">
+                    {group.label}
+                  </p>
+                )
+              ) : null}
+              {open ? group.items.map(renderLink) : null}
+            </div>
+          )
+        })}
       </div>
       <Slot zone="shell.sidebar.bottom" />
     </nav>

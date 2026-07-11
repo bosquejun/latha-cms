@@ -202,9 +202,12 @@ Collection({
 Resolution per entity: `studio.group` → the module's `studio.nav.label` →
 **ungrouped**. Tabs sort by `studio.nav.order`; items within a rail by
 `studio.order`. Custom pages are ungrouped (their own tab) unless they declare
-a `group`; settings pages always collect under the Settings tab. Below `lg`
-both bars collapse into a hamburger menu where the active tab's rail items
-nest beneath it.
+a `group`; settings pages always collect under the Settings tab. Where a
+module's section renders as a labelled group inside a rail (e.g. a
+settings-area module), `studio.nav.collapsible: true` turns the heading into
+a fold toggle (`defaultCollapsed` starts it folded — it still opens for the
+active page). Below `lg` both bars collapse into a hamburger menu where the
+active tab's rail items nest beneath it.
 
 ## Architecture notes
 

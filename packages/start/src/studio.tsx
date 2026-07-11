@@ -160,6 +160,8 @@ interface RawSection {
   key: string
   label: string
   order: number
+  collapsible?: boolean
+  defaultCollapsed?: boolean
   items: RawItem[]
 }
 
@@ -214,7 +216,10 @@ function buildNavSections(nav: NavSection[], extras: ExtraEntry[], kindIcons: Pa
       contentWidth: item.contentWidth,
     }))
     if (section.label) {
-      groupFor(section.label, section.order).items.push(...items)
+      const grp = groupFor(section.label, section.order)
+      grp.items.push(...items)
+      grp.collapsible = grp.collapsible || section.collapsible
+      grp.defaultCollapsed = grp.defaultCollapsed || section.defaultCollapsed
     } else {
       for (const item of items) single(`e:${item.key}`, { ...item, order: item.order || ORDER_UNGROUPED })
     }
@@ -283,7 +288,12 @@ function sectionsToGroups(sections: RawSection[]): ShellNavGroup[] {
   const groups: ShellNavGroup[] = []
   for (const section of sections) {
     if (section.label) {
-      groups.push({ label: section.label, items: section.items })
+      groups.push({
+        label: section.label,
+        collapsible: section.collapsible,
+        defaultCollapsed: section.defaultCollapsed,
+        items: section.items,
+      })
     } else {
       const last = groups[groups.length - 1]
       if (last && !last.label) last.items.push(...section.items)

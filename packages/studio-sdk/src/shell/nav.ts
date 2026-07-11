@@ -36,6 +36,10 @@ export interface ShellNavSubItem {
 /** Sub-items are grouped; a group with no label renders as a plain list. */
 export interface ShellNavGroup {
   label?: string
+  /** Render the heading as a fold toggle (needs a `label`). */
+  collapsible?: boolean
+  /** Start folded; the group still opens when it holds the active item. */
+  defaultCollapsed?: boolean
   items: ShellNavSubItem[]
 }
 

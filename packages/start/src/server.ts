@@ -148,12 +148,16 @@ async function navOf(
         area,
         label,
         order,
+        collapsible: navMeta?.collapsible,
+        defaultCollapsed: navMeta?.defaultCollapsed,
         items: [],
       }
       sections.set(sectionKey, section)
     } else {
-      // A group spanning modules takes the earliest order.
+      // A group spanning modules takes the earliest order and any collapsible.
       section.order = Math.min(section.order, order)
+      section.collapsible = section.collapsible || navMeta?.collapsible
+      section.defaultCollapsed = section.defaultCollapsed || navMeta?.defaultCollapsed
     }
     section.items.push(item)
   }

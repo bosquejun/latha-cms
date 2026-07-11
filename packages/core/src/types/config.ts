@@ -99,6 +99,15 @@ export interface ModuleNavConfig {
   label?: string
   /** Section sort order (lower first). Defaults to the module's resolution order. */
   order?: number
+  /**
+   * Render this section's heading as a fold toggle where it appears as a
+   * labelled group inside a section rail (e.g. a settings-area group in the
+   * Settings tab's rail). Main-area sections become their own tab with a flat
+   * rail, so the flag only takes effect where a group heading is rendered.
+   */
+  collapsible?: boolean
+  /** Start a collapsible group folded (it still opens for the active page). */
+  defaultCollapsed?: boolean
 }
 
 export interface ModuleStudioConfig {
