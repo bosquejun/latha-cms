@@ -8,6 +8,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  silentLogger,
   bootstrapKon10,
   defineConfig,
   operations,
@@ -64,6 +65,7 @@ function fakeDb(): DBAdapter {
 
 async function bootAuth(): Promise<Kon10Instance> {
   const config = defineConfig({
+    logger: silentLogger,
     db: fakeDb(),
     modules: [
       AuthModule({
@@ -145,6 +147,7 @@ const usersEntity: Entity = {
 
 async function bootAuthWithCache(cache: CacheAdapter): Promise<Kon10Instance> {
   const config = defineConfig({
+    logger: silentLogger,
     db: fakeDb(),
     modules: [
       { name: 'users', entities: [usersEntity] },

@@ -33,7 +33,7 @@ import {
 import { AccessDeniedError } from '@kon10/core'
 import type { JsonValue } from '@kon10/core'
 import { getRuntime } from './runtime.js'
-import { humanize, Kon10RpcInputSchema } from '@kon10/studio-sdk'
+import { humanize, Kon10RpcInputSchema, type Kon10RpcInput } from '@kon10/studio-sdk'
 import type { EntityDescriptor, NavItem, NavSection } from '@kon10/studio-sdk'
 import { hiddenFieldNames, projectDoc } from './hidden-fields.js'
 
@@ -270,16 +270,55 @@ export async function handleKon10Request(
   const kon10 = await getRuntime(config)
   const basePath = config.studioPath || '/studio'
 
+  const requestId = crypto.randomUUID()
+  const log = kon10.logger.child({ requestId, surface: 'rpc' })
+  const started = Date.now()
+
   const { principal } = await resolvePrincipal(kon10, request)
+  // Principals are opaque to this layer; a defensive `id` read is enough for
+  // log correlation and never asserts a shape on the auth module.
+  const principalId = (principal as { id?: string } | null)?.id ?? 'anonymous'
+  const slug = 'slug' in input ? input.slug : undefined
+  const requestLine = { action: input.action, slug, principalId }
 
-  // Every remaining action is Studio-only. Login/logout/currentUser run
-  // without a session by definition (they live under @kon10/auth's own
-  // routes, see `ModuleRoute`), so they can't sit behind this gate.
-  if (!hasPermission(principal, STUDIO_ACCESS)) {
-    throw new AccessDeniedError('read', 'studio')
+  try {
+    // Every remaining action is Studio-only. Login/logout/currentUser run
+    // without a session by definition (they live under @kon10/auth's own
+    // routes, see `ModuleRoute`), so they can't sit behind this gate.
+    if (!hasPermission(principal, STUDIO_ACCESS)) {
+      throw new AccessDeniedError('read', 'studio')
+    }
+
+    const result = await runKon10Action(kon10, basePath, input, principal, requestId)
+    log.info({ ...requestLine, durationMs: Date.now() - started, outcome: 'ok' })
+    return result
+  } catch (err) {
+    log.error(
+      {
+        ...requestLine,
+        durationMs: Date.now() - started,
+        outcome: 'error',
+        err: err instanceof Error ? err.message : String(err),
+      },
+      'rpc failed',
+    )
+    throw err
   }
+}
 
-  const opCtx: OperationContext = { cms: kon10, principal, context: { enforce: true } }
+/** Run one parsed RPC action. Split from `handleKon10Request` so the request log wraps it. */
+async function runKon10Action(
+  kon10: Kon10Instance,
+  basePath: string,
+  input: Kon10RpcInput,
+  principal: unknown,
+  requestId: string,
+): Promise<unknown> {
+  const opCtx: OperationContext = {
+    cms: kon10,
+    principal,
+    context: { enforce: true, requestId },
+  }
 
   // `meta.hidden` fields (credential material like `passwordHash`/`keyHash`)
   // must never reach the browser — not even here, where the Studio form just

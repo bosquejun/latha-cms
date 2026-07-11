@@ -11,6 +11,8 @@
 import '../fields/builtins.js'
 import { fieldRegistry } from '../fields/registry.js'
 import type { FieldTypeEntry } from '../fields/registry.js'
+import { consoleLogger } from '../logger/index.js'
+import type { Logger } from '../logger/index.js'
 import { ModuleRegistry } from '../registry/index.js'
 import type { CacheAdapter, StorageAdapter } from '../types/adapter.js'
 import type { Entity } from '../types/entity.js'
@@ -40,12 +42,14 @@ export function defineConfig(config: Kon10Config): ResolvedConfig {
     ...working,
     plugins,
     studioPath: working.studioPath ?? DEFAULT_STUDIO_PATH,
+    logger: working.logger ?? consoleLogger(),
   }
 }
 
 class Kon10 implements Kon10Instance {
   readonly config: ResolvedConfig
   readonly db: ResolvedConfig['db']
+  readonly logger: Logger
   storage?: StorageAdapter
   cache?: CacheAdapter
   modules: Module[] = []
@@ -59,6 +63,9 @@ class Kon10 implements Kon10Instance {
   constructor(config: ResolvedConfig) {
     this.config = config
     this.db = config.db
+    // `defineConfig()` always sets `logger`; default defensively for configs
+    // built by hand (tests, custom runners) so boot never crashes on logging.
+    this.logger = config.logger ?? consoleLogger()
   }
 
   getEntity(slug: string): Entity | undefined {
@@ -82,23 +89,44 @@ class Kon10 implements Kon10Instance {
   }
 
   async boot(): Promise<this> {
+    const started = Date.now()
+
     this.registry.registerAll(this.config.modules)
     this.modules = this.registry.resolve()
 
     this.entities = this.registry.collectEntities()
     for (const entity of this.entities) this.entityIndex.set(entity.slug, entity)
 
+    this.db.logger ??= this.logger.child({ component: 'db' })
     await this.db.connect?.()
 
-    for (const module of this.modules) await module.onInit?.(this)
+    for (const module of this.modules) {
+      this.logger.debug({ module: module.name }, 'module onInit')
+      await module.onInit?.(this)
+    }
 
-    for (const plugin of this.config.plugins) await plugin.onInit?.(this)
+    for (const plugin of this.config.plugins) {
+      this.logger.debug({ plugin: plugin.name }, 'plugin onInit')
+      await plugin.onInit?.(this)
+    }
 
+    this.logger.debug({ entities: this.entities.length }, 'migrate start')
     await this.db.migrate(this.entities)
 
-    for (const module of this.modules) await module.onReady?.(this)
+    for (const module of this.modules) {
+      this.logger.debug({ module: module.name }, 'module onReady')
+      await module.onReady?.(this)
+    }
 
     this.ready = true
+    this.logger.info(
+      {
+        modules: this.modules.length,
+        entities: this.entities.length,
+        durationMs: Date.now() - started,
+      },
+      'kon10 booted',
+    )
     return this
   }
 }

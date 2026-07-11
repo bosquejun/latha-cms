@@ -302,17 +302,37 @@ export async function handleDeliveryRequest(
   }
 
   const kon10 = await getRuntime(config)
+  const requestId = crypto.randomUUID()
+  const log = kon10.logger.child({ requestId, surface: 'api' })
+  const started = Date.now()
+  /** Log the one request line this handler emits, then pass `response` through. */
+  const finish = (response: Response, extra?: Record<string, unknown>) => {
+    const level = response.status >= 500 ? 'error' : 'info'
+    log[level]({
+      method: request.method,
+      path: url.pathname,
+      status: response.status,
+      durationMs: Date.now() - started,
+      ...extra,
+    })
+    return response
+  }
+
   const route = resolveDeliveryRoute(kon10, segments)
-  if (!route) return json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors)
+  if (!route) {
+    return finish(json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors))
+  }
   const { entity, id } = route
   const slug = entity.slug
 
   const resolved = await resolveApiPrincipal(kon10, request, cors)
-  if ('error' in resolved) return resolved.error
+  if ('error' in resolved) return finish(resolved.error)
+  // Opaque principal; defensive `id` read for log correlation only.
+  const principalId = (resolved.principal as { id?: string } | null)?.id ?? 'anonymous'
   const opCtx = {
     cms: kon10,
     principal: resolved.principal,
-    context: { enforce: true },
+    context: { enforce: true, requestId },
   }
   const hidden = hiddenFieldNames(entity)
   // The entity's delivery constraint (e.g. `{ status: 'published' }` from a
@@ -331,23 +351,29 @@ export async function handleDeliveryRequest(
   const cacheTtl = cacheOpt ? (cacheOpt.ttlSeconds ?? DEFAULT_CACHE_TTL_SECONDS) : DEFAULT_CACHE_TTL_SECONDS
   const cacheKey = cacheEnabled ? deliveryCacheKey(request, url) : undefined
 
+  const logLine = { slug, id, principalId }
+
   if (cacheKey) {
     const cached = await kon10.cache!.get(cacheKey)
-    if (cached !== undefined) return json(200, cached as ApiResponse<unknown>, cors)
+    if (cached !== undefined) {
+      return finish(json(200, cached as ApiResponse<unknown>, cors), { ...logLine, cache: 'hit' })
+    }
   }
 
   /** Serve a success body, caching it (when enabled) before returning it. */
   async function respond(body: ApiResponse<unknown>): Promise<Response> {
     if (cacheKey) await kon10.cache!.set(cacheKey, body as unknown as JsonValue, cacheTtl)
-    return json(200, body, cors)
+    return finish(json(200, body, cors), cacheKey ? { ...logLine, cache: 'miss' } : logLine)
   }
 
   try {
     if (entity.cardinality === 'single') {
-      if (id !== undefined) return json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors)
+      if (id !== undefined) {
+        return finish(json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors), logLine)
+      }
       const doc = await operations.findGlobal(opCtx, slug)
       if (!doc || !matchesConstraint(doc, constraint)) {
-        return json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors)
+        return finish(json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors), logLine)
       }
       return respond(apiSuccess(projectDoc(hidden, doc)))
     }
@@ -355,7 +381,7 @@ export async function handleDeliveryRequest(
     if (id !== undefined) {
       const doc = await operations.findOne(opCtx, slug, id)
       if (!doc || !matchesConstraint(doc, constraint)) {
-        return json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors)
+        return finish(json(404, apiFailure(API_ERROR_CODES.NOT_FOUND, 'Not found.'), cors), logLine)
       }
       return respond(apiSuccess(projectDoc(hidden, doc)))
     }
@@ -386,12 +412,21 @@ export async function handleDeliveryRequest(
     )
   } catch (err) {
     if (err instanceof BadRequestError) {
-      return json(400, apiFailure(API_ERROR_CODES.BAD_REQUEST, err.message), cors)
+      return finish(
+        json(400, apiFailure(API_ERROR_CODES.BAD_REQUEST, err.message, requestId), cors),
+        { ...logLine, err: err.message },
+      )
     }
     if (err instanceof AccessDeniedError) {
-      return json(403, apiFailure(API_ERROR_CODES.FORBIDDEN, 'Forbidden.'), cors)
+      return finish(json(403, apiFailure(API_ERROR_CODES.FORBIDDEN, 'Forbidden.', requestId), cors), logLine)
     }
-    console.error('[kon10] delivery API error:', err)
-    return json(500, apiFailure(API_ERROR_CODES.INTERNAL_ERROR, 'Internal error.'), cors)
+    return finish(
+      json(500, apiFailure(API_ERROR_CODES.INTERNAL_ERROR, 'Internal error.', requestId), cors),
+      {
+        ...logLine,
+        err: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+      },
+    )
   }
 }

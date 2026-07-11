@@ -37,6 +37,17 @@ export {
 // Hooks
 export { runHooks, runHookEvent } from './hooks/engine.js'
 
+// Logger
+export {
+  logLevelSchema,
+  type LogLevel,
+  type LogFn,
+  type Logger,
+  type ConsoleLoggerOptions,
+  consoleLogger,
+  silentLogger,
+} from './logger/index.js'
+
 // Registry
 export { ModuleRegistry } from './registry/index.js'
 

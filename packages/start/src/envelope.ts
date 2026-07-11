@@ -32,6 +32,13 @@ export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES
 export const apiErrorSchema = z.object({
   code: z.string(),
   message: z.string(),
+  /**
+   * Correlation id for this request's server log lines. Present on failures
+   * the server logged (always on `INTERNAL_ERROR`) — quote it when reporting
+   * a problem. Optional and additive: envelopes validated against an older
+   * schema still parse.
+   */
+  requestId: z.string().optional(),
 })
 export type ApiError = z.infer<typeof apiErrorSchema>
 
@@ -74,8 +81,12 @@ export function apiSuccess<T>(data: T, pagination?: ApiPagination): ApiResponse<
 }
 
 /** Build a failure envelope. `data` is always `null` on failure. */
-export function apiFailure(code: ApiErrorCode, message: string): ApiResponse<never> {
-  return { data: null, error: { code, message } }
+export function apiFailure(
+  code: ApiErrorCode,
+  message: string,
+  requestId?: string,
+): ApiResponse<never> {
+  return { data: null, error: requestId ? { code, message, requestId } : { code, message } }
 }
 
 /** Derive the `pagination` block from a list page's page/pageSize/total. */

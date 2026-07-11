@@ -12,6 +12,7 @@ import { test, before } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   defineConfig,
+  silentLogger,
   stampFields,
   text,
   boolean,
@@ -110,6 +111,7 @@ const widgetEntity: Entity = {
 
 const config: ResolvedConfig = defineConfig({
   db: memoryAdapter(),
+  logger: silentLogger,
   modules: [
     AuthModule({ secret: 'test-secret' }),
     { name: 'test-content', entities: [postsEntity, articlesEntity] },
@@ -135,7 +137,10 @@ test('anonymous read is denied until the Public role grants it', async () => {
   assert.equal(res.headers.get('access-control-allow-origin'), '*')
   const body = (await res.json()) as ApiResponse<unknown>
   assert.equal(body.data, null)
-  assert.deepEqual(body.error, { code: 'FORBIDDEN', message: 'Forbidden.' })
+  assert.equal(body.error?.code, 'FORBIDDEN')
+  assert.equal(body.error?.message, 'Forbidden.')
+  // Failures the server logged carry a correlation id for support reports.
+  assert.equal(typeof body.error?.requestId, 'string')
 })
 
 test('unknown module prefixes, unknown entity slugs, and over-deep paths 404', async () => {

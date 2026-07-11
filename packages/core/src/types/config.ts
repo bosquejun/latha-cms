@@ -6,6 +6,7 @@ import type { CacheAdapter, DBAdapter, StorageAdapter } from './adapter.js'
 import type { AnyEntity, DeliveryCacheOption } from './entity.js'
 import type { Guard } from './guard.js'
 import type { FieldTypeEntry } from '../fields/registry.js'
+import type { Logger } from '../logger/index.js'
 
 /** Forward reference to the live instance; defined in `bootstrap`. */
 export interface Kon10Instance {
@@ -47,6 +48,12 @@ export interface Kon10Instance {
    * core never reads or writes through it itself.
    */
   registerCacheAdapter(adapter: CacheAdapter): void
+  /**
+   * The instance logger (`config.logger`, or the console-backed default).
+   * Modules, hooks, and guards log through this; runners derive per-request
+   * child loggers from it.
+   */
+  logger: Logger
   ready: boolean
 }
 
@@ -216,10 +223,17 @@ export interface Kon10Config {
    * a first admin user). Runners decide when to invoke it; the kernel does not.
    */
   seed?: (kon10: Kon10Instance) => void | Promise<void>
+  /**
+   * Structured logger for kernel lifecycle and runner request logs. Any
+   * pino-shaped logger works (`logger: pino()`); defaults to the built-in
+   * `consoleLogger()` (level via `KON10_LOG_LEVEL`, default `info`).
+   */
+  logger?: Logger
 }
 
 /** Config after `defineConfig()` has applied defaults and plugin transforms. */
 export interface ResolvedConfig extends Kon10Config {
   studioPath: string
   plugins: Plugin[]
+  logger: Logger
 }
