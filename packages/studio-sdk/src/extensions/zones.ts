@@ -10,7 +10,9 @@
  */
 
 export const STUDIO_ZONES = [
-  // Shell chrome — always present, regardless of the current view.
+  // Shell chrome. Topbar and main zones are always present. The sidebar zones
+  // render in the active section's rail (SectionSidebar) — so only while a
+  // tab with sub-navigation is active — and in the MobileMenu sheet.
   'shell.topbar.start',
   'shell.topbar.end',
   'shell.sidebar.top',

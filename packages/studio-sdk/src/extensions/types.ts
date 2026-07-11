@@ -25,7 +25,7 @@ export interface WidgetConfig {
   /** One zone, or several, to render into. */
   zone: StudioZone | StudioZone[]
   /**
-   * For entity-scoped zones (`form.*`, `list.*`, `document.*`): only render
+   * For entity-scoped zones (`form.*`, `list.*`, `global.*`): only render
    * for these entity slugs. Omit to apply to every entity. Declaring this
    * (rather than bailing inside the component) lets views make layout
    * decisions — e.g. a form only reserves its sidebar column when some
@@ -53,13 +53,16 @@ export interface PageComponentProps {
 export interface PageConfig {
   /** Mounted at `<studioBase>/<path>` — e.g. `analytics` → `/studio/analytics`. */
   path: string
-  /** Sidebar label. */
+  /** Nav label (an ungrouped page becomes its own top-level tab). */
   label: string
-  /** Sidebar icon. */
+  /** Nav icon. */
   icon?: LucideIcon
-  /** Sidebar group heading. Default `Extensions`. */
+  /**
+   * Section this page joins: grouped pages share a top-level tab and list in
+   * its section rail; omit for a free-floating tab of its own.
+   */
   group?: string
-  /** Routable but hidden from the sidebar. */
+  /** Routable but hidden from the nav. */
   hidden?: boolean
   order?: number
 }
@@ -115,12 +118,15 @@ export interface EntityListRendererExtension extends EntityListConfig {
   Component: EntityListComponent
 }
 
-/** A plain sidebar link (internal route or external URL) with no page body. */
+/** A plain nav link (internal route or external URL) with no page body. */
 export interface NavItemExtension {
   label: string
   href: string
   icon?: LucideIcon
-  /** Sidebar group heading. Default `Extensions`. */
+  /**
+   * Section this link joins (a shared tab + its section rail); omit for a
+   * free-floating top-level tab.
+   */
   group?: string
   /** Open in a new tab. */
   external?: boolean
@@ -137,7 +143,7 @@ export interface StudioExtensions {
   /** Full list-view replacements, keyed by entity slug. */
   lists?: EntityListRendererExtension[]
   nav?: NavItemExtension[]
-  /** Per-entity-kind sidebar icons. Keys are entity kind strings (e.g. `collection`). */
+  /** Per-entity-kind nav icons. Keys are entity kind strings (e.g. `collection`). */
   kindIcons?: Partial<Record<string, NavIcon>>
 }
 

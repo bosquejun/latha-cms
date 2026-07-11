@@ -1,7 +1,7 @@
 /**
  * Example widget — an entity-scoped panel in the create/edit form sidebar.
  *
- * Entity-scoped zones (`form.*`, `list.*`, `document.*`) hand the widget the
+ * Entity-scoped zones (`form.*`, `list.*`, `global.*`) hand the widget the
  * current `entity` (and `recordId` on edit). Declare `entities` in the config
  * to scope the widget — the registry filters it out for other entities, and
  * views rely on that for layout (a form with no applicable sidebar widgets

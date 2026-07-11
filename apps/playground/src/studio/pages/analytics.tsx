@@ -1,9 +1,10 @@
 /**
- * Example custom page — a full Studio route with its own sidebar entry.
+ * Example custom page — a full Studio route with its own nav entry.
  *
- * Files under `src/studio/pages/` mount at `<studioBase>/<config.path>` and add a
- * sidebar link under `config.group`. The component receives the splat `params`
- * for anything after its mount path.
+ * Files under `src/studio/pages/` mount at `<studioBase>/<config.path>` and add
+ * a nav entry: grouped pages share a top-level tab (listed in its section
+ * rail), ungrouped ones become their own tab. The component receives the
+ * splat `params` for anything after its mount path.
  */
 
 import { definePageConfig, type PageComponentProps } from '@kon10/start'
@@ -15,9 +16,9 @@ export const config = definePageConfig({
   path: 'analytics',
   label: 'Analytics',
   icon: BarChart3,
-  // No `group` → a free-floating sidebar entry. `order` places it: the Content
-  // group sits at 10, so 100 drops Analytics below it. (Drop `order` and an
-  // ungrouped item defaults to the top.)
+  // No `group` → a top-level tab of its own. `order` places it: the Content
+  // section sits at 10, so 100 drops Analytics after it in the tab strip.
+  // (Drop `order` and an ungrouped entry defaults to the front.)
   order: 100,
 })
 

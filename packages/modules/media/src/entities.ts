@@ -58,8 +58,8 @@ export function buildMediaEntity(policy?: Partial<UploadPolicy>): MediaEntity {
       // to sit flat instead, same reasoning as `site-settings`' `group: ''`.
       group: '',
       // Ungrouped items sort by this order among themselves and against
-      // labelled groups alike — push Media Library below content groups
-      // (e.g. Globals) rather than defaulting to the top of the sidebar.
+      // labelled groups alike — push Media Library after content groups
+      // (e.g. Globals) rather than defaulting to the front of the nav.
       order: 50,
     },
     fields: stampFields(fields),

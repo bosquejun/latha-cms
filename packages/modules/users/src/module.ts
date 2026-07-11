@@ -43,8 +43,7 @@ export function UsersModule(config: UsersModuleConfig = {}): Module {
         cardinality: 'many',
         slug: USERS_SLUG,
         studio: {
-          // Lives in the settings sidebar (behind the Settings button) rather
-          // than the main nav.
+          // Lives in the Settings tab's rail rather than the main nav.
           area: 'settings',
           useAsTitle: 'email',
           defaultColumns: ['email', 'name', 'roles'],

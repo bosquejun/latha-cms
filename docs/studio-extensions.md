@@ -5,16 +5,17 @@ something onto it — a banner, an extra page, a tweak to a form. The **Studio
 extension system** gives devs a structured set of *places* to attach custom
 React components, in the spirit of Medusa's admin injection zones.
 
-There are six surfaces:
+There are seven surfaces:
 
 | Surface | What it is | Authored in |
 |---|---|---|
 | **Widgets** | Components injected into named **zones** scattered through the shell and views | `src/studio/widgets/` |
-| **Pages** | Full custom pages with their own sidebar entry, mounted at `/studio/<path>` | `src/studio/pages/` |
+| **Pages** | Full custom pages with their own nav entry, mounted at `/studio/<path>` | `src/studio/pages/` |
 | **Dashboard widgets** | Cards dropped into the dashboard grid | `src/studio/dashboard/` |
 | **Settings pages** | Pages namespaced under `/studio/settings`, with an auto-generated index | `src/studio/settings/` |
 | **Field renderers** | Overrides for how a field type renders in forms | `src/studio/fields/` |
-| **Nav links** | Plain sidebar links (internal or external) | `defineStudioExtensions` |
+| **List views** | Full replacements for one entity's list view (e.g. a media grid) | `src/studio/lists/` |
+| **Nav links** | Plain nav links (internal or external) | `defineStudioExtensions` |
 
 ---
 
@@ -83,14 +84,14 @@ The full catalogue (`STUDIO_ZONES`):
 
 | Zone | Renders | Context |
 |---|---|---|
-| `shell.topbar.start` / `shell.topbar.end` | Ends of the topbar | — |
-| `shell.sidebar.top` / `shell.sidebar.bottom` | Top/bottom of the sidebar | — |
+| `shell.topbar.start` / `shell.topbar.end` | Ends of the top bar | — |
+| `shell.sidebar.top` / `shell.sidebar.bottom` | Top/bottom of the active section's rail (only when the active tab has sub-navigation), and of the mobile menu sheet | — |
 | `shell.main.before` / `shell.main.after` | Around the main content area | — |
 | `dashboard.before` / `dashboard.after` | Around the dashboard | — |
 | `list.before` / `list.after` | Around a collection list | `entity`, `data.rows` |
 | `form.before` / `form.after` | Top/bottom of the form's main column | `entity`, `recordId` |
 | `form.sidebar.before` / `form.sidebar.after` | Around the form's meta sidebar | `entity`, `recordId` |
-| `document.before` / `document.after` | Around a document singleton | `entity` |
+| `global.before` / `global.after` | Around a global (single-record) entity view | `entity` |
 
 Every widget receives a `WidgetContext`: the active `zone`, plus `entity` /
 `recordId` / `data` in entity-scoped zones. Bail out for entities you don't
@@ -113,8 +114,8 @@ import { definePageConfig, type PageComponentProps } from '@kon10/start'
 
 export const config = definePageConfig({
   path: 'analytics',          // → /studio/analytics
-  label: 'Analytics',         // sidebar label
-  group: 'Insights',          // sidebar group heading (default "Extensions")
+  label: 'Analytics',         // nav label
+  group: 'Insights',          // join (or create) the "Insights" section; omit for a tab of its own
   // icon, hidden, order also supported
 })
 
@@ -150,30 +151,43 @@ export default function ColorField({ value, onChange }: FieldControlProps) {
 Field renderers are registered into the same registry the auto-generated forms
 read from, so an override applies everywhere that type appears.
 
+```tsx
+// src/studio/lists/media.tsx — replace one entity's whole list view
+import { defineEntityListConfig, type EntityListProps } from '@kon10/start'
+export const config = defineEntityListConfig({ slug: 'media' })
+export default function MediaGrid({ rows, getEditHref }: EntityListProps) { /* … */ }
+```
+
+List views are keyed by entity slug; the app's replacement wins over a
+module-provided one (that's how you'd restyle `@kon10/media`'s grid).
+
 ---
 
-## Sidebar sections
+## Navigation sections
 
-Entity groups, custom pages, nav links, and settings all render through the same
-`SidebarSection` shape, so the sidebar reads as one coherent list. Three tiers,
-top to bottom:
+The shell is a top-nav layout: a tab strip of top-level sections under the top
+bar, with a **section rail** (a vertical sidebar of sub-items) next to the
+content when the active section owns deep navigation. Entity groups, custom
+pages, nav links, and settings all feed the same section model:
 
-1. **Ungrouped** (no heading) — the default. Anything without an explicit group
-   floats to the top as a flat list, next to Dashboard. This keeps the sidebar
-   from sprouting a heading for every single item.
-2. **Named groups** (with a heading) — opt in per module via `studio.nav.label`
-   (e.g. `ContentModule` → "Content"), or per entity via `studio.group`. Best for
-   a module that contributes several entities.
-3. **Settings** — a conventional area pinned to the bottom. Settings pages land
-   here automatically; a module can join it by naming its group `Settings`
-   (that's how `UsersModule` places the `users` entity there).
+1. **Ungrouped** — the default. Anything without an explicit group becomes its
+   own top-level tab, full-width, with no rail.
+2. **Named groups** — opt in per module via `studio.nav.label` (e.g.
+   `ContentModule` → "Content"), or per entity via `studio.group`. A group
+   becomes one tab that links to its first item and lists all its items in a
+   section rail. Best for a module that contributes several entities.
+3. **Settings** — a conventional area rendered as the last tab. Settings pages
+   land there automatically; an entity joins it via `studio.area: 'settings'`
+   (that's how `UsersModule` places the `users` entity there — a module can set
+   it for all its entities via `studio.nav.area`), and settings-area entities
+   route under `/studio/settings/…`.
 
 ```ts
-// A module that wants a heading for its entities:
+// A module that wants its entities grouped under one tab:
 studio: { nav: { label: 'Content', order: 10 } }
 
-// A module that belongs in the bottom Settings area:
-studio: { nav: { label: 'Settings', order: 1000 } }
+// A module that belongs in the Settings tab:
+studio: { nav: { area: 'settings' } }
 ```
 
 ```ts
@@ -186,10 +200,11 @@ Collection({
 ```
 
 Resolution per entity: `studio.group` → the module's `studio.nav.label` →
-**ungrouped**. Sections sort by `studio.nav.order`; items by `studio.order`. Set
-`collapsible: true` (with optional `defaultCollapsed`) on a module's nav to make
-its section a collapse toggle. Custom pages are ungrouped unless they declare a
-`group`; settings pages always collect under "Settings".
+**ungrouped**. Tabs sort by `studio.nav.order`; items within a rail by
+`studio.order`. Custom pages are ungrouped (their own tab) unless they declare
+a `group`; settings pages always collect under the Settings tab. Below `lg`
+both bars collapse into a hamburger menu where the active tab's rail items
+nest beneath it.
 
 ## Architecture notes
 
@@ -198,7 +213,7 @@ its section a collapse toggle. Custom pages are ungrouped unless they declare a
   It is component-aware and therefore **client-only** — extensions never travel
   over RPC.
 - `@kon10/start` wires the registry through `Kon10Provider`, merges custom pages
-  / nav into the sidebar, routes custom + settings pages on the Studio splat, and
-  applies field-renderer overrides.
+  / nav links into the tab strip and section rails, routes custom + settings
+  pages on the Studio splat, and applies field-renderer overrides.
 - Adding a new zone is a two-line change: add the literal to `STUDIO_ZONES`, then
   drop a `<Slot zone="…" />` where it should render.

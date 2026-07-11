@@ -34,7 +34,7 @@ export interface ExtensionRegistry {
   readonly fields: FieldRendererExtension[]
   /** Full list-view replacements, keyed by entity slug. */
   readonly lists: EntityListRendererExtension[]
-  /** Standalone sidebar links, sorted. */
+  /** Standalone nav links, sorted. */
   readonly nav: NavItemExtension[]
   /** Resolve a custom page by its mount path. */
   pageFor(path: string): PageExtension | undefined

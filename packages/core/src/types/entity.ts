@@ -26,20 +26,20 @@ export interface EntityStudioConfig {
   defaultColumns?: string[]
   /** Optional plural/singular label overrides. */
   labels?: { singular?: string; plural?: string }
-  /** Hide this entity from the Studio sidebar. */
+  /** Hide this entity from the Studio nav. */
   hidden?: boolean
   /**
-   * Sidebar this entity belongs to: the main nav (default) or the `settings`
-   * area, which renders its own sidebar behind the Settings button.
+   * Nav area this entity belongs to: the main nav (default) or the `settings`
+   * area, which routes under `/settings` and lists in the Settings section.
    */
   area?: 'main' | 'settings'
   /**
-   * Sidebar section this entity appears under. Overrides the default, which is
+   * Nav section this entity appears under. Overrides the default, which is
    * the contributing module's nav label. Entities sharing a `group` merge into
    * one section.
    */
   group?: string
-  /** Sort order within its sidebar section (lower first). Default 0. */
+  /** Sort order within its nav section (lower first). Default 0. */
   order?: number
   /**
    * Width of this entity's create/edit form in the Studio: `'full'` spans the
