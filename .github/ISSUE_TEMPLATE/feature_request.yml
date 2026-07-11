@@ -1,0 +1,43 @@
+name: Feature request
+description: Propose an improvement or new capability
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the use case, not just the solution you have in mind.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: >
+        What you'd like to see. If it's a new field type, module, or Studio
+        extension point, sketch the config/API you'd want to write.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: >
+        Can this be done today in userland (hooks, guards, plugins, Studio
+        extensions)? If so, what makes that insufficient?
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - core (kernel)
+        - content
+        - auth / users
+        - media
+        - storage
+        - cache
+        - studio (UI / extensions)
+        - start (integration / API)
+        - create-kon10-app
+        - docs
+        - other

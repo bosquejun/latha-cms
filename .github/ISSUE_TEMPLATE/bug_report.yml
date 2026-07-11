@@ -1,0 +1,50 @@
+name: Bug report
+description: Something in Kon10 isn't working as documented
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report! For **security issues, do not open a public
+        issue** — use the private channel described in
+        [SECURITY.md](https://github.com/bosquejun/kon10/blob/main/SECURITY.md).
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: >
+        Minimal steps to reproduce — ideally a `kon10.config.ts` snippet plus
+        the request/action that misbehaves, or a link to a minimal repo.
+      placeholder: |
+        1. Config: …
+        2. Run: …
+        3. Observe: …
+    validations:
+      required: true
+  - type: input
+    id: packages
+    attributes:
+      label: Affected package(s) and version(s)
+      placeholder: '@kon10/core 1.0.0, @kon10/start 1.0.0'
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: 'Node 22, pnpm 10, SQLite (file:local.db) / Turso / Postgres, OS'
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: >
+        Run with `KON10_LOG_LEVEL=debug` if possible and paste the relevant
+        lines (a `requestId` from an error response helps correlate).
+      render: shell
