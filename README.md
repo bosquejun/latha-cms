@@ -5,10 +5,11 @@
 Kon10 is an open-source headless CMS framework built on TanStack Start.
 Everything is a module, and modules are composed via a single config file.
 
-- **Concepts** — [taxonomy](./docs/concepts/taxonomy.md) (vocabulary),
-  [entities](./docs/concepts/entities.md) (content model),
+- **Documentation** — [`docs/`](./docs/) for v1 reference material, including
+  [taxonomy](./docs/concepts/taxonomy.md) (vocabulary),
+  [entities](./docs/concepts/entities.md) (content model), and
   [frameworks](./docs/concepts/frameworks.md) (the `@kon10/start` integration).
-- **Architecture & roadmap** — [`SPEC.md`](./SPEC.md).
+- **Architecture** — [`SPEC.md`](./SPEC.md).
 
 ## Status
 

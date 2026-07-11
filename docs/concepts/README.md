@@ -1,7 +1,7 @@
 # Kon10 Concepts
 
 Reference documentation for the vocabulary and architecture of Kon10.
-For the project-wide spec and roadmap, see [`../../SPEC.md`](../../SPEC.md).
+For the project-wide architecture spec, see [`../../SPEC.md`](../../SPEC.md).
 
 | Doc | What it covers |
 |---|---|
