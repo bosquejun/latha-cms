@@ -53,6 +53,10 @@ export function StudioShell({
   const activeSubItem = activeItem?.subItems
     ?.flatMap((group) => group.items)
     .find((item) => item.key === activeSubKey)
+  // Width resolves per PAGE: the active sub-item's own contentWidth wins,
+  // then a plain (sub-item-less) tab's, then the shell default. Grouped tabs
+  // deliberately carry no width of their own, so one page's `full` never
+  // bleeds into sibling pages in the same section.
   const activeContentWidth = activeSubItem?.contentWidth ?? activeItem?.contentWidth ?? contentWidth
 
   return (

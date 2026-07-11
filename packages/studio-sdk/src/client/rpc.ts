@@ -104,6 +104,12 @@ export interface EntityDescriptor {
   defaultColumns?: string[]
   /** Form width override from the entity config (`studio.formWidth`). */
   formWidth?: 'full' | 'narrow'
+  /**
+   * Effective Studio rail + page width for this entity — the entity's
+   * `studio.contentWidth`, falling back to its module's default. `'full'`
+   * also lifts the narrow form cap (see `useFormWidth`).
+   */
+  contentWidth?: 'default' | 'full'
 }
 
 /** The single server function signature the app wires up. */
