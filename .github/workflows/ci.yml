@@ -61,7 +61,7 @@ jobs:
       - run: pnpm build
 
       - name: Scaffold a fresh app
-        run: node packages/create-kon10-app/dist/index.js smoke-app
+        run: node "$GITHUB_WORKSPACE/packages/create-kon10-app/dist/index.js" smoke-app
         working-directory: ${{ runner.temp }}
 
       - name: Point @kon10/* at the workspace packages
