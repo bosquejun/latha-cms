@@ -10,7 +10,7 @@
  */
 
 import { createClient, type Client } from '@libsql/client'
-import type { DBAdapter, Doc, Entity, Query } from '@kon10/core'
+import type { DBAdapter, Doc, Entity, Logger, Query } from '@kon10/core'
 import {
   alterTableSQL,
   buildTablePlan,
@@ -32,6 +32,8 @@ function newId(): string {
 }
 
 class TursoAdapter implements DBAdapter {
+  logger?: Logger
+
   private readonly client: Client
   private readonly plans = new Map<string, TablePlan>()
 
@@ -74,9 +76,9 @@ class TursoAdapter implements DBAdapter {
       await this.client.execute(sql)
     }
     for (const name of undeclaredColumns(plan, existing)) {
-      console.warn(
-        `[kon10] table "${plan.table}" has a column "${name}" that no field declares; it is left untouched.`,
-      )
+      const msg = `table "${plan.table}" has a column "${name}" that no field declares; it is left untouched.`
+      if (this.logger) this.logger.warn({ table: plan.table, column: name }, msg)
+      else console.warn(`[kon10] ${msg}`)
     }
   }
 

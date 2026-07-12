@@ -8,7 +8,7 @@
  * package), and calls the handler. Everything else — what the route does,
  * which entity it touches — is the module's business, not this runner's.
  */
-import type { ModuleRoute, ResolvedConfig } from '@kon10/core'
+import { consoleLogger, type ModuleRoute, type ResolvedConfig } from '@kon10/core'
 import { hasPermission, STUDIO_ACCESS } from '@kon10/auth'
 import { getRuntime } from './runtime.js'
 import { resolvePrincipal } from './server.js'
@@ -37,7 +37,12 @@ export async function handleModuleRoute(
   try {
     kon10 = await getRuntime(config)
   } catch (err) {
-    console.error('[kon10] runtime bootstrap failed:', err)
+    // `config.logger` is usable even when the runtime itself failed to boot;
+    // default defensively for hand-built configs that skipped defineConfig().
+    ;(config.logger ?? consoleLogger()).error(
+      { err: err instanceof Error ? err.message : String(err) },
+      'runtime bootstrap failed',
+    )
     const message = err instanceof Error ? err.message : 'Runtime bootstrap failed.'
     return json(500, { error: message })
   }
@@ -61,6 +66,10 @@ export async function handleModuleRoute(
     // faults — surface the message with a 4xx.
     const status = err instanceof Error && err.name === 'AccessDeniedError' ? 403 : 400
     const message = err instanceof Error ? err.message : 'Request failed.'
+    kon10.logger.info(
+      { surface: 'module-route', module: moduleName, path, status, err: message },
+      'module route rejected',
+    )
     return json(status, { error: message })
   }
 }

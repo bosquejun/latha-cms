@@ -4,6 +4,7 @@
  */
 
 import type { AnyEntity } from './entity.js'
+import type { Logger } from '../logger/index.js'
 
 /** A JSON-serializable value — the wire shape of any persisted field. */
 export type JsonValue =
@@ -31,6 +32,13 @@ export interface Query {
 export type Doc = Record<string, unknown> & { id: string }
 
 export interface DBAdapter {
+  /**
+   * Assigned by the kernel during boot (a `component: 'db'` child of the
+   * instance logger); adapters may use it for migration diagnostics. Optional
+   * and writable so adapters still work standalone (fall back to `console`).
+   */
+  logger?: Logger
+
   /** Establish the connection / run any one-time setup. */
   connect?(): Promise<void>
   /** Tear down the connection. */

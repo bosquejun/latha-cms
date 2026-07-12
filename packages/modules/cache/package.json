@@ -1,7 +1,7 @@
 {
   "name": "@kon10/cache",
-  "version": "0.0.0",
-  "description": "Kon10 cache \u2014 CacheAdapter implementations (in-memory, Redis).",
+  "version": "0.1.0",
+  "description": "Kon10 cache — CacheAdapter implementations (in-memory, Redis).",
   "type": "module",
   "license": "MIT",
   "sideEffects": false,
@@ -28,11 +28,36 @@
     "ioredis": "^5.11.1"
   },
   "peerDependencies": {
-    "@kon10/core": "workspace:*"
+    "@kon10/core": "workspace:^"
   },
   "devDependencies": {
-    "@kon10/core": "workspace:*",
+    "@kon10/core": "workspace:^",
     "@types/node": "^22.10.0",
     "typescript": "^5.7.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bosquejun/kon10.git",
+    "directory": "packages/modules/cache"
+  },
+  "homepage": "https://github.com/bosquejun/kon10#readme",
+  "bugs": "https://github.com/bosquejun/kon10/issues",
+  "keywords": [
+    "kon10",
+    "cms",
+    "headless-cms",
+    "tanstack-start",
+    "cache",
+    "redis"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
   }
 }

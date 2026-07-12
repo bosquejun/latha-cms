@@ -10,6 +10,7 @@
 import { test, before } from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  silentLogger,
   defineConfig,
   relationship,
   stampFields,
@@ -77,6 +78,7 @@ const usersEntity: Entity = {
 }
 
 const config = defineConfig({
+  logger: silentLogger,
   db: memoryAdapter(),
   modules: [
     { name: 'test-users', entities: [usersEntity] },

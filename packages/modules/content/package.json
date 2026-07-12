@@ -1,7 +1,7 @@
 {
   "name": "@kon10/content",
-  "version": "0.0.0",
-  "description": "Kon10 ContentModule \u2014 Collection, Document, Taxonomy, and the config-driven content API.",
+  "version": "0.1.0",
+  "description": "Kon10 ContentModule — Collection, Document, Taxonomy, and the config-driven content API.",
   "type": "module",
   "license": "MIT",
   "exports": {
@@ -29,9 +29,9 @@
     "test:coverage": "tsc -p tsconfig.json && tsc -p tsconfig.studio.json && node --test --experimental-test-coverage $(find dist -name '*.test.js' -print)"
   },
   "peerDependencies": {
-    "@kon10/core": "workspace:*",
-    "@kon10/studio-sdk": "workspace:*",
-    "@kon10/ui": "workspace:*",
+    "@kon10/core": "workspace:^",
+    "@kon10/studio-sdk": "workspace:^",
+    "@kon10/ui": "workspace:^",
     "react": "^18 || ^19"
   },
   "peerDependenciesMeta": {
@@ -46,9 +46,9 @@
     }
   },
   "devDependencies": {
-    "@kon10/core": "workspace:*",
-    "@kon10/studio-sdk": "workspace:*",
-    "@kon10/ui": "workspace:*",
+    "@kon10/core": "workspace:^",
+    "@kon10/studio-sdk": "workspace:^",
+    "@kon10/ui": "workspace:^",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "react": "^19.0.0",
@@ -57,5 +57,35 @@
   },
   "dependencies": {
     "zod": "^4.4.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bosquejun/kon10.git",
+    "directory": "packages/modules/content"
+  },
+  "homepage": "https://github.com/bosquejun/kon10#readme",
+  "bugs": "https://github.com/bosquejun/kon10/issues",
+  "keywords": [
+    "kon10",
+    "cms",
+    "headless-cms",
+    "tanstack-start",
+    "content",
+    "collections",
+    "taxonomy"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./studio": {
+        "types": "./dist/studio/index.d.ts",
+        "import": "./dist/studio/index.js"
+      }
+    }
   }
 }

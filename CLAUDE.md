@@ -21,7 +21,7 @@ Every package has a strict boundary. Nothing crosses it. This is not a soft guid
 | `@kon10/studio-sdk` | Studio UI shell, field renderers, views, display hints | Business logic, persistence logic |
 | `@kon10/ui` | Pure design system primitives | Any CMS knowledge whatsoever |
 | `@kon10/start` | TanStack Start integration, RPC dispatcher | Business logic |
-| `@kon10/storage` | `DBAdapter` implementation — `migrate()` issues `CREATE TABLE IF NOT EXISTS` only; no ALTER, schema drift is silent | Application logic |
+| `@kon10/storage` | `DBAdapter` implementations (Turso/libsql, Postgres) — `migrate()` reconciles additively: `CREATE TABLE IF NOT EXISTS` plus `ALTER TABLE ADD COLUMN` for new fields; renames/retypes/removals are never applied and drift is only warned about (`docs/concepts/migrations.md`) | Application logic |
 
 **The test:** If you find yourself importing `@kon10/content` from `@kon10/core`, or `@kon10/auth` from `@kon10/content`, stop. The dependency direction is always inward toward core, never across modules.
 

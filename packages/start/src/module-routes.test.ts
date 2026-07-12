@@ -8,7 +8,7 @@
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import type { Module, ModuleRoute, ResolvedConfig } from '@kon10/core'
+import { silentLogger, type Module, type ModuleRoute, type ResolvedConfig } from '@kon10/core'
 import { handleModuleRoute, DEFAULT_MODULE_ROUTES_PATH } from './module-routes.js'
 
 const echoRoute: ModuleRoute = {
@@ -43,6 +43,7 @@ function fakeConfig(modules: Module[]): ResolvedConfig {
     modules,
     plugins: [],
     studioPath: '/studio',
+    logger: silentLogger,
   } as unknown as ResolvedConfig
 }
 

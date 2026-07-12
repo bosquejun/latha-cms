@@ -7,6 +7,7 @@
 import { test, before } from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  silentLogger,
   defineConfig,
   stampFields,
   text,
@@ -114,6 +115,7 @@ const uncachedWidgetEntity: Entity = {
 // --- cache miss then hit ---------------------------------------------------
 
 const hitConfig: ResolvedConfig = defineConfig({
+  logger: silentLogger,
   db: memoryAdapter(),
   modules: [CacheModule({ cache: inMemoryCache() }), { name: 'widgets', entities: [widgetEntity] }],
 })
@@ -153,6 +155,7 @@ const identityWidgetEntity: Entity = {
 }
 
 const spyConfig: ResolvedConfig = defineConfig({
+  logger: silentLogger,
   db: memoryAdapter(),
   modules: [
     AuthModule({ secret: 'test-secret' }),
@@ -192,6 +195,7 @@ test('requests with different Authorization headers get different cache keys', a
 // --- per-entity opt-out ------------------------------------------------------
 
 const optOutConfig: ResolvedConfig = defineConfig({
+  logger: silentLogger,
   db: memoryAdapter(),
   modules: [
     CacheModule({ cache: spyCache() }),

@@ -1,7 +1,7 @@
 {
   "name": "@kon10/core",
-  "version": "0.0.0",
-  "description": "Kon10 kernel \u2014 types, defineConfig, module registry, hook engine, access evaluator, Zod schema builder.",
+  "version": "0.1.0",
+  "description": "Kon10 kernel — types, defineConfig, module registry, hook engine, access evaluator, Zod schema builder.",
   "type": "module",
   "license": "MIT",
   "exports": {
@@ -29,5 +29,30 @@
   "devDependencies": {
     "@types/node": "^22.10.0",
     "typescript": "^5.7.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bosquejun/kon10.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/bosquejun/kon10#readme",
+  "bugs": "https://github.com/bosquejun/kon10/issues",
+  "keywords": [
+    "kon10",
+    "cms",
+    "headless-cms",
+    "tanstack-start",
+    "kernel",
+    "zod"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
   }
 }

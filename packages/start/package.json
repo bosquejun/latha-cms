@@ -1,7 +1,7 @@
 {
   "name": "@kon10/start",
-  "version": "0.0.0",
-  "description": "Kon10 integration for TanStack Start \u2014 runtime, RPC dispatcher, client, and Studio UI.",
+  "version": "0.1.0",
+  "description": "Kon10 integration for TanStack Start — runtime, RPC dispatcher, client, and Studio UI.",
   "type": "module",
   "license": "MIT",
   "exports": {
@@ -72,27 +72,87 @@
     "test:coverage": "tsc -p tsconfig.json && node --test --experimental-test-coverage $(find dist -name '*.test.js' -print)"
   },
   "peerDependencies": {
-    "@kon10/studio-sdk": "workspace:*",
-    "@kon10/auth": "workspace:*",
-    "@kon10/content": "workspace:*",
-    "@kon10/core": "workspace:*",
-    "@kon10/ui": "workspace:*",
+    "@kon10/studio-sdk": "workspace:^",
+    "@kon10/auth": "workspace:^",
+    "@kon10/content": "workspace:^",
+    "@kon10/core": "workspace:^",
+    "@kon10/ui": "workspace:^",
     "@tanstack/react-router": "^1.168.0",
     "@tanstack/react-start": "^1.168.0",
     "react": "^18 || ^19"
   },
   "devDependencies": {
-    "@kon10/studio-sdk": "workspace:*",
-    "@kon10/auth": "workspace:*",
-    "@kon10/cache": "workspace:*",
-    "@kon10/content": "workspace:*",
-    "@kon10/core": "workspace:*",
-    "@kon10/ui": "workspace:*",
+    "@kon10/studio-sdk": "workspace:^",
+    "@kon10/auth": "workspace:^",
+    "@kon10/cache": "workspace:^",
+    "@kon10/content": "workspace:^",
+    "@kon10/core": "workspace:^",
+    "@kon10/ui": "workspace:^",
     "@tanstack/react-router": "^1.168.0",
     "@tanstack/react-start": "^1.168.0",
     "@tanstack/virtual-file-routes": "^1.162.0",
     "@types/react": "^19.0.0",
     "react": "^19.0.0",
     "typescript": "^5.7.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bosquejun/kon10.git",
+    "directory": "packages/start"
+  },
+  "homepage": "https://github.com/bosquejun/kon10#readme",
+  "bugs": "https://github.com/bosquejun/kon10/issues",
+  "keywords": [
+    "kon10",
+    "cms",
+    "headless-cms",
+    "tanstack-start",
+    "tanstack",
+    "vite"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./server": {
+        "types": "./dist/server.d.ts",
+        "import": "./dist/server.js"
+      },
+      "./vite": {
+        "types": "./dist/vite.d.ts",
+        "import": "./dist/vite.js"
+      },
+      "./virtual": {
+        "types": "./virtual.d.ts"
+      },
+      "./routes/login": {
+        "types": "./dist/routes/login.d.ts",
+        "import": "./dist/routes/login.js"
+      },
+      "./routes/studio": {
+        "types": "./dist/routes/studio.d.ts",
+        "import": "./dist/routes/studio.js"
+      },
+      "./routes/rpc": {
+        "types": "./dist/routes/rpc.d.ts",
+        "import": "./dist/routes/rpc.js"
+      },
+      "./routes/modules": {
+        "types": "./dist/routes/modules.d.ts",
+        "import": "./dist/routes/modules.js"
+      },
+      "./routes/api": {
+        "types": "./dist/routes/api.d.ts",
+        "import": "./dist/routes/api.js"
+      },
+      "./envelope": {
+        "types": "./dist/envelope.d.ts",
+        "import": "./dist/envelope.js"
+      }
+    }
   }
 }
