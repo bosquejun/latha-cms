@@ -15,7 +15,11 @@ export function InitialValuePlugin({ value }: { value: string }) {
     } catch {
       // Invalid JSON — start with an empty editor state
     }
-  }, [editor, value])
+    // Deliberately omits `value` from deps — this must run once on mount only.
+    // Re-running on every keystroke (value changes via onChange on each edit)
+    // would call setEditorState with the just-typed content, which carries no
+    // selection, silently resetting the caret to the start of the document.
+  }, [editor])
 
   return null
 }
