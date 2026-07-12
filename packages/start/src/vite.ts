@@ -112,9 +112,11 @@ export interface Kon10StartOptions {
   /** Studio base path; the Studio mounts as a catch-all under it. Default `/studio`. */
   studioBasePath?: string
   /**
-   * Studio extension auto-discovery. When enabled (the default), files under the
-   * convention directory are collected into the `virtual:kon10/studio-extensions`
-   * module. Pass `false` to disable, or an object to point at a custom folder.
+   * The Studio UI surface: `/login`, the `/studio` catch-all, and extension
+   * auto-discovery (files under the convention directory collected into the
+   * `virtual:kon10/studio-extensions` module). Enabled by default. Pass `false`
+   * for a headless build — no Studio/login routes are mounted and no Studio UI
+   * is bundled — or an object to point discovery at a custom folder.
    */
   studio?: false | { dir?: string }
   /**
@@ -143,8 +145,12 @@ export function kon10Start(
   // framework routes are layered on as siblings.
   const virtualRouteConfig = rootRoute('__root.tsx', [
     physical('', '.'),
-    route(loginPath, routeFile('@kon10/start/routes/login')),
-    route(`${studioBasePath}/$`, routeFile('@kon10/start/routes/studio')),
+    ...(options.studio === false
+      ? []
+      : [
+          route(loginPath, routeFile('@kon10/start/routes/login')),
+          route(`${studioBasePath}/$`, routeFile('@kon10/start/routes/studio')),
+        ]),
     route(DEFAULT_RPC_PATH, routeFile('@kon10/start/routes/rpc')),
     route(`${DEFAULT_MODULE_ROUTES_PATH}/$`, routeFile('@kon10/start/routes/modules')),
     ...(options.api === false
