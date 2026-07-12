@@ -16,11 +16,17 @@
 import { assertAccess } from '../access/evaluator.js'
 import { runHookEvent } from '../hooks/engine.js'
 import { fieldRegistry } from '../fields/registry.js'
+import { noopTracer, withSpan } from '../tracing/index.js'
 import type { Doc, Query } from '../types/adapter.js'
 import { isMany, isSingle, type Entity } from '../types/entity.js'
 import type { Kon10Instance } from '../types/config.js'
 import type { Operation } from '../types/access.js'
 import type { GuardContext } from '../types/guard.js'
+
+/** `ctx.cms.tracer` defensively — hand-built test/mocked instances may omit it. */
+function tracerFor(ctx: OperationContext) {
+  return ctx.cms.tracer ?? noopTracer
+}
 
 export interface OperationContext {
   cms: Kon10Instance
@@ -82,11 +88,14 @@ export async function find(
   slug: string,
   query?: Query,
 ): Promise<Doc[]> {
-  const entity = resolveMany(ctx.cms, slug)
-  const principal = ctx.principal ?? null
-  await assertAccess(entity.access, { principal, operation: 'read' }, entity.slug)
-  await runGuards(ctx, entity, 'read')
-  return ctx.cms.db.find(entity.slug, query)
+  return withSpan(tracerFor(ctx), 'kon10.find', async (span) => {
+    span.setAttributes({ 'kon10.entity': slug, 'kon10.operation': 'read' })
+    const entity = resolveMany(ctx.cms, slug)
+    const principal = ctx.principal ?? null
+    await assertAccess(entity.access, { principal, operation: 'read' }, entity.slug)
+    await runGuards(ctx, entity, 'read')
+    return ctx.cms.db.find(entity.slug, query)
+  })
 }
 
 /** Count the records matching `query.where`, under the same read authorization as `find`. */
@@ -95,11 +104,14 @@ export async function count(
   slug: string,
   query?: Pick<Query, 'where'>,
 ): Promise<number> {
-  const entity = resolveMany(ctx.cms, slug)
-  const principal = ctx.principal ?? null
-  await assertAccess(entity.access, { principal, operation: 'read' }, entity.slug)
-  await runGuards(ctx, entity, 'read')
-  return ctx.cms.db.count(entity.slug, query)
+  return withSpan(tracerFor(ctx), 'kon10.count', async (span) => {
+    span.setAttributes({ 'kon10.entity': slug, 'kon10.operation': 'read' })
+    const entity = resolveMany(ctx.cms, slug)
+    const principal = ctx.principal ?? null
+    await assertAccess(entity.access, { principal, operation: 'read' }, entity.slug)
+    await runGuards(ctx, entity, 'read')
+    return ctx.cms.db.count(entity.slug, query)
+  })
 }
 
 export async function findOne(
@@ -107,13 +119,16 @@ export async function findOne(
   slug: string,
   id: string,
 ): Promise<Doc | null> {
-  const entity = resolveMany(ctx.cms, slug)
-  const principal = ctx.principal ?? null
-  const doc = await ctx.cms.db.findOne(slug, id)
-  if (!doc) return null
-  await assertAccess(entity.access, { principal, operation: 'read', doc }, slug)
-  await runGuards(ctx, entity, 'read', { doc })
-  return doc
+  return withSpan(tracerFor(ctx), 'kon10.findOne', async (span) => {
+    span.setAttributes({ 'kon10.entity': slug, 'kon10.operation': 'read' })
+    const entity = resolveMany(ctx.cms, slug)
+    const principal = ctx.principal ?? null
+    const doc = await ctx.cms.db.findOne(slug, id)
+    if (!doc) return null
+    await assertAccess(entity.access, { principal, operation: 'read', doc }, slug)
+    await runGuards(ctx, entity, 'read', { doc })
+    return doc
+  })
 }
 
 export async function create(
@@ -121,32 +136,35 @@ export async function create(
   slug: string,
   data: unknown,
 ): Promise<Doc> {
-  const entity = resolveMany(ctx.cms, slug)
-  const principal = ctx.principal ?? null
+  return withSpan(tracerFor(ctx), 'kon10.create', async (span) => {
+    span.setAttributes({ 'kon10.entity': slug, 'kon10.operation': 'create' })
+    const entity = resolveMany(ctx.cms, slug)
+    const principal = ctx.principal ?? null
 
-  await assertAccess(entity.access, { principal, operation: 'create', data }, slug)
-  await runGuards(ctx, entity, 'create', { data })
+    await assertAccess(entity.access, { principal, operation: 'create', data }, slug)
+    await runGuards(ctx, entity, 'create', { data })
 
-  const schema = fieldRegistry.buildDocumentSchema(entity.fields)
-  const validated = schema.parse(data) as Record<string, unknown>
+    const schema = fieldRegistry.buildDocumentSchema(entity.fields)
+    const validated = schema.parse(data) as Record<string, unknown>
 
-  const beforeData = await runHookEvent(entity.hooks, 'beforeCreate', {
-    data: validated,
-    principal,
-    operation: 'create',
-    slug,
-    cms: ctx.cms,
+    const beforeData = await runHookEvent(entity.hooks, 'beforeCreate', {
+      data: validated,
+      principal,
+      operation: 'create',
+      slug,
+      cms: ctx.cms,
+    })
+
+    const created = await ctx.cms.db.create(slug, beforeData)
+
+    return runHookEvent(entity.hooks, 'afterCreate', {
+      data: created,
+      principal,
+      operation: 'create',
+      slug,
+      cms: ctx.cms,
+    }) as Promise<Doc>
   })
-
-  const created = await ctx.cms.db.create(slug, beforeData)
-
-  return runHookEvent(entity.hooks, 'afterCreate', {
-    data: created,
-    principal,
-    operation: 'create',
-    slug,
-    cms: ctx.cms,
-  }) as Promise<Doc>
 }
 
 export async function update(
@@ -155,42 +173,45 @@ export async function update(
   id: string,
   data: unknown,
 ): Promise<Doc> {
-  const entity = resolveMany(ctx.cms, slug)
-  const principal = ctx.principal ?? null
+  return withSpan(tracerFor(ctx), 'kon10.update', async (span) => {
+    span.setAttributes({ 'kon10.entity': slug, 'kon10.operation': 'update' })
+    const entity = resolveMany(ctx.cms, slug)
+    const principal = ctx.principal ?? null
 
-  const previousDoc = await ctx.cms.db.findOne(slug, id)
-  if (!previousDoc) throw new Error(`Record "${slug}/${id}" not found.`)
+    const previousDoc = await ctx.cms.db.findOne(slug, id)
+    if (!previousDoc) throw new Error(`Record "${slug}/${id}" not found.`)
 
-  await assertAccess(
-    entity.access,
-    { principal, operation: 'update', doc: previousDoc, data },
-    slug,
-  )
-  await runGuards(ctx, entity, 'update', { doc: previousDoc, data })
+    await assertAccess(
+      entity.access,
+      { principal, operation: 'update', doc: previousDoc, data },
+      slug,
+    )
+    await runGuards(ctx, entity, 'update', { doc: previousDoc, data })
 
-  // Partial update: only validate the provided keys.
-  const schema = fieldRegistry.buildDocumentSchema(entity.fields).partial()
-  const validated = schema.parse(data) as Record<string, unknown>
+    // Partial update: only validate the provided keys.
+    const schema = fieldRegistry.buildDocumentSchema(entity.fields).partial()
+    const validated = schema.parse(data) as Record<string, unknown>
 
-  const beforeData = await runHookEvent(entity.hooks, 'beforeUpdate', {
-    data: validated,
-    principal,
-    operation: 'update',
-    slug,
-    previousDoc,
-    cms: ctx.cms,
+    const beforeData = await runHookEvent(entity.hooks, 'beforeUpdate', {
+      data: validated,
+      principal,
+      operation: 'update',
+      slug,
+      previousDoc,
+      cms: ctx.cms,
+    })
+
+    const updated = await ctx.cms.db.update(slug, id, beforeData)
+
+    return runHookEvent(entity.hooks, 'afterUpdate', {
+      data: updated,
+      principal,
+      operation: 'update',
+      slug,
+      previousDoc,
+      cms: ctx.cms,
+    }) as Promise<Doc>
   })
-
-  const updated = await ctx.cms.db.update(slug, id, beforeData)
-
-  return runHookEvent(entity.hooks, 'afterUpdate', {
-    data: updated,
-    principal,
-    operation: 'update',
-    slug,
-    previousDoc,
-    cms: ctx.cms,
-  }) as Promise<Doc>
 }
 
 export async function destroy(
@@ -198,31 +219,34 @@ export async function destroy(
   slug: string,
   id: string,
 ): Promise<void> {
-  const entity = resolveMany(ctx.cms, slug)
-  const principal = ctx.principal ?? null
+  return withSpan(tracerFor(ctx), 'kon10.destroy', async (span) => {
+    span.setAttributes({ 'kon10.entity': slug, 'kon10.operation': 'delete' })
+    const entity = resolveMany(ctx.cms, slug)
+    const principal = ctx.principal ?? null
 
-  const doc = await ctx.cms.db.findOne(slug, id)
-  if (!doc) throw new Error(`Record "${slug}/${id}" not found.`)
+    const doc = await ctx.cms.db.findOne(slug, id)
+    if (!doc) throw new Error(`Record "${slug}/${id}" not found.`)
 
-  await assertAccess(entity.access, { principal, operation: 'delete', doc }, slug)
-  await runGuards(ctx, entity, 'delete', { doc })
+    await assertAccess(entity.access, { principal, operation: 'delete', doc }, slug)
+    await runGuards(ctx, entity, 'delete', { doc })
 
-  await runHookEvent(entity.hooks, 'beforeDelete', {
-    data: doc,
-    principal,
-    operation: 'delete',
-    slug,
-    cms: ctx.cms,
-  })
+    await runHookEvent(entity.hooks, 'beforeDelete', {
+      data: doc,
+      principal,
+      operation: 'delete',
+      slug,
+      cms: ctx.cms,
+    })
 
-  await ctx.cms.db.delete(slug, id)
+    await ctx.cms.db.delete(slug, id)
 
-  await runHookEvent(entity.hooks, 'afterDelete', {
-    data: doc,
-    principal,
-    operation: 'delete',
-    slug,
-    cms: ctx.cms,
+    await runHookEvent(entity.hooks, 'afterDelete', {
+      data: doc,
+      principal,
+      operation: 'delete',
+      slug,
+      cms: ctx.cms,
+    })
   })
 }
 
@@ -235,17 +259,20 @@ export async function findGlobal(
   ctx: OperationContext,
   slug: string,
 ): Promise<Doc | null> {
-  const entity = resolveSingle(ctx.cms, slug)
-  const principal = ctx.principal ?? null
-  const rows = await ctx.cms.db.find(slug, { limit: 1 })
-  const doc = rows[0] ?? null
-  await assertAccess(
-    entity.access,
-    { principal, operation: 'read', doc: doc ?? undefined },
-    slug,
-  )
-  await runGuards(ctx, entity, 'read', { doc: doc ?? undefined })
-  return doc
+  return withSpan(tracerFor(ctx), 'kon10.findGlobal', async (span) => {
+    span.setAttributes({ 'kon10.entity': slug, 'kon10.operation': 'read' })
+    const entity = resolveSingle(ctx.cms, slug)
+    const principal = ctx.principal ?? null
+    const rows = await ctx.cms.db.find(slug, { limit: 1 })
+    const doc = rows[0] ?? null
+    await assertAccess(
+      entity.access,
+      { principal, operation: 'read', doc: doc ?? undefined },
+      slug,
+    )
+    await runGuards(ctx, entity, 'read', { doc: doc ?? undefined })
+    return doc
+  })
 }
 
 /**
@@ -257,45 +284,48 @@ export async function saveGlobal(
   slug: string,
   data: unknown,
 ): Promise<Doc> {
-  const entity = resolveSingle(ctx.cms, slug)
-  const principal = ctx.principal ?? null
+  return withSpan(tracerFor(ctx), 'kon10.saveGlobal', async (span) => {
+    const entity = resolveSingle(ctx.cms, slug)
+    const principal = ctx.principal ?? null
 
-  const existing = (await ctx.cms.db.find(slug, { limit: 1 }))[0] ?? null
-  const operation = existing ? 'update' : 'create'
+    const existing = (await ctx.cms.db.find(slug, { limit: 1 }))[0] ?? null
+    const operation = existing ? 'update' : 'create'
+    span.setAttributes({ 'kon10.entity': slug, 'kon10.operation': operation })
 
-  await assertAccess(
-    entity.access,
-    { principal, operation, doc: existing ?? undefined, data },
-    slug,
-  )
-  await runGuards(ctx, entity, operation, { doc: existing ?? undefined, data })
+    await assertAccess(
+      entity.access,
+      { principal, operation, doc: existing ?? undefined, data },
+      slug,
+    )
+    await runGuards(ctx, entity, operation, { doc: existing ?? undefined, data })
 
-  const base = fieldRegistry.buildDocumentSchema(entity.fields)
-  const schema = existing ? base.partial() : base
-  const validated = schema.parse(data) as Record<string, unknown>
+    const base = fieldRegistry.buildDocumentSchema(entity.fields)
+    const schema = existing ? base.partial() : base
+    const validated = schema.parse(data) as Record<string, unknown>
 
-  const beforeEvent = existing ? 'beforeUpdate' : 'beforeCreate'
-  const afterEvent = existing ? 'afterUpdate' : 'afterCreate'
+    const beforeEvent = existing ? 'beforeUpdate' : 'beforeCreate'
+    const afterEvent = existing ? 'afterUpdate' : 'afterCreate'
 
-  const before = await runHookEvent(entity.hooks, beforeEvent, {
-    data: validated,
-    principal,
-    operation,
-    slug,
-    previousDoc: existing ?? undefined,
-    cms: ctx.cms,
+    const before = await runHookEvent(entity.hooks, beforeEvent, {
+      data: validated,
+      principal,
+      operation,
+      slug,
+      previousDoc: existing ?? undefined,
+      cms: ctx.cms,
+    })
+
+    const saved = existing
+      ? await ctx.cms.db.update(slug, existing.id, before)
+      : await ctx.cms.db.create(slug, before)
+
+    return runHookEvent(entity.hooks, afterEvent, {
+      data: saved,
+      principal,
+      operation,
+      slug,
+      previousDoc: existing ?? undefined,
+      cms: ctx.cms,
+    }) as Promise<Doc>
   })
-
-  const saved = existing
-    ? await ctx.cms.db.update(slug, existing.id, before)
-    : await ctx.cms.db.create(slug, before)
-
-  return runHookEvent(entity.hooks, afterEvent, {
-    data: saved,
-    principal,
-    operation,
-    slug,
-    previousDoc: existing ?? undefined,
-    cms: ctx.cms,
-  }) as Promise<Doc>
 }

@@ -7,6 +7,7 @@ import type { AnyEntity, DeliveryCacheOption } from './entity.js'
 import type { Guard } from './guard.js'
 import type { FieldTypeEntry } from '../fields/registry.js'
 import type { Logger } from '../logger/index.js'
+import type { Tracer } from '../tracing/index.js'
 
 /** Forward reference to the live instance; defined in `bootstrap`. */
 export interface Kon10Instance {
@@ -54,6 +55,19 @@ export interface Kon10Instance {
    * child loggers from it.
    */
   logger: Logger
+  /**
+   * The instance tracer — a no-op by default, or whichever `Tracer` a module
+   * or plugin registered via `registerTracer` (e.g. `@kon10/sentry`).
+   * `operations.ts` and the hook engine emit spans through this
+   * unconditionally; a no-op tracer costs nothing.
+   */
+  tracer: Tracer
+  /**
+   * Register the instance-wide tracer (typically from a module or plugin's
+   * `onInit`, e.g. `@kon10/sentry`). Same shape as `registerCacheAdapter` —
+   * core never opines on tracing backends, only on this seam.
+   */
+  registerTracer(tracer: Tracer): void
   ready: boolean
 }
 

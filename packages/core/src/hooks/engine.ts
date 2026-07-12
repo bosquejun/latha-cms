@@ -5,6 +5,7 @@
  * one. Hooks run sequentially; each receives the output of the previous.
  */
 
+import { noopTracer, withSpan } from '../tracing/index.js'
 import type {
   EntityHooks,
   HookArgs,
@@ -12,15 +13,25 @@ import type {
   HookFn,
 } from '../types/hook.js'
 
-/** Run a single chain of hooks, folding `data` through each. */
+/**
+ * Run a single chain of hooks, folding `data` through each. Each hook call is
+ * its own span (`spanName`, default `kon10.hook`) so a slow hook — e.g. one
+ * calling out to an external API — shows up distinctly from the surrounding
+ * operation in a trace.
+ */
 export async function runHooks<T extends Record<string, unknown>>(
   hooks: HookFn<T>[] | undefined,
   args: HookArgs<T>,
+  spanName = 'kon10.hook',
 ): Promise<T> {
   if (!hooks || hooks.length === 0) return args.data
+  const tracer = args.cms?.tracer ?? noopTracer
   let data = args.data
   for (const hook of hooks) {
-    data = await hook({ ...args, data })
+    data = await withSpan(tracer, spanName, async (span) => {
+      span.setAttributes({ 'kon10.entity': args.slug, 'kon10.operation': args.operation })
+      return hook({ ...args, data })
+    })
   }
   return data
 }
@@ -31,5 +42,5 @@ export async function runHookEvent<T extends Record<string, unknown>>(
   event: HookEvent,
   args: HookArgs<T>,
 ): Promise<T> {
-  return runHooks(entityHooks?.[event], args)
+  return runHooks(entityHooks?.[event], args, `kon10.hook.${event}`)
 }
