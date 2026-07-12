@@ -1,6 +1,6 @@
 {
   "name": "@kon10/ui",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Kon10 design system — shadcn/ui primitives and tokens. CMS-unaware.",
   "type": "module",
   "license": "MIT",
@@ -50,5 +50,32 @@
     "react-dom": "^19.0.0",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bosquejun/kon10.git",
+    "directory": "packages/ui"
+  },
+  "homepage": "https://github.com/bosquejun/kon10#readme",
+  "bugs": "https://github.com/bosquejun/kon10/issues",
+  "keywords": [
+    "kon10",
+    "cms",
+    "headless-cms",
+    "tanstack-start",
+    "design-system",
+    "react",
+    "tailwindcss"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./styles.css": "./src/styles/globals.css"
+    }
   }
 }

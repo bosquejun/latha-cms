@@ -1,6 +1,6 @@
 {
   "name": "@kon10/studio-sdk",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Kon10 Studio SDK — CMS-aware shell, field renderers, and auto-generated views.",
   "type": "module",
   "license": "MIT",
@@ -39,16 +39,42 @@
     "zod": "^4.4.3"
   },
   "peerDependencies": {
-    "@kon10/core": "workspace:*",
-    "@kon10/ui": "workspace:*",
+    "@kon10/core": "workspace:^",
+    "@kon10/ui": "workspace:^",
     "react": "^18 || ^19"
   },
   "devDependencies": {
-    "@kon10/core": "workspace:*",
-    "@kon10/ui": "workspace:*",
+    "@kon10/core": "workspace:^",
+    "@kon10/ui": "workspace:^",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "react": "^19.0.0",
     "typescript": "^5.7.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bosquejun/kon10.git",
+    "directory": "packages/studio-sdk"
+  },
+  "homepage": "https://github.com/bosquejun/kon10#readme",
+  "bugs": "https://github.com/bosquejun/kon10/issues",
+  "keywords": [
+    "kon10",
+    "cms",
+    "headless-cms",
+    "tanstack-start",
+    "admin",
+    "studio",
+    "react"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
   }
 }

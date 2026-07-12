@@ -30,6 +30,8 @@ jobs:
 
       - run: pnpm typecheck
 
+      - run: pnpm lint
+
       - run: pnpm test
 
   # Scaffold an app with create-kon10-app against the workspace packages and

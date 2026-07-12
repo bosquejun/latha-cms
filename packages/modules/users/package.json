@@ -1,6 +1,6 @@
 {
   "name": "@kon10/users",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Kon10 users — UsersModule, roles, and user operations.",
   "type": "module",
   "license": "MIT",
@@ -13,17 +13,44 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "peerDependencies": {
-    "@kon10/core": "workspace:*"
+    "@kon10/core": "workspace:^"
   },
   "devDependencies": {
-    "@kon10/core": "workspace:*",
+    "@kon10/core": "workspace:^",
     "typescript": "^5.7.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bosquejun/kon10.git",
+    "directory": "packages/modules/users"
+  },
+  "homepage": "https://github.com/bosquejun/kon10#readme",
+  "bugs": "https://github.com/bosquejun/kon10/issues",
+  "keywords": [
+    "kon10",
+    "cms",
+    "headless-cms",
+    "tanstack-start",
+    "users",
+    "roles"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
   }
 }

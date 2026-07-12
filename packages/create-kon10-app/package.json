@@ -1,6 +1,6 @@
 {
   "name": "create-kon10-app",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Scaffold a new Kon10 app — a config-driven headless CMS on TanStack Start.",
   "type": "module",
   "bin": {
@@ -32,5 +32,16 @@
   "devDependencies": {
     "@types/node": "^22.10.0",
     "typescript": "^5.7.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bosquejun/kon10.git",
+    "directory": "packages/create-kon10-app"
+  },
+  "homepage": "https://github.com/bosquejun/kon10#readme",
+  "bugs": "https://github.com/bosquejun/kon10/issues",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

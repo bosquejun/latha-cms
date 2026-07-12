@@ -1,6 +1,6 @@
 {
   "name": "@kon10/storage",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Kon10 storage — Turso (libsql) + Postgres/Supabase DBAdapters.",
   "type": "module",
   "license": "MIT",
@@ -14,7 +14,9 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
@@ -26,11 +28,38 @@
     "postgres": "^3.4.5"
   },
   "peerDependencies": {
-    "@kon10/core": "workspace:*"
+    "@kon10/core": "workspace:^"
   },
   "devDependencies": {
-    "@kon10/core": "workspace:*",
+    "@kon10/core": "workspace:^",
     "@types/node": "^22.10.0",
     "typescript": "^5.7.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bosquejun/kon10.git",
+    "directory": "packages/modules/storage"
+  },
+  "homepage": "https://github.com/bosquejun/kon10#readme",
+  "bugs": "https://github.com/bosquejun/kon10/issues",
+  "keywords": [
+    "kon10",
+    "cms",
+    "headless-cms",
+    "tanstack-start",
+    "sqlite",
+    "turso",
+    "postgres",
+    "database"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
   }
 }
