@@ -246,10 +246,13 @@ defineConfig({ logger: pino(), … })
 ```
 
 Control the built-in logger's threshold with `KON10_LOG_LEVEL`
-(`debug` | `info` | `warn` | `error` | `silent`). Every failure response from
-the delivery API carries an `error.requestId` that matches the server-side log
-line, so a client-reported error can be correlated with its logs. Details in
-[deployment](./docs/deployment.md).
+(`debug` | `info` | `warn` | `error` | `silent`). Sensitive keys
+(`password`, `secret`, `token`, `apikey`, `authorization`, `cookie`, …) are
+**redacted by default** — recursively, case-insensitively, by substring —
+and the stem list is extendable via `KON10_LOG_REDACT=ssn,internalNote`.
+Every failure response from the delivery API carries an `error.requestId`
+that matches the server-side log line, so a client-reported error can be
+correlated with its logs. Details in [deployment](./docs/deployment.md).
 
 ## Roadmap
 

@@ -40,6 +40,9 @@ The content you model in `kon10.config.ts` is served read-only at
   (defaults to a local `file:local.db` SQLite database).
 - `ADMIN_EMAIL` / `ADMIN_PASSWORD` — first-run admin seed overrides.
 - `KON10_LOG_LEVEL` — `debug` | `info` (default) | `warn` | `error` | `silent`.
+- `KON10_LOG_REDACT` — extra key stems to redact from logs (comma-separated),
+  on top of the built-in defaults (`password`, `secret`, `token`, `apikey`,
+  `authorization`, `cookie`, …).
 
 ## Build & deploy
 

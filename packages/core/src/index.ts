@@ -46,6 +46,8 @@ export {
   type ConsoleLoggerOptions,
   consoleLogger,
   silentLogger,
+  DEFAULT_REDACT_KEYS,
+  redactKeysSchema,
 } from './logger/index.js'
 
 // Registry

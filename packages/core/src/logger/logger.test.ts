@@ -113,3 +113,94 @@ test('silentLogger no-ops and child() returns itself', () => {
   assert.equal(silentLogger.child({ a: 1 }), silentLogger)
   silentLogger.error({ boom: true }, 'nothing happens')
 })
+
+test('default redaction masks sensitive keys, case-insensitively and by substring', () => {
+  const { logger, lines } = capture()
+  logger.info(
+    {
+      email: 'a@b.c',
+      passwordHash: 'pbkdf2$abc',
+      Authorization: 'Bearer kon10_xyz',
+      dbToken: 'tok',
+      api_key: 'k',
+      safeCount: 3,
+    },
+    'x',
+  )
+  assert.deepEqual(lines[0]!.obj, {
+    email: 'a@b.c',
+    passwordHash: '[REDACTED]',
+    Authorization: '[REDACTED]',
+    dbToken: '[REDACTED]',
+    api_key: '[REDACTED]',
+    safeCount: 3,
+  })
+})
+
+test('redaction recurses into nested objects and arrays, and redacts whole object values', () => {
+  const { logger, lines } = capture()
+  const input = {
+    doc: { title: 'hi', credentials: { user: 'u', pass: 'p' } },
+    users: [{ name: 'a', password: 'p1' }, { name: 'b' }],
+  }
+  logger.info(input, 'x')
+  assert.deepEqual(lines[0]!.obj, {
+    doc: { title: 'hi', credentials: '[REDACTED]' },
+    users: [{ name: 'a', password: '[REDACTED]' }, { name: 'b' }],
+  })
+  // The caller's object is never mutated.
+  assert.equal(input.users[0]!.password, 'p1')
+})
+
+test('redaction covers bindings, including on string-only calls', () => {
+  const lines: Captured[] = []
+  const logger = consoleLogger({
+    bindings: { component: 'db', authToken: 'shhh' },
+    sink: (l, obj, msg) => lines.push({ level: l, obj, msg }),
+  })
+  logger.info('just a message')
+  assert.deepEqual(lines[0]!.obj, { component: 'db', authToken: '[REDACTED]' })
+})
+
+test('KON10_LOG_REDACT extends the default stems', () => {
+  const prev = process.env['KON10_LOG_REDACT']
+  try {
+    process.env['KON10_LOG_REDACT'] = 'ssn, internalNote'
+    const { logger, lines } = capture()
+    logger.info({ ssn: '123', internalnote: 'x', title: 'ok', password: 'p' }, 'x')
+    assert.deepEqual(lines[0]!.obj, {
+      ssn: '[REDACTED]',
+      internalnote: '[REDACTED]',
+      title: 'ok',
+      password: '[REDACTED]',
+    })
+  } finally {
+    if (prev === undefined) delete process.env['KON10_LOG_REDACT']
+    else process.env['KON10_LOG_REDACT'] = prev
+  }
+})
+
+test('the redact option extends defaults; children inherit it', () => {
+  const lines: Captured[] = []
+  const logger = consoleLogger({
+    redact: ['customerId'],
+    sink: (l, obj, msg) => lines.push({ level: l, obj, msg }),
+  })
+  logger.child({ requestId: 'r1' }).info({ customerId: 'c1', secretKey: 's', ok: 1 }, 'x')
+  assert.deepEqual(lines[0]!.obj, {
+    requestId: 'r1',
+    customerId: '[REDACTED]',
+    secretKey: '[REDACTED]',
+    ok: 1,
+  })
+})
+
+test('redact: false disables redaction entirely', () => {
+  const lines: Captured[] = []
+  const logger = consoleLogger({
+    redact: false,
+    sink: (l, obj, msg) => lines.push({ level: l, obj, msg }),
+  })
+  logger.info({ password: 'visible' }, 'x')
+  assert.deepEqual(lines[0]!.obj, { password: 'visible' })
+})

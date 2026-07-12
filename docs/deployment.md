@@ -75,6 +75,24 @@ setup. Useful knobs:
 - Every failure response carries an `error.requestId`; the same id is on the
   server log line, so a client-reported error can be matched to its logs.
 
+### Redaction
+
+The built-in logger redacts sensitive values before anything is written: any
+logged property whose name contains one of the default stems — `password`,
+`passwd`, `secret`, `token`, `apikey`, `api_key`, `authorization`, `cookie`,
+`credential`, `keyhash`, `privatekey`, `private_key` — is replaced with
+`[REDACTED]`, case-insensitively and recursively through nested objects and
+arrays. This is deliberately substring-based (so `passwordHash`, `dbToken`,
+and `Authorization` are all caught), erring toward over-redaction.
+
+- **Extend** the stems with `KON10_LOG_REDACT` (comma-separated), e.g.
+  `KON10_LOG_REDACT=ssn,internalNote`, or programmatically via
+  `consoleLogger({ redact: ['ssn'] })`.
+- **Disable** (not recommended) with `consoleLogger({ redact: false })`.
+- **Custom loggers redact themselves**: if you pass your own `logger` (e.g.
+  pino), Kon10 hands it raw objects — configure that logger's own redaction
+  (pino's `redact` option).
+
 ## CORS
 
 The delivery API defaults to `Access-Control-Allow-Origin: *` — public
