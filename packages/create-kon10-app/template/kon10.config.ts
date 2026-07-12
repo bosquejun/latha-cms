@@ -1,0 +1,66 @@
+/**
+ * kon10.config.ts — the single entrypoint of a Kon10 app.
+ *
+ * Everything else (the API, auth, the Studio UI at /studio) is derived from
+ * this file by @kon10/start. Add fields, collections, and modules here.
+ */
+
+import { defineConfig } from '@kon10/core'
+import { AuthModule, getRoleByName, hashPassword } from '@kon10/auth'
+import { CacheModule, inMemoryCache } from '@kon10/cache'
+import { Collection, ContentModule, Document, date, richtext, text } from '@kon10/content'
+import { tursoAdapter } from '@kon10/storage'
+import { countUsers, createUser, UsersModule } from '@kon10/users'
+
+export default defineConfig({
+  // Local SQLite file by default; point at Turso in production via env vars.
+  db: tursoAdapter({
+    url: process.env.TURSO_DATABASE_URL ?? 'file:local.db',
+    authToken: process.env.TURSO_AUTH_TOKEN,
+  }),
+
+  modules: [
+    UsersModule(),
+    // AUTH_SECRET is required in production (the runtime refuses to boot
+    // without it) — `create-kon10-app` generated one in `.env`.
+    AuthModule({ secret: process.env.AUTH_SECRET ?? 'kon10-dev-secret-change-me' }),
+    CacheModule({ cache: inMemoryCache() }),
+
+    ContentModule({
+      entities: [
+        Collection({
+          slug: 'posts',
+          studio: { useAsTitle: 'title' },
+          fields: {
+            title: text({ required: true }),
+            body: richtext(),
+            publishedAt: date({ meta: { sidebar: true } }),
+          },
+        }),
+        Document({
+          slug: 'site-settings',
+          fields: {
+            siteTitle: text({ required: true, meta: { label: 'Site Title' } }),
+            description: text({ meta: { multiline: true } }),
+          },
+        }),
+      ],
+    }),
+  ],
+
+  // First-run seed so login works out of the box. Override the defaults with
+  // ADMIN_EMAIL / ADMIN_PASSWORD — and change the password immediately in
+  // production.
+  seed: async (kon10) => {
+    if ((await countUsers(kon10)) === 0) {
+      const adminRole = await getRoleByName(kon10, 'admin')
+      await createUser(kon10, {
+        email: process.env.ADMIN_EMAIL ?? 'admin@kon10.dev',
+        name: 'Admin',
+        roles: adminRole ? [adminRole.id] : [],
+        passwordHash: await hashPassword(process.env.ADMIN_PASSWORD ?? 'password'),
+      })
+      kon10.logger.info('seeded first admin user — sign in at /studio and change the password')
+    }
+  },
+})

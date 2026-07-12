@@ -31,3 +31,52 @@ jobs:
       - run: pnpm typecheck
 
       - run: pnpm test
+
+  # Scaffold an app with create-kon10-app against the workspace packages and
+  # build it — this is what effectively typechecks the shipped template.
+  scaffold-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - name: Scaffold a fresh app
+        run: node packages/create-kon10-app/dist/index.js smoke-app
+        working-directory: ${{ runner.temp }}
+
+      - name: Point @kon10/* at the workspace packages
+        run: |
+          node -e '
+            const fs = require("fs");
+            const p = process.env.RUNNER_TEMP + "/smoke-app/package.json";
+            const j = JSON.parse(fs.readFileSync(p, "utf8"));
+            const map = {
+              "@kon10/auth": "modules/auth", "@kon10/cache": "modules/cache",
+              "@kon10/content": "modules/content", "@kon10/core": "core",
+              "@kon10/start": "start", "@kon10/storage": "modules/storage",
+              "@kon10/studio-sdk": "studio-sdk", "@kon10/ui": "ui",
+              "@kon10/users": "modules/users",
+            };
+            j.pnpm = { overrides: Object.fromEntries(Object.entries(map).map(
+              ([n, d]) => [n, "file:" + process.env.GITHUB_WORKSPACE + "/packages/" + d],
+            )) };
+            fs.writeFileSync(p, JSON.stringify(j, null, 2) + "\n");
+          '
+
+      - name: Install, build, and typecheck the scaffolded app
+        working-directory: ${{ runner.temp }}/smoke-app
+        run: |
+          pnpm install --no-frozen-lockfile
+          pnpm build
+          pnpm exec tsc --noEmit

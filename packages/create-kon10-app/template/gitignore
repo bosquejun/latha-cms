@@ -1,0 +1,18 @@
+node_modules
+dist
+.output
+.nitro
+.tanstack
+
+# Secrets — AUTH_SECRET lives here.
+.env
+
+# Local SQLite database
+local.db
+local.db-journal
+
+# Generated route tree
+src/routeTree.gen.ts
+
+# Media uploads (local disk storage)
+public/uploads
