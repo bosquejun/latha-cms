@@ -177,3 +177,10 @@ pluggable **subject store**:
 The subject just needs an `id`, a `passwordHash` (for password login), and
 `roles` (role ids) for RBAC resolution. Roles/scopes/permissions are owned by
 auth itself, so RBAC works the same either way.
+
+## Password resets
+
+There is no self-service password-reset (email) flow in v1 — it's on the
+roadmap alongside email delivery. Until then, a user with Studio access to
+**Settings → Users** can set a new password on any account, which covers the
+admin-assisted reset case.
