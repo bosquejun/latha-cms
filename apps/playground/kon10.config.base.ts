@@ -60,6 +60,7 @@ import {
 } from '@kon10/auth'
 import { media, MediaModule } from '@kon10/media'
 import { CacheModule, inMemoryCache } from '@kon10/cache'
+import { sentryTracingPlugin } from '@kon10/sentry'
 import { slug, slugPlugin } from '@kon10/slug'
 
 // `text({ schema: ... })` escape hatch — no dedicated `color` field type
@@ -120,9 +121,22 @@ export function buildConfig(
   return defineConfig({
     db,
 
-    // slugPlugin wires generation + uniqueness hooks into every entity below
-    // that carries a slug() field (posts, pages).
-    plugins: [slugPlugin()],
+    plugins: [
+      // slugPlugin wires generation + uniqueness hooks into every entity below
+      // that carries a slug() field (posts, pages).
+      slugPlugin(),
+      // Only registered when a DSN is configured — otherwise cms.tracer stays
+      // the built-in no-op and every operation/hook span is free.
+      ...(process.env.SENTRY_DSN
+        ? [
+            sentryTracingPlugin({
+              dsn: process.env.SENTRY_DSN,
+              environment: process.env.NODE_ENV,
+              tracesSampleRate: 1,
+            }),
+          ]
+        : []),
+    ],
 
     modules: [
       UsersModule(),
