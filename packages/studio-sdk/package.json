@@ -35,7 +35,7 @@
     "@lexical/utils": "^0.46.0",
     "lexical": "^0.46.0",
     "lucide-animated": "^1.0.5",
-    "lucide-react": "^0.469.0",
+    "lucide-react": "^1.24.0",
     "react-hook-form": "^7.80.0",
     "zod": "^4.4.3"
   },
