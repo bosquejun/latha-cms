@@ -27,6 +27,17 @@ jobs:
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
+      - name: Verify npm publishing access
+        run: |
+          echo "Registry: $(npm config get registry)"
+          echo "Authenticated npm user:"
+          npm whoami
+          echo "kon10 npm organization membership:"
+          npm org ls kon10
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm build
