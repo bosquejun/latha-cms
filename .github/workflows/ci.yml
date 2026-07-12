@@ -41,6 +41,41 @@ jobs:
       - name: Coverage
         run: pnpm test:coverage
 
+  # Browser E2E smoke tests: boot the playground dev server and drive the real
+  # Studio UI (login, CRUD, media upload, extensions) with Playwright.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The dev server serves @kon10/* from source, but a build keeps parity
+      # with the documented verify flow and surfaces build breaks early.
+      - name: Build packages and apps
+        run: pnpm build
+
+      # playwright-core ships no install CLI, so provision Chromium via the
+      # full playwright package at the exact version playwright-core resolved to
+      # (matching browser revisions), then let playwright-core find it. Runs in
+      # the playground dir so the devDep resolves (pnpm doesn't hoist it to root).
+      - name: Install Chromium for Playwright
+        working-directory: apps/playground
+        run: |
+          PW_VERSION="$(node -p "require('playwright-core/package.json').version")"
+          npx --yes "playwright@${PW_VERSION}" install --with-deps chromium
+
+      - name: Browser E2E smoke tests
+        run: pnpm --filter @kon10/playground test:e2e
+
   # Scaffold an app with create-kon10-app against the workspace packages and
   # build it — this is what effectively typechecks the shipped template.
   scaffold-smoke:

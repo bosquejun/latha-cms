@@ -104,6 +104,9 @@ importers:
       nitro:
         specifier: 3.0.260610-beta
         version: 3.0.260610-beta(@libsql/client@0.14.0)(chokidar@5.0.0)(ioredis@5.11.1)(jiti@2.7.0)(rollup@4.62.2)(vite@7.3.5(@types/node@26.0.0)(jiti@2.7.0)(lightningcss@1.32.0))
+      playwright-core:
+        specifier: ^1.61.0
+        version: 1.61.1
       tailwindcss:
         specifier: ^4.0.0
         version: 4.3.1
@@ -287,6 +290,9 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
+      '@kon10/content':
+        specifier: workspace:^
+        version: link:../../modules/content
       '@kon10/core':
         specifier: workspace:^
         version: link:../../core
@@ -339,12 +345,18 @@ importers:
       '@kon10/core':
         specifier: workspace:^
         version: link:../core
+      '@kon10/storage':
+        specifier: workspace:^
+        version: link:../modules/storage
       '@kon10/studio-sdk':
         specifier: workspace:^
         version: link:../studio-sdk
       '@kon10/ui':
         specifier: workspace:^
         version: link:../ui
+      '@kon10/users':
+        specifier: workspace:^
+        version: link:../modules/users
       '@tanstack/react-router':
         specifier: ^1.168.0
         version: 1.170.16(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -3014,6 +3026,11 @@ packages:
 
   pkg-types@1.3.1:
     resolution: {integrity: sha512-/Jm5M4RvtBFVkKWRu2BLUTNP8/M2a+UwuAX+ae4770q1qVGtfjG+WTCupoZixokjmHiry8uI+dlY8KXYV5HVVQ==}
+
+  playwright-core@1.61.1:
+    resolution: {integrity: sha512-h7Qlt6m4REp25qvIdvbDtVmD4LqVXfpRxhORv9L0jzETM05p4fuPJ3dKyuSXQxDSbXnmS79HAgi9589lGSpLkg==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   postcss-load-config@6.0.1:
     resolution: {integrity: sha512-oPtTM4oerL+UXmx+93ytZVN82RrlY/wPUV8IeDxFrzIjXOLF1pN+EmKPLbubvKHT2HC20xXsCAH2Z+CKV6Oz/g==}
@@ -5788,7 +5805,7 @@ snapshots:
   h3@2.0.1-rc.22(crossws@0.4.9(srvx@0.11.17)):
     dependencies:
       rou3: 0.8.1
-      srvx: 0.11.17
+      srvx: 0.11.20
     optionalDependencies:
       crossws: 0.4.9(srvx@0.11.17)
 
@@ -6167,6 +6184,8 @@ snapshots:
       confbox: 0.1.8
       mlly: 1.8.2
       pathe: 2.0.3
+
+  playwright-core@1.61.1: {}
 
   postcss-load-config@6.0.1(jiti@2.7.0)(postcss@8.5.15):
     dependencies:

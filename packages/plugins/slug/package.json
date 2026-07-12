@@ -53,6 +53,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@kon10/content": "workspace:^",
     "@kon10/core": "workspace:^",
     "@kon10/studio-sdk": "workspace:^",
     "@kon10/start": "workspace:^",
