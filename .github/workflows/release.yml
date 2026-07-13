@@ -50,4 +50,8 @@ jobs:
           publish: pnpm changeset publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # setup-node's generated .npmrc authenticates via NODE_AUTH_TOKEN;
+          # without it `changeset publish` runs unauthenticated and npm masks
+          # the 401/403 as an E404 on PUT.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
