@@ -126,7 +126,9 @@ export function buildConfig(
       // that carries a slug() field (posts, pages).
       slugPlugin(),
       // Only registered when a DSN is configured — otherwise cms.tracer stays
-      // the built-in no-op and every operation/hook span is free.
+      // the built-in no-op and every operation/hook span is free. Also
+      // reports operation/hook errors to Sentry as Issues by default
+      // (captureExceptions: true) — see @kon10/sentry's README to opt out.
       ...(process.env.SENTRY_DSN
         ? [
             sentryTracingPlugin({
