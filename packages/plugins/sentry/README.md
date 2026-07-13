@@ -1,6 +1,6 @@
 # @kon10/sentry
 
-OpenTelemetry tracing for Kon10, backed by Sentry. Registers a `Tracer` (see `@kon10/core`'s tracing contract) so every CRUD operation in `operations.ts` and every hook invocation gets a span, reported through Sentry's OpenTelemetry integration.
+OpenTelemetry tracing for Kon10, backed by Sentry. Registers a `Tracer` (see `@kon10/core`'s tracing contract) so every CRUD operation in `operations.ts` and every hook invocation gets a span, reported through Sentry's OpenTelemetry integration — and, by default, every operation/hook error also becomes a Sentry Issue.
 
 ## Install
 
@@ -41,11 +41,18 @@ If your app already calls `Sentry.init()` itself (e.g. for error monitoring outs
 sentryTracingPlugin({ autoInit: false })
 ```
 
+By default, every error `withSpan` records (an operation or hook throwing) is reported to Sentry as an Issue, on top of being an errored span — that's `captureExceptions: true`, the default. Set it to `false` if you already capture these errors another way and don't want duplicate Issues:
+
+```ts
+sentryTracingPlugin({ dsn: process.env.SENTRY_DSN, captureExceptions: false })
+```
+
 ## Operational notes
 
 - Register `sentryTracingPlugin()` once in the Kon10 config; it registers the tracer during `onInit`, before `db.migrate()` runs.
 - Without this plugin (or another one calling `cms.registerTracer()`), `cms.tracer` is a no-op — spans are created and discarded at zero cost.
 - Span names follow `kon10.<operation>` (e.g. `kon10.find`, `kon10.create`) and `kon10.hook.<event>` (e.g. `kon10.hook.beforeCreate`) for hook invocations.
+- `captureExceptions` only affects errors that surface through `withSpan` (operations and hooks). Uncaught exceptions/unhandled rejections elsewhere in the process are handled by Sentry's own default Node integrations once `Sentry.init()` has run, independent of this option.
 
 ## Related documentation
 

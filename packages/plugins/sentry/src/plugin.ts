@@ -15,6 +15,15 @@
  * Pass `autoInit: false` to skip `Sentry.init()` and reuse a client the host
  * app already initialized (e.g. it also uses Sentry for error monitoring
  * outside Kon10) — this plugin only wires up the tracer in that case.
+ *
+ * By default (`captureExceptions: true`) every error `withSpan` records
+ * (operation and hook failures) is also reported to Sentry as an Issue via
+ * `Sentry.captureException`, not just marked as an errored span — this is
+ * the one Sentry-specific behavior layered on top of the OTel-agnostic
+ * tracing contract, and it lives here rather than in the host app because
+ * the adapter below already observes every recorded exception in one place.
+ * Set `captureExceptions: false` if you already capture these errors
+ * elsewhere and don't want duplicates.
  */
 
 import { trace } from '@opentelemetry/api'
@@ -33,12 +42,23 @@ export const sentryTracingPluginOptionsSchema = z.object({
   autoInit: z.boolean().optional(),
   /** Name passed to `trace.getTracer()`. Defaults to `'kon10'`. */
   tracerName: z.string().optional(),
+  /** Also report `withSpan`-recorded errors to Sentry as Issues. Defaults to `true`. */
+  captureExceptions: z.boolean().optional(),
 })
 
 export type SentryTracingPluginOptions = z.infer<typeof sentryTracingPluginOptionsSchema>
 
-/** Adapt a real `@opentelemetry/api` `Tracer` to Kon10's minimal `Tracer` contract. */
-function toKon10Tracer(otelTracer: OtelTracer): Tracer {
+/**
+ * Adapt a real `@opentelemetry/api` `Tracer` to Kon10's minimal `Tracer`
+ * contract. `captureException`, when given, runs alongside
+ * `otelSpan.recordException` — injected rather than reaching for the global
+ * `Sentry.captureException` directly, so this adapter is testable without
+ * mocking the `@sentry/node` module.
+ */
+export function toKon10Tracer(
+  otelTracer: OtelTracer,
+  captureException?: (exception: unknown) => void,
+): Tracer {
   return {
     startActiveSpan<T>(name: string, fn: (span: Span) => T): T {
       return otelTracer.startActiveSpan(name, (otelSpan: OtelSpan) => {
@@ -53,6 +73,7 @@ function toKon10Tracer(otelTracer: OtelTracer): Tracer {
           },
           recordException(exception) {
             otelSpan.recordException(exception as Error)
+            captureException?.(exception)
           },
           setStatus(status) {
             otelSpan.setStatus(status)
@@ -81,7 +102,10 @@ export function sentryTracingPlugin(options: SentryTracingPluginOptions = {}): P
           tracesSampleRate: opts.tracesSampleRate ?? 1,
         })
       }
-      cms.registerTracer(toKon10Tracer(trace.getTracer(opts.tracerName ?? 'kon10')))
+      const captureException = (opts.captureExceptions ?? true)
+        ? (exception: unknown) => Sentry.captureException(exception)
+        : undefined
+      cms.registerTracer(toKon10Tracer(trace.getTracer(opts.tracerName ?? 'kon10'), captureException))
       cms.logger.info({ plugin: 'sentry' }, 'tracing registered (Sentry via OpenTelemetry)')
     },
   }

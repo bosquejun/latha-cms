@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
+import { trace } from '@opentelemetry/api'
+
 import { silentLogger } from '@kon10/core'
 import type { Kon10Instance } from '@kon10/core'
-import { sentryTracingPlugin, sentryTracingPluginOptionsSchema } from './plugin.js'
+import { sentryTracingPlugin, sentryTracingPluginOptionsSchema, toKon10Tracer } from './plugin.js'
 
 function fakeCms() {
   let registered: Kon10Instance['tracer'] | undefined
@@ -43,4 +45,36 @@ test('onInit with autoInit: false skips Sentry.init and registers a Tracer', asy
     return 'span ran'
   })
   assert.equal(result, 'span ran')
+})
+
+test('toKon10Tracer calls the injected captureException alongside otelSpan.recordException', () => {
+  const captured: unknown[] = []
+  const tracer = toKon10Tracer(trace.getTracer('test'), (exception) => captured.push(exception))
+
+  const error = new Error('boom')
+  tracer.startActiveSpan('kon10.create', (span) => {
+    span.recordException(error)
+    span.end()
+  })
+
+  assert.deepEqual(captured, [error])
+})
+
+test('toKon10Tracer without a captureException callback only records on the span', () => {
+  // No captureException passed — recordException must not throw, and nothing is captured.
+  const tracer = toKon10Tracer(trace.getTracer('test'))
+  assert.doesNotThrow(() => {
+    tracer.startActiveSpan('kon10.create', (span) => {
+      span.recordException(new Error('boom'))
+      span.end()
+    })
+  })
+})
+
+test('sentryTracingPlugin defaults captureExceptions to true, and honors false', async () => {
+  const withDefault = sentryTracingPluginOptionsSchema.parse({ autoInit: false })
+  assert.equal(withDefault.captureExceptions, undefined) // unset -> the plugin defaults it to true internally
+
+  const disabled = sentryTracingPluginOptionsSchema.parse({ autoInit: false, captureExceptions: false })
+  assert.equal(disabled.captureExceptions, false)
 })
