@@ -18,6 +18,15 @@ export interface NavLinkProps {
   className?: string
   children: ReactNode
   onClick?: () => void
+  /**
+   * Pointer/focus handlers the shell uses to drive per-link effects (e.g.
+   * replaying a nav icon's animation while the tab is hovered/focused). A
+   * link component should forward these to its underlying anchor.
+   */
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
+  onFocus?: () => void
+  onBlur?: () => void
 }
 
 /** A single entry inside a tab's section sidebar. */
