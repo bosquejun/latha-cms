@@ -51,9 +51,9 @@ import { SettingsIcon } from 'lucide-animated'
 import type { NavIcon } from '@kon10/studio-sdk'
 import { UserMenu } from './UserMenu.js'
 
-function RouterLink({ href, className, children, onClick }: NavLinkProps) {
+function RouterLink({ href, className, children, onClick, ...handlers }: NavLinkProps) {
   return (
-    <Link to={href} className={className} onClick={onClick}>
+    <Link to={href} className={className} onClick={onClick} {...handlers}>
       {children}
     </Link>
   )
