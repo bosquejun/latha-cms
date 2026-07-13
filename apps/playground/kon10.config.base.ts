@@ -191,6 +191,7 @@ export function buildConfig(
                 meta: {
                   group: 'Branding',
                   width: 'half',
+                  aspectRatio: '3:1',
                   description: 'Shown in the Studio topbar and public site header.',
                 },
               }),
@@ -198,6 +199,7 @@ export function buildConfig(
                 meta: {
                   group: 'Branding',
                   width: 'half',
+                  aspectRatio: '1:1',
                   description: 'Browser tab icon — square image recommended.',
                 },
               }),
@@ -254,7 +256,7 @@ export function buildConfig(
                 fields: {
                   metaTitle: text({ meta: { label: 'Meta Title' } }),
                   metaDescription: text({ meta: { label: 'Meta Description', multiline: true } }),
-                  ogImage: media({ meta: { label: 'Default OG Image' } }),
+                  ogImage: media({ meta: { label: 'Default OG Image', aspectRatio: '1.91:1' } }),
                 },
                 meta: {
                   group: 'SEO & Meta',
@@ -305,7 +307,7 @@ export function buildConfig(
                 fields: {
                   metaTitle: text({ meta: { label: 'Meta Title' } }),
                   metaDescription: text({ meta: { label: 'Meta Description', multiline: true } }),
-                  ogImage: media({ meta: { label: 'OG Image' } }),
+                  ogImage: media({ meta: { label: 'OG Image', aspectRatio: '1.91:1' } }),
                 },
                 meta: {
                   group: 'SEO & Meta',
@@ -413,7 +415,7 @@ export function buildConfig(
                 fields: {
                   metaTitle: text({ meta: { label: 'Meta Title' } }),
                   metaDescription: text({ meta: { label: 'Meta Description', multiline: true } }),
-                  ogImage: media({ meta: { label: 'OG Image' } }),
+                  ogImage: media({ meta: { label: 'OG Image', aspectRatio: '1.91:1' } }),
                 },
                 meta: { group: 'SEO & Meta', label: 'SEO', description: 'Search & social metadata.' },
               }),
@@ -426,7 +428,9 @@ export function buildConfig(
                 defaultValue: 'draft',
                 meta: { sidebar: true },
               }),
-              featuredImage: media({ meta: { label: 'Featured Image', sidebar: true } }),
+              featuredImage: media({
+                meta: { label: 'Featured Image', sidebar: true, aspectRatio: '16:9' },
+              }),
               category: taxonomy({ to: 'categories', meta: { sidebar: true } }),
               tags: taxonomy({ to: 'tags', many: true, meta: { sidebar: true } }),
               author: relationship({ to: 'users', meta: { sidebar: true } }),

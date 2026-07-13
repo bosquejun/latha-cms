@@ -78,16 +78,16 @@ function ManyTermPicker({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-inline">
       {selected.length > 0 && (
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-stack">
           {selected.map((v) => (
-            <Badge key={v} variant="secondary" className="gap-0.5 pr-1">
+            <Badge key={v} variant="secondary" className="min-h-11 gap-0.5 pr-0 md:min-h-0 md:pr-1">
               {nameOf(v)}
               <button
                 type="button"
                 aria-label={`Remove ${nameOf(v)}`}
-                className="ml-0.5 rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
+                className="ml-0.5 inline-flex size-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground md:size-4"
                 onClick={() => commit(selected.filter((s) => s !== v))}
               >
                 <XIcon className="size-3" />
@@ -108,13 +108,13 @@ function ManyTermPicker({
 
       <div className="flex max-h-52 flex-col gap-0.5 overflow-y-auto rounded-md border border-input p-1.5">
         {filtered.length === 0 ? (
-          <span className="px-1 py-1 text-caption text-muted-foreground">No matches.</span>
+          <span className="px-stack py-stack text-caption text-muted-foreground">No matches.</span>
         ) : (
           filtered.map((term) => (
             <label
               key={term.id}
               className={cn(
-                'flex cursor-pointer items-center gap-2 rounded-sm px-1.5 py-1 text-small transition-colors hover:bg-accent/60',
+                'flex min-h-11 cursor-pointer items-center gap-inline rounded-sm px-tight py-stack text-small transition-colors hover:bg-accent/60 md:min-h-0',
               )}
               style={{ paddingLeft: `${term.depth * 12 + 6}px` }}
             >

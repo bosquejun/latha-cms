@@ -55,6 +55,13 @@ export const fieldMetaSchema = z.object({
    */
   shades: z.boolean().optional(),
   /**
+   * Intended display ratio for media uploads and previews. The media module
+   * uses this hint to reserve the right amount of space before an asset is
+   * uploaded and to keep previews from being cropped into a generic 16:9
+   * frame. It is ignored by the kernel like every other rendering hint.
+   */
+  aspectRatio: z.enum(['1:1', '16:9', '1.91:1', '3:1']).optional(),
+  /**
    * Only render this field when a sibling field (within the same group/array
    * item, or the same entity for top-level fields) currently holds a matching
    * value — e.g. a `url` field with `showIf: { field: 'linkType', equals: 'url' }`

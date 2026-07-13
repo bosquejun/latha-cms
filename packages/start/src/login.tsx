@@ -32,22 +32,22 @@ export function Kon10Login() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted p-6">
+    <main className="flex min-h-screen items-center justify-center bg-muted p-page">
       <div className="w-full max-w-[380px]">
-        <div className="mb-[22px] flex items-center justify-center gap-2.5">
+        <div className="mb-page-gap flex items-center justify-center gap-inline">
           <span className="grid size-8 place-items-center rounded-[var(--radius-md)] bg-primary text-base font-semibold text-primary-foreground">
             K
           </span>
           <span className="text-lg font-semibold tracking-tight">Kon10</span>
         </div>
-        <Card className="gap-6 p-6">
-          <div className="flex flex-col gap-1.5">
-            <h1 className="text-lg font-semibold tracking-tight">Welcome back</h1>
+        <Card className="gap-card-gap p-card">
+          <div className="flex flex-col gap-tight">
+            <h1 className="text-h1 font-semibold tracking-tight">Welcome back</h1>
             <p className="text-small text-muted-foreground">
               Enter your credentials to continue.
             </p>
           </div>
-          <form onSubmit={onSubmit} className="flex flex-col gap-4">
+          <form onSubmit={onSubmit} className="flex flex-col gap-form">
             <Field htmlFor="email" label="Email">
               <Input id="email" type="email" autoComplete="username"
                 value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -56,7 +56,7 @@ export function Kon10Login() {
               <Input id="password" type="password" autoComplete="current-password"
                 value={password} onChange={(e) => setPassword(e.target.value)} />
             </Field>
-            <Button type="submit" className="mt-1 w-full" disabled={busy || !email || !password}>
+            <Button type="submit" className="w-full" disabled={busy || !email || !password}>
               {busy ? 'Signing in…' : 'Sign in'}
             </Button>
           </form>

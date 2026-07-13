@@ -91,7 +91,7 @@ export function SecondaryTopNav({ items, activeKey, LinkComponent }: SecondaryTo
   return (
     <nav
       aria-label="Sections"
-      className="no-scrollbar sticky top-(--header-height) z-30 flex h-(--subnav-height) items-stretch gap-1 overflow-x-auto border-b border-nav-border bg-nav px-nav max-lg:hidden"
+      className="no-scrollbar sticky top-(--header-height) z-30 flex h-(--subnav-height) items-stretch gap-stack overflow-x-auto border-b border-nav-border bg-nav px-nav max-lg:hidden"
     >
       {items.map((item) => (
         <SecondaryTopNavTab

@@ -22,6 +22,13 @@ import {
 
 export const config = { type: 'media' }
 
+const ASPECT_FRAME = {
+  '1:1': 'aspect-square w-32 max-w-full',
+  '16:9': 'aspect-video w-full',
+  '1.91:1': 'aspect-[1.91/1] w-full',
+  '3:1': 'aspect-[3/1] w-full',
+} as const
+
 /** Cloud-upload glyph for the empty dropzone. Inlined to avoid an icon dep. */
 function UploadIcon({ className }: { className?: string }) {
   return (
@@ -87,6 +94,8 @@ export default function MediaField({ field, id, value, onChange, onBlur, error }
   }, [mediaId, uploaded])
 
   const label = field.meta?.label ?? humanize(field.name)
+  const aspectRatio = field.meta?.aspectRatio
+  const frameClass = aspectRatio ? ASPECT_FRAME[aspectRatio] : 'aspect-video w-full'
 
   async function upload(file: File) {
     setBusy(true)
@@ -131,7 +140,9 @@ export default function MediaField({ field, id, value, onChange, onBlur, error }
         id={id}
         type="file"
         accept="image/*"
-        className="sr-only"
+        className="hidden"
+        tabIndex={-1}
+        aria-hidden="true"
         disabled={busy}
         onChange={(e) => handleFiles(e.target.files)}
         onBlur={onBlur}
@@ -147,10 +158,16 @@ export default function MediaField({ field, id, value, onChange, onBlur, error }
             <img
               src={url}
               alt={typeof meta?.alt === 'string' ? meta.alt : (filename ?? '')}
-              className="aspect-video w-full rounded-md border border-border bg-muted object-cover"
+              className={cn(
+                'self-start rounded-md border border-border bg-muted object-contain',
+                frameClass,
+              )}
             />
           ) : (
-            <div className="flex aspect-video w-full items-center justify-center rounded-md border border-border bg-muted text-muted-foreground">
+            <div className={cn(
+              'flex self-start items-center justify-center rounded-md border border-border bg-muted text-muted-foreground',
+              frameClass,
+            )}>
               <FileIcon className="size-8" />
             </div>
           )}
@@ -183,6 +200,7 @@ export default function MediaField({ field, id, value, onChange, onBlur, error }
       ) : (
         <button
           type="button"
+          aria-label={`Upload ${label}`}
           disabled={busy}
           onClick={openPicker}
           onDragOver={(e) => {
@@ -196,9 +214,10 @@ export default function MediaField({ field, id, value, onChange, onBlur, error }
             if (!busy) handleFiles(e.dataTransfer.files)
           }}
           className={cn(
-            'flex w-full flex-col items-center justify-center gap-1.5 rounded-md border border-dashed border-input px-4 py-6 text-center transition-colors',
+            'flex min-h-28 flex-col items-center justify-center gap-1.5 self-start rounded-md border border-dashed border-input px-4 py-4 text-center transition-colors',
             'hover:bg-accent/40 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 outline-none',
             'disabled:cursor-not-allowed disabled:opacity-70',
+            aspectRatio ? frameClass : 'w-full',
             dragOver && 'border-ring bg-accent/60',
           )}
         >
@@ -213,7 +232,9 @@ export default function MediaField({ field, id, value, onChange, onBlur, error }
                 Click to upload
                 <span className="font-normal text-muted-foreground"> or drag &amp; drop</span>
               </span>
-              <span className="text-caption text-muted-foreground">Images only</span>
+              <span className="text-caption text-muted-foreground">
+                Images only{aspectRatio ? ` · Recommended ${aspectRatio}` : ''}
+              </span>
             </>
           )}
         </button>

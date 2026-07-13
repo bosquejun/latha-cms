@@ -224,6 +224,7 @@ export function EntityForm({
             onChange={rhf.onChange}
             onBlur={rhf.onBlur}
             error={fieldState.error?.message}
+            headingLevel={2}
           />
         )}
       />
@@ -276,7 +277,7 @@ export function EntityForm({
             sits directly above the panels it switches. From `sm` up both
             share one row — tabs left, actions right.
         ──────────────────────────────────────────────────────────────────────── */}
-        <div className="bleed-x sticky top-[var(--shell-top,var(--header-height))] z-10 mb-page-gap flex flex-wrap items-center gap-x-3 gap-y-2.5 border-b border-border bg-background/95 px-(--container-px) py-2.5 backdrop-blur-sm max-sm:-mt-2 max-sm:py-2">
+        <div className="bleed-x sticky top-[var(--shell-top,var(--header-height))] z-10 mb-page-gap flex flex-wrap items-center gap-x-group gap-y-2.5 border-b border-border bg-background/95 px-(--container-px) py-2.5 backdrop-blur-sm max-sm:-mt-2 max-sm:py-inline">
           {tabbed ? (
             <Tabs
               className="max-w-full max-sm:order-last max-sm:w-full max-sm:[&>button]:flex-1 max-sm:[&>button]:justify-center"
@@ -288,7 +289,7 @@ export function EntityForm({
                     <span className="flex items-center gap-1.5">
                       {group.label}
                       {errorCount > 0 && (
-                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-stack text-[10px] font-semibold text-destructive-foreground">
                           {errorCount}
                         </span>
                       )}

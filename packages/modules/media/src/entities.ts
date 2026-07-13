@@ -52,7 +52,7 @@ export function buildMediaEntity(policy?: Partial<UploadPolicy>): MediaEntity {
       segment: 'content',
       useAsTitle: 'filename',
       defaultColumns: ['filename', 'mimeType', 'size'],
-      labels: { singular: 'Media', plural: 'Media Library' },
+      labels: { singular: 'Media item', plural: 'Media Library', empty: 'Media items' },
       // `media` is the only entity `MediaModule` registers, so the default
       // module-label group would render a one-item "Media" folder — override
       // to sit flat instead, same reasoning as `site-settings`' `group: ''`.

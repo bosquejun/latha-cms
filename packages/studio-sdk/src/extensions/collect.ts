@@ -56,7 +56,7 @@ export function collectStudioExtensions(globs: StudioGlobs): StudioExtensions {
 
   const lists = entries(globs.lists)
     .filter(({ mod }) => mod && mod.default && cfg(mod).slug)
-    .map(({ mod }) => ({ slug: cfg(mod).slug, Component: mod.default })) as EntityListRendererExtension[]
+    .map(({ mod }) => ({ ...cfg(mod), Component: mod.default })) as EntityListRendererExtension[]
 
   return {
     widgets: widgets.length ? widgets : undefined,

@@ -35,8 +35,17 @@ import type { FieldControlProps } from '../types.js'
 import { getFieldRenderer } from '../registry.js'
 import { layoutRows } from '../layout.js'
 import { isFieldVisible } from '../show-if.js'
+import { FieldHeading, nextHeadingLevel } from '../FieldHeading.js'
 
-export function GroupField({ field, id, value, onChange, onBlur, error }: FieldControlProps) {
+export function GroupField({
+  field,
+  id,
+  value,
+  onChange,
+  onBlur,
+  error,
+  headingLevel = 2,
+}: FieldControlProps) {
   const children: Field[] = Array.isArray((field as Record<string, unknown>).fields)
     ? ((field as Record<string, unknown>).fields as Field[])
     : []
@@ -66,6 +75,7 @@ export function GroupField({ field, id, value, onChange, onBlur, error }: FieldC
         onChange={(v) => setChild(child.name, v)}
         onBlur={onBlur}
         error={undefined}
+        headingLevel={nextHeadingLevel(headingLevel)}
       />
     )
   }
@@ -90,10 +100,10 @@ export function GroupField({ field, id, value, onChange, onBlur, error }: FieldC
   return (
     <div className="flex flex-col gap-field">
       <div className="flex items-center gap-inline">
-        <p className="text-sm font-medium">
+        <FieldHeading level={headingLevel}>
           {label}
           {field.required && <span className="ml-1 text-destructive">*</span>}
-        </p>
+        </FieldHeading>
       </div>
       {field.meta?.description && (
         <p className="text-caption text-muted-foreground">{field.meta.description}</p>
@@ -107,7 +117,7 @@ export function GroupField({ field, id, value, onChange, onBlur, error }: FieldC
               type="button"
               onClick={() => setShowAdvanced((v) => !v)}
               aria-expanded={showAdvanced}
-              className="flex w-full items-center justify-between px-card py-2.5 text-caption font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+              className="flex min-h-11 w-full items-center justify-between px-card py-2.5 text-caption font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground md:min-h-0"
             >
               Advanced options
               <ChevronDown

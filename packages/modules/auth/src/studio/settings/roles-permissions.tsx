@@ -27,6 +27,7 @@ import {
   Skeleton,
   Switch,
   Table,
+  TableCaption,
   TBody,
   TD,
   TH,
@@ -47,9 +48,11 @@ import {
   type PageComponentProps,
 } from '@kon10/studio-sdk'
 import {
+  Check,
   ChevronDown,
   ChevronLeft,
   Lock,
+  Minus,
   Plus,
   Search,
   ShieldAlert,
@@ -125,7 +128,7 @@ function BulkCheckbox({
   return (
     <span
       className={cn(
-        'relative inline-flex size-4 shrink-0 items-center justify-center',
+        'relative inline-flex size-11 shrink-0 items-center justify-center md:size-4',
         disabled && 'pointer-events-none opacity-50',
         className,
       )}
@@ -136,46 +139,22 @@ function BulkCheckbox({
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
+        className="peer absolute inset-0 size-full cursor-pointer appearance-none opacity-0 outline-none disabled:cursor-not-allowed"
+      />
+      <span
+        aria-hidden
         className={cn(
-          'size-4 cursor-pointer appearance-none rounded-[4px] border shadow-2xs outline-none transition-colors',
-          'focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed',
+          'pointer-events-none size-4 rounded-[4px] border shadow-2xs transition-colors peer-focus-visible:ring-[3px] peer-focus-visible:ring-ring/50',
           checked || indeterminate
             ? 'border-primary bg-primary'
             : 'border-input bg-background',
         )}
       />
       {checked && (
-        <svg
-          aria-hidden
-          viewBox="0 0 12 12"
-          className="pointer-events-none absolute size-3 text-white"
-        >
-          <polyline
-            points="1.5,6 4.5,9 10.5,3"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <Check aria-hidden className="pointer-events-none absolute size-3 text-primary-foreground" strokeWidth={3} />
       )}
       {!checked && indeterminate && (
-        <svg
-          aria-hidden
-          viewBox="0 0 12 12"
-          className="pointer-events-none absolute size-3 text-white"
-        >
-          <line
-            x1="2"
-            y1="6"
-            x2="10"
-            y2="6"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
-        </svg>
+        <Minus aria-hidden className="pointer-events-none absolute size-3 text-primary-foreground" strokeWidth={3} />
       )}
     </span>
   )
@@ -200,7 +179,7 @@ function RoleItem({
       type="button"
       onClick={onClick}
       className={cn(
-        'group flex w-full items-center gap-group rounded-md px-group py-group text-left transition-colors',
+        'group flex min-h-11 w-full items-center gap-group rounded-md px-group py-group text-left transition-colors',
         selected
           ? 'bg-accent text-accent-foreground'
           : 'text-foreground hover:bg-accent/50',
@@ -261,14 +240,14 @@ function ToggleRow({
           </div>
         )}
         <div>
-          <p
+          <h2
             className={cn(
-              'text-small font-medium',
+              'text-h3 font-semibold',
               danger && checked && 'text-warning-foreground',
             )}
           >
             {title}
-          </p>
+          </h2>
           <p className="text-caption text-muted-foreground">{description}</p>
         </div>
       </div>
@@ -579,9 +558,9 @@ export default function RolesPermissions({ params }: PageComponentProps) {
             <div className={cn('flex flex-col gap-inline', detailOpen && 'max-lg:hidden')}>
             <div className="flex items-center justify-between px-stack">
               <div className="flex items-center gap-inline">
-                <span className="text-small font-semibold text-foreground">
+                <h2 className="text-h2 font-semibold text-foreground">
                   Roles
-                </span>
+                </h2>
                 <Badge variant="secondary">{roleList.length}</Badge>
               </div>
               {!creating && (
@@ -612,7 +591,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
 
             {creating && (
               <Card className="p-group">
-                <p className="mb-inline text-small font-medium">New role</p>
+                <h3 className="mb-inline text-h3 font-semibold">New role</h3>
                 <div className="flex flex-col gap-inline">
                   <Input
                     autoFocus
@@ -661,7 +640,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
               <button
                 type="button"
                 onClick={() => go(rootHref)}
-                className="flex items-center gap-1 self-start rounded-md py-1 pr-2 text-small font-medium text-muted-foreground transition-colors hover:text-foreground lg:hidden pointer-coarse:min-h-10"
+                className="flex min-h-11 items-center gap-stack self-start rounded-md py-stack pr-inline text-small font-medium text-muted-foreground transition-colors hover:text-foreground lg:hidden"
               >
                 <ChevronLeft className="size-4" /> All roles
               </button>
@@ -670,7 +649,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                 <div>
                   <div>
                     <div className="flex flex-wrap items-center gap-inline">
-                      <h2 className="text-base font-semibold">
+                      <h2 className="text-h2 font-semibold">
                         {asStr(selected.label) || asStr(selected.name)}
                       </h2>
                       {selected.system ? (
@@ -751,10 +730,21 @@ export default function RolesPermissions({ params }: PageComponentProps) {
               <Card
                 className={cn(
                   'overflow-hidden p-0',
-                  isSuper && 'pointer-events-none opacity-40',
+                  isSuper && 'bg-muted/10',
                 )}
               >
-                <div className="border-b border-border p-group">
+                <div className="flex flex-col gap-group border-b border-border p-group">
+                  <div>
+                    <h2 className="text-h2 font-semibold">Permission matrix</h2>
+                    <p className="mt-stack text-caption text-muted-foreground">
+                      {isSuper
+                        ? 'Shown for reference; superadmin access overrides every permission below.'
+                        : 'Grant access by resource and action.'}
+                      <span className="block lg:hidden">
+                        Scroll horizontally to review every action.
+                      </span>
+                    </p>
+                  </div>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -767,7 +757,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                       <button
                         type="button"
                         onClick={() => setFilterQuery('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                        className="absolute right-0 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center text-muted-foreground transition-colors hover:text-foreground md:right-1 md:size-8"
                         aria-label="Clear filter"
                       >
                         <X className="size-4" />
@@ -776,17 +766,18 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                   </div>
                 </div>
 
-                <Table>
+                <Table className="min-w-[40rem]">
+                  <TableCaption className="px-group pb-group text-left text-caption lg:hidden">
+                    Scroll horizontally to review all permission actions.
+                  </TableCaption>
                   <THead>
                     {/* Row 1 — column labels, aligned on the same baseline */}
                     <TR className="border-b-0">
-                      <TH className="max-sm:px-3">Resource</TH>
-                      {/* Compact action columns on phones so all four fit
-                          without sideways panning. */}
+                      <TH className="min-w-44 max-sm:px-group">Resource</TH>
                       {ACTION_COLUMNS.map((action) => (
                         <TH
                           key={action}
-                          className="min-w-12 px-2 text-center capitalize sm:min-w-[80px] sm:px-4"
+                          className="min-w-20 px-sidebar text-center capitalize"
                         >
                           {action}
                         </TH>
@@ -794,11 +785,11 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                     </TR>
                     {/* Row 2 — bulk-select checkboxes */}
                     <TR>
-                      <TH className="py-group font-normal text-muted-foreground max-sm:px-3">
+                      <TH className="py-group font-normal text-muted-foreground max-sm:px-group">
                         Select all
                       </TH>
                       {ACTION_COLUMNS.map((action) => (
-                        <TH key={action} className="px-2 py-group text-center sm:px-4">
+                        <TH key={action} className="px-sidebar py-group text-center">
                           <div className="flex items-center justify-center">
                             <BulkCheckbox
                               checked={columnState[action].allChecked}
@@ -830,13 +821,13 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                             <TR className="bg-muted/30 hover:bg-muted/40">
                               <TD
                                 colSpan={1 + ACTION_COLUMNS.length}
-                                className="py-inline max-sm:px-3"
+                                className="py-inline max-sm:px-group"
                               >
                                 <div className="flex items-center gap-inline">
                                   <button
                                     type="button"
                                     onClick={() => toggleSection(mod)}
-                                    className="flex flex-1 items-center gap-inline text-small font-medium capitalize"
+                                    className="flex min-h-11 flex-1 items-center gap-inline text-small font-medium capitalize"
                                   >
                                     <ChevronDown
                                       className={cn(
@@ -871,7 +862,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                                   key={scope.key}
                                   className="hover:bg-accent/20"
                                 >
-                                  <TD className="max-sm:px-3">
+                                  <TD className="max-sm:px-group">
                                     <span className="text-small font-medium">
                                       {scope.label || scope.key}
                                     </span>
@@ -886,7 +877,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                                       `${scope.key}:${action}`,
                                     )
                                     return (
-                                      <TD key={action} className="px-2 text-center sm:px-4">
+                                      <TD key={action} className="px-sidebar text-center">
                                         {perm ? (
                                           <Checkbox
                                             checked={

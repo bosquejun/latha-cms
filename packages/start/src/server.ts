@@ -33,7 +33,7 @@ import {
 import { AccessDeniedError } from '@kon10/core'
 import type { JsonValue } from '@kon10/core'
 import { getRuntime } from './runtime.js'
-import { humanize, Kon10RpcInputSchema, type Kon10RpcInput } from '@kon10/studio-sdk'
+import { labelsOf, Kon10RpcInputSchema, type Kon10RpcInput } from '@kon10/studio-sdk'
 import type { EntityDescriptor, NavItem, NavSection } from '@kon10/studio-sdk'
 import { hiddenFieldNames, projectDoc } from './hidden-fields.js'
 
@@ -70,9 +70,8 @@ export function rejectUntrustedOrigin(request: Request): Response | null {
 }
 
 function labelOf(entity: Entity): string {
-  const labels = entity.studio?.labels
-  if (entity.cardinality === 'single') return labels?.singular ?? humanize(entity.slug)
-  return labels?.plural ?? humanize(entity.slug)
+  const labels = labelsOf(entity)
+  return entity.cardinality === 'single' ? labels.singular : labels.plural
 }
 
 /**
@@ -192,11 +191,16 @@ function moduleFor(kon10: Kon10Instance, slug: string): Module | undefined {
 }
 
 function describe(entity: Entity, module?: Module): EntityDescriptor {
+  const labels = labelsOf(entity)
   return {
     slug: entity.slug,
     kind: entity.kind ?? (entity.cardinality === 'single' ? 'document' : 'collection'),
     label: labelOf(entity),
+    singularLabel: labels.singular,
+    pluralLabel: labels.plural,
+    emptyLabel: labels.empty,
     fields: describeFields(entity.fields) as unknown as EntityDescriptor['fields'],
+    hierarchical: entity.hierarchical,
     useAsTitle: entity.studio?.useAsTitle,
     defaultColumns: entity.studio?.defaultColumns,
     formWidth: entity.studio?.formWidth,

@@ -101,7 +101,7 @@ export function SectionSidebar({ item, activeSubKey, LinkComponent }: SectionSid
                     onClick={() =>
                       setToggled((prev) => ({ ...prev, [group.label!]: !open }))
                     }
-                    className="flex touch-manipulation items-center gap-1 px-2.5 pb-1 text-label font-medium uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+                    className="flex touch-manipulation items-center gap-stack px-2.5 pb-1 text-label font-medium uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
                   >
                     <span>{group.label}</span>
                     <ChevronRight

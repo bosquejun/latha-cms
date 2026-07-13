@@ -18,7 +18,7 @@ function Switch({ className, disabled, ...props }: SwitchProps) {
     <label
       data-slot="switch"
       className={cn(
-        'relative inline-flex h-[1.15rem] w-8 shrink-0 cursor-pointer items-center',
+        'relative inline-flex size-11 shrink-0 cursor-pointer items-center justify-center md:h-[1.15rem] md:w-8',
         disabled && 'cursor-not-allowed opacity-50',
         className,
       )}
@@ -32,11 +32,7 @@ function Switch({ className, disabled, ...props }: SwitchProps) {
       />
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-full bg-input transition-colors peer-checked:bg-primary peer-focus-visible:ring-[3px] peer-focus-visible:ring-ring/50"
-      />
-      <span
-        aria-hidden
-        className="pointer-events-none absolute left-0.5 size-3.5 rounded-full bg-background shadow-xs transition-transform peer-checked:translate-x-[0.85rem]"
+        className="pointer-events-none relative h-[1.15rem] w-8 rounded-full bg-input shadow-xs transition-colors after:absolute after:left-0.5 after:top-1/2 after:size-3.5 after:-translate-y-1/2 after:rounded-full after:bg-background after:shadow-xs after:transition-transform after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-[0.85rem] peer-focus-visible:ring-[3px] peer-focus-visible:ring-ring/50"
       />
     </label>
   )

@@ -479,16 +479,16 @@ function Dashboard({ nav }: { nav: NavSection[] }) {
         title="Dashboard"
         description="Everything below is derived from your config."
       />
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-card-gap lg:grid-cols-4">
         {items.map((item) => {
           const Icon = kindIcons[item.kind]
           return (
             <Link key={item.slug} to={item.href}>
               <Card className="gap-0 p-0 transition-colors hover:border-foreground/20">
-                <div className="flex items-center justify-between px-4 pt-4">
-                  <span className="text-small font-medium text-muted-foreground">
+                <div className="flex items-center justify-between px-card pt-card">
+                  <h2 className="text-small font-medium text-muted-foreground">
                     {item.label}
-                  </span>
+                  </h2>
                   {Icon ? <Icon className="size-4 text-muted-foreground" /> : null}
                 </div>
                 <StatCount client={client} item={item} />
@@ -524,7 +524,7 @@ function StatCount({ client, item }: { client: ReturnType<typeof useKon10>['clie
   )
   const value = item.cardinality === 'many' ? (count.data?.total ?? '—') : '—'
   return (
-    <div className="px-4 pb-4 pt-1.5 text-3xl font-semibold tracking-[-0.02em]">
+    <div className="px-card pb-card pt-tight text-3xl font-semibold tracking-[-0.02em]">
       {count.loading ? '·' : value}
     </div>
   )
@@ -554,31 +554,33 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
   const newHref = `${base}/${segment}/${slug}/new`
   // A module may register a full list-view replacement for this slug (e.g.
   // @kon10/media's thumbnail grid) — falls back to the generic table.
-  const ListComponent = ext.listRendererFor(slug)?.Component ?? EntityList
+  const listExtension = ext.listRendererFor(slug)
+  const ListComponent = listExtension?.Component ?? EntityList
+  const managesCreate = listExtension?.managesCreate === true
   return (
     <>
       <Slot zone="list.before" entity={entity.data} data={{ rows: list }} />
       <PageHeader
         title={entity.data.label}
         actions={
-          canCreate ? (
+          canCreate && total > 0 && !managesCreate ? (
             <Button asChild size="sm">
               <Link to={newHref}>
-                <Plus /> New
+                <Plus /> New {entity.data.singularLabel.toLowerCase()}
               </Link>
             </Button>
           ) : undefined
         }
       />
-      {total === 0 ? (
+      {total === 0 && !listExtension ? (
         <EmptyState
-          title={`No ${entity.data.label.toLowerCase()} yet`}
-          description={`Create your first to start managing ${entity.data.label.toLowerCase()}.`}
+          title={`No ${entity.data.emptyLabel.toLowerCase()} yet`}
+          description={`Create your first ${entity.data.singularLabel.toLowerCase()} to get started.`}
           action={
             canCreate ? (
               <Button asChild size="sm" className="mt-stack">
                 <Link to={newHref}>
-                  <Plus /> New
+                  <Plus /> New {entity.data.singularLabel.toLowerCase()}
                 </Link>
               </Button>
             ) : undefined
@@ -590,6 +592,8 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
             <ListComponent
               entity={asEntity(entity.data)}
               rows={list}
+              canCreate={canCreate}
+              onRefresh={rows.reload}
               getEditHref={(id) => `${base}/${segment}/${slug}/${id}`}
               onDelete={
                 // List renderers own the confirmation (shared ConfirmDialog),
@@ -633,24 +637,32 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
 function CreateView({ slug, base, segment }: { slug: string; base: string; segment: string }) {
   const { client } = useKon10()
   const navigate = useNavigate()
+  const managesCreate = useExtensions().listRendererFor(slug)?.managesCreate === true
   const entity = useAsync(() => client.entity(slug), [slug])
   const formWidth = useFormWidth(entity.data, entity.data ? asEntity(entity.data).fields : [])
+  const listHref = `${base}/${segment}/${slug}`
+
+  useEffect(() => {
+    if (managesCreate) void navigate({ to: listHref, replace: true })
+  }, [listHref, managesCreate, navigate])
+
+  if (managesCreate) return <LoadingState />
 
   if (entity.loading) return <LoadingState />
   if (!entity.data) return <p className="text-small text-muted-foreground">Entity not found.</p>
 
-  const toList = () => navigate({ to: `${base}/${segment}/${slug}` })
+  const toList = () => navigate({ to: listHref })
 
   return (
     <div {...(formWidth === 'narrow' ? FORM_PAGE_NARROW : {})}>
-      <PageHeader title={`New ${entity.data.label.toLowerCase()}`} />
+      <PageHeader title={`New ${entity.data.singularLabel.toLowerCase()}`} />
       <EntityForm
         fields={asEntity(entity.data).fields}
-        submitLabel={`Create ${entity.data.label}`}
+        submitLabel={`Create ${entity.data.singularLabel}`}
         entity={asEntity(entity.data)}
         onSubmit={async (values) => {
           await client.create(slug, values)
-          toast.success(`${entity.data!.label} created.`)
+          toast.success(`${entity.data!.singularLabel} created.`)
           await toList()
         }}
         onCancel={toList}
@@ -677,7 +689,7 @@ function EditView({ slug, id, base, segment }: { slug: string; id: string; base:
 
   return (
     <div {...(formWidth === 'narrow' ? FORM_PAGE_NARROW : {})}>
-      <PageHeader title={`Edit ${entity.data.label.toLowerCase()}`} />
+      <PageHeader title={`Edit ${entity.data.singularLabel.toLowerCase()}`} />
       <EntityForm
         fields={asEntity(entity.data).fields}
         submitLabel="Save changes"

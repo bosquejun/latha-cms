@@ -37,7 +37,7 @@ test('creating a post persists it to the list', async () => {
   const title = `E2E Created ${stamp}`
   await page.goto(`${BASE_URL}/studio/content/posts/new`, { waitUntil: 'networkidle' })
   await page.getByLabel(/^Title/).first().fill(title)
-  await page.getByRole('button', { name: /create posts/i }).click()
+  await page.getByRole('button', { name: 'Create Post' }).click()
 
   // The app redirects to the list on success.
   await page.waitForURL('**/studio/content/posts', { timeout: 20_000 })
@@ -51,7 +51,7 @@ test('editing a post saves the new title', async () => {
   // Create it first.
   await page.goto(`${BASE_URL}/studio/content/posts/new`, { waitUntil: 'networkidle' })
   await page.getByLabel(/^Title/).first().fill(title)
-  await page.getByRole('button', { name: /create posts/i }).click()
+  await page.getByRole('button', { name: 'Create Post' }).click()
   await page.waitForURL('**/studio/content/posts', { timeout: 20_000 })
 
   // Open its edit form.

@@ -24,8 +24,8 @@ export interface EntityStudioConfig {
   useAsTitle?: string
   /** Default fields shown as columns in the list view. */
   defaultColumns?: string[]
-  /** Optional plural/singular label overrides. */
-  labels?: { singular?: string; plural?: string }
+  /** Optional singular/plural labels plus countable wording for empty states. */
+  labels?: { singular?: string; plural?: string; empty?: string }
   /** Hide this entity from the Studio nav. */
   hidden?: boolean
   /**

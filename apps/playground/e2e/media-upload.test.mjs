@@ -47,7 +47,7 @@ test('a post saves with an uploaded featured image', async () => {
   await page.locator('input[type="file"]').first().setInputFiles(fixture)
   await page.locator('img[src*="/uploads/"]').first().waitFor({ state: 'visible', timeout: 20_000 })
 
-  await page.getByRole('button', { name: /create posts/i }).click()
+  await page.getByRole('button', { name: 'Create Post' }).click()
   await page.waitForURL('**/studio/content/posts', { timeout: 20_000 })
   await visibleLink(page, title).first().waitFor({ state: 'visible', timeout: 10_000 })
 

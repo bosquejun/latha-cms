@@ -115,16 +115,16 @@ export default function ApiKeys() {
         title="API Keys"
         description="Bearer credentials for the public delivery API. A key carries exactly the permissions of its roles."
         actions={
-          <Button onClick={() => setCreateOpen(true)}>
+          sorted.length > 0 ? <Button onClick={() => setCreateOpen(true)}>
             <Plus className="size-4" /> Create key
-          </Button>
+          </Button> : undefined
         }
       />
 
       {keys.loading ? (
         <LoadingState />
       ) : keys.error ? (
-        <Card className="p-6 text-sm text-destructive">{keys.error}</Card>
+        <Card className="p-card text-sm text-destructive">{keys.error}</Card>
       ) : sorted.length === 0 ? (
         <EmptyState
           icon={KeyRound}
@@ -141,15 +141,15 @@ export default function ApiKeys() {
           {/* ── Mobile (< md): stacked cards, same pattern as EntityList ──── */}
           <ul className="divide-y divide-border md:hidden">
             {sorted.map((doc) => (
-              <li key={doc.id} className="flex flex-col gap-2 p-4">
-                <div className="flex items-start justify-between gap-3">
+              <li key={doc.id} className="flex flex-col gap-inline p-sidebar">
+                <div className="flex items-start justify-between gap-group">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{asStr(doc.name)}</p>
+                    <h2 className="truncate text-h3 font-semibold">{asStr(doc.name)}</h2>
                     <code className="text-xs text-muted-foreground">
                       {asStr(doc.prefix)}…
                     </code>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-inline">
                     <Switch
                       checked={doc.enabled !== false}
                       onChange={() => void toggleEnabled(doc)}
@@ -167,7 +167,7 @@ export default function ApiKeys() {
                   </div>
                 </div>
                 {asIds(doc.roles).length > 0 && (
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-stack">
                     {roleNames(roles.data, asIds(doc.roles)).map((name) => (
                       <Badge key={name} variant="secondary">
                         {name}
@@ -201,7 +201,7 @@ export default function ApiKeys() {
                     </code>
                   </TD>
                   <TD>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-stack">
                       {roleNames(roles.data, asIds(doc.roles)).map((name) => (
                         <Badge key={name} variant="secondary">
                           {name}
@@ -256,7 +256,7 @@ export default function ApiKeys() {
               <code className="text-xs">Authorization: Bearer …</code>.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center gap-2 rounded-md border bg-muted/40 p-3">
+          <div className="flex items-center gap-inline rounded-md border bg-muted/40 p-group">
             <code className="min-w-0 flex-1 break-all text-xs">{mintedToken}</code>
             {mintedToken ? <CopyButton value={mintedToken} /> : null}
           </div>
@@ -336,7 +336,7 @@ function CreateKeyDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <label className="block space-y-1.5 text-sm font-medium">
+          <label className="block space-y-tight text-sm font-medium">
             Name
             <Input
               value={name}
@@ -345,14 +345,14 @@ function CreateKeyDialog({
               autoFocus
             />
           </label>
-          <div className="space-y-1.5">
-            <div className="text-sm font-medium">Roles</div>
-            <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border p-2">
+          <fieldset className="space-y-tight">
+            <legend className="text-sm font-medium">Roles</legend>
+            <div className="max-h-48 space-y-stack overflow-y-auto rounded-md border p-inline">
               {roles.map((role) => (
                 <label
                   key={role.id}
                   className={cn(
-                    'flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm',
+                    'flex min-h-11 cursor-pointer items-center gap-inline rounded px-inline py-tight text-sm md:min-h-0',
                     'hover:bg-muted/60',
                   )}
                 >
@@ -365,7 +365,7 @@ function CreateKeyDialog({
                 </label>
               ))}
             </div>
-          </div>
+          </fieldset>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
         </div>
         <DialogFooter>
