@@ -13,6 +13,8 @@ import { fieldRegistry } from '../fields/registry.js'
 import type { FieldTypeEntry } from '../fields/registry.js'
 import { consoleLogger, redactLogger } from '../logger/index.js'
 import type { Logger } from '../logger/index.js'
+import { noopTracer } from '../tracing/index.js'
+import type { Tracer } from '../tracing/index.js'
 import { ModuleRegistry } from '../registry/index.js'
 import type { CacheAdapter, StorageAdapter } from '../types/adapter.js'
 import type { Entity } from '../types/entity.js'
@@ -65,6 +67,7 @@ class Kon10 implements Kon10Instance {
   readonly config: ResolvedConfig
   readonly db: ResolvedConfig['db']
   readonly logger: Logger
+  tracer: Tracer = noopTracer
   storage?: StorageAdapter
   cache?: CacheAdapter
   modules: Module[] = []
@@ -101,6 +104,10 @@ class Kon10 implements Kon10Instance {
 
   registerCacheAdapter(adapter: CacheAdapter): void {
     this.cache = adapter
+  }
+
+  registerTracer(tracer: Tracer): void {
+    this.tracer = tracer
   }
 
   async boot(): Promise<this> {

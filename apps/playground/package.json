@@ -18,6 +18,7 @@
     "@kon10/content": "workspace:^",
     "@kon10/core": "workspace:^",
     "@kon10/media": "workspace:^",
+    "@kon10/sentry": "workspace:^",
     "@kon10/slug": "workspace:^",
     "@kon10/start": "workspace:^",
     "@kon10/storage": "workspace:^",

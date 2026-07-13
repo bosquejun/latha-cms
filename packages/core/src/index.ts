@@ -51,6 +51,17 @@ export {
   redactKeysSchema,
 } from './logger/index.js'
 
+// Tracing
+export {
+  SpanStatusCode,
+  type SpanStatus,
+  type SpanAttributeValue,
+  type Span,
+  type Tracer,
+  noopTracer,
+  withSpan,
+} from './tracing/index.js'
+
 // Registry
 export { ModuleRegistry } from './registry/index.js'
 
