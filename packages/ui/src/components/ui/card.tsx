@@ -28,9 +28,16 @@ function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
   )
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
+type CardTitleElement = 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'div'
+
+interface CardTitleProps extends React.HTMLAttributes<HTMLElement> {
+  /** Semantic heading level; defaults to the page-section level. */
+  as?: CardTitleElement
+}
+
+function CardTitle({ as: Comp = 'h2', className, ...props }: CardTitleProps) {
   return (
-    <div
+    <Comp
       data-slot="card-title"
       className={cn('text-h2 font-semibold', className)}
       {...props}
@@ -73,6 +80,7 @@ export {
   CardHeader,
   CardFooter,
   CardTitle,
+  type CardTitleProps,
   CardDescription,
   CardContent,
 }

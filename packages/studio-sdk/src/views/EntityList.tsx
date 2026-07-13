@@ -39,6 +39,10 @@ export interface EntityListProps {
   rows: EntityRow[]
   getEditHref: (id: string) => string
   onDelete?: (id: string) => void
+  /** Whether the current user may create rows. */
+  canCreate?: boolean
+  /** Refresh the host list after an extension-owned mutation. */
+  onRefresh?: () => void
   busy?: boolean
 }
 
@@ -94,6 +98,16 @@ export function EntityList({
   const columns = resolveColumns(entity)
   const titleCol = entity.useAsTitle ?? columns[0]
   const colType = new Map(entity.fields.map((f) => [f.name, f.type]))
+  const rowById = new Map(rows.map((row) => [row.id, row]))
+
+  const renderValue = (row: EntityRow, column: string) => {
+    const value = row[column]
+    if (entity.hierarchical && column === 'parent' && typeof value === 'string') {
+      const parent = rowById.get(value)
+      if (parent) return renderCell(parent[titleCol ?? 'id'] ?? parent.id)
+    }
+    return renderCell(value, colType.get(column))
+  }
 
   const pendingRow = rows.find((r) => r.id === pendingDeleteId)
   const pendingLabel = pendingRow
@@ -104,7 +118,7 @@ export function EntityList({
     String(row[titleCol ?? 'id'] ?? row.id)
 
   const rowActions = (row: EntityRow) => (
-    <div className="flex shrink-0 items-center justify-end gap-1">
+    <div className="flex shrink-0 items-center justify-end gap-stack">
       <Button
         asChild
         size="icon-sm"
@@ -137,8 +151,8 @@ export function EntityList({
   if (rows.length === 0) {
     return (
       <EmptyState
-        title={`No ${entity.label.toLowerCase()} yet`}
-        description={`Create your first to start managing ${entity.label.toLowerCase()}.`}
+        title={`No ${entity.emptyLabel.toLowerCase()} yet`}
+        description={`Create your first ${entity.singularLabel.toLowerCase()} to get started.`}
       />
     )
   }
@@ -153,13 +167,15 @@ export function EntityList({
         {rows.map((row) => {
           const detailCols = columns.filter((col) => col !== titleCol)
           return (
-            <li key={row.id} className="flex flex-col gap-2 p-4">
-              <div className="flex items-start justify-between gap-3">
+            <li key={row.id} className="flex flex-col gap-inline p-sidebar">
+              <div className="flex items-start justify-between gap-group">
                 <a
                   href={getEditHref(row.id)}
-                  className="min-w-0 flex-1 py-1 font-medium text-foreground"
+                  className="flex min-h-11 min-w-0 flex-1 items-center py-stack font-medium text-foreground"
                 >
-                  {renderCell(row[titleCol ?? 'id'] ?? row.id, colType.get(titleCol ?? ''))}
+                  <h2 className="truncate text-small font-medium">
+                    {renderValue(row, titleCol ?? 'id')}
+                  </h2>
                 </a>
                 {onDelete && (
                   <Button
@@ -175,12 +191,12 @@ export function EntityList({
                 )}
               </div>
               {detailCols.length > 0 && (
-                <dl className="flex flex-col gap-1">
+                <dl className="flex flex-col gap-stack">
                   {detailCols.map((col) => (
-                    <div key={col} className="flex items-baseline gap-2 text-small">
+                    <div key={col} className="flex items-baseline gap-inline text-small">
                       <dt className="shrink-0 text-muted-foreground">{humanize(col)}</dt>
                       <dd className="min-w-0 truncate">
-                        {renderCell(row[col], colType.get(col))}
+                        {renderValue(row, col)}
                       </dd>
                     </div>
                   ))}
@@ -214,10 +230,10 @@ export function EntityList({
                       href={getEditHref(row.id)}
                       className="font-medium text-foreground hover:underline"
                     >
-                      {renderCell(row[col], colType.get(col))}
+                      {renderValue(row, col)}
                     </a>
                   ) : (
-                    renderCell(row[col], colType.get(col))
+                    renderValue(row, col)
                   )}
                 </TD>
               ))}

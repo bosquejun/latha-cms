@@ -5,15 +5,16 @@
  * need to know media exists — the same extension-first pattern as the
  * `media` field renderer.
  */
-import { useState } from 'react'
-import { Button, ConfirmDialog } from '@kon10/ui'
+import { useRef, useState } from 'react'
+import { Button, ConfirmDialog, toast } from '@kon10/ui'
 import {
   EmptyState,
   defineEntityListConfig,
+  useKon10,
   type EntityListProps,
 } from '@kon10/studio-sdk'
 
-export const config = defineEntityListConfig({ slug: 'media' })
+export const config = defineEntityListConfig({ slug: 'media', managesCreate: true })
 
 /** Trash glyph for the per-thumbnail delete action. Inlined to avoid an icon dep. */
 function TrashIcon({ className }: { className?: string }) {
@@ -37,22 +38,70 @@ function TrashIcon({ className }: { className?: string }) {
   )
 }
 
-export default function MediaLibraryList({ rows, getEditHref, onDelete, busy }: EntityListProps) {
+export default function MediaLibraryList({
+  rows,
+  getEditHref,
+  onDelete,
+  canCreate,
+  onRefresh,
+  busy,
+}: EntityListProps) {
+  const { client } = useKon10()
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
   const pendingRow = rows.find((r) => r.id === pendingDeleteId)
+
+  async function upload(files: FileList | null) {
+    if (!files?.length) return
+    setUploading(true)
+    try {
+      for (const file of Array.from(files)) await client.upload(file)
+      toast.success(`${files.length} ${files.length === 1 ? 'file' : 'files'} uploaded.`)
+      onRefresh?.()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Upload failed.')
+    } finally {
+      setUploading(false)
+      if (inputRef.current) inputRef.current.value = ''
+    }
+  }
+
+  const uploadControl = canCreate ? (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        className="hidden"
+        tabIndex={-1}
+        aria-hidden="true"
+        onChange={(event) => void upload(event.target.files)}
+      />
+      <Button type="button" loading={uploading} onClick={() => inputRef.current?.click()}>
+        Upload files
+      </Button>
+    </>
+  ) : undefined
 
   if (rows.length === 0) {
     return (
       <EmptyState
         title="No media yet"
         description="Upload your first file to start building the library."
+        action={uploadControl}
       />
     )
   }
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-4 p-card sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+      {uploadControl && (
+        <div className="flex justify-end border-b border-border px-card pb-card">
+          {uploadControl}
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-card-gap p-card sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
         {rows.map((row) => {
           const url = typeof row.url === 'string' ? row.url : undefined
           const mimeType = typeof row.mimeType === 'string' ? row.mimeType : undefined
@@ -60,7 +109,7 @@ export default function MediaLibraryList({ rows, getEditHref, onDelete, busy }: 
           const isImage = mimeType?.startsWith('image/') ?? false
 
           return (
-            <div key={row.id} className="group relative flex flex-col gap-1.5">
+            <div key={row.id} className="group relative flex flex-col gap-tight">
               <a
                 href={getEditHref(row.id)}
                 className="block aspect-square overflow-hidden rounded-md border bg-muted"
@@ -72,7 +121,7 @@ export default function MediaLibraryList({ rows, getEditHref, onDelete, busy }: 
                     className="h-full w-full object-cover transition-transform group-hover:scale-105"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center p-2 text-center text-caption text-muted-foreground">
+                  <div className="flex h-full w-full items-center justify-center p-inline text-center text-caption text-muted-foreground">
                     {filename}
                   </div>
                 )}
@@ -82,7 +131,7 @@ export default function MediaLibraryList({ rows, getEditHref, onDelete, busy }: 
                 className="truncate text-caption text-foreground hover:underline"
                 title={filename}
               >
-                {filename}
+                <h2 className="truncate text-caption font-medium">{filename}</h2>
               </a>
               {onDelete && (
                 // Hover-revealed on fine pointers; always visible on touch
@@ -96,7 +145,7 @@ export default function MediaLibraryList({ rows, getEditHref, onDelete, busy }: 
                   disabled={busy}
                   aria-label={`Delete ${filename}`}
                   title="Delete"
-                  className="absolute right-1 top-1 bg-background/80 opacity-0 shadow-xs backdrop-blur-sm transition-opacity focus-visible:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100"
+                  className="absolute right-stack top-stack bg-background/80 opacity-0 shadow-xs backdrop-blur-sm transition-opacity focus-visible:opacity-100 group-hover:opacity-100 max-md:opacity-100 pointer-coarse:opacity-100"
                   onClick={(e) => {
                     e.preventDefault()
                     setPendingDeleteId(row.id)

@@ -23,7 +23,19 @@ import {
 } from '@lexical/list'
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link'
 import { $findMatchingParent, $insertNodeToNearestRoot } from '@lexical/utils'
-import { Button, Separator, Spinner, toast } from '@kon10/ui'
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  Separator,
+  Spinner,
+  toast,
+} from '@kon10/ui'
 import {
   Bold,
   Code,
@@ -35,6 +47,8 @@ import {
   Link2,
   List,
   ListOrdered,
+  MoreHorizontal,
+  Pilcrow,
   Quote,
   Redo2,
   Strikethrough,
@@ -122,6 +136,30 @@ export function ToolbarPlugin() {
     })
   }, [editor, blockType])
 
+  const formatParagraph = useCallback(() => {
+    editor.update(() => {
+      const selection = $getSelection()
+      if (!$isRangeSelection(selection)) return
+      $setBlocksType(selection, () => $createParagraphNode())
+    })
+  }, [editor])
+
+  const toggleBulletList = useCallback(() => {
+    if (blockType === 'bullet') {
+      editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined)
+    } else {
+      editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)
+    }
+  }, [blockType, editor])
+
+  const toggleNumberedList = useCallback(() => {
+    if (blockType === 'number') {
+      editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined)
+    } else {
+      editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)
+    }
+  }, [blockType, editor])
+
   const toggleLink = useCallback(() => {
     if (isLink) {
       editor.dispatchCommand(TOGGLE_LINK_COMMAND, null)
@@ -151,8 +189,201 @@ export function ToolbarPlugin() {
     [client, editor],
   )
 
+  const hasOverflowFormat =
+    isUnderline ||
+    isStrikethrough ||
+    isCode ||
+    ['h2', 'h3', 'h4', 'quote', 'bullet', 'number'].includes(blockType)
+
   return (
-    <div className="flex flex-wrap items-center gap-0.5 border-b border-input px-2 py-1.5">
+    <div className="border-b border-input px-inline py-tight">
+      <div
+        className="flex items-center gap-0.5 md:hidden"
+        role="toolbar"
+        aria-label="Text formatting"
+      >
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          onClick={() => editor.dispatchCommand(UNDO_COMMAND, undefined)}
+          aria-label="Undo"
+          title="Undo"
+        >
+          <Undo2 className="size-4" />
+        </Button>
+        <Button
+          type="button"
+          size="icon"
+          variant={isBold ? 'secondary' : 'ghost'}
+          onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold')}
+          aria-label="Bold"
+          aria-pressed={isBold}
+          title="Bold"
+        >
+          <Bold className="size-4" />
+        </Button>
+        <Button
+          type="button"
+          size="icon"
+          variant={isItalic ? 'secondary' : 'ghost'}
+          onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic')}
+          aria-label="Italic"
+          aria-pressed={isItalic}
+          title="Italic"
+        >
+          <Italic className="size-4" />
+        </Button>
+        <Button
+          type="button"
+          size="icon"
+          variant={isLink ? 'secondary' : 'ghost'}
+          onClick={toggleLink}
+          aria-label={isLink ? 'Remove link' : 'Add link'}
+          aria-pressed={isLink}
+          title={isLink ? 'Remove link' : 'Add link'}
+        >
+          <Link2 className="size-4" />
+        </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              size="icon"
+              variant={hasOverflowFormat ? 'secondary' : 'ghost'}
+              aria-label="More formatting options"
+              title="More formatting options"
+            >
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            collisionPadding={16}
+            className="max-h-[var(--radix-dropdown-menu-content-available-height)] w-64 overscroll-contain overflow-y-auto"
+          >
+            <DropdownMenuLabel>History</DropdownMenuLabel>
+            <DropdownMenuItem
+              className="min-h-11"
+              onSelect={() => editor.dispatchCommand(REDO_COMMAND, undefined)}
+            >
+              <Redo2 />
+              Redo
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Text style</DropdownMenuLabel>
+            <DropdownMenuCheckboxItem
+              className="min-h-11"
+              checked={isUnderline}
+              onCheckedChange={() =>
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline')
+              }
+            >
+              <Underline className="size-4" />
+              Underline
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              className="min-h-11"
+              checked={isStrikethrough}
+              onCheckedChange={() =>
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough')
+              }
+            >
+              <Strikethrough className="size-4" />
+              Strikethrough
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              className="min-h-11"
+              checked={isCode}
+              onCheckedChange={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code')}
+            >
+              <Code className="size-4" />
+              Inline code
+            </DropdownMenuCheckboxItem>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Block style</DropdownMenuLabel>
+            <DropdownMenuCheckboxItem
+              className="min-h-11"
+              checked={blockType === 'paragraph'}
+              onCheckedChange={formatParagraph}
+            >
+              <Pilcrow className="size-4" />
+              Paragraph
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              className="min-h-11"
+              checked={blockType === 'h2'}
+              onCheckedChange={() => formatHeading('h2')}
+            >
+              <Heading2 className="size-4" />
+              Heading 2
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              className="min-h-11"
+              checked={blockType === 'h3'}
+              onCheckedChange={() => formatHeading('h3')}
+            >
+              <Heading3 className="size-4" />
+              Heading 3
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              className="min-h-11"
+              checked={blockType === 'h4'}
+              onCheckedChange={() => formatHeading('h4')}
+            >
+              <Heading4 className="size-4" />
+              Heading 4
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              className="min-h-11"
+              checked={blockType === 'quote'}
+              onCheckedChange={formatQuote}
+            >
+              <Quote className="size-4" />
+              Blockquote
+            </DropdownMenuCheckboxItem>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Lists</DropdownMenuLabel>
+            <DropdownMenuCheckboxItem
+              className="min-h-11"
+              checked={blockType === 'bullet'}
+              onCheckedChange={toggleBulletList}
+            >
+              <List className="size-4" />
+              Bullet list
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              className="min-h-11"
+              checked={blockType === 'number'}
+              onCheckedChange={toggleNumberedList}
+            >
+              <ListOrdered className="size-4" />
+              Numbered list
+            </DropdownMenuCheckboxItem>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Insert</DropdownMenuLabel>
+            <DropdownMenuItem
+              className="min-h-11"
+              disabled={uploading}
+              onSelect={() => fileInputRef.current?.click()}
+            >
+              {uploading ? <Spinner className="size-4" /> : <ImagePlus className="size-4" />}
+              {uploading ? 'Uploading image…' : 'Image'}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <div
+        className="hidden flex-wrap items-center gap-0.5 md:flex"
+        role="toolbar"
+        aria-label="Text formatting"
+      >
       <Button
         type="button"
         size="icon"
@@ -332,11 +563,15 @@ export function ToolbarPlugin() {
           <ImagePlus className="h-3.5 w-3.5" />
         )}
       </Button>
+      </div>
+
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
         className="hidden"
+        aria-hidden="true"
+        tabIndex={-1}
         onChange={(e) => {
           const file = e.target.files?.[0]
           if (file) void insertImage(file)

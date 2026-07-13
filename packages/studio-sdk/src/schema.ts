@@ -22,7 +22,12 @@ export interface StudioEntity {
   slug: string
   kind: EntityKind
   label: string
+  singularLabel: string
+  pluralLabel: string
+  emptyLabel: string
   fields: Field[]
+  /** Whether this collection stores self-referential parent/child rows. */
+  hierarchical?: boolean
   /** Field used as the row title in list views. */
   useAsTitle?: string
   /** Columns shown by default in the list view. */
@@ -44,18 +49,49 @@ function kindOf(entity: Entity): EntityKind {
   return entity.cardinality === 'single' ? 'document' : 'collection'
 }
 
-function labelOf(entity: Entity): string {
+/** A conservative English fallback for collection labels without overrides. */
+export function singularizeLabel(label: string): string {
+  if (/ies$/i.test(label)) return label.replace(/ies$/i, 'y')
+  if (/(ches|shes|xes|zes|ses)$/i.test(label)) return label.replace(/es$/i, '')
+  if (/s$/i.test(label) && !/ss$/i.test(label)) return label.replace(/s$/i, '')
+  return label
+}
+
+export interface EntityLabels {
+  singular: string
+  plural: string
+  empty: string
+}
+
+/** Resolve explicit Studio labels with stable singular/plural fallbacks. */
+export function labelsOf(entity: Entity): EntityLabels {
   const labels = entity.studio?.labels
-  if (entity.cardinality === 'single') return labels?.singular ?? humanize(entity.slug)
-  return labels?.plural ?? humanize(entity.slug)
+  const fallback = humanize(entity.slug)
+  if (entity.cardinality === 'single') {
+    const singular = labels?.singular ?? fallback
+    const plural = labels?.plural ?? singular
+    return { singular, plural, empty: labels?.empty ?? plural }
+  }
+
+  const plural = labels?.plural ?? fallback
+  return {
+    singular: labels?.singular ?? singularizeLabel(plural),
+    plural,
+    empty: labels?.empty ?? plural,
+  }
 }
 
 export function describeEntity(entity: Entity): StudioEntity {
+  const labels = labelsOf(entity)
   return {
     slug: entity.slug,
     kind: kindOf(entity),
-    label: labelOf(entity),
+    label: entity.cardinality === 'single' ? labels.singular : labels.plural,
+    singularLabel: labels.singular,
+    pluralLabel: labels.plural,
+    emptyLabel: labels.empty,
     fields: entity.fields,
+    hierarchical: entity.hierarchical,
     useAsTitle: entity.studio?.useAsTitle,
     defaultColumns: entity.studio?.defaultColumns,
     formWidth: entity.studio?.formWidth,

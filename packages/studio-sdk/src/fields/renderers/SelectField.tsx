@@ -56,7 +56,7 @@ export function SelectField({
         <div
           role="radiogroup"
           aria-label={field.meta?.label ?? humanize(field.name)}
-          className="flex w-full items-center gap-1 rounded-md bg-muted p-1"
+          className="flex w-full items-center gap-stack rounded-md bg-muted p-stack"
         >
           {options.map((o) => {
             const active = current === o.value
@@ -69,7 +69,7 @@ export function SelectField({
                 aria-checked={active}
                 onClick={() => onChange(o.value)}
                 className={cn(
-                  'inline-flex h-7 flex-1 items-center justify-center gap-1.5 rounded-sm px-3 text-sm font-medium transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
+                  'inline-flex h-11 min-h-11 flex-1 items-center justify-center gap-tight rounded-sm px-group text-sm font-medium transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 md:h-7 md:min-h-0',
                   active
                     ? 'bg-background text-foreground shadow-xs'
                     : 'text-muted-foreground hover:text-foreground',

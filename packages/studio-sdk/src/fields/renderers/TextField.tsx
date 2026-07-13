@@ -45,10 +45,10 @@ export function TextField({
     // partial/empty one has nothing to derive from (shadesOf returns []).
     const shades = field.meta?.shades ? shadesOf(stringValue) : []
     control = (
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-inline">
+        <div className="flex items-center gap-inline">
           <label
-            className="relative block size-9 shrink-0 cursor-pointer overflow-hidden rounded-md border border-input shadow-xs focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50"
+            className="relative block size-11 shrink-0 cursor-pointer overflow-hidden rounded-md border border-input shadow-xs focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 md:size-9"
             style={{ backgroundColor: swatchColor }}
           >
             <span className="sr-only">Pick a color</span>
@@ -71,21 +71,22 @@ export function TextField({
           />
         </div>
         {shades.length > 0 && (
-          <div className="flex gap-1" role="group" aria-label="Shades">
-            {shades.map((shade, i) => (
+          <div className="grid grid-cols-5 gap-tight sm:grid-cols-9" role="group" aria-label="Primary color shades">
+            {shades.map((shade) => (
               <button
-                key={`${shade}-${i}`}
+                key={shade.step}
                 type="button"
-                title={shade}
-                onClick={() => onChange(shade)}
+                title={`${shade.step}: ${shade.hex}${shade.isBase ? ' (base)' : ''}`}
+                aria-label={`Use shade ${shade.step}, ${shade.hex}${shade.isBase ? ', current base color' : ''}`}
+                onClick={() => onChange(shade.hex)}
                 className={cn(
-                  'h-6 flex-1 cursor-pointer rounded-sm border transition-transform hover:scale-y-110',
-                  shade.toLowerCase() === stringValue.toLowerCase()
-                    ? 'border-ring ring-2 ring-ring/50'
-                    : 'border-input',
+                  'flex min-h-11 cursor-pointer flex-col overflow-hidden rounded-md border border-input bg-background text-[10px] font-medium text-muted-foreground outline-none transition-transform hover:-translate-y-0.5 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
+                  shade.isBase && 'border-ring ring-2 ring-ring/40',
                 )}
-                style={{ backgroundColor: shade }}
-              />
+              >
+                <span className="h-6 w-full" style={{ backgroundColor: shade.hex }} />
+                <span className="flex flex-1 items-center">{shade.step}</span>
+              </button>
             ))}
           </div>
         )}

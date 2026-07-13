@@ -47,7 +47,7 @@ export function EmptyState({ icon = FileStackIcon, title, description, action }:
         <Icon ref={iconRef} />
       </div>
       <div>
-        <h3 className="text-small font-semibold">{title}</h3>
+        <h2 className="text-h3 font-semibold">{title}</h2>
         {description && (
           <p className="mx-auto mt-stack max-w-[360px] text-caption text-muted-foreground">
             {description}

@@ -112,6 +112,8 @@ export type EntityListComponent = ComponentType<EntityListProps>
 export interface EntityListConfig {
   /** The entity slug this list view replaces `<EntityList>` for (e.g. `media`). */
   slug: string
+  /** Custom list owns creation, such as an inline file uploader. */
+  managesCreate?: boolean
 }
 
 export interface EntityListRendererExtension extends EntityListConfig {

@@ -15,7 +15,7 @@ function Checkbox({ className, disabled, ...props }: CheckboxProps) {
     <span
       data-slot="checkbox"
       className={cn(
-        'relative inline-flex size-4 shrink-0 items-center justify-center',
+        'relative inline-flex size-11 shrink-0 items-center justify-center md:size-4',
         disabled && 'opacity-50',
         className,
       )}
@@ -23,8 +23,12 @@ function Checkbox({ className, disabled, ...props }: CheckboxProps) {
       <input
         type="checkbox"
         disabled={disabled}
-        className="peer size-4 cursor-pointer appearance-none rounded-[4px] border border-input bg-background shadow-2xs outline-none transition-colors checked:border-primary checked:bg-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed"
+        className="peer absolute inset-0 size-full cursor-pointer appearance-none opacity-0 outline-none disabled:cursor-not-allowed"
         {...props}
+      />
+      <span
+        aria-hidden
+        className="pointer-events-none size-4 rounded-[4px] border border-input bg-background shadow-2xs transition-colors peer-checked:border-primary peer-checked:bg-primary peer-focus-visible:ring-[3px] peer-focus-visible:ring-ring/50"
       />
       <Check
         aria-hidden

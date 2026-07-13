@@ -94,7 +94,7 @@ export function LexicalEditor({ id, value, onChange, onBlur, lexicalConfig }: Le
     >
       <div ref={containerRef} className="relative rounded-md border border-input bg-background text-sm">
         <ToolbarPlugin />
-        <div className="relative px-3 py-2">
+        <div className="relative px-group py-inline">
           <RichTextPlugin
             contentEditable={
               <ContentEditable

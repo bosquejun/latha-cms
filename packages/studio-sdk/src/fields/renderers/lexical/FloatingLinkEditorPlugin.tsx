@@ -163,10 +163,10 @@ export function FloatingLinkEditorPlugin({ anchorRef }: FloatingLinkEditorPlugin
   return (
     <div
       style={{ position: 'absolute', top: pos.top, left: pos.left, zIndex: 50 }}
-      className="rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md"
+      className="rounded-md border border-border bg-popover p-stack text-popover-foreground shadow-md"
     >
       {editing ? (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-stack">
           <label className="flex items-center gap-1.5">
             <span className="w-8 shrink-0 text-caption text-muted-foreground">Text</span>
             <Input
@@ -210,7 +210,7 @@ export function FloatingLinkEditorPlugin({ anchorRef }: FloatingLinkEditorPlugin
             target="_blank"
             rel="noreferrer"
             onMouseDown={preventBlur}
-            className="max-w-60 truncate px-2 text-sm text-primary underline underline-offset-2"
+            className="max-w-60 truncate px-inline text-sm text-primary underline underline-offset-2"
             title={url}
           >
             {url}

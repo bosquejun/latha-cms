@@ -41,12 +41,16 @@ test('mergeExtensions concatenates distinct keys', () => {
 test('collectStudioExtensions assembles a list-view override from glob maps', () => {
   const ext = collectStudioExtensions({
     lists: {
-      '/a/lists/media.tsx': { default: Comp, config: { slug: 'media' } },
+      '/a/lists/media.tsx': {
+        default: Comp,
+        config: { slug: 'media', managesCreate: true },
+      },
       '/a/lists/skip.tsx': { default: Comp }, // no config -> dropped
     },
   })
   assert.equal(ext.lists?.length, 1)
   assert.equal(ext.lists?.at(0)?.slug, 'media')
+  assert.equal(ext.lists?.at(0)?.managesCreate, true)
   assert.equal(ext.lists?.at(0)?.Component, Comp)
 })
 

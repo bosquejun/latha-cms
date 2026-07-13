@@ -25,8 +25,17 @@ import type { FieldControlProps } from '../types.js'
 import { getFieldRenderer } from '../registry.js'
 import { isFieldVisible } from '../show-if.js'
 import { sparseDefaults } from '../defaults.js'
+import { FieldHeading, nextHeadingLevel } from '../FieldHeading.js'
 
-export function ArrayField({ field, id, value, onChange, onBlur, error }: FieldControlProps) {
+export function ArrayField({
+  field,
+  id,
+  value,
+  onChange,
+  onBlur,
+  error,
+  headingLevel = 2,
+}: FieldControlProps) {
   const children: Field[] = Array.isArray((field as Record<string, unknown>).fields)
     ? ((field as Record<string, unknown>).fields as Field[])
     : []
@@ -92,10 +101,10 @@ export function ArrayField({ field, id, value, onChange, onBlur, error }: FieldC
   return (
     <div className="flex flex-col gap-field">
       <div className="flex items-center justify-between gap-inline">
-        <p className="text-sm font-medium">
+        <FieldHeading level={headingLevel}>
           {label}
           {field.required && <span className="ml-1 text-destructive">*</span>}
-        </p>
+        </FieldHeading>
         <Button type="button" size="sm" variant="outline" onClick={addItem}>
           <Plus /> Add {itemLabel.toLowerCase()}
         </Button>
@@ -104,7 +113,7 @@ export function ArrayField({ field, id, value, onChange, onBlur, error }: FieldC
         <p className="text-caption text-muted-foreground">{field.meta.description}</p>
       )}
       {items.length === 0 ? (
-        <p className="rounded-md border border-dashed p-3 text-center text-sm text-muted-foreground">
+        <p className="rounded-md border border-dashed p-group text-center text-sm text-muted-foreground">
           No {label.toLowerCase()} yet.
         </p>
       ) : (
@@ -114,21 +123,26 @@ export function ArrayField({ field, id, value, onChange, onBlur, error }: FieldC
             <Card key={index} className={cn(itemCollapsed && 'py-3')}>
               <CardContent className="flex flex-col gap-form">
                 <div className="flex items-center justify-between gap-inline">
-                  <button
-                    type="button"
-                    onClick={() => toggleCollapsed(index)}
-                    aria-expanded={!itemCollapsed}
-                    className="flex min-w-0 flex-1 items-center gap-1.5 text-caption font-medium text-muted-foreground hover:text-foreground"
+                  <FieldHeading
+                    level={nextHeadingLevel(headingLevel)}
+                    className="min-w-0 flex-1 text-caption font-medium text-muted-foreground"
                   >
-                    <ChevronDown
-                      className={cn(
-                        'size-3.5 shrink-0 transition-transform duration-150',
-                        itemCollapsed && '-rotate-90',
-                      )}
-                    />
-                    <span className="truncate">{itemTitle(item, index)}</span>
-                  </button>
-                  <div className="flex shrink-0 gap-1">
+                    <button
+                      type="button"
+                      onClick={() => toggleCollapsed(index)}
+                      aria-expanded={!itemCollapsed}
+                      className="flex min-h-11 w-full items-center gap-1.5 text-left hover:text-foreground md:min-h-0"
+                    >
+                      <ChevronDown
+                        className={cn(
+                          'size-3.5 shrink-0 transition-transform duration-150',
+                          itemCollapsed && '-rotate-90',
+                        )}
+                      />
+                      <span className="truncate">{itemTitle(item, index)}</span>
+                    </button>
+                  </FieldHeading>
+                  <div className="flex shrink-0 gap-stack">
                     <Button
                       type="button"
                       size="icon-sm"
@@ -177,6 +191,7 @@ export function ArrayField({ field, id, value, onChange, onBlur, error }: FieldC
                           onChange={(v) => setItem(index, child.name, v)}
                           onBlur={onBlur}
                           error={undefined}
+                          headingLevel={nextHeadingLevel(headingLevel)}
                         />
                       )
                     })}

@@ -80,7 +80,7 @@
   --success: oklch(0.696 0.17 149);
   --success-foreground: oklch(0.145 0 0);
   --warning: oklch(0.78 0.17 55);
-  --warning-foreground: oklch(0.145 0 0);
+  --warning-foreground: oklch(0.86 0.12 70);
 
   /* Navigation surfaces — one step lighter than the page background (the old
      --sidebar tokens, repointed at the shell navigation). */
@@ -139,6 +139,7 @@
   --space-tight: 0.375rem;             /* 6px  — compact atom padding (dropdown items, tabs) */
   --space-stack: var(--space-1);       /* nav item lists                                   */
   --space-nav: var(--space-4);         /* nav chrome inner padding (bars, menu sheet)      */
+  --space-sidebar: var(--space-4);     /* sidebar and compact list-card inner padding      */
   --space-empty: var(--space-10);      /* empty / placeholder state padding                */
 
   /* Container-awareness hook — set by any padded block container, inherited by children */
@@ -203,7 +204,7 @@
   --success: oklch(0.55 0.15 149);
   --success-foreground: oklch(0.985 0 0);
   --warning: oklch(0.7 0.18 55);
-  --warning-foreground: oklch(0.985 0 0);
+  --warning-foreground: oklch(0.35 0.1 55);
 
   --nav: oklch(0.99 0 0);
   --nav-foreground: oklch(0.205 0 0);
@@ -282,6 +283,7 @@
   --spacing-inline: var(--space-inline);
   --spacing-stack: var(--space-stack);
   --spacing-nav: var(--space-nav);
+  --spacing-sidebar: var(--space-sidebar);
   --spacing-empty: var(--space-empty);
 
   /* Layout constants -> width/height/max-width utilities */

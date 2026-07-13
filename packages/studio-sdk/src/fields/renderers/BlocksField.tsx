@@ -6,6 +6,7 @@ import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 import { getFieldRenderer } from '../registry.js'
 import { sparseDefaults } from '../defaults.js'
+import { FieldHeading, nextHeadingLevel } from '../FieldHeading.js'
 
 interface BlockDef {
   type: string
@@ -31,6 +32,7 @@ export function BlocksField({
   onChange,
   onBlur,
   error,
+  headingLevel = 2,
 }: FieldControlProps) {
   const items: BlockItem[] = Array.isArray(value) ? (value as BlockItem[]) : []
   const blockDefs: BlockDef[] = Array.isArray((field as Record<string, unknown>).blocks)
@@ -118,10 +120,10 @@ export function BlocksField({
   return (
     <div className="flex flex-col gap-field">
       <div className="flex items-center gap-inline">
-        <p className="text-sm font-medium">
+        <FieldHeading level={headingLevel}>
           {fieldLabel}
           {field.required && <span className="ml-1 text-destructive">*</span>}
-        </p>
+        </FieldHeading>
         {items.length > 0 && (
           <span className="text-caption text-muted-foreground">
             {items.length} block{items.length !== 1 ? 's' : ''}
@@ -130,7 +132,7 @@ export function BlocksField({
         {items.length > 1 && (
           <button
             type="button"
-            className="ml-auto text-caption text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+            className="ml-auto min-h-11 text-caption text-muted-foreground underline-offset-2 hover:text-foreground hover:underline md:min-h-0"
             onClick={toggleCollapseAll}
           >
             {allCollapsed ? 'Expand all' : 'Collapse all'}
@@ -139,10 +141,10 @@ export function BlocksField({
       </div>
 
       {items.length === 0 && blockDefs.length > 0 && !showPicker && (
-        <div className="flex flex-col items-center gap-3 rounded-lg border-2 border-dashed border-border py-10">
+        <div className="flex flex-col items-center gap-group rounded-lg border-2 border-dashed border-border py-10">
           <Layers className="h-8 w-8 text-muted-foreground/40" aria-hidden />
           <div className="text-center">
-            <p className="text-sm font-medium">No blocks yet</p>
+            <FieldHeading level={nextHeadingLevel(headingLevel)}>No blocks yet</FieldHeading>
             <p className="mt-0.5 text-caption text-muted-foreground">
               Add a block to start building this content area
             </p>
@@ -155,7 +157,7 @@ export function BlocksField({
       )}
 
       {items.length > 0 && (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-group">
           {items.map((item, index) => {
             const def = blockDefs.find((d) => d.type === item.type)
             if (!def) return null
@@ -164,16 +166,18 @@ export function BlocksField({
 
             return (
               <Card key={index} className="overflow-hidden py-0 gap-0">
-                <div className="flex items-center gap-2 border-b border-border bg-muted/20 px-3 py-2">
+                <div className="flex items-center gap-inline border-b border-border bg-muted/20 px-group py-inline">
                   {/* Drag handle (visual only) */}
                   <GripVertical
                     className="h-4 w-4 shrink-0 cursor-grab text-muted-foreground/40"
                     aria-hidden
                   />
 
-                  <Badge variant="secondary" className="shrink-0 text-xs">
-                    {def.label}
-                  </Badge>
+                  <FieldHeading level={nextHeadingLevel(headingLevel)} className="shrink-0">
+                    <Badge variant="secondary" className="text-xs">
+                      {def.label}
+                    </Badge>
+                  </FieldHeading>
 
                   {isCollapsed && preview && (
                     <span className="min-w-0 truncate text-sm text-muted-foreground">
@@ -251,6 +255,7 @@ export function BlocksField({
                           onChange={(v) => updateField(index, f.name, v)}
                           onBlur={onBlur}
                           error={undefined}
+                          headingLevel={nextHeadingLevel(headingLevel)}
                         />
                       )
                     })}
@@ -265,11 +270,14 @@ export function BlocksField({
       {blockDefs.length > 0 && (
         <div>
           {showPicker ? (
-            <div className="rounded-lg border border-border bg-muted/20 p-3">
+            <div className="rounded-lg border border-border bg-muted/20 p-group">
               <div className="mb-2.5 flex items-center justify-between">
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <FieldHeading
+                  level={nextHeadingLevel(headingLevel)}
+                  className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                >
                   Choose block type
-                </p>
+                </FieldHeading>
                 <Button
                   type="button"
                   size="icon-sm"
@@ -281,7 +289,7 @@ export function BlocksField({
                   <X className="h-3 w-3" />
                 </Button>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-inline">
                 {blockDefs.map((d) => (
                   <Button
                     key={d.type}

@@ -70,30 +70,64 @@ function hslToHex({ h, s, l }: Hsl): string {
 
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n))
 
+export const SHADE_STEPS = [100, 200, 300, 400, 500, 600, 700, 800, 900] as const
+export type ShadeStep = (typeof SHADE_STEPS)[number]
+
+export interface ColorShade {
+  step: ShadeStep
+  hex: string
+  isBase: boolean
+}
+
 /**
- * `count` lightness-derived shades of `hex`, lightest to darkest, with the
- * base color itself sitting at the middle index. Returns `[]` for an
- * incomplete/invalid hex (nothing to derive from yet).
+ * Target lightness anchors for a familiar 100-900 design-token scale. The
+ * supplied brand color is placed at the nearest anchor instead of always at
+ * 500: a deliberately dark primary such as #171717 therefore remains the
+ * exact 900 token while still producing useful lighter values.
  */
-export function shadesOf(hex: string, count = 7): string[] {
+const TARGET_LIGHTNESS: Record<ShadeStep, number> = {
+  100: 0.96,
+  200: 0.9,
+  300: 0.82,
+  400: 0.7,
+  500: 0.58,
+  600: 0.46,
+  700: 0.35,
+  800: 0.23,
+  900: 0.1,
+}
+
+/**
+ * A named 100-900 lightness scale derived from `hex`, lightest to darkest.
+ * The base color is preserved exactly at the nearest lightness anchor.
+ * Returns `[]` for an incomplete/invalid hex.
+ */
+export function shadesOf(hex: string): ColorShade[] {
   const base = hexToHsl(hex)
   if (!base) return []
-  const mid = Math.floor(count / 2)
-  const lightSteps = mid
-  const darkSteps = count - 1 - mid
+
+  const baseIndex = SHADE_STEPS.reduce((nearest, step, index) => {
+    const currentDistance = Math.abs(base.l - TARGET_LIGHTNESS[step])
+    const nearestDistance = Math.abs(base.l - TARGET_LIGHTNESS[SHADE_STEPS[nearest]!])
+    return currentDistance < nearestDistance ? index : nearest
+  }, 0)
+
   const lightCeiling = 0.96
-  const darkFloor = 0.08
-  return Array.from({ length: count }, (_, i) => {
-    const offset = i - mid
-    if (offset === 0) return hex
-    // Index before mid lightens toward `lightCeiling`; after mid darkens
-    // toward `darkFloor`. Each side interpolates over its own step count, so
-    // an uneven split (e.g. count=6, mid=3 -> 3 light, 2 dark) still reaches
-    // its floor/ceiling at the outermost swatch either side.
+  const darkFloor = 0.06
+  return SHADE_STEPS.map((step, index) => {
+    if (index === baseIndex) return { step, hex, isBase: true }
+
     const l =
-      offset < 0
-        ? base.l + (-offset / (lightSteps || 1)) * (lightCeiling - base.l)
-        : base.l - (offset / (darkSteps || 1)) * (base.l - darkFloor)
-    return hslToHex({ h: base.h, s: base.s, l: clamp(l, darkFloor, lightCeiling) })
+      index < baseIndex
+        ? lightCeiling - (index / (baseIndex || 1)) * (lightCeiling - base.l)
+        : base.l -
+          ((index - baseIndex) / (SHADE_STEPS.length - 1 - baseIndex || 1)) *
+            (base.l - darkFloor)
+
+    return {
+      step,
+      hex: hslToHex({ h: base.h, s: base.s, l: clamp(l, darkFloor, lightCeiling) }),
+      isBase: false,
+    }
   })
 }

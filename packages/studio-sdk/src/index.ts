@@ -13,6 +13,9 @@ export {
   describeEntity,
   describeEntities,
   humanize,
+  labelsOf,
+  singularizeLabel,
+  type EntityLabels,
   type StudioEntity,
   type EntityKind,
 } from './schema.js'
@@ -34,6 +37,11 @@ export { SectionSidebar, type SectionSidebarProps } from './shell/SectionSidebar
 export { MobileMenu, type MobileMenuProps } from './shell/MobileMenu.js'
 export { useTheme, type Theme } from './shell/useTheme.js'
 export { PageHeader, type PageHeaderProps } from './shell/PageHeader.js'
+export {
+  FieldHeading,
+  nextHeadingLevel,
+  type FieldHeadingLevel,
+} from './fields/FieldHeading.js'
 export { EmptyState, type EmptyStateProps } from './shell/EmptyState.js'
 export { LoadingState, type LoadingStateProps } from './shell/LoadingState.js'
 export { PageLayout, type PageLayoutProps } from './shell/PageLayout.js'

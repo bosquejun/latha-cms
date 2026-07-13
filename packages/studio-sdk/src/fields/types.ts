@@ -9,6 +9,7 @@
 
 import type { Field } from '@kon10/core'
 import type { ReactNode } from 'react'
+import type { FieldHeadingLevel } from './FieldHeading.js'
 
 export interface FieldControlProps {
   /** The field definition from config. */
@@ -19,6 +20,8 @@ export interface FieldControlProps {
   onChange: (value: unknown) => void
   onBlur: () => void
   error?: string
+  /** Heading level for structural renderers such as groups, arrays, and blocks. */
+  headingLevel?: FieldHeadingLevel
 }
 
 export type FieldRenderer = (props: FieldControlProps) => ReactNode

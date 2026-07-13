@@ -99,7 +99,11 @@ export interface EntityDescriptor {
   /** Opaque entity kind tag stamped by the module (e.g. 'collection', 'document', 'taxonomy'). */
   kind: string
   label: string
+  singularLabel: string
+  pluralLabel: string
+  emptyLabel: string
   fields: JsonValue
+  hierarchical?: boolean
   useAsTitle?: string
   defaultColumns?: string[]
   /** Form width override from the entity config (`studio.formWidth`). */
