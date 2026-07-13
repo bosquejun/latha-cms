@@ -28,10 +28,23 @@ const BUILT_IN_NODES = [
 ]
 
 // Base theme classes for nodes that need styling the browser doesn't give for
-// free inside a contentEditable — notably links. Module/field themes merge on
-// top (and win) via the Object.assign order below.
+// free inside a contentEditable — notably links, headings (Tailwind preflight
+// strips h1-h6 default sizing), and underline/strikethrough (Lexical only
+// emits semantic tags for bold/italic; these two rely entirely on theme
+// classes). Module/field themes merge on top (and win) via the Object.assign
+// order below.
 const BASE_THEME = {
   link: 'text-primary underline underline-offset-2 cursor-pointer',
+  heading: {
+    h2: 'text-xl font-semibold',
+    h3: 'text-lg font-semibold',
+    h4: 'text-base font-semibold',
+  },
+  text: {
+    underline: 'underline underline-offset-2',
+    strikethrough: 'line-through',
+    underlineStrikethrough: 'underline underline-offset-2 line-through',
+  },
 }
 
 interface LexicalEditorProps {
