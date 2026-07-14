@@ -84,6 +84,18 @@ export {
   DialogTrigger,
 } from './components/ui/dialog.js'
 export {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetOverlay,
+  SheetPortal,
+  SheetTitle,
+  SheetTrigger,
+} from './components/ui/sheet.js'
+export {
   Tooltip,
   TooltipContent,
   TooltipProvider,

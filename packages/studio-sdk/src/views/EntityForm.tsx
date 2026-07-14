@@ -13,6 +13,12 @@
  * section tabs, the unsaved-changes status, and Save stay reachable
  * regardless of form length.
  *
+ * On phones (below `sm`) the layout adapts: the actions move out of the top
+ * toolbar into a fixed bottom action bar (thumb reach), and the right sidebar
+ * collapses into a bottom sheet opened from a Details button in that bar. The
+ * section tabs stay in the top toolbar as a full-width segmented control. At
+ * `sm+` the layout is unchanged (top toolbar + right panel).
+ *
  * When any main-column field carries a `field.meta?.group`, the main column
  * splits into tabs — one per distinct group, in the order groups first appear,
  * with ungrouped fields collected into a leading "General" tab. The tab strip
@@ -32,8 +38,8 @@ import { useMemo, useState } from 'react'
 import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { Field } from '@kon10/core'
-import { Button, Tabs, toast } from '@kon10/ui'
-import { Trash2 } from 'lucide-react'
+import { Button, Sheet, SheetContent, SheetHeader, SheetTitle, Tabs, cn, toast } from '@kon10/ui'
+import { SlidersHorizontal, Trash2 } from 'lucide-react'
 import { useId } from 'react'
 import { buildFormSchema } from '../fields/formSchema.js'
 import { FormValuesProvider, type FormValuesStore } from '../fields/form-values.js'
@@ -44,6 +50,7 @@ import { defaultForField } from '../fields/defaults.js'
 import { Slot } from '../extensions/Slot.js'
 import { useExtensions } from '../extensions/context.js'
 import { PageLayout } from '../shell/PageLayout.js'
+import { useIsPhone } from '../shell/useMediaQuery.js'
 
 type FormValues = Record<string, unknown>
 
@@ -193,6 +200,13 @@ export function EntityForm({
   const mainFields = visibleFields.filter((f) => !f.meta?.sidebar && !f.meta?.hidden)
   const sidebarFields = visibleFields.filter((f) => f.meta?.sidebar && !f.meta?.hidden)
 
+  // On phones the actions move to a fixed bottom bar and the sidebar collapses
+  // into a bottom sheet opened from that bar. `useIsPhone` is false during SSR
+  // and the first client render, so the default is the unchanged `sm+` layout.
+  const isPhone = useIsPhone()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const sidebarErrorCount = sidebarFields.filter((f) => errors[f.name]).length
+
   // Split the main column into tab groups. A single group means no field
   // declared `meta.group`, so we render flat with no tab strip.
   const groups = useMemo(() => groupFields(mainFields), [mainFields])
@@ -250,12 +264,83 @@ export function EntityForm({
 
   const hasSidebar = sidebarFields.length > 0 || hasSidebarSlots
 
+  // The action cluster (Delete / dirty status / Cancel / Save) renders in the
+  // sticky top toolbar at `sm+` and, on phones, in the fixed bottom bar instead.
+  const actions = (
+    <>
+      {onDelete && (
+        <>
+          <Button
+            type="button"
+            variant="destructive-subtle"
+            size="sm"
+            onClick={() => void onDelete()}
+          >
+            <Trash2 /> Delete
+          </Button>
+          <div className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
+        </>
+      )}
+      {isDirty ? (
+        <span
+          className="mr-1 flex items-center gap-1.5 text-sm text-muted-foreground"
+          title="Unsaved changes"
+        >
+          <span className="inline-block h-2 w-2 rounded-full bg-warning" />
+          {/* On phones the amber dot alone signals dirty state. */}
+          <span className="max-sm:sr-only">Unsaved changes</span>
+        </span>
+      ) : null}
+      {onCancel && (
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+          Cancel
+        </Button>
+      )}
+      {/* On an existing record (edit view, `recordId` set) there's nothing to
+          save until something changes, so Save stays disabled while the form is
+          pristine. Create/singleton forms keep Save always enabled. */}
+      <Button
+        type="submit"
+        size="sm"
+        loading={isSubmitting}
+        disabled={isSubmitting || (recordId != null && !isDirty)}
+      >
+        {isSubmitting ? 'Saving…' : submitLabel}
+      </Button>
+    </>
+  )
+
+  // The sidebar renders in exactly one place: the page's right panel at `sm+`,
+  // or the bottom sheet on phones (chosen below via `isPhone`). Building it once
+  // avoids mounting two Controllers for the same field.
+  const sidebarContent = hasSidebar ? (
+    <aside className="flex flex-col gap-form">
+      <Slot
+        zone="form.sidebar.before"
+        entity={entity}
+        recordId={recordId}
+        className="flex flex-col gap-form"
+      />
+      {sidebarFields.map(renderField)}
+      <Slot
+        zone="form.sidebar.after"
+        entity={entity}
+        recordId={recordId}
+        className="flex flex-col gap-form"
+      />
+    </aside>
+  ) : null
+
   return (
     <FormValuesProvider store={valuesStore}>
       {/* Width is a page concern, not the form's: the host page (see
           `useFormWidth`) wraps the header AND this form in the narrow
           container so title, toolbar, and fields center as one unit. */}
       <form
+        // On phones the fixed bottom action bar overlays the page bottom; pad
+        // the form so the last fields stay scrollable clear of it (and the
+        // home-indicator safe area).
+        className="max-sm:pb-[calc(4rem+env(safe-area-inset-bottom))]"
         onSubmit={(e) => {
           e.preventDefault()
           e.stopPropagation()
@@ -271,13 +356,19 @@ export function EntityForm({
             reads clearly. `bleed-x` + `px-(--container-px)` track the page
             gutter (which shrinks on mobile) instead of hardcoding 24px.
 
-            On phones the row splits into two tidy stacked rows: actions
-            first (right-aligned, matching the mobile app-bar convention),
-            then the tabs stretched into a full-width segmented control that
-            sits directly above the panels it switches. From `sm` up both
-            share one row — tabs left, actions right.
+            On phones the actions move out to a fixed bottom bar (see below),
+            so this row keeps only the section tabs — stretched into a
+            full-width segmented control that sits directly above the panels it
+            switches. With no tabs there's nothing left for phones to show, so
+            the whole bar hides below `sm`. From `sm` up it's one row — tabs
+            left, actions right.
         ──────────────────────────────────────────────────────────────────────── */}
-        <div className="bleed-x sticky top-[var(--shell-top,var(--header-height))] z-10 mb-page-gap flex flex-wrap items-center gap-x-group gap-y-2.5 border-b border-border bg-background/95 px-(--container-px) py-2.5 backdrop-blur-sm max-sm:-mt-2 max-sm:py-inline">
+        <div
+          className={cn(
+            'bleed-x sticky top-[var(--shell-top,var(--header-height))] z-10 mb-page-gap flex flex-wrap items-center gap-x-group gap-y-2.5 border-b border-border bg-background/95 px-(--container-px) py-2.5 backdrop-blur-sm max-sm:-mt-2 max-sm:py-inline',
+            !tabbed && 'max-sm:hidden',
+          )}
+        >
           {tabbed ? (
             <Tabs
               className="max-w-full max-sm:order-last max-sm:w-full max-sm:[&>button]:flex-1 max-sm:[&>button]:justify-center"
@@ -302,70 +393,13 @@ export function EntityForm({
             />
           ) : null}
 
-          <div className="ml-auto flex shrink-0 items-center gap-inline max-sm:w-full max-sm:justify-end">
-            {onDelete && (
-              <>
-                <Button
-                  type="button"
-                  variant="destructive-subtle"
-                  size="sm"
-                  onClick={() => void onDelete()}
-                >
-                  <Trash2 /> Delete
-                </Button>
-                <div className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
-              </>
-            )}
-            {isDirty ? (
-              <span
-                className="mr-1 flex items-center gap-1.5 text-sm text-muted-foreground"
-                title="Unsaved changes"
-              >
-                <span className="inline-block h-2 w-2 rounded-full bg-warning" />
-                {/* On phones the amber dot alone signals dirty state. */}
-                <span className="max-sm:sr-only">Unsaved changes</span>
-              </span>
-            ) : null}
-            {onCancel && (
-              <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-                Cancel
-              </Button>
-            )}
-            {/* On an existing record (edit view, `recordId` set) there's nothing
-                to save until something changes, so Save stays disabled while the
-                form is pristine. Create/singleton forms keep Save always enabled. */}
-            <Button
-              type="submit"
-              size="sm"
-              loading={isSubmitting}
-              disabled={isSubmitting || (recordId != null && !isDirty)}
-            >
-              {isSubmitting ? 'Saving…' : submitLabel}
-            </Button>
+          {/* Hidden on phones — the actions live in the bottom bar there. */}
+          <div className="ml-auto flex shrink-0 items-center gap-inline max-sm:hidden">
+            {actions}
           </div>
         </div>
 
-        <PageLayout
-          right={
-            hasSidebar ? (
-              <aside className="flex flex-col gap-form">
-                <Slot
-                  zone="form.sidebar.before"
-                  entity={entity}
-                  recordId={recordId}
-                  className="flex flex-col gap-form"
-                />
-                {sidebarFields.map(renderField)}
-                <Slot
-                  zone="form.sidebar.after"
-                  entity={entity}
-                  recordId={recordId}
-                  className="flex flex-col gap-form"
-                />
-              </aside>
-            ) : undefined
-          }
-        >
+        <PageLayout right={isPhone ? undefined : (sidebarContent ?? undefined)}>
           <div className="flex flex-col gap-form">
             <Slot
               zone="form.before"
@@ -397,6 +431,49 @@ export function EntityForm({
             />
           </div>
         </PageLayout>
+
+        {/* ── Phone bottom action bar ─────────────────────────────────────────
+            Pinned to the viewport bottom (thumb reach) with the same blur +
+            gutter treatment as the top toolbar. Carries the actions and, when
+            there's a sidebar, a Details trigger that opens it as a bottom sheet.
+            Gated on `isPhone` (so it never renders at `sm+`) with `sm:hidden` as
+            a belt-and-braces guard for the pre-hydration frame.
+        ──────────────────────────────────────────────────────────────────────── */}
+        {isPhone && (
+          <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-inline border-t border-border bg-background/95 px-(--container-px) py-inline pb-[calc(var(--space-inline)+env(safe-area-inset-bottom))] backdrop-blur-sm sm:hidden">
+            {hasSidebar && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="relative"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <SlidersHorizontal /> Details
+                {sidebarErrorCount > 0 && (
+                  <span className="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-stack text-[10px] font-semibold text-destructive-foreground">
+                    {sidebarErrorCount}
+                  </span>
+                )}
+              </Button>
+            )}
+            <div className="ml-auto flex items-center gap-inline">{actions}</div>
+          </div>
+        )}
+
+        {/* Sidebar-as-bottom-sheet on phones. Content mounts only while open;
+            RHF's default `shouldUnregister: false` preserves the sidebar fields'
+            values (and errors) after it closes, so nothing is lost. */}
+        {isPhone && hasSidebar && (
+          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+            <SheetContent side="bottom">
+              <SheetHeader>
+                <SheetTitle>Details</SheetTitle>
+              </SheetHeader>
+              {sidebarContent}
+            </SheetContent>
+          </Sheet>
+        )}
       </form>
     </FormValuesProvider>
   )
