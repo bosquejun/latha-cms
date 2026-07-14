@@ -24,6 +24,7 @@ import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 import { getFieldRenderer } from '../registry.js'
 import { isFieldVisible } from '../show-if.js'
+import { layoutRows } from '../layout.js'
 import { sparseDefaults } from '../defaults.js'
 import { FieldHeading, nextHeadingLevel } from '../FieldHeading.js'
 
@@ -178,9 +179,8 @@ export function ArrayField({
                   </div>
                 </div>
                 {!itemCollapsed &&
-                  children
-                    .filter((child) => isFieldVisible(child, item))
-                    .map((child) => {
+                  layoutRows(children.filter((child) => isFieldVisible(child, item))).map((row) => {
+                    const renderChild = (child: Field) => {
                       const Renderer = getFieldRenderer(child.type)
                       return (
                         <Renderer
@@ -194,7 +194,21 @@ export function ArrayField({
                           headingLevel={nextHeadingLevel(headingLevel)}
                         />
                       )
-                    })}
+                    }
+                    if (row.length === 2) {
+                      const [first, second] = row
+                      return (
+                        <div
+                          key={`${first.name}+${second.name}`}
+                          className="grid grid-cols-2 gap-form max-sm:grid-cols-1"
+                        >
+                          {renderChild(first)}
+                          {renderChild(second)}
+                        </div>
+                      )
+                    }
+                    return renderChild(row[0])
+                  })}
               </CardContent>
             </Card>
           )
