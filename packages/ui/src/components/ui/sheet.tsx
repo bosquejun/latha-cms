@@ -62,7 +62,7 @@ function SheetContent({
         {...props}
       >
         {children}
-        <SheetClose className="absolute right-1.5 top-1.5 flex size-11 touch-manipulation items-center justify-center rounded-md opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none md:right-2.5 md:top-2.5 md:size-9">
+        <SheetClose className="absolute right-1.5 top-1.5 flex size-10 touch-manipulation items-center justify-center rounded-md opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none md:right-2.5 md:top-2.5 md:size-9">
           <X className="size-4" />
           <span className="sr-only">Close</span>
         </SheetClose>

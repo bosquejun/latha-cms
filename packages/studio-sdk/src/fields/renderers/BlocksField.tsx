@@ -134,7 +134,7 @@ export function BlocksField({
         {items.length > 1 && (
           <button
             type="button"
-            className="ml-auto min-h-11 text-caption text-muted-foreground underline-offset-2 hover:text-foreground hover:underline md:min-h-0"
+            className="ml-auto min-h-10 text-caption text-muted-foreground underline-offset-2 hover:text-foreground hover:underline md:min-h-0"
             onClick={toggleCollapseAll}
           >
             {allCollapsed ? 'Expand all' : 'Collapse all'}
@@ -393,7 +393,7 @@ function BlockBody({
             type="button"
             onClick={() => setShowAdvanced((v) => !v)}
             aria-expanded={showAdvanced}
-            className="flex min-h-11 w-full items-center justify-between text-caption font-medium text-muted-foreground transition-colors hover:text-foreground md:min-h-0"
+            className="flex min-h-10 w-full items-center justify-between text-caption font-medium text-muted-foreground transition-colors hover:text-foreground md:min-h-0"
           >
             Advanced options
             <ChevronDown

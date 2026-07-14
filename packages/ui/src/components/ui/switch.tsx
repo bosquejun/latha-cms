@@ -18,7 +18,7 @@ function Switch({ className, disabled, ...props }: SwitchProps) {
     <label
       data-slot="switch"
       className={cn(
-        'relative inline-flex size-11 shrink-0 cursor-pointer items-center justify-center md:h-[1.15rem] md:w-8',
+        'relative inline-flex size-10 shrink-0 cursor-pointer items-center justify-center md:h-[1.15rem] md:w-8',
         disabled && 'cursor-not-allowed opacity-50',
         className,
       )}

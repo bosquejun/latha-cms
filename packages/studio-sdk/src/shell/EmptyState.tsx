@@ -43,7 +43,7 @@ export function EmptyState({ icon = FileStackIcon, title, description, action }:
       onMouseEnter={() => iconRef.current?.startAnimation?.()}
       onMouseLeave={() => iconRef.current?.stopAnimation?.()}
     >
-      <div className="grid size-11 place-items-center rounded-full bg-muted text-muted-foreground [&_svg]:size-5">
+      <div className="grid size-10 place-items-center rounded-full bg-muted text-muted-foreground [&_svg]:size-5">
         <Icon ref={iconRef} />
       </div>
       <div>

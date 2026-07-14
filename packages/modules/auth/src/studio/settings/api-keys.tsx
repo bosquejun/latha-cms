@@ -352,7 +352,7 @@ function CreateKeyDialog({
                 <label
                   key={role.id}
                   className={cn(
-                    'flex min-h-11 cursor-pointer items-center gap-inline rounded px-inline py-tight text-sm md:min-h-0',
+                    'flex min-h-10 cursor-pointer items-center gap-inline rounded px-inline py-tight text-sm md:min-h-0',
                     'hover:bg-muted/60',
                   )}
                 >

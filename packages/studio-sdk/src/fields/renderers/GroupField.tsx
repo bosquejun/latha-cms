@@ -117,7 +117,7 @@ export function GroupField({
               type="button"
               onClick={() => setShowAdvanced((v) => !v)}
               aria-expanded={showAdvanced}
-              className="flex min-h-11 w-full items-center justify-between px-card py-2.5 text-caption font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground md:min-h-0"
+              className="flex min-h-10 w-full items-center justify-between px-card py-2.5 text-caption font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground md:min-h-0"
             >
               Advanced options
               <ChevronDown
