@@ -142,6 +142,18 @@
   --space-sidebar: var(--space-3);     /* sidebar and compact list-card inner padding      */
   --space-empty: var(--space-10);      /* empty / placeholder state padding                */
 
+  /* Control sizing — interactive control heights (single source of truth).
+     Mobile-first: the base values are the comfortable phone sizes; the 48rem
+     media query below tightens them for desktop density. Primitives reference
+     the `control-*` scale via their `size` variant, so heights adjust by size
+     value AND by viewport without any per-component `md:` override. */
+  --control-sm: 2.25rem;   /* 36px mobile — compact controls (tabs, sm buttons/inputs) */
+  --control-md: 2.5rem;    /* 40px mobile — default control height                     */
+  --control-lg: 2.75rem;   /* 44px mobile — prominent controls                        */
+  /* Minimum touch target for compact / toggle controls (checkbox, switch,
+     close buttons, list rows). Held on mobile, released on desktop. */
+  --tap-target: 2.5rem;    /* 40px mobile */
+
   /* Container-awareness hook — set by any padded block container, inherited by children */
   --container-px: 0px;
 
@@ -174,6 +186,12 @@
     --space-nav: var(--space-4);
     --space-sidebar: var(--space-4);
     --space-empty: var(--space-16);
+
+    /* Desktop density: tighten controls one step, release the mobile tap floor. */
+    --control-sm: 2rem;      /* 32px */
+    --control-md: 2.25rem;   /* 36px */
+    --control-lg: 2.5rem;    /* 40px */
+    --tap-target: 0px;
   }
 }
 
@@ -287,6 +305,12 @@
   --spacing-nav: var(--space-nav);
   --spacing-sidebar: var(--space-sidebar);
   --spacing-empty: var(--space-empty);
+
+  /* Control sizing -> h-control-*, size-control-*, min-h-tap, size-tap utilities */
+  --spacing-control-sm: var(--control-sm);
+  --spacing-control-md: var(--control-md);
+  --spacing-control-lg: var(--control-lg);
+  --spacing-tap: var(--tap-target);
 
   /* Layout constants -> width/height/max-width utilities */
   --spacing-header-height: var(--header-height);

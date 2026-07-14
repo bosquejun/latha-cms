@@ -66,12 +66,12 @@ function ManyDocPicker({
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-stack">
           {selected.map((v) => (
-            <Badge key={v} variant="secondary" className="min-h-10 gap-0.5 pr-0 md:min-h-0 md:pr-1">
+            <Badge key={v} variant="secondary" className="min-h-tap gap-0.5 pr-0 md:min-h-0 md:pr-1">
               {labelOf(v)}
               <button
                 type="button"
                 aria-label={`Remove ${labelOf(v)}`}
-                className="ml-0.5 inline-flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground md:size-4"
+                className="ml-0.5 inline-flex size-tap items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground md:size-4"
                 onClick={() => commit(selected.filter((s) => s !== v))}
               >
                 <X className="size-3" />
@@ -98,7 +98,7 @@ function ManyDocPicker({
             <label
               key={doc.id}
               className={cn(
-                'flex min-h-10 cursor-pointer items-center gap-inline rounded-sm px-tight py-stack text-small transition-colors hover:bg-accent/60 md:min-h-0',
+                'flex min-h-tap cursor-pointer items-center gap-inline rounded-sm px-tight py-stack text-small transition-colors hover:bg-accent/60 md:min-h-0',
               )}
             >
               <Checkbox

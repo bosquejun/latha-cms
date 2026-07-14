@@ -12,6 +12,8 @@ export interface TabsProps extends Omit<React.ComponentProps<'div'>, 'onChange'>
   value?: string
   defaultValue?: string
   onValueChange?: (value: string) => void
+  /** Trigger height from the shared control scale. Defaults to the compact `sm`. */
+  size?: 'sm' | 'md'
 }
 
 /**
@@ -24,6 +26,7 @@ function Tabs({
   defaultValue,
   onValueChange,
   className,
+  size = 'sm',
   ...props
 }: TabsProps) {
   const [internal, setInternal] = React.useState(
@@ -59,7 +62,8 @@ function Tabs({
             data-state={isActive ? 'active' : 'inactive'}
             onClick={() => select(it.value)}
             className={cn(
-              'inline-flex h-10 min-h-10 shrink-0 touch-manipulation items-center gap-1.5 whitespace-nowrap rounded-sm px-3 text-sm font-medium transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 md:h-7 md:min-h-0',
+              'inline-flex shrink-0 touch-manipulation items-center gap-1.5 whitespace-nowrap rounded-sm px-3 text-sm font-medium transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
+              size === 'sm' ? 'h-control-sm' : 'h-control-md',
               isActive
                 ? 'bg-background text-foreground shadow-xs'
                 : 'text-muted-foreground hover:text-foreground',

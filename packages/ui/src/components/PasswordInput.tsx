@@ -1,11 +1,13 @@
 import * as React from 'react'
+import type { VariantProps } from 'class-variance-authority'
 import { Eye, EyeOff } from 'lucide-react'
 import { cn } from '../lib/utils.js'
-import { Input } from './ui/input.js'
+import { Input, inputVariants } from './ui/input.js'
 import { InputGroup, InputAddon } from './ui/input-group.js'
 
 export interface PasswordInputProps
-  extends Omit<React.ComponentProps<'input'>, 'type'> {}
+  extends Omit<React.ComponentProps<'input'>, 'type' | 'size'>,
+    VariantProps<typeof inputVariants> {}
 
 /**
  * PasswordInput — a text input with a show/hide eye-toggle button. Wraps

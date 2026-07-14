@@ -265,7 +265,7 @@ export function ToolbarPlugin() {
           >
             <DropdownMenuLabel>History</DropdownMenuLabel>
             <DropdownMenuItem
-              className="min-h-10"
+              className="min-h-tap"
               onSelect={() => editor.dispatchCommand(REDO_COMMAND, undefined)}
             >
               <Redo2 />
@@ -275,7 +275,7 @@ export function ToolbarPlugin() {
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Text style</DropdownMenuLabel>
             <DropdownMenuCheckboxItem
-              className="min-h-10"
+              className="min-h-tap"
               checked={isUnderline}
               onCheckedChange={() =>
                 editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline')
@@ -285,7 +285,7 @@ export function ToolbarPlugin() {
               Underline
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
-              className="min-h-10"
+              className="min-h-tap"
               checked={isStrikethrough}
               onCheckedChange={() =>
                 editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough')
@@ -295,7 +295,7 @@ export function ToolbarPlugin() {
               Strikethrough
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
-              className="min-h-10"
+              className="min-h-tap"
               checked={isCode}
               onCheckedChange={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code')}
             >
@@ -306,7 +306,7 @@ export function ToolbarPlugin() {
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Block style</DropdownMenuLabel>
             <DropdownMenuCheckboxItem
-              className="min-h-10"
+              className="min-h-tap"
               checked={blockType === 'paragraph'}
               onCheckedChange={formatParagraph}
             >
@@ -314,7 +314,7 @@ export function ToolbarPlugin() {
               Paragraph
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
-              className="min-h-10"
+              className="min-h-tap"
               checked={blockType === 'h2'}
               onCheckedChange={() => formatHeading('h2')}
             >
@@ -322,7 +322,7 @@ export function ToolbarPlugin() {
               Heading 2
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
-              className="min-h-10"
+              className="min-h-tap"
               checked={blockType === 'h3'}
               onCheckedChange={() => formatHeading('h3')}
             >
@@ -330,7 +330,7 @@ export function ToolbarPlugin() {
               Heading 3
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
-              className="min-h-10"
+              className="min-h-tap"
               checked={blockType === 'h4'}
               onCheckedChange={() => formatHeading('h4')}
             >
@@ -338,7 +338,7 @@ export function ToolbarPlugin() {
               Heading 4
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
-              className="min-h-10"
+              className="min-h-tap"
               checked={blockType === 'quote'}
               onCheckedChange={formatQuote}
             >
@@ -349,7 +349,7 @@ export function ToolbarPlugin() {
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Lists</DropdownMenuLabel>
             <DropdownMenuCheckboxItem
-              className="min-h-10"
+              className="min-h-tap"
               checked={blockType === 'bullet'}
               onCheckedChange={toggleBulletList}
             >
@@ -357,7 +357,7 @@ export function ToolbarPlugin() {
               Bullet list
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
-              className="min-h-10"
+              className="min-h-tap"
               checked={blockType === 'number'}
               onCheckedChange={toggleNumberedList}
             >
@@ -368,7 +368,7 @@ export function ToolbarPlugin() {
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Insert</DropdownMenuLabel>
             <DropdownMenuItem
-              className="min-h-10"
+              className="min-h-tap"
               disabled={uploading}
               onSelect={() => fileInputRef.current?.click()}
             >

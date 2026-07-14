@@ -6,7 +6,7 @@ import { cn } from '../../lib/utils.js'
 import { Spinner } from './spinner.js'
 
 const buttonVariants = cva(
-  "inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all touch-manipulation disabled:pointer-events-none disabled:opacity-50 md:min-h-0 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all touch-manipulation disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
   {
     variants: {
       variant: {
@@ -27,16 +27,16 @@ const buttonVariants = cva(
           'text-destructive hover:bg-destructive/10 hover:text-destructive focus-visible:ring-destructive/20 dark:hover:bg-destructive/20 dark:focus-visible:ring-destructive/40',
         link: 'text-primary underline-offset-4 hover:underline',
       },
-      // Mobile-first 44px targets stay usable in browser device emulation and
-      // hybrid hardware where pointer media queries are unreliable. Desktop
-      // density returns at `md`; min-* survives compact caller overrides.
+      // Heights come from the `control-*` token scale: comfortable on mobile,
+      // one step tighter on desktop — the responsive step lives in the tokens
+      // (globals.css), not here. `className` still wins for one-off overrides.
       size: {
-        default: 'h-10 px-4 py-2 has-[>svg]:px-3 md:h-9',
-        sm: 'h-10 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5 md:h-8',
-        lg: 'h-10 rounded-md px-6 has-[>svg]:px-4 md:h-10',
-        icon: 'size-10 min-w-10 md:size-9 md:min-w-0',
+        default: 'h-control-md px-4 py-2 has-[>svg]:px-3',
+        sm: 'h-control-sm rounded-md gap-1.5 px-3 has-[>svg]:px-2.5',
+        lg: 'h-control-lg rounded-md px-6 has-[>svg]:px-4',
+        icon: 'size-control-md',
         // Compact icon button for dense contexts (table rows, card headers).
-        'icon-sm': 'size-10 min-w-10 rounded-md md:size-8 md:min-w-0',
+        'icon-sm': 'size-control-sm rounded-md',
       },
     },
     defaultVariants: {

@@ -128,7 +128,7 @@ function BulkCheckbox({
   return (
     <span
       className={cn(
-        'relative inline-flex size-10 shrink-0 items-center justify-center md:size-4',
+        'relative inline-flex size-tap shrink-0 items-center justify-center md:size-4',
         disabled && 'pointer-events-none opacity-50',
         className,
       )}
@@ -179,7 +179,7 @@ function RoleItem({
       type="button"
       onClick={onClick}
       className={cn(
-        'group flex min-h-10 w-full items-center gap-group rounded-md px-group py-group text-left transition-colors',
+        'group flex min-h-tap w-full items-center gap-group rounded-md px-group py-group text-left transition-colors',
         selected
           ? 'bg-accent text-accent-foreground'
           : 'text-foreground hover:bg-accent/50',
@@ -640,7 +640,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
               <button
                 type="button"
                 onClick={() => go(rootHref)}
-                className="flex min-h-10 items-center gap-stack self-start rounded-md py-stack pr-inline text-small font-medium text-muted-foreground transition-colors hover:text-foreground lg:hidden"
+                className="flex min-h-tap items-center gap-stack self-start rounded-md py-stack pr-inline text-small font-medium text-muted-foreground transition-colors hover:text-foreground lg:hidden"
               >
                 <ChevronLeft className="size-4" /> All roles
               </button>
@@ -757,7 +757,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                       <button
                         type="button"
                         onClick={() => setFilterQuery('')}
-                        className="absolute right-0 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center text-muted-foreground transition-colors hover:text-foreground md:right-1 md:size-8"
+                        className="absolute right-0 top-1/2 flex size-tap -translate-y-1/2 items-center justify-center text-muted-foreground transition-colors hover:text-foreground md:right-1 md:size-8"
                         aria-label="Clear filter"
                       >
                         <X className="size-4" />
@@ -827,7 +827,7 @@ export default function RolesPermissions({ params }: PageComponentProps) {
                                   <button
                                     type="button"
                                     onClick={() => toggleSection(mod)}
-                                    className="flex min-h-10 flex-1 items-center gap-inline text-small font-medium capitalize"
+                                    className="flex min-h-tap flex-1 items-center gap-inline text-small font-medium capitalize"
                                   >
                                     <ChevronDown
                                       className={cn(

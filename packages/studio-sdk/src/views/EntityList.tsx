@@ -171,7 +171,7 @@ export function EntityList({
               <div className="flex items-start justify-between gap-group">
                 <a
                   href={getEditHref(row.id)}
-                  className="flex min-h-10 min-w-0 flex-1 items-center py-stack font-medium text-foreground"
+                  className="flex min-h-tap min-w-0 flex-1 items-center py-stack font-medium text-foreground"
                 >
                   <h2 className="truncate text-small font-medium">
                     {renderValue(row, titleCol ?? 'id')}

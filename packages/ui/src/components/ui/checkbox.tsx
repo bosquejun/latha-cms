@@ -15,7 +15,7 @@ function Checkbox({ className, disabled, ...props }: CheckboxProps) {
     <span
       data-slot="checkbox"
       className={cn(
-        'relative inline-flex size-10 shrink-0 items-center justify-center md:size-4',
+        'relative inline-flex size-tap shrink-0 items-center justify-center md:size-4',
         disabled && 'opacity-50',
         className,
       )}

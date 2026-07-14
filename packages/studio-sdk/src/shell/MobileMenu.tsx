@@ -29,7 +29,7 @@ export interface MobileMenuProps {
 
 const itemClass = (active: boolean) =>
   cn(
-    'flex min-h-10 touch-manipulation items-center gap-2.5 rounded-md border border-transparent px-3 py-1.5 text-sm transition-colors',
+    'flex min-h-tap touch-manipulation items-center gap-2.5 rounded-md border border-transparent px-3 py-1.5 text-sm transition-colors',
     '[&_svg]:size-4 [&_svg]:shrink-0',
     active
       ? 'border-nav-border bg-nav-accent font-medium text-nav-accent-foreground shadow-2xs [&_svg]:text-foreground'
