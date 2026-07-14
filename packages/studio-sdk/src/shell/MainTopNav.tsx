@@ -24,7 +24,7 @@ export function MainTopNav({ brand = 'Kon10', onMenuClick, children }: MainTopNa
           size="icon"
           onClick={onMenuClick}
           aria-label="Menu"
-          className="lg:hidden pointer-coarse:min-h-11 pointer-coarse:min-w-11 [&_svg]:size-[18px]"
+          className="lg:hidden pointer-coarse:min-h-10 pointer-coarse:min-w-10 [&_svg]:size-[18px]"
         >
           <Menu />
         </Button>

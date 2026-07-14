@@ -132,7 +132,7 @@ export function ArrayField({
                       type="button"
                       onClick={() => toggleCollapsed(index)}
                       aria-expanded={!itemCollapsed}
-                      className="flex min-h-11 w-full items-center gap-1.5 text-left hover:text-foreground md:min-h-0"
+                      className="flex min-h-tap w-full items-center gap-1.5 text-left hover:text-foreground md:min-h-0"
                     >
                       <ChevronDown
                         className={cn(

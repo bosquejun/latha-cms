@@ -48,7 +48,7 @@ export function TextField({
       <div className="flex flex-col gap-inline">
         <div className="flex items-center gap-inline">
           <label
-            className="relative block size-11 shrink-0 cursor-pointer overflow-hidden rounded-md border border-input shadow-xs focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 md:size-9"
+            className="relative block size-tap shrink-0 cursor-pointer overflow-hidden rounded-md border border-input shadow-xs focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 md:size-9"
             style={{ backgroundColor: swatchColor }}
           >
             <span className="sr-only">Pick a color</span>
@@ -80,7 +80,7 @@ export function TextField({
                 aria-label={`Use shade ${shade.step}, ${shade.hex}${shade.isBase ? ', current base color' : ''}`}
                 onClick={() => onChange(shade.hex)}
                 className={cn(
-                  'flex min-h-11 cursor-pointer flex-col overflow-hidden rounded-md border border-input bg-background text-[10px] font-medium text-muted-foreground outline-none transition-transform hover:-translate-y-0.5 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
+                  'flex min-h-tap cursor-pointer flex-col overflow-hidden rounded-md border border-input bg-background text-[10px] font-medium text-muted-foreground outline-none transition-transform hover:-translate-y-0.5 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
                   shade.isBase && 'border-ring ring-2 ring-ring/40',
                 )}
               >
