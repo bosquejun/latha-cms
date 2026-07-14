@@ -6,7 +6,9 @@ import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 import { getFieldRenderer } from '../registry.js'
 import { sparseDefaults } from '../defaults.js'
-import { FieldHeading, nextHeadingLevel } from '../FieldHeading.js'
+import { layoutRows } from '../layout.js'
+import { isFieldVisible } from '../show-if.js'
+import { FieldHeading, nextHeadingLevel, type FieldHeadingLevel } from '../FieldHeading.js'
 
 interface BlockDef {
   type: string
@@ -243,23 +245,14 @@ export function BlocksField({
                 </div>
 
                 {!isCollapsed && (
-                  <CardContent className="flex flex-col gap-form pt-form">
-                    {def.fields.map((f) => {
-                      const Renderer = getFieldRenderer(f.type)
-                      return (
-                        <Renderer
-                          key={f.name}
-                          field={f}
-                          id={`${id}-${index}-${f.name}`}
-                          value={item[f.name]}
-                          onChange={(v) => updateField(index, f.name, v)}
-                          onBlur={onBlur}
-                          error={undefined}
-                          headingLevel={nextHeadingLevel(headingLevel)}
-                        />
-                      )
-                    })}
-                  </CardContent>
+                  <BlockBody
+                    def={def}
+                    item={item}
+                    fieldId={`${id}-${index}`}
+                    onChangeField={(name, v) => updateField(index, name, v)}
+                    onBlur={onBlur}
+                    headingLevel={nextHeadingLevel(headingLevel)}
+                  />
                 )}
               </Card>
             )
@@ -325,5 +318,94 @@ export function BlocksField({
 
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
+  )
+}
+
+/**
+ * Renders one block's fields with the same layout contract the rest of the form
+ * honors: `meta.showIf` toggles visibility against sibling values, `meta.width:
+ * 'half'` pairs consecutive fields into a two-up row that stacks below `sm`
+ * (mobile-first), and `meta.advanced` children collapse behind an "Advanced
+ * options" disclosure — mirroring `GroupField` so a field lays out the same
+ * whether it sits at the top level, inside a `group()`, or inside a block.
+ */
+function BlockBody({
+  def,
+  item,
+  fieldId,
+  onChangeField,
+  onBlur,
+  headingLevel,
+}: {
+  def: BlockDef
+  item: BlockItem
+  fieldId: string
+  onChangeField: (name: string, value: unknown) => void
+  onBlur: () => void
+  headingLevel: FieldHeadingLevel
+}) {
+  const [showAdvanced, setShowAdvanced] = useState(false)
+
+  const visible = def.fields.filter((f) => isFieldVisible(f, item))
+  const primary = visible.filter((f) => !f.meta?.advanced)
+  const advanced = visible.filter((f) => f.meta?.advanced)
+
+  const renderField = (f: Field) => {
+    const Renderer = getFieldRenderer(f.type)
+    return (
+      <Renderer
+        key={f.name}
+        field={f}
+        id={`${fieldId}-${f.name}`}
+        value={item[f.name]}
+        onChange={(v) => onChangeField(f.name, v)}
+        onBlur={onBlur}
+        error={undefined}
+        headingLevel={headingLevel}
+      />
+    )
+  }
+
+  const renderRows = (fields: Field[]) =>
+    layoutRows(fields).map((row) => {
+      if (row.length === 2) {
+        const [first, second] = row
+        return (
+          <div
+            key={`${first.name}+${second.name}`}
+            className="grid grid-cols-2 gap-form max-sm:grid-cols-1"
+          >
+            {renderField(first)}
+            {renderField(second)}
+          </div>
+        )
+      }
+      return renderField(row[0])
+    })
+
+  return (
+    <CardContent className="flex flex-col gap-form pt-form">
+      {renderRows(primary)}
+      {advanced.length > 0 && (
+        <>
+          <Separator />
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            aria-expanded={showAdvanced}
+            className="flex min-h-11 w-full items-center justify-between text-caption font-medium text-muted-foreground transition-colors hover:text-foreground md:min-h-0"
+          >
+            Advanced options
+            <ChevronDown
+              className={cn(
+                'size-4 shrink-0 transition-transform duration-200',
+                showAdvanced && 'rotate-180',
+              )}
+            />
+          </button>
+          {showAdvanced && renderRows(advanced)}
+        </>
+      )}
+    </CardContent>
   )
 }
