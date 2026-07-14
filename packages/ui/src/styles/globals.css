@@ -127,10 +127,10 @@
      Consumers only ever reference the alias, so every padded surface
      (page gutter, cards, empty states) adapts without per-component
      breakpoints. */
-  --space-page: var(--space-4);        /* page / content padding                           */
+  --space-page: var(--space-3);        /* page / content padding                           */
   --space-page-gap: var(--space-5);    /* gap between PageHeader and page content          */
   --space-section: var(--space-6);     /* gap between page sections                        */
-  --space-card: var(--space-4);        /* card inner padding                               */
+  --space-card: var(--space-3);        /* card inner padding                               */
   --space-card-gap: var(--space-4);    /* gap inside a card                                */
   --space-group: var(--space-3);       /* gap within a component row (title + actions row) */
   --space-field-gap: var(--space-2);   /* label <-> control <-> help                       */
@@ -138,8 +138,8 @@
   --space-inline: var(--space-2);      /* icon <-> text, button rows                       */
   --space-tight: 0.375rem;             /* 6px  — compact atom padding (dropdown items, tabs) */
   --space-stack: var(--space-1);       /* nav item lists                                   */
-  --space-nav: var(--space-4);         /* nav chrome inner padding (bars, menu sheet)      */
-  --space-sidebar: var(--space-4);     /* sidebar and compact list-card inner padding      */
+  --space-nav: var(--space-3);         /* nav chrome inner padding (bars, menu sheet)      */
+  --space-sidebar: var(--space-3);     /* sidebar and compact list-card inner padding      */
   --space-empty: var(--space-10);      /* empty / placeholder state padding                */
 
   /* Container-awareness hook — set by any padded block container, inherited by children */
@@ -171,6 +171,8 @@
     --space-page-gap: var(--space-6);
     --space-section: var(--space-8);
     --space-card: var(--space-6);
+    --space-nav: var(--space-4);
+    --space-sidebar: var(--space-4);
     --space-empty: var(--space-16);
   }
 }
