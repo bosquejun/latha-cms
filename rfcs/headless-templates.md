@@ -317,9 +317,15 @@ running site talks to the delivery API directly.
    wrapping, `id`/timestamps as strings), with a `z.unknown()` fallback for
    module-registered types. Plug the `entities` map into the client's per-call
    `schema` option.
-4. **Registry scaffolding.** `registry.json` + build pipeline + hosting, with the
-   `/r/<framework>/*.json` namespacing; mirror `@kon10/ui` primitives as
-   `registry:ui` items.
+4. **Registry scaffolding.** ✅ **Done.** New private `@kon10/registry` package:
+   a `registry.json` source index + `items/<framework>/…` source tree, and a
+   validated build that inlines file contents and emits shadcn
+   `registry-item.json` at `public/r/<framework>/<name>.json` plus a discovery
+   catalog. Ships the foundational `registry:lib` `kon10-client` item (installs
+   `@kon10/client` + a configured client). Hosting is a static `public/` deploy.
+   Mirroring `@kon10/ui` primitives as `registry:ui` items is deferred to when a
+   template needs specific ones (Phase 5) — until then templates can pull
+   primitives from shadcn's own registry via `registryDependencies`.
 5. **First template — `tanstack/blog` (default).** A `registry:block` composing the
    client + typed content + UI on Vite + TanStack Start, installable end-to-end via
    `npx shadcn add`.

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "kon10",
+  "homepage": "https://github.com/bosquejun/kon10",
+  "items": [
+    {
+      "framework": "tanstack",
+      "name": "kon10-client",
+      "type": "registry:lib",
+      "title": "Kon10 delivery client",
+      "description": "A configured @kon10/client instance for reading content from a Kon10 Studio's delivery API.",
+      "author": "Kon10",
+      "dependencies": ["@kon10/client"],
+      "files": [
+        {
+          "path": "tanstack/lib/kon10.ts",
+          "type": "registry:lib",
+          "target": "src/lib/kon10.ts"
+        }
+      ]
+    }
+  ]
+}
