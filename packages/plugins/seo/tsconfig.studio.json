@@ -1,0 +1,23 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "composite": true
+  },
+  "references": [
+    { "path": "../../core" },
+    { "path": "../../studio-sdk" }
+  ],
+  "include": [
+    "src/studio/**/*.ts",
+    "src/studio/**/*.tsx",
+    "src/schema.ts",
+    "src/template.ts"
+  ],
+  "exclude": ["dist", "node_modules"]
+}
