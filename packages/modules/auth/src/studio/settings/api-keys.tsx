@@ -293,6 +293,9 @@ function CreateKeyDialog({
 }) {
   const { client } = useKon10()
   const [name, setName] = useState('')
+  const [type, setType] = useState<'secret' | 'publishable'>('secret')
+  const [allowedOrigins, setAllowedOrigins] = useState('')
+  const [rateLimit, setRateLimit] = useState('')
   const [roleIds, setRoleIds] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -306,15 +309,31 @@ function CreateKeyDialog({
     setBusy(true)
     setError(null)
     try {
-      const token = generateApiKeyToken()
+      const token = generateApiKeyToken(type)
+      const origins = allowedOrigins
+        .split(',')
+        .map((o) => o.trim())
+        .filter(Boolean)
+      const rpm = Number.parseInt(rateLimit, 10)
       await client.create(API_KEYS_SLUG, {
         name: name.trim(),
         keyHash: await hashApiKeyToken(token),
         prefix: apiKeyDisplayPrefix(token),
+        type,
         roles: roleIds,
         enabled: true,
+        // Publishable-key guardrails; omitted (and irrelevant) for secret keys.
+        ...(type === 'publishable' && origins.length > 0
+          ? { allowedOrigins: origins.join(',') }
+          : {}),
+        ...(type === 'publishable' && Number.isFinite(rpm) && rpm > 0
+          ? { rateLimitPerMinute: rpm }
+          : {}),
       })
       setName('')
+      setType('secret')
+      setAllowedOrigins('')
+      setRateLimit('')
       setRoleIds([])
       onCreated(token)
     } catch (e) {
@@ -345,6 +364,55 @@ function CreateKeyDialog({
               autoFocus
             />
           </label>
+          <div className="space-y-tight">
+            <span className="text-sm font-medium">Type</span>
+            <div className="flex gap-inline">
+              {(['secret', 'publishable'] as const).map((t) => (
+                <Button
+                  key={t}
+                  type="button"
+                  variant={type === t ? 'default' : 'outline'}
+                  className="flex-1 capitalize"
+                  onClick={() => setType(t)}
+                >
+                  {t}
+                </Button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {type === 'secret'
+                ? 'Server-only. Broader access — never expose in client code.'
+                : 'Safe to embed in client code (kon10_pk_…). Read-only, published content only.'}
+            </p>
+          </div>
+          {type === 'publishable' && (
+            <>
+              <label className="block space-y-tight text-sm font-medium">
+                Allowed origins{' '}
+                <span className="font-normal text-muted-foreground">
+                  (optional, comma-separated)
+                </span>
+                <Input
+                  value={allowedOrigins}
+                  onChange={(e) => setAllowedOrigins(e.target.value)}
+                  placeholder="https://example.com, https://www.example.com"
+                />
+              </label>
+              <label className="block space-y-tight text-sm font-medium">
+                Rate limit{' '}
+                <span className="font-normal text-muted-foreground">
+                  (optional, requests/min)
+                </span>
+                <Input
+                  type="number"
+                  min="0"
+                  value={rateLimit}
+                  onChange={(e) => setRateLimit(e.target.value)}
+                  placeholder="e.g. 120"
+                />
+              </label>
+            </>
+          )}
           <fieldset className="space-y-tight">
             <legend className="text-sm font-medium">Roles</legend>
             <div className="max-h-48 space-y-stack overflow-y-auto rounded-md border p-inline">

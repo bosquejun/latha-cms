@@ -224,3 +224,40 @@ test('an entity with api.cache: false is never read through or written to the ca
   assert.equal(cache.setKeys.length, 1)
   assert.equal(deliveryGetKeys.length, 1)
 })
+
+// --- per-key rate limiting -------------------------------------------------
+
+const rateLimitConfig: ResolvedConfig = defineConfig({
+  logger: silentLogger,
+  db: memoryAdapter(),
+  modules: [
+    AuthModule({ secret: 'test-secret' }),
+    CacheModule({ cache: inMemoryCache() }),
+    { name: 'widgets', entities: [widgetEntity] },
+  ],
+})
+
+test('a per-key rate limit returns 429 once the window budget is spent', async () => {
+  const kon10 = await getRuntime(rateLimitConfig)
+  await kon10.db.create('widget', { name: 'Gadget' })
+  const { token } = await createApiKey(kon10, {
+    name: 'pk-rl',
+    type: 'publishable',
+    rateLimitPerMinute: 2,
+  })
+  const call = () =>
+    handleDeliveryRequest(
+      rateLimitConfig,
+      new Request('http://cms.test/api/v1/widgets', {
+        headers: { authorization: `Bearer ${token}` },
+      }),
+    )
+
+  assert.equal((await call()).status, 200)
+  assert.equal((await call()).status, 200)
+  const third = await call()
+  assert.equal(third.status, 429)
+  const body = (await third.json()) as ApiResponse<unknown>
+  assert.equal(body.error?.code, 'TOO_MANY_REQUESTS')
+  assert.equal(third.headers.get('retry-after'), '60')
+})

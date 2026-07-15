@@ -16,6 +16,17 @@ export function createRbacGuard(): Guard {
   return (ctx) => {
     if (ctx.context.enforce !== true) return
 
+    // Publishable keys are read-only, unconditionally — a token you must assume
+    // is public can never write, regardless of the roles attached or an entity
+    // access predicate. This runs before the access-predicate deferral so it
+    // cannot be lifted.
+    if (
+      (ctx.principal as { publishable?: boolean } | null)?.publishable === true &&
+      ctx.operation !== 'read'
+    ) {
+      throw new AccessDeniedError(ctx.operation, ctx.slug)
+    }
+
     // An explicit per-entity access predicate already ran and authorized
     // this operation; don't second-guess it with the RBAC default.
     const entity = ctx.cms.getEntity(ctx.slug)

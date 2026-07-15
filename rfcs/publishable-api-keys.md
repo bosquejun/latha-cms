@@ -1,10 +1,20 @@
 # RFC: Publishable API Keys
 
-**Status:** Draft
+**Status:** Implemented
 **Scope:** `@kon10/auth` (api-keys entity, token scheme, RBAC guard) + `@kon10/start`
-(delivery-API enforcement) + Studio key-management UI.
+(delivery-API enforcement) + `@kon10/client` (browser guard) + Studio key-management UI.
 **Relation:** Enables the client-side path for the headless template system
 (`rfcs/headless-templates.md`) without leaking a secret.
+
+> **Implemented.** `kon10_pk_`/`kon10_sk_` token classes (legacy → secret);
+> `type`/`allowedOrigins`/`rateLimitPerMinute` on the `api-keys` entity;
+> `ApiKeyPrincipal.publishable`; the RBAC guard's read-only cap; delivery-API
+> origin allowlist + per-key rate limit (`429 TOO_MANY_REQUESTS`); a
+> `createDeliveryClient` guard that throws on a `kon10_sk_` key in the browser;
+> and a Studio create-dialog type selector + guardrail inputs. The template's
+> `VITE_` key footgun is documented as publishable-only. Open questions in §10
+> (app-wide anonymous rate default, a "require pk_" switch, preview capability)
+> remain future work.
 
 ---
 

@@ -56,7 +56,7 @@ import {
   type QuerySort,
   type ResolvedConfig,
 } from '@kon10/core'
-import { verifyApiKeyToken, API_KEY_TOKEN_PREFIX } from '@kon10/auth'
+import { verifyApiKeyToken, API_KEY_TOKEN_PREFIX, type ApiKeyPrincipal } from '@kon10/auth'
 import { DEFAULT_API_PATH } from '@kon10/studio-sdk'
 import { getRuntime } from './runtime.js'
 import { resolveAnonymousPrincipal } from './server.js'
@@ -235,6 +235,56 @@ async function resolveApiPrincipal(
   return { principal }
 }
 
+/**
+ * Enforce a resolved key's publishable-key guardrails before any DB work:
+ * the origin allowlist and the per-key rate limit. Returns a blocking response
+ * (403/429) when the request is refused, or `undefined` to proceed. Anonymous
+ * and secret keys without these fields set are unaffected.
+ */
+async function enforceKeyPolicy(
+  kon10: Kon10Instance,
+  principal: unknown,
+  request: Request,
+  cors: Record<string, string>,
+  requestId: string,
+): Promise<Response | undefined> {
+  const key = principal as Partial<ApiKeyPrincipal> | null
+  if (!key || key.kind !== 'api-key') return undefined
+
+  // Origin allowlist — publishable keys only. Defense-in-depth: `Origin` is
+  // spoofable by non-browser clients, so this stops casual browser reuse of a
+  // leaked key from another site, not a determined scraper.
+  if (key.publishable && key.allowedOrigins && key.allowedOrigins.length > 0) {
+    const origin = request.headers.get('origin')
+    if (!origin || !key.allowedOrigins.includes(origin)) {
+      return json(
+        403,
+        apiFailure(API_ERROR_CODES.FORBIDDEN, 'Origin not allowed for this key.', requestId),
+        cors,
+      )
+    }
+  }
+
+  // Per-key rate limit — best-effort fixed window via the cache adapter (global
+  // with redis, per-process with the in-memory adapter — a speed bump, not a
+  // hard guarantee, same as the login throttle).
+  if (key.rateLimitPerMinute && key.rateLimitPerMinute > 0 && kon10.cache) {
+    const windowStart = Math.floor(Date.now() / 60_000)
+    const rlKey = `ratelimit:${key.id}:${windowStart}`
+    const count = Number((await kon10.cache.get(rlKey)) ?? 0)
+    if (count >= key.rateLimitPerMinute) {
+      return json(
+        429,
+        apiFailure(API_ERROR_CODES.TOO_MANY_REQUESTS, 'Rate limit exceeded.', requestId),
+        { ...cors, 'retry-after': '60' },
+      )
+    }
+    await kon10.cache.set(rlKey, (count + 1) as unknown as JsonValue, 60)
+  }
+
+  return undefined
+}
+
 /** One resolved delivery-API target: the entity to operate on, and an optional item id. */
 interface ResolvedRoute {
   entity: Entity
@@ -384,6 +434,8 @@ export async function handleDeliveryRequest(
     const resolved = await resolveApiPrincipal(kon10, request, cors)
     if ('error' in resolved) return finish(resolved.error)
     const principalId = (resolved.principal as { id?: string } | null)?.id ?? 'anonymous'
+    const policyBlock = await enforceKeyPolicy(kon10, resolved.principal, request, cors, requestId)
+    if (policyBlock) return finish(policyBlock, { slug: MANIFEST_SEGMENT, principalId })
     const opCtx: OperationContext = {
       cms: kon10,
       principal: resolved.principal,
@@ -432,6 +484,8 @@ export async function handleDeliveryRequest(
   if ('error' in resolved) return finish(resolved.error)
   // Opaque principal; defensive `id` read for log correlation only.
   const principalId = (resolved.principal as { id?: string } | null)?.id ?? 'anonymous'
+  const policyBlock = await enforceKeyPolicy(kon10, resolved.principal, request, cors, requestId)
+  if (policyBlock) return finish(policyBlock, { slug, principalId })
   const opCtx = {
     cms: kon10,
     principal: resolved.principal,

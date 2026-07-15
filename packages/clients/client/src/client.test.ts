@@ -116,3 +116,22 @@ test('a malformed (non-envelope) body throws DeliveryError', async () => {
     return true
   })
 })
+
+test('a secret key passed in a browser context throws; publishable is fine', () => {
+  const g = globalThis as { window?: unknown; document?: unknown }
+  g.window = {}
+  g.document = {}
+  const noopFetch = (() => Promise.resolve(new Response('{}'))) as unknown as typeof fetch
+  try {
+    assert.throws(
+      () => createDeliveryClient({ baseUrl: 'https://x', apiKey: 'kon10_sk_secret', fetch: noopFetch }),
+      /secret API key/,
+    )
+    assert.doesNotThrow(() =>
+      createDeliveryClient({ baseUrl: 'https://x', apiKey: 'kon10_pk_ok', fetch: noopFetch }),
+    )
+  } finally {
+    delete g.window
+    delete g.document
+  }
+})

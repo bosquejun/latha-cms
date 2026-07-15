@@ -25,6 +25,9 @@ import {
 /** The default base path the delivery API is mounted at (see `@kon10/start`). */
 export const DEFAULT_API_PATH = '/api/v1'
 
+/** Prefix of a secret API key — must never reach the browser. */
+const SECRET_KEY_PREFIX = 'kon10_sk_'
+
 /** An untyped document — the fallback shape when no schema is supplied. */
 export type JsonDoc = Record<string, unknown>
 
@@ -111,6 +114,20 @@ export function createDeliveryClient(options: DeliveryClientOptions): DeliveryCl
   const fetchImpl = options.fetch ?? globalThis.fetch
   if (typeof fetchImpl !== 'function') {
     throw new Error('No fetch implementation available; pass `fetch` in DeliveryClientOptions.')
+  }
+
+  // A secret key must never ship to the browser. Fail loudly if one is used in
+  // a browser context — use a publishable key (`kon10_pk_…`) client-side, and
+  // keep secret keys to server-only code.
+  if (
+    options.apiKey?.startsWith(SECRET_KEY_PREFIX) &&
+    typeof window !== 'undefined' &&
+    typeof document !== 'undefined'
+  ) {
+    throw new Error(
+      'A secret API key (kon10_sk_…) was passed to createDeliveryClient in a browser context. ' +
+        'Use a publishable key (kon10_pk_…) client-side; keep secret keys server-only.',
+    )
   }
 
   function buildUrl(segments: string[], query?: URLSearchParams): string {

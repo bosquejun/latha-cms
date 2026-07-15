@@ -10,6 +10,9 @@ import { apiKeysEntity } from './entities.js'
 import { createApiKey, verifyApiKeyToken } from './service.js'
 import {
   API_KEY_TOKEN_PREFIX,
+  PUBLISHABLE_TOKEN_PREFIX,
+  SECRET_TOKEN_PREFIX,
+  apiKeyClassOf,
   apiKeyDisplayPrefix,
   generateApiKeyToken,
   hashApiKeyToken,
@@ -92,10 +95,21 @@ test('hashApiKeyToken: deterministic SHA-256 hex', async () => {
 })
 
 test('apiKeyDisplayPrefix keeps only the identifying head', () => {
-  const token = generateApiKeyToken()
+  const token = generateApiKeyToken() // secret by default
   const prefix = apiKeyDisplayPrefix(token)
   assert.ok(token.startsWith(prefix))
-  assert.equal(prefix.length, API_KEY_TOKEN_PREFIX.length + 8)
+  assert.equal(prefix.length, SECRET_TOKEN_PREFIX.length + 8)
+})
+
+test('token class: pk_/sk_ prefixes; default and legacy resolve as secret', () => {
+  assert.ok(generateApiKeyToken('publishable').startsWith(PUBLISHABLE_TOKEN_PREFIX))
+  assert.ok(generateApiKeyToken('secret').startsWith(SECRET_TOKEN_PREFIX))
+  assert.ok(generateApiKeyToken().startsWith(SECRET_TOKEN_PREFIX))
+  // Both still carry the umbrella prefix the delivery API detects.
+  assert.ok(generateApiKeyToken('publishable').startsWith(API_KEY_TOKEN_PREFIX))
+  assert.equal(apiKeyClassOf(generateApiKeyToken('publishable')), 'publishable')
+  assert.equal(apiKeyClassOf(generateApiKeyToken('secret')), 'secret')
+  assert.equal(apiKeyClassOf('kon10_legacytoken'), 'secret')
 })
 
 test('createApiKey stores the hash, never the token', async () => {
@@ -200,4 +214,30 @@ test('the entity afterDelete hook invalidates the deleted key immediately', asyn
   })
 
   assert.equal(await verifyApiKeyToken(kon10, token), null, 'deleted key denies immediately')
+})
+
+test('verify resolves a publishable key with its guardrail config', async () => {
+  const kon10 = fakeKon10()
+  const { token } = await createApiKey(kon10, {
+    name: 'pk',
+    type: 'publishable',
+    allowedOrigins: ['https://a.example', 'https://b.example'],
+    rateLimitPerMinute: 60,
+  })
+  assert.ok(token.startsWith(PUBLISHABLE_TOKEN_PREFIX))
+  const principal = await verifyApiKeyToken(kon10, token)
+  assert.ok(principal)
+  assert.equal(principal.publishable, true)
+  assert.deepEqual(principal.allowedOrigins, ['https://a.example', 'https://b.example'])
+  assert.equal(principal.rateLimitPerMinute, 60)
+})
+
+test('verify resolves a secret key (default) as non-publishable, no guardrails', async () => {
+  const kon10 = fakeKon10()
+  const { token } = await createApiKey(kon10, { name: 'sk' })
+  assert.ok(token.startsWith(SECRET_TOKEN_PREFIX))
+  const principal = await verifyApiKeyToken(kon10, token)
+  assert.equal(principal?.publishable, false)
+  assert.equal(principal?.allowedOrigins, undefined)
+  assert.equal(principal?.rateLimitPerMinute, undefined)
 })

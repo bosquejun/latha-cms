@@ -346,3 +346,31 @@ test('an anonymous manifest lists only entities the caller may read', async () =
   // RBAC-gated entities never granted to the Public role stay out of the manifest.
   assert.equal(slugs.has('roles'), false)
 })
+
+test('a publishable key with an origin allowlist enforces the request Origin', async () => {
+  const kon10 = await getRuntime(config)
+  const { token } = await createApiKey(kon10, {
+    name: 'pk-origin',
+    type: 'publishable',
+    allowedOrigins: ['https://ok.example'],
+  })
+
+  // A disallowed Origin is refused.
+  const wrong = await get('/api/v1/widgets', {
+    authorization: `Bearer ${token}`,
+    origin: 'https://evil.example',
+  })
+  assert.equal(wrong.status, 403)
+  assert.equal(((await wrong.json()) as ApiResponse<unknown>).error?.code, 'FORBIDDEN')
+
+  // A missing Origin is refused when an allowlist is set.
+  const missing = await get('/api/v1/widgets', { authorization: `Bearer ${token}` })
+  assert.equal(missing.status, 403)
+
+  // The allowed Origin passes through.
+  const ok = await get('/api/v1/widgets', {
+    authorization: `Bearer ${token}`,
+    origin: 'https://ok.example',
+  })
+  assert.equal(ok.status, 200)
+})
