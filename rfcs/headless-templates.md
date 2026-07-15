@@ -303,8 +303,12 @@ running site talks to the delivery API directly.
    ships against `/api/v1`, alongside the `@kon10/client-react` hooks package
    (`Kon10Provider` + `useList` / `useDoc` / `useSingle`). Packages live under
    `packages/clients/*`.
-2. **`_manifest` endpoint.** Serialize entity/field configs from the runtime,
-   RBAC-scoped, hidden fields omitted.
+2. **`_manifest` endpoint.** ✅ **Done.** `GET /api/v1/_manifest` in
+   `packages/start/src/api.ts` serializes each readable entity's `prefix` /
+   `slug` / `cardinality` / `kind` / `hierarchical` + non-hidden field configs.
+   Gated by the same read authorization as the entity's own reads (entity
+   `access` predicate + RBAC guard), so it never advertises an entity the caller
+   couldn't fetch; hidden fields omitted; per-identity cached like other reads.
 3. **`kon10 typegen`.** Manifest → Zod + inferred types in the consumer repo
    (framework-agnostic output); wire the client's generics to the generated
    `entities` map.

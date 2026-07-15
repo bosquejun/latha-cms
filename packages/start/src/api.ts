@@ -8,6 +8,14 @@
  *   GET <api>/<prefix>/<slug>           → paginated list of documents
  *   GET <api>/<prefix>/<slug>/:id       → one document (404 when absent)
  *   GET <api>/<prefix>/<slug> (single)  → the singleton document
+ *   GET <api>/_manifest                 → schema of every readable entity
+ *
+ * `_manifest` returns, for every entity the caller may read, its `prefix`,
+ * `slug`, `cardinality`, opaque `kind`, and serialized (non-hidden) field
+ * configs — enough for a consumer or `kon10 typegen` to rebuild the same
+ * document shape the server validates. It is gated by the same read
+ * authorization as the entity's own reads, so it never advertises an entity
+ * the caller could not fetch.
  *
  * Every response — success or failure, single resource or list — is the same
  * envelope (see `./envelope.ts`): `{ data, error, pagination? }`. `error` is
@@ -43,6 +51,7 @@ import {
   type Entity,
   type JsonValue,
   type Kon10Instance,
+  type OperationContext,
   type Query,
   type QuerySort,
   type ResolvedConfig,
@@ -57,6 +66,8 @@ import { API_ERROR_CODES, apiFailure, apiPaginationOf, apiSuccess, type ApiRespo
 const LIST_DEFAULT_PAGE_SIZE = 50
 const LIST_MAX_PAGE_SIZE = 200
 const DEFAULT_CACHE_TTL_SECONDS = 60
+/** Reserved delivery-API path segment for the schema manifest. */
+const MANIFEST_SEGMENT = '_manifest'
 
 interface CorsSettings {
   cors: '*' | string[] | false
@@ -263,6 +274,52 @@ function resolveDeliveryRoute(kon10: Kon10Instance, segments: string[]): Resolve
   return undefined
 }
 
+/**
+ * One entity's public schema descriptor for the delivery manifest — enough for
+ * a consumer (or `kon10 typegen`) to rebuild the same document shape the server
+ * validates. Hidden fields (`meta.hidden`, credential material) are dropped,
+ * exactly as on every other read of this surface.
+ */
+interface EntityManifest {
+  prefix: string
+  slug: string
+  cardinality: Entity['cardinality']
+  kind?: string
+  hierarchical?: boolean
+  fields: unknown[]
+}
+
+function entityManifest(prefix: string, entity: Entity): EntityManifest {
+  const hidden = hiddenFieldNames(entity)
+  const fields = (entity.fields as Array<{ name: string }>).filter((f) => !hidden.has(f.name))
+  return {
+    prefix,
+    slug: entity.slug,
+    cardinality: entity.cardinality,
+    ...(entity.kind !== undefined ? { kind: entity.kind } : {}),
+    ...(entity.hierarchical ? { hierarchical: true } : {}),
+    fields,
+  }
+}
+
+/**
+ * Whether `principal` may read `entity`, decided by the same authorization the
+ * read path runs — the entity `access` predicate plus every registered guard
+ * (RBAC's `<slug>:read`). Reuses `operations` so the manifest can never
+ * advertise an entity the caller couldn't actually fetch; a non-access error
+ * propagates to the 500 handler.
+ */
+async function canReadEntity(opCtx: OperationContext, entity: Entity): Promise<boolean> {
+  try {
+    if (entity.cardinality === 'single') await operations.findGlobal(opCtx, entity.slug)
+    else await operations.count(opCtx, entity.slug)
+    return true
+  } catch (err) {
+    if (err instanceof AccessDeniedError) return false
+    throw err
+  }
+}
+
 /** Answer a CORS preflight for the delivery API. */
 export function handleDeliveryPreflight(
   config: ResolvedConfig,
@@ -316,6 +373,49 @@ export async function handleDeliveryRequest(
       ...extra,
     })
     return response
+  }
+
+  // The schema manifest: every entity the caller may read, with its serialized
+  // field configs. Consumers and `kon10 typegen` build typed clients from this.
+  if (segments.length === 1 && segments[0] === MANIFEST_SEGMENT) {
+    const resolved = await resolveApiPrincipal(kon10, request, cors)
+    if ('error' in resolved) return finish(resolved.error)
+    const principalId = (resolved.principal as { id?: string } | null)?.id ?? 'anonymous'
+    const opCtx: OperationContext = {
+      cms: kon10,
+      principal: resolved.principal,
+      context: { enforce: true, requestId },
+    }
+    const cacheOpt = config.api?.cache
+    const cacheEnabled = kon10.cache !== undefined && cacheOpt !== false
+    const cacheTtl = cacheOpt ? (cacheOpt.ttlSeconds ?? DEFAULT_CACHE_TTL_SECONDS) : DEFAULT_CACHE_TTL_SECONDS
+    const cacheKey = cacheEnabled ? deliveryCacheKey(request, url) : undefined
+    const logLine = { slug: MANIFEST_SEGMENT, principalId }
+
+    if (cacheKey) {
+      const cached = await kon10.cache!.get(cacheKey)
+      if (cached !== undefined) {
+        return finish(json(200, cached as ApiResponse<unknown>, cors), { ...logLine, cache: 'hit' })
+      }
+    }
+
+    try {
+      const entities: EntityManifest[] = []
+      for (const module of kon10.modules) {
+        const prefix = moduleApiPrefix(module)
+        for (const entity of (module.entities ?? []) as Entity[]) {
+          if (await canReadEntity(opCtx, entity)) entities.push(entityManifest(prefix, entity))
+        }
+      }
+      const body = apiSuccess({ entities })
+      if (cacheKey) await kon10.cache!.set(cacheKey, body as unknown as JsonValue, cacheTtl)
+      return finish(json(200, body, cors), cacheKey ? { ...logLine, cache: 'miss' } : logLine)
+    } catch (err) {
+      return finish(
+        json(500, apiFailure(API_ERROR_CODES.INTERNAL_ERROR, 'Internal error.', requestId), cors),
+        { ...logLine, err: err instanceof Error ? err.message : String(err) },
+      )
+    }
   }
 
   const route = resolveDeliveryRoute(kon10, segments)

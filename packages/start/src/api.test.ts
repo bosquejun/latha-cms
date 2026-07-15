@@ -300,3 +300,49 @@ test('preflight answers with CORS headers', () => {
   assert.equal(res.headers.get('access-control-allow-origin'), '*')
   assert.match(res.headers.get('access-control-allow-methods') ?? '', /GET/)
 })
+
+interface ManifestEntity {
+  prefix: string
+  slug: string
+  cardinality: 'many' | 'single'
+  kind?: string
+  fields: { name: string; type: string }[]
+}
+
+test('the manifest describes every entity an admin key can read, hidden fields omitted', async () => {
+  const kon10 = await getRuntime(config)
+  const adminRole = (await kon10.db.find('roles', { where: { name: 'admin' }, limit: 1 }))[0]!
+  const { token } = await createApiKey(kon10, { name: 'manifest', roles: [adminRole.id] })
+
+  const res = await get('/api/v1/_manifest', { authorization: `Bearer ${token}` })
+  assert.equal(res.status, 200)
+  const body = (await res.json()) as ApiResponse<{ entities: ManifestEntity[] }>
+  assertSuccess(body)
+
+  const bySlug = new Map(body.data.entities.map((e) => [e.slug, e]))
+  const posts = bySlug.get('posts')!
+  assert.equal(posts.prefix, 'test-content')
+  assert.equal(posts.cardinality, 'many')
+  const fieldNames = posts.fields.map((f) => f.name)
+  assert.ok(fieldNames.includes('title'))
+  assert.ok(fieldNames.includes('featured'))
+  // The `meta.hidden` field never appears in the manifest, as on every read.
+  assert.equal(fieldNames.includes('internalNote'), false)
+
+  // Every module's readable entities are described, not just one module's.
+  assert.ok(bySlug.has('articles'))
+  assert.ok(bySlug.has('widget'))
+  assert.ok(bySlug.has('roles'))
+})
+
+test('an anonymous manifest lists only entities the caller may read', async () => {
+  const res = await get('/api/v1/_manifest')
+  assert.equal(res.status, 200)
+  const body = (await res.json()) as ApiResponse<{ entities: ManifestEntity[] }>
+  assertSuccess(body)
+  const slugs = new Set(body.data.entities.map((e) => e.slug))
+  // `widget` grants read to everyone via its access predicate.
+  assert.ok(slugs.has('widget'))
+  // RBAC-gated entities never granted to the Public role stay out of the manifest.
+  assert.equal(slugs.has('roles'), false)
+})
