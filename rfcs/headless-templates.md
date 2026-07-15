@@ -26,6 +26,14 @@ This mirrors how shadcn/ui itself distributes components, and it fits Kon10's
 existing shape: `@kon10/ui` is already a shadcn-style design system
 (`components.json`, `new-york` style, `neutral` base, CSS variables, lucide icons).
 
+**Multi-framework is a first-class constraint, not an afterthought.** We must be
+able to ship the same template concept ("blog") for Vite + TanStack Start, Next.js,
+Vue/Nuxt, and beyond. To keep that tractable, every layer of the design is graded
+by how portable it is (§3.4): the data/typing core is framework-agnostic, and only
+the outermost routing/rendering shell is framework-specific. **Vite + TanStack
+Start (React) is the default target** and the first template we ship; other
+frameworks follow the same layering.
+
 ---
 
 ## 2. Current State (what we build on)
@@ -82,8 +90,17 @@ Responsibilities:
   envelope's typed `ApiError` codes on failure. Typed schemas come from typegen
   (§3.2); untyped calls fall back to a permissive `JsonDoc` schema.
 - Send `Authorization: Bearer <apiKey>` when provided.
-- Optional `@kon10/client/react` entry: `useList` / `useDoc` / `useSingle`
-  hooks (thin, or TanStack-Query-friendly), since templates are React-first.
+
+The **core is pure TypeScript** (`fetch` + Zod) with zero framework imports, so it
+runs unchanged under React, Vue, or a plain Node build step. Framework bindings are
+**separate optional entry points** over that same core:
+
+- `@kon10/client/react` — `useList` / `useDoc` / `useSingle` hooks (thin, or
+  TanStack-Query-friendly). Ships first, since Vite + TanStack is the default.
+- `@kon10/client/vue` — the equivalent composables (`useList`, …). Added when the
+  Vue template lands.
+
+New UI-library bindings never touch the core; they only wrap it.
 
 **Envelope relocation.** `apiResponseSchema` / `ApiResponse` / `apiErrorSchema`
 currently live in `@kon10/start/envelope`. The client cannot depend on
@@ -164,6 +181,18 @@ npx shadcn@latest add https://kon10.dev/r/blog.json
 
 which **copies source files into their repo** — the dev-first ownership model.
 
+The shadcn registry format is React + Tailwind oriented, so a single registry
+serves every React framework (Vite/TanStack, Next.js). Vue is served by the
+parallel [shadcn-vue](https://www.shadcn-vue.com/) registry format; we treat it as
+a second registry namespace, not a blocker (§3.4). Templates are **namespaced by
+framework** because their routing/rendering shells differ:
+
+```
+/r/tanstack/blog.json      # default
+/r/next/blog.json
+/r/vue/blog.json           # shadcn-vue format
+```
+
 Template items are layered by registry item type:
 
 | Layer | Item type | Contents |
@@ -183,18 +212,51 @@ into the docs site). A build step generates `registry.json` + `/r/*.json` from a
 `registry/` source tree that holds the real, type-checked template source (so
 templates are lint/build-tested in CI like any package, not hand-authored JSON).
 
+### 3.4 Multi-framework strategy
+
+The template concept must survive Vite/TanStack, Next.js, and Vue/Nuxt. The key is
+to grade every layer by portability and push framework-specific code to the thin
+outer shell only:
+
+| Layer | Portability | Per-framework work |
+|---|---|---|
+| `@kon10/client` core (fetch + Zod envelope) | All JS frameworks | None — pure TS. |
+| `kon10 typegen` output (Zod + inferred types) | All JS frameworks | None — plain schemas. |
+| Client binding (`/react` hooks, `/vue` composables) | Per UI library | One thin adapter per UI library (React, Vue). |
+| Presentational components | Per UI library | Parallel implementations: JSX for React, SFC for Vue. Same props/design tokens, different syntax. |
+| Template shell — routing, data loading, SEO/meta | Per framework | TanStack file routes + loaders vs. Next app/pages vs. Nuxt pages. The only genuinely framework-specific surface. |
+
+Consequences:
+- **One data/typing spine** (`@kon10/client` core + `typegen`) is shared by every
+  framework; we never re-solve fetching or typing per framework.
+- **React frameworks share the shadcn registry and JSX components**; TanStack vs.
+  Next differ only in the route/loader shell, so a Next template reuses most of a
+  TanStack template's non-route files.
+- **Vue is additive, not a fork of core.** It reuses the client core + generated
+  types, adds a `@kon10/client/vue` binding, and ships templates through the
+  shadcn-vue registry namespace with SFC components.
+
+Rollout order: **Vite + TanStack (default) → Next.js (same registry, new shell) →
+Vue/Nuxt (shadcn-vue namespace).** Each step validates that the shared spine stayed
+framework-agnostic; if a framework forces a change into `@kon10/client` core, that
+is a design smell to fix rather than special-case.
+
 ---
 
 ## 4. Proposed Layout
 
 ```
 packages/client/            @kon10/client — delivery SDK + envelope contract (new home)
-  src/index.ts              createDeliveryClient, envelope schemas, types
-  src/react.ts              useList / useDoc / useSingle
-packages/cli/               kon10 typegen  (new, or extend an existing CLI)
+  src/index.ts              createDeliveryClient, envelope schemas, types (pure TS core)
+  src/react.ts              React hooks: useList / useDoc / useSingle
+  src/vue.ts                Vue composables (added with the Vue template)
+packages/cli/               kon10 typegen  (new, or extend an existing CLI) — framework-agnostic
 packages/start/src/api.ts   + GET /api/v1/_manifest
-registry/                   template source tree (blog/, docs/, marketing/…), type-checked
-apps/registry/              builds + serves registry.json + /r/*.json  (or fold into docs)
+registry/                   type-checked template source, namespaced by framework
+  tanstack/                   blog/, docs/, marketing/…   (default, ships first)
+  next/                       blog/, …                    (reuses non-route files from tanstack)
+  vue/                        blog/, …                    (shadcn-vue format)
+apps/registry/              builds + serves registry.json + /r/<framework>/*.json  (or fold into docs)
 ```
 
 `@kon10/ui` stays CMS-unaware; templates compose it. No new cross-module import
@@ -219,20 +281,28 @@ running site talks to the delivery API directly.
 
 ## 6. Phased Roadmap
 
-1. **Envelope relocation + `@kon10/client`.** Move `apiResponseSchema` et al. into
-   the neutral package; ship `createDeliveryClient` (generic-typed) against
-   `/api/v1`. Smallest useful unit — immediately usable by hand-written sites.
+1. **Envelope relocation + `@kon10/client` core.** Move `apiResponseSchema` et al.
+   into the neutral package; ship framework-agnostic `createDeliveryClient`
+   (generic-typed) against `/api/v1`, plus the `@kon10/client/react` binding.
+   Smallest useful unit — immediately usable by hand-written sites.
 2. **`_manifest` endpoint.** Serialize entity/field configs from the runtime,
    RBAC-scoped, hidden fields omitted.
-3. **`kon10 typegen`.** Manifest → Zod + inferred types in the consumer repo;
-   wire the client's generics to the generated `entities` map.
-4. **Registry scaffolding.** `registry.json` + build pipeline + hosting; mirror
-   `@kon10/ui` primitives as `registry:ui` items.
-5. **First template — `blog`.** A `registry:block` composing client + typed
-   content + UI, installable end-to-end via `npx shadcn add`.
-6. **Template gallery + scaffolder.** `docs`, `marketing`, etc.; a
-   `create-kon10-site` command (or a `--template` flag) paralleling
-   `create-kon10-app`.
+3. **`kon10 typegen`.** Manifest → Zod + inferred types in the consumer repo
+   (framework-agnostic output); wire the client's generics to the generated
+   `entities` map.
+4. **Registry scaffolding.** `registry.json` + build pipeline + hosting, with the
+   `/r/<framework>/*.json` namespacing; mirror `@kon10/ui` primitives as
+   `registry:ui` items.
+5. **First template — `tanstack/blog` (default).** A `registry:block` composing the
+   client + typed content + UI on Vite + TanStack Start, installable end-to-end via
+   `npx shadcn add`.
+6. **Second framework — `next/blog`.** Same registry, reusing the TanStack
+   template's non-route files; validates the shell/spine split.
+7. **Vue track.** `@kon10/client/vue` binding + `vue/blog` via the shadcn-vue
+   registry namespace.
+8. **Template gallery + scaffolder.** `docs`, `marketing`, etc. across frameworks;
+   a `create-kon10-site` command (or a `--template` / `--framework` flag)
+   paralleling `create-kon10-app`.
 
 ---
 
@@ -241,6 +311,12 @@ running site talks to the delivery API directly.
 - **CLI home:** new `packages/cli` vs. extending `create-kon10-app`'s bin.
 - **React data layer:** ship our own hooks vs. lean on TanStack Query as a peer.
 - **Registry hosting:** standalone `apps/registry` vs. a route in the docs site.
+- **Vue registry mechanics:** target shadcn-vue's registry format directly, or
+  publish a Kon10-native Vue registry; how much of the JSON pipeline is shared with
+  the React namespace.
+- **Shared-file reuse across React shells:** how the build expresses "Next reuses
+  TanStack's non-route files" without duplicating source (registry composition vs.
+  a shared `registry/_shared` tree pulled into both).
 - **Versioning:** how a template pins a compatible `@kon10/client` / manifest
   shape as entities evolve (manifest could carry a schema version).
 - **Preview/ISR:** whether templates get a draft-preview path (delivery API today
