@@ -18,6 +18,43 @@
           "target": "src/lib/kon10.ts"
         }
       ]
+    },
+    {
+      "framework": "tanstack",
+      "name": "blog",
+      "type": "registry:block",
+      "title": "Blog",
+      "description": "A blog index and post pages for TanStack Start, reading a published `posts` collection from your Kon10 Studio's delivery API.",
+      "author": "Kon10",
+      "dependencies": ["@kon10/client", "zod"],
+      "categories": ["blog", "content"],
+      "files": [
+        {
+          "path": "tanstack/lib/kon10.ts",
+          "type": "registry:lib",
+          "target": "src/lib/kon10.ts"
+        },
+        {
+          "path": "tanstack/blog/lib/posts.ts",
+          "type": "registry:lib",
+          "target": "src/lib/posts.ts"
+        },
+        {
+          "path": "tanstack/blog/components/post-card.tsx",
+          "type": "registry:component",
+          "target": "src/components/blog/post-card.tsx"
+        },
+        {
+          "path": "tanstack/blog/routes/index.tsx",
+          "type": "registry:page",
+          "target": "src/routes/blog/index.tsx"
+        },
+        {
+          "path": "tanstack/blog/routes/$slug.tsx",
+          "type": "registry:page",
+          "target": "src/routes/blog/$slug.tsx"
+        }
+      ]
     }
   ]
 }

@@ -326,16 +326,26 @@ running site talks to the delivery API directly.
    Mirroring `@kon10/ui` primitives as `registry:ui` items is deferred to when a
    template needs specific ones (Phase 5) — until then templates can pull
    primitives from shadcn's own registry via `registryDependencies`.
-5. **First template — `tanstack/blog` (default).** A `registry:block` composing the
-   client + typed content + UI on Vite + TanStack Start, installable end-to-end via
-   `npx shadcn add`.
+5. **First template — `tanstack/blog` (default).** ✅ **Done.** A `registry:block`
+   for Vite + TanStack Start: a blog index + post pages that read a published
+   `posts` collection through the `kon10-client` lib (reused, not duplicated) and
+   the per-call Zod schema pattern, with TanStack Router loaders as the data
+   shell and plain Tailwind theme-token markup for presentation. Installable via
+   `npx shadcn add <host>/r/tanstack/blog.json`. A syntax guard in
+   `@kon10/registry` transpile-checks every item source file so templates can't
+   ship a parse error. The discovery catalog (Phase 4's `r/index.json`) lists it.
+
+The spine (client → manifest → typegen → registry) and the first end-to-end
+template are complete and verified. The remaining roadmap is additive — each
+step follows the established pattern:
+
 6. **Second framework — `next/blog`.** Same registry, reusing the TanStack
    template's non-route files; validates the shell/spine split.
 7. **Vue track.** `@kon10/client-vue` binding + `vue/blog` via the shadcn-vue
    registry namespace.
-8. **Template gallery + scaffolder.** `docs`, `marketing`, etc. across frameworks;
-   a `create-kon10-site` command (or a `--template` / `--framework` flag)
-   paralleling `create-kon10-app`.
+8. **Template gallery + scaffolder.** `docs`, `marketing`, etc. across frameworks
+   (discovery catalog already emitted); a `create-kon10-site` command (or a
+   `--template` / `--framework` flag) paralleling `create-kon10-app`.
 
 ---
 
