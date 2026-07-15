@@ -107,6 +107,7 @@ jobs:
             const j = JSON.parse(fs.readFileSync(p, "utf8"));
             const map = {
               "@kon10/auth": "modules/auth", "@kon10/cache": "modules/cache",
+              "@kon10/client": "clients/client",
               "@kon10/content": "modules/content", "@kon10/core": "core",
               "@kon10/start": "start", "@kon10/storage": "modules/storage",
               "@kon10/studio-sdk": "studio-sdk", "@kon10/ui": "ui",

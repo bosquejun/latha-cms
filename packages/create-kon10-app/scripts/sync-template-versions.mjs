@@ -20,7 +20,7 @@ if (!existsSync(join(workspaceRoot, 'pnpm-workspace.yaml'))) {
 
 /** name → version for every @kon10/* workspace package. */
 const versions = new Map()
-for (const group of ['packages', 'packages/modules', 'packages/plugins']) {
+for (const group of ['packages', 'packages/clients', 'packages/modules', 'packages/plugins']) {
   const groupDir = join(workspaceRoot, group)
   if (!existsSync(groupDir)) continue
   for (const entry of readdirSync(groupDir, { withFileTypes: true })) {
