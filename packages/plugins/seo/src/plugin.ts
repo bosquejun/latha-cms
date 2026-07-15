@@ -1,99 +1,117 @@
 /**
- * `seoPlugin()` — the core `Plugin` that wires a search/social metadata field
- * into entities, whichever module contributed them.
+ * `seoPlugin()` — the core `Plugin` that wires a search-metadata field and a
+ * social-graph field into entities, whichever module contributed them.
  *
  * At `onInit` (after all module onInits, before migrate — so the injected
- * field gets a storage column for free) it:
- * 1. registers the `seo` field type,
- * 2. injects an `seo` field into every entity matched by `inject` that does
- *    not already declare one (config-level opt-in, for "add SEO to all my
- *    pages" without touching each entity),
- * 3. for each `seo` field (hand-written via `seo()` or injected), resolves its
- *    `from` derivation map (falling back to a value inferred from the entity's
- *    own fields) and stamps the resolved config back onto the field so the
- *    Studio renderer and the hooks agree, and
- * 4. appends beforeCreate/beforeUpdate hooks that backfill blank SEO
+ * fields get storage columns for free) it:
+ * 1. registers the `seo` and `socialGraph` field types,
+ * 2. injects each into every entity matched by `inject` that does not already
+ *    declare it (config-level opt-in), placing `seo` in the "SEO" tab and
+ *    `socialGraph` in the "Social Graph" tab,
+ * 3. resolves each `seo` field's `from` derivation map (falling back to a value
+ *    inferred from the entity's own fields) and stamps it back so the Studio
+ *    renderer and the hooks agree,
+ * 4. cross-links a `socialGraph` field to its sibling `seo` field (`seoField`)
+ *    so the social previews can fall back to the search title/description, and
+ * 5. appends beforeCreate/beforeUpdate hooks that backfill blank SEO
  *    sub-fields from the final document data.
  *
- * Detection is by field *type* `'seo'`, never by name — a hand-rolled
- * `seo: group(...)` is left untouched. Top-level fields only.
+ * Detection is by field *type*, never by name — a hand-rolled `seo: group(...)`
+ * is left untouched. Top-level fields only.
  */
 
 import type { AnyEntity, Field, Kon10Instance, Plugin } from '@kon10/core'
-import { seoFieldEntry } from './field.js'
+import { seoFieldEntry, socialFieldEntry } from './field.js'
 import { inferFrom } from './defaults.js'
 import { createSeoHooks, type SeoHookTarget } from './hooks.js'
 
 export interface SeoPluginOptions {
   /**
-   * Which entities get an `seo` field injected automatically. A list of entity
-   * slugs, or a predicate over the entity (e.g. `(e) => e.kind === 'document'`
-   * to cover every content singleton). Entities that already declare an `seo`
-   * field are skipped either way. Omit to inject nowhere — only hand-written
-   * `seo()` fields are wired.
+   * Which entities get `seo` + `socialGraph` fields injected automatically. A
+   * list of entity slugs, or a predicate over the entity (e.g. `(e) => e.kind
+   * === 'document'`). Entities that already declare a given field are skipped
+   * for that field. Omit to inject nowhere — only hand-written fields are wired.
    */
   inject?: string[] | ((entity: AnyEntity) => boolean)
-  /** Default `titleTemplate` for every wired field (a field's own value wins). */
+  /** Default `titleTemplate` for every wired `seo` field (a field's own value wins). */
   titleTemplate?: string
-  /** Default `social` toggle for injected fields. Default true. */
+  /** Inject the `socialGraph` field alongside `seo`. Default true. */
   social?: boolean
-  /** Default `robots` toggle for injected fields. Default true. */
+  /** Default `robots` toggle for injected `seo` fields. Default true. */
   robots?: boolean
   /**
-   * Default derivation map merged under each field's own `from` and the
-   * per-entity inferred default. Lets you force, say, `{ description:
-   * '{summary}' }` everywhere without repeating it.
+   * Default derivation map merged under each `seo` field's own `from` and the
+   * per-entity inferred default.
    */
   from?: Record<string, string>
 }
 
-/** Does this entity opt into an injected SEO field? */
+/** Does this entity opt into injected SEO fields? */
 function matchesInject(entity: AnyEntity, inject: SeoPluginOptions['inject']): boolean {
   if (!inject) return false
   return typeof inject === 'function' ? inject(entity) : inject.includes(entity.slug)
 }
 
-/** The `seo` field on an entity, if any — detected by type, never by name. */
-function findSeoField(entity: AnyEntity): Record<string, unknown> | undefined {
-  return (entity.fields as Array<Record<string, unknown>>).find((f) => f.type === 'seo')
+/** The first field of a given type on an entity — detected by type, never by name. */
+function findFieldByType(entity: AnyEntity, type: string): Record<string, unknown> | undefined {
+  return (entity.fields as Array<Record<string, unknown>>).find((f) => f.type === type)
 }
 
 export function seoPlugin(options: SeoPluginOptions = {}): Plugin {
+  const injectSocial = options.social !== false
+
   return {
     name: 'seo',
     studio: { ui: '@kon10/seo/studio' },
     onInit(cms: Kon10Instance) {
       cms.registerFieldType(seoFieldEntry)
+      cms.registerFieldType(socialFieldEntry)
 
       for (const entity of cms.entities) {
-        let field = findSeoField(entity)
+        let seoField = findFieldByType(entity, 'seo')
+        let socialField = findFieldByType(entity, 'socialGraph')
+        const inject = matchesInject(entity, options.inject)
 
-        // Config-level injection: add a field to opted-in entities that lack one.
-        if (!field && matchesInject(entity, options.inject)) {
-          field = {
+        // Config-level injection: add the fields to opted-in entities that lack them.
+        if (!seoField && inject) {
+          seoField = {
             name: 'seo',
             type: 'seo',
-            ...(options.social != null ? { social: options.social } : {}),
             ...(options.robots != null ? { robots: options.robots } : {}),
-            meta: { group: 'SEO & Meta', label: 'SEO', description: 'Search & social metadata.' },
+            meta: { group: 'SEO', label: 'SEO', description: 'Search engine metadata.' },
           }
-          ;(entity.fields as Field[]).push(field as unknown as Field)
+          ;(entity.fields as Field[]).push(seoField as unknown as Field)
+        }
+        if (!socialField && inject && injectSocial) {
+          socialField = {
+            name: 'social',
+            type: 'socialGraph',
+            meta: { group: 'Social Graph', label: 'Social Graph', description: 'Open Graph & Twitter cards.' },
+          }
+          ;(entity.fields as Field[]).push(socialField as unknown as Field)
         }
 
-        if (!field) continue
+        // Cross-link the social field to its sibling seo field so the OG/Twitter
+        // previews can fall back to the search title/description.
+        if (socialField && seoField) socialField.seoField = String(seoField.name)
+
+        if (!seoField) continue
 
         // Resolve the derivation map: the field's own `from` wins, then the
         // plugin-wide `from`, then the per-entity inferred default.
-        const from = { ...inferFrom(entity), ...options.from, ...(field.from as Record<string, string> | undefined) }
-        const titleTemplate = (field.titleTemplate as string | undefined) ?? options.titleTemplate
+        const from = {
+          ...inferFrom(entity),
+          ...options.from,
+          ...(seoField.from as Record<string, string> | undefined),
+        }
+        const titleTemplate = (seoField.titleTemplate as string | undefined) ?? options.titleTemplate
 
         // Stamp the resolved config back so the Studio renderer reads the same
-        // `from`/`titleTemplate` the hooks use (parity with how slugPlugin
-        // stamps its compiled tokens).
-        field.from = from
-        if (titleTemplate != null) field.titleTemplate = titleTemplate
+        // `from`/`titleTemplate` the hooks use (parity with slugPlugin).
+        seoField.from = from
+        if (titleTemplate != null) seoField.titleTemplate = titleTemplate
 
-        const target: SeoHookTarget = { fieldName: String(field.name), from, titleTemplate }
+        const target: SeoHookTarget = { fieldName: String(seoField.name), from, titleTemplate }
         const { beforeCreate, beforeUpdate } = createSeoHooks(target)
 
         // Append (not unshift): derive from the most-final data, after any

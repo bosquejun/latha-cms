@@ -1,20 +1,23 @@
 /**
- * The `seo` field type — Zod-first config schema + data schema.
+ * The `seo` and `socialGraph` field types — Zod-first config + data schemas.
  *
- * The stored value is the `SeoData` object (title, description, canonical,
- * robots, OpenGraph, Twitter). The field is deliberately never `required`:
- * document validation runs *before* `beforeCreate` hooks, so a required SEO
- * block would reject the empty payload the derivation hook is about to fill.
- * The hook guarantees a populated block whenever `from` templates resolve.
- *
- * `configSchema` describes what a developer writes (or what `seoPlugin`
- * injects): the `from` derivation map, an optional site-wide `titleTemplate`,
- * and the Studio display toggles (`social`, `robots`, length thresholds).
+ * Two field types (each rendered as its own Studio tab): `seo` owns the search
+ * surface, `socialGraph` owns the Open Graph / Twitter surface. Neither is ever
+ * `required` — document validation runs *before* `beforeCreate` hooks, so a
+ * required block would reject the empty payload the derivation hook is about to
+ * fill. The seo hook guarantees a populated block whenever `from` templates
+ * resolve; the social block stays empty and falls back to the SEO values at
+ * render/delivery time.
  */
 
 import { z } from 'zod'
 import type { FieldTypeEntry } from '@kon10/core'
-import { DEFAULT_MAX_DESCRIPTION_LENGTH, DEFAULT_MAX_TITLE_LENGTH, seoDataSchema } from './schema.js'
+import {
+  DEFAULT_MAX_DESCRIPTION_LENGTH,
+  DEFAULT_MAX_TITLE_LENGTH,
+  seoDataSchema,
+  socialDataSchema,
+} from './schema.js'
 
 export const seoFieldConfigSchema = z.object({
   type: z.literal('seo'),
@@ -33,8 +36,6 @@ export const seoFieldConfigSchema = z.object({
    * double-wrap across updates.
    */
   titleTemplate: z.string().optional(),
-  /** Show the OpenGraph / Twitter overrides section in the Studio. Default true. */
-  social: z.boolean().optional(),
   /** Show the noindex / nofollow robots switches in the Studio. Default true. */
   robots: z.boolean().optional(),
   /** Soft character threshold for the title counter/preview. Default 60. */
@@ -48,6 +49,23 @@ export const seoFieldEntry: FieldTypeEntry = {
   // Length limits are preview-only (see schema.ts) — the stored value is the
   // plain optional object so a long title still validates and persists.
   buildDataSchema: () => seoDataSchema,
+}
+
+export const socialFieldConfigSchema = z.object({
+  type: z.literal('socialGraph'),
+  /**
+   * Name of the sibling `seo` field, stamped by `seoPlugin` at onInit so the
+   * Studio renderer knows where to read the search title/description that the
+   * OG/Twitter previews fall back to. Not hand-written.
+   */
+  seoField: z.string().optional(),
+  /** Soft character threshold for the social title counter/preview. Default 60. */
+  maxTitleLength: z.number().int().positive().optional(),
+})
+
+export const socialFieldEntry: FieldTypeEntry = {
+  configSchema: socialFieldConfigSchema,
+  buildDataSchema: () => socialDataSchema,
 }
 
 export { DEFAULT_MAX_DESCRIPTION_LENGTH, DEFAULT_MAX_TITLE_LENGTH }

@@ -8,11 +8,11 @@ import {
   type Kon10Instance,
 } from '@kon10/core'
 import { seoPlugin } from './plugin.js'
-import { seoFieldConfigSchema } from './field.js'
+import { seoFieldConfigSchema, socialFieldConfigSchema } from './field.js'
 
 const userHook: HookFn = ({ data }) => data
 
-// Explicit opt-in via a seo() field, with a hand-written `from`.
+// Explicit opt-in: a seo() field + a socialGraph() field, in their own groups.
 const posts: AnyEntity = {
   slug: 'posts',
   cardinality: 'many',
@@ -22,10 +22,11 @@ const posts: AnyEntity = {
     { name: 'title', type: 'text' },
     { name: 'excerpt', type: 'text' },
     { name: 'seo', type: 'seo', from: { description: '{excerpt}' } },
+    { name: 'social', type: 'socialGraph' },
   ],
 }
 
-// Config-injection target — has no seo field of its own.
+// Config-injection target — has neither field of its own.
 const pages: AnyEntity = {
   slug: 'pages',
   cardinality: 'many',
@@ -39,7 +40,7 @@ const plain: AnyEntity = {
   fields: [{ name: 'seo', type: 'group', fields: [] }],
 }
 
-// Never injected: not in the inject list and carries no seo field.
+// Never injected: not in the inject list.
 const tags: AnyEntity = {
   slug: 'tags',
   cardinality: 'many',
@@ -51,7 +52,8 @@ function fakeCms(entities: AnyEntity[]): Kon10Instance {
     entities,
     db: {},
     registerFieldType: (entry: FieldTypeEntry) => {
-      if (!fieldRegistry.has('seo')) fieldRegistry.register(entry)
+      const type = entry.configSchema.shape.type.value
+      if (!fieldRegistry.has(type)) fieldRegistry.register(entry)
     },
   } as unknown as Kon10Instance
 }
@@ -60,19 +62,29 @@ await seoPlugin({ inject: ['pages'], titleTemplate: '%s · Acme' }).onInit?.(
   fakeCms([posts, pages, plain, tags]),
 )
 
-test('registers the seo field type with an object data schema', () => {
+test('registers the seo (search) and socialGraph (OG/Twitter) field types', () => {
   assert.ok(fieldRegistry.has('seo'))
-  const built = fieldRegistry.buildDocumentSchema([{ name: 'seo', type: 'seo' }])
-  assert.equal(built.safeParse({}).success, true) // never required
-  assert.equal(built.safeParse({ seo: { title: 'Hi', noindex: true } }).success, true)
-  assert.equal(built.safeParse({ seo: { canonical: 'not-a-url' } }).success, false)
+  assert.ok(fieldRegistry.has('socialGraph'))
+
+  const seoSchema = fieldRegistry.buildDocumentSchema([{ name: 'seo', type: 'seo' }])
+  assert.equal(seoSchema.safeParse({}).success, true) // never required
+  assert.equal(seoSchema.safeParse({ seo: { title: 'Hi', noindex: true } }).success, true)
+  assert.equal(seoSchema.safeParse({ seo: { canonical: 'not-a-url' } }).success, false)
+
+  const socialSchema = fieldRegistry.buildDocumentSchema([{ name: 'social', type: 'socialGraph' }])
+  assert.equal(socialSchema.safeParse({ social: { ogTitle: 'Hi', twitterCard: 'summary' } }).success, true)
+  assert.equal(socialSchema.safeParse({ social: { twitterCard: 'nope' } }).success, false)
 })
 
 test('resolves and stamps `from`: field value wins, entity default fills the rest', () => {
   const field = posts.fields.find((f) => f.name === 'seo') as Record<string, unknown>
-  // title inferred from the entity; description kept from the hand-written `from`.
   assert.deepEqual(field.from, { title: '{title}', description: '{excerpt}' })
   assert.equal(field.titleTemplate, '%s · Acme')
+})
+
+test('cross-links the socialGraph field to its sibling seo field', () => {
+  const social = posts.fields.find((f) => f.name === 'social') as Record<string, unknown>
+  assert.equal(social.seoField, 'seo')
 })
 
 test('appends derivation hooks after user hooks, on seo-carrying entities only', () => {
@@ -81,12 +93,23 @@ test('appends derivation hooks after user hooks, on seo-carrying entities only',
   assert.equal(posts.hooks?.beforeUpdate?.length, 1)
 })
 
-test('injects a seo field into listed entities that lack one', () => {
-  const injected = pages.fields.find((f) => (f as Record<string, unknown>).type === 'seo') as Record<string, unknown>
-  assert.ok(injected)
-  assert.equal(injected.name, 'seo')
-  assert.deepEqual(injected.from, { title: '{title}' })
+test('injects both seo and socialGraph into listed entities that lack them', () => {
+  const seoField = pages.fields.find((f) => (f as Record<string, unknown>).type === 'seo') as Record<string, unknown>
+  const socialField = pages.fields.find((f) => (f as Record<string, unknown>).type === 'socialGraph') as Record<string, unknown>
+  assert.ok(seoField)
+  assert.ok(socialField)
+  assert.equal((seoField.meta as Record<string, unknown>).group, 'SEO')
+  assert.equal((socialField.meta as Record<string, unknown>).group, 'Social Graph')
+  assert.equal(socialField.seoField, 'seo')
+  assert.deepEqual(seoField.from, { title: '{title}' })
   assert.equal(pages.hooks?.beforeCreate?.length, 1)
+})
+
+test('social:false injects only the seo field', () => {
+  const noSocial: AnyEntity = { slug: 'faqs', cardinality: 'many', fields: [{ name: 'title', type: 'text' }] }
+  seoPlugin({ inject: ['faqs'], social: false }).onInit?.(fakeCms([noSocial]))
+  assert.ok(noSocial.fields.find((f) => (f as Record<string, unknown>).type === 'seo'))
+  assert.equal(noSocial.fields.find((f) => (f as Record<string, unknown>).type === 'socialGraph'), undefined)
 })
 
 test('leaves a hand-rolled group named seo untouched', () => {
@@ -101,17 +124,12 @@ test('does not inject into entities outside the inject list', () => {
   assert.equal(tags.hooks, undefined)
 })
 
-test('config schema accepts a bare seo field and the full option set', () => {
+test('config schemas accept bare fields and the full option set', () => {
   assert.equal(seoFieldConfigSchema.safeParse({ type: 'seo' }).success, true)
   assert.equal(
-    seoFieldConfigSchema.safeParse({
-      type: 'seo',
-      from: { title: '{title}' },
-      titleTemplate: '%s',
-      social: false,
-      robots: true,
-      maxTitleLength: 70,
-    }).success,
+    seoFieldConfigSchema.safeParse({ type: 'seo', from: { title: '{title}' }, titleTemplate: '%s', robots: true, maxTitleLength: 70 }).success,
     true,
   )
+  assert.equal(socialFieldConfigSchema.safeParse({ type: 'socialGraph' }).success, true)
+  assert.equal(socialFieldConfigSchema.safeParse({ type: 'socialGraph', seoField: 'seo', maxTitleLength: 70 }).success, true)
 })

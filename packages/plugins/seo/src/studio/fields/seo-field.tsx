@@ -1,30 +1,22 @@
 /**
- * `seo` field renderer — a metadata section with live previews.
+ * `seo` field renderer — the search-engine surface, with a live Google preview.
  *
- * The stored value is the `SeoData` object. Rather than hand-roll a dozen
- * inputs, this composes the Studio's existing field renderers through
- * `getFieldRenderer` (the same pattern `GroupField` uses) so an `ogImage`
- * reuses the media plugin's picker, the enums reuse the select renderer, and
- * so on — the SEO plugin owns only the layout and the two previews.
+ * Composes the Studio's existing renderers through `getFieldRenderer` (the same
+ * pattern `GroupField` uses) for the title/description/canonical inputs, and
+ * adds the search-result preview plus soft length counters. The Open Graph /
+ * Twitter surface lives in its own `socialGraph` field / tab (see
+ * `social-field.tsx`).
  *
- * The previews mirror what the server derives: while a title/description is
- * blank, they fall back to the value the derivation hook would fill from the
+ * The preview mirrors what the server derives: while a title/description is
+ * blank it falls back to the value the derivation hook would fill from the
  * field's `from` templates (read live from sibling form values), so a writer
- * sees the real search/social result before saving. The soft length counters
- * flag titles/descriptions past the recommended thresholds without blocking a
- * save (parity with the server, which never hard-limits them).
+ * sees the real search result before saving.
  */
 import { useState } from 'react'
 import { Badge, Card, CardContent, Separator, Switch, cn } from '@kon10/ui'
 import { type FieldControlProps, getFieldRenderer, humanize, useFieldValue } from '@kon10/studio-sdk'
 import type { Field, FieldMeta } from '@kon10/core'
-import {
-  DEFAULT_MAX_DESCRIPTION_LENGTH,
-  DEFAULT_MAX_TITLE_LENGTH,
-  OG_TYPES,
-  TWITTER_CARDS,
-  type SeoData,
-} from '../../schema.js'
+import { DEFAULT_MAX_DESCRIPTION_LENGTH, DEFAULT_MAX_TITLE_LENGTH, type SeoData } from '../../schema.js'
 import { applyTitleTemplate, resolveTemplate, templateTokens } from '../../template.js'
 
 export const config = { type: 'seo' }
@@ -33,7 +25,6 @@ export const config = { type: 'seo' }
 type SeoFieldConfig = Field & {
   from?: Record<string, string>
   titleTemplate?: string
-  social?: boolean
   robots?: boolean
   maxTitleLength?: number
   maxDescriptionLength?: number
@@ -43,7 +34,6 @@ type SeoFieldConfig = Field & {
 interface ChildFieldConfig {
   name: keyof SeoData
   type: string
-  options?: string[]
   meta?: FieldMeta
 }
 
@@ -53,9 +43,9 @@ function clip(text: string, max: number): string {
 }
 
 /**
- * Live sibling values for every field referenced by the `from` templates.
- * The token set is derived from the (constant) `from` map, so the per-token
- * hook calls keep a stable order across renders — the same guarantee the slug
+ * Live sibling values for every field referenced by the `from` templates. The
+ * token set is derived from the (constant) `from` map, so the per-token hook
+ * calls keep a stable order across renders — the same guarantee the slug
  * renderer relies on.
  */
 function useDerived(
@@ -82,7 +72,6 @@ function Counter({ length, max }: { length: number; max: number }) {
 
 export default function SeoField({ field, id, value, onChange }: FieldControlProps) {
   const cfg = field as SeoFieldConfig
-  const showSocial = cfg.social !== false
   const showRobots = cfg.robots !== false
   const maxTitle = cfg.maxTitleLength ?? DEFAULT_MAX_TITLE_LENGTH
   const maxDescription = cfg.maxDescriptionLength ?? DEFAULT_MAX_DESCRIPTION_LENGTH
@@ -98,7 +87,6 @@ export default function SeoField({ field, id, value, onChange }: FieldControlPro
     onChange(Object.keys(merged).length ? merged : undefined)
   }
 
-  // Compose an existing Studio renderer for one SEO sub-field.
   const renderChild = (child: ChildFieldConfig) => {
     const Renderer = getFieldRenderer(child.type)
     return (
@@ -114,7 +102,6 @@ export default function SeoField({ field, id, value, onChange }: FieldControlPro
     )
   }
 
-  // Preview values fall back to what the server would derive.
   const previewTitle = seo.title || derived.title
   const previewDescription = seo.description || derived.description
   const label = field.meta?.label ?? humanize(field.name)
@@ -177,20 +164,6 @@ export default function SeoField({ field, id, value, onChange }: FieldControlPro
           meta: { label: 'Canonical URL', inputType: 'url', placeholder: 'https://example.com/page' },
         })}
       </div>
-
-      {showSocial && (
-        <>
-          <Separator />
-          <div className="flex flex-col gap-form">
-            <p className="text-caption font-medium text-muted-foreground">Open Graph & social</p>
-            {renderChild({ name: 'ogImage', type: 'media', meta: { label: 'Share Image', aspectRatio: '1.91:1' } })}
-            {renderChild({ name: 'ogTitle', type: 'text', meta: { label: 'Social Title', placeholder: previewTitle || 'Defaults to the meta title' } })}
-            {renderChild({ name: 'ogDescription', type: 'text', meta: { label: 'Social Description', multiline: true, placeholder: previewDescription || 'Defaults to the meta description' } })}
-            {renderChild({ name: 'ogType', type: 'select', options: [...OG_TYPES], meta: { label: 'Open Graph Type', width: 'half' } })}
-            {renderChild({ name: 'twitterCard', type: 'select', options: [...TWITTER_CARDS], meta: { label: 'Twitter Card', width: 'half' } })}
-          </div>
-        </>
-      )}
 
       {showRobots && (
         <>
