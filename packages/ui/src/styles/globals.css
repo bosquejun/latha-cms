@@ -6,11 +6,15 @@
 @custom-variant dark (&:not(.light *));
 
 /* Scan the design system + Studio SDK sources for utility classes.
-   Paths are relative to this file: packages/ui/src/styles/. */
+   Paths are relative to this file: packages/ui/src/styles/. Modules and
+   plugins both ship Studio UI, so both trees are scanned — otherwise a
+   utility a plugin renderer uses but nothing else does (e.g. a preview's
+   `max-w-xl`) never gets generated. */
 @source "../..";
 @source "../../../studio-sdk/src";
 @source "../../../start/src";
 @source "../../../modules";
+@source "../../../plugins";
 
 /* ---------------------------------------------------------------------------
  * Webfonts — Geist Sans + Geist Mono (Vercel's open-source typeface).

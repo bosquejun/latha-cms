@@ -1,0 +1,98 @@
+{
+  "name": "@kon10/seo",
+  "version": "0.1.0",
+  "description": "Kon10 SEO plugin — an injectable search & social metadata field with backend derivation and a Studio preview.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "development": "./src/index.ts",
+      "import": "./dist/index.js"
+    },
+    "./studio": {
+      "types": "./dist/studio/index.d.ts",
+      "development": "./src/studio/index.ts",
+      "import": "./dist/studio/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.studio.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.studio.json --noEmit",
+    "test": "tsc -p tsconfig.json && node --test $(find dist -name '*.test.js' -print)",
+    "test:coverage": "tsc -p tsconfig.json && node --test --experimental-test-coverage $(find dist -name '*.test.js' -print)"
+  },
+  "peerDependencies": {
+    "@kon10/core": "workspace:^",
+    "@kon10/studio-sdk": "workspace:^",
+    "@kon10/start": "workspace:^",
+    "@kon10/ui": "workspace:^",
+    "react": "^18 || ^19"
+  },
+  "peerDependenciesMeta": {
+    "@kon10/studio-sdk": {
+      "optional": true
+    },
+    "@kon10/start": {
+      "optional": true
+    },
+    "@kon10/ui": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@kon10/content": "workspace:^",
+    "@kon10/core": "workspace:^",
+    "@kon10/studio-sdk": "workspace:^",
+    "@kon10/start": "workspace:^",
+    "@kon10/ui": "workspace:^",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
+    "typescript": "^5.7.2",
+    "vite": "^7.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bosquejun/kon10.git",
+    "directory": "packages/plugins/seo"
+  },
+  "homepage": "https://github.com/bosquejun/kon10#readme",
+  "bugs": "https://github.com/bosquejun/kon10/issues",
+  "keywords": [
+    "kon10",
+    "cms",
+    "headless-cms",
+    "tanstack-start",
+    "seo",
+    "metadata",
+    "opengraph",
+    "plugin"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./studio": {
+        "types": "./dist/studio/index.d.ts",
+        "import": "./dist/studio/index.js"
+      }
+    }
+  }
+}

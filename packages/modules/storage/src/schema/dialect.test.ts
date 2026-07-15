@@ -8,7 +8,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { buildTablePlan, createTableSQL } from './generator.js'
 import { toPg, rowToDocPg } from './pg-marshal.js'
-import type { Entity } from '@kon10/core'
+import { registerFieldType, z, type Entity } from '@kon10/core'
 
 const posts = {
   cardinality: 'many',
@@ -86,4 +86,34 @@ test('rowToDocPg tolerates stringified JSON and t/f booleans', () => {
   })
   assert.deepEqual(doc.tags, ['x'])
   assert.equal(doc.featured, false)
+})
+
+// A module/plugin field type whose registered data schema is an object or
+// array must land in a JSON column — the generator classifies it from the Zod
+// schema, not a hardcoded type list. This guards the Zod-v4 introspection: v4
+// renamed `_def.typeName` → `_def.type`, so keying only on the old tag would
+// silently store these as `String(value)` text and reject the parsed object on
+// the next write.
+test('custom object/array field types classify as JSON columns', () => {
+  registerFieldType({
+    configSchema: z.object({ type: z.literal('probe_obj') }),
+    buildDataSchema: () => z.object({ a: z.string().optional() }),
+  })
+  registerFieldType({
+    configSchema: z.object({ type: z.literal('probe_arr') }),
+    buildDataSchema: () => z.array(z.string()),
+  })
+
+  const entity = {
+    cardinality: 'many',
+    slug: 'probe',
+    fields: [
+      { name: 'obj', type: 'probe_obj' },
+      { name: 'arr', type: 'probe_arr' },
+    ],
+  } as unknown as Entity
+
+  const plan = buildTablePlan(entity)
+  assert.equal(plan.columns.find((c) => c.name === 'obj')?.kind, 'json')
+  assert.equal(plan.columns.find((c) => c.name === 'arr')?.kind, 'json')
 })

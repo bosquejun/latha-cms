@@ -62,6 +62,7 @@ import { media, MediaModule } from '@kon10/media'
 import { CacheModule, inMemoryCache } from '@kon10/cache'
 import { sentryTracingPlugin } from '@kon10/sentry'
 import { slug, slugPlugin } from '@kon10/slug'
+import { seo, socialGraph, seoPlugin } from '@kon10/seo'
 
 // `text({ schema: ... })` escape hatch — no dedicated `color` field type
 // exists (or is needed) for a `#rrggbb` string; `inputType: 'color'` on the
@@ -125,6 +126,12 @@ export function buildConfig(
       // slugPlugin wires generation + uniqueness hooks into every entity below
       // that carries a slug() field (posts, pages).
       slugPlugin(),
+      // seoPlugin registers the `seo` field type and its derivation hooks. It
+      // wires every entity carrying a seo() field (posts, landing-page) and
+      // *also* injects one into `pages` via `inject` — so pages get search &
+      // social metadata without a field declared on the entity. `titleTemplate`
+      // wraps any auto-derived title site-wide.
+      seoPlugin({ inject: ['pages'], titleTemplate: '%s · Kon10' }),
       // Only registered when a DSN is configured — otherwise cms.tracer stays
       // the built-in no-op and every operation/hook span is free.
       ...(process.env.SENTRY_DSN
@@ -303,18 +310,15 @@ export function buildConfig(
                 ],
                 meta: { description: 'Landing page sections, in display order. Start with a Hero block.' },
               }),
-              seo: group({
-                fields: {
-                  metaTitle: text({ meta: { label: 'Meta Title' } }),
-                  metaDescription: text({ meta: { label: 'Meta Description', multiline: true } }),
-                  ogImage: media({ meta: { label: 'OG Image', aspectRatio: '1.91:1' } }),
-                },
-                meta: {
-                  group: 'SEO & Meta',
-                  label: 'SEO',
-                  description: 'Search & social metadata for the landing page.',
-                },
-              }),
+              // Full search & social metadata (title, description, canonical,
+              // OpenGraph, Twitter, robots) with live previews — the plugin
+              // owns the field type, so this one call replaces the hand-rolled
+              // group. The landing page has no title/excerpt to derive from, so
+              // editors fill it directly.
+              // Search metadata and social cards split into their own tabs —
+              // both owned by seoPlugin, each with its own live preview.
+              seo: seo({ meta: { group: 'SEO', description: 'Search engine metadata for the landing page.' } }),
+              social: socialGraph({ meta: { group: 'Social Graph', description: 'Open Graph & Twitter cards.' } }),
             },
           }),
 
@@ -400,25 +404,24 @@ export function buildConfig(
               ],
             },
             // Main-column fields are split into tabs via `meta.group`: a
-            // "Content" tab for the body, an "SEO & Meta" tab for metadata.
-            // Sidebar fields (`meta.sidebar`) stay in the sidebar regardless.
+            // "Content" tab for the body, then the plugin-owned "SEO" and
+            // "Social Graph" tabs. Sidebar fields (`meta.sidebar`) stay in the
+            // sidebar regardless.
             fields: {
               title: text({ required: true, meta: { group: 'Content' } }),
               slug: slug({ from: '{title}', meta: { group: 'Content' } }),
               excerpt: text({ meta: { group: 'Content', multiline: true, description: 'Short summary shown in listings.' } }),
               content: richtext({ meta: { group: 'Content' } }),
               // Zod-first escape hatch: full schema validation server-side,
-              // mirrored to the Studio form via jsonSchema.
-              contactEmail: text({ schema: z.email(), meta: { group: 'SEO & Meta', label: 'Contact Email' } }),
-              views: number({ integer: true, defaultValue: 0, meta: { group: 'SEO & Meta' } }),
-              seo: group({
-                fields: {
-                  metaTitle: text({ meta: { label: 'Meta Title' } }),
-                  metaDescription: text({ meta: { label: 'Meta Description', multiline: true } }),
-                  ogImage: media({ meta: { label: 'OG Image', aspectRatio: '1.91:1' } }),
-                },
-                meta: { group: 'SEO & Meta', label: 'SEO', description: 'Search & social metadata.' },
-              }),
+              // mirrored to the Studio form via jsonSchema. Grouped into the SEO
+              // tab alongside the seo() field.
+              contactEmail: text({ schema: z.email(), meta: { group: 'SEO', label: 'Contact Email' } }),
+              views: number({ integer: true, defaultValue: 0, meta: { group: 'SEO' } }),
+              // The plugin derives `title` from `title` and `description` from
+              // `excerpt` on create (see seoPlugin's inferred `from`), so a new
+              // post ships with sensible metadata before the editor touches it.
+              seo: seo({ meta: { group: 'SEO' } }),
+              social: socialGraph({ meta: { group: 'Social Graph' } }),
               // Status leads the sidebar (rendered after the `form.sidebar.before`
               // zone) — the publish control readers reach for first. Sidebar
               // fields render in definition order, so its position here is what

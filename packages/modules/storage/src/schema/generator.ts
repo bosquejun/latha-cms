@@ -38,11 +38,30 @@ export interface TablePlan {
 /** Structural view of a Zod schema node — just enough to classify storage shape. */
 interface ZodNode {
   _def?: {
+    /** Zod v3 tag (e.g. `'ZodObject'`). Absent in v4. */
     typeName?: string
+    /** Zod v4 tag (e.g. `'object'`). Absent in v3. */
+    type?: string
     innerType?: ZodNode
     schema?: ZodNode
   }
 }
+
+/** A node's structural tag, normalized across Zod v3 (`typeName`) and v4 (`type`). */
+function nodeTag(def: ZodNode['_def'] | undefined): string | undefined {
+  return def?.typeName ?? def?.type
+}
+
+/** Wrapper tags whose inner schema determines the storage shape. */
+const WRAPPER_TAGS = new Set([
+  'ZodOptional',
+  'ZodNullable',
+  'ZodDefault',
+  'ZodEffects', // v3
+  'optional',
+  'nullable',
+  'default', // v4
+])
 
 /**
  * Classify a field's registered data schema (built by the field registry from
@@ -50,34 +69,44 @@ interface ZodNode {
  * (optional / nullable / default / effects) are unwrapped first. Returns `null`
  * when the schema doesn't pin down a storage shape — e.g. `z.unknown()`, which
  * the registry substitutes for types not registered in this runtime.
+ *
+ * Recognizes both Zod v3 (`_def.typeName`, e.g. `'ZodObject'`) and Zod v4
+ * (`_def.type`, e.g. `'object'`) tags — v4 renamed the internal discriminant,
+ * so keying only on `typeName` would misclassify every object/array field as
+ * text and never JSON-encode it on write.
  */
 function columnKindFromDataSchema(node: ZodNode | undefined): ColumnKind | null {
   let def = node?._def
-  while (
-    def &&
-    (def.typeName === 'ZodOptional' ||
-      def.typeName === 'ZodNullable' ||
-      def.typeName === 'ZodDefault' ||
-      def.typeName === 'ZodEffects')
-  ) {
+  while (def && WRAPPER_TAGS.has(nodeTag(def) ?? '')) {
     def = (def.innerType ?? def.schema)?._def
   }
-  switch (def?.typeName) {
+  switch (nodeTag(def)) {
     case 'ZodArray':
+    case 'array':
     case 'ZodObject':
+    case 'object':
     case 'ZodRecord':
+    case 'record':
     case 'ZodTuple':
+    case 'tuple':
     case 'ZodUnion':
+    case 'union':
     case 'ZodDiscriminatedUnion':
       return 'json'
     case 'ZodNumber':
+    case 'number':
       return 'real'
     case 'ZodBoolean':
+    case 'boolean':
       return 'boolean'
     case 'ZodString':
+    case 'string':
     case 'ZodEnum':
+    case 'enum':
     case 'ZodLiteral':
+    case 'literal':
     case 'ZodDate':
+    case 'date':
       return 'text'
     default:
       return null
