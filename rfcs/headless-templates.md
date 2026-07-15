@@ -297,10 +297,12 @@ running site talks to the delivery API directly.
 
 ## 6. Phased Roadmap
 
-1. **Envelope relocation + `@kon10/client` core.** Move `apiResponseSchema` et al.
-   into the neutral package; ship framework-agnostic `createDeliveryClient`
-   (generic-typed) against `/api/v1`, plus the `@kon10/client-react` hooks package.
-   Smallest useful unit — immediately usable by hand-written sites.
+1. **Envelope relocation + `@kon10/client` core.** ✅ **Done.** `apiResponseSchema`
+   et al. now live in `@kon10/client` (`@kon10/start/envelope` re-exports them);
+   `createDeliveryClient` (framework-agnostic, generic-typed, per-call Zod schemas)
+   ships against `/api/v1`, alongside the `@kon10/client-react` hooks package
+   (`Kon10Provider` + `useList` / `useDoc` / `useSingle`). Packages live under
+   `packages/clients/*`.
 2. **`_manifest` endpoint.** Serialize entity/field configs from the runtime,
    RBAC-scoped, hidden fields omitted.
 3. **`kon10 typegen`.** Manifest → Zod + inferred types in the consumer repo
