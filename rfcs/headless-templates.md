@@ -92,15 +92,30 @@ Responsibilities:
 - Send `Authorization: Bearer <apiKey>` when provided.
 
 The **core is pure TypeScript** (`fetch` + Zod) with zero framework imports, so it
-runs unchanged under React, Vue, or a plain Node build step. Framework bindings are
-**separate optional entry points** over that same core:
+runs unchanged under React, Vue, or a plain Node build step — and is directly
+useful on its own (TanStack loaders, React Server Components, Node scripts call it
+without any hook layer). Reactive bindings are **separate packages** over that same
+core, following the TanStack Query model (`query-core` + `react-query` +
+`vue-query`), which is already the pattern in this stack:
 
-- `@kon10/client/react` — `useList` / `useDoc` / `useSingle` hooks (thin, or
-  TanStack-Query-friendly). Ships first, since Vite + TanStack is the default.
-- `@kon10/client/vue` — the equivalent composables (`useList`, …). Added when the
-  Vue template lands.
+| Package | Contains | Framework peer |
+|---|---|---|
+| `@kon10/client` | Framework-agnostic core — `createDeliveryClient`, envelope schema, generics | none |
+| `@kon10/client-react` | `useList` / `useDoc` / `useSingle` hooks (ships first) | `react` |
+| `@kon10/client-vue` | Equivalent composables (with the Vue template) | `vue` |
 
-New UI-library bindings never touch the core; they only wrap it.
+Separate packages rather than subpath exports of one package, for two concrete
+reasons:
+
+1. **Peer-dependency isolation.** A single package declaring both `react` and
+   `vue` as peers forces "missing peer" noise on every app that uses only one, and
+   makes both framework typings visible everywhere. Each binding package declares
+   only its own peer.
+2. **Independent release cadence.** A Vue-binding fix must not bump the version
+   React consumers see.
+
+A binding depends on `@kon10/client` and only wraps it; new UI-library bindings
+never touch the core. A plain content site can install just `@kon10/client`.
 
 **Envelope relocation.** `apiResponseSchema` / `ApiResponse` / `apiErrorSchema`
 currently live in `@kon10/start/envelope`. The client cannot depend on
@@ -222,7 +237,7 @@ outer shell only:
 |---|---|---|
 | `@kon10/client` core (fetch + Zod envelope) | All JS frameworks | None — pure TS. |
 | `kon10 typegen` output (Zod + inferred types) | All JS frameworks | None — plain schemas. |
-| Client binding (`/react` hooks, `/vue` composables) | Per UI library | One thin adapter per UI library (React, Vue). |
+| Client binding (`client-react` hooks, `client-vue` composables) | Per UI library | One thin adapter package per UI library (React, Vue). |
 | Presentational components | Per UI library | Parallel implementations: JSX for React, SFC for Vue. Same props/design tokens, different syntax. |
 | Template shell — routing, data loading, SEO/meta | Per framework | TanStack file routes + loaders vs. Next app/pages vs. Nuxt pages. The only genuinely framework-specific surface. |
 
@@ -233,7 +248,7 @@ Consequences:
   Next differ only in the route/loader shell, so a Next template reuses most of a
   TanStack template's non-route files.
 - **Vue is additive, not a fork of core.** It reuses the client core + generated
-  types, adds a `@kon10/client/vue` binding, and ships templates through the
+  types, adds the `@kon10/client-vue` binding package, and ships templates through the
   shadcn-vue registry namespace with SFC components.
 
 Rollout order: **Vite + TanStack (default) → Next.js (same registry, new shell) →
@@ -246,10 +261,9 @@ is a design smell to fix rather than special-case.
 ## 4. Proposed Layout
 
 ```
-packages/client/            @kon10/client — delivery SDK + envelope contract (new home)
-  src/index.ts              createDeliveryClient, envelope schemas, types (pure TS core)
-  src/react.ts              React hooks: useList / useDoc / useSingle
-  src/vue.ts                Vue composables (added with the Vue template)
+packages/client/            @kon10/client — framework-agnostic core: delivery SDK + envelope contract
+packages/client-react/      @kon10/client-react — React hooks: useList / useDoc / useSingle (ships first)
+packages/client-vue/        @kon10/client-vue — Vue composables (added with the Vue template)
 packages/cli/               kon10 typegen  (new, or extend an existing CLI) — framework-agnostic
 packages/start/src/api.ts   + GET /api/v1/_manifest
 registry/                   type-checked template source, namespaced by framework
@@ -283,7 +297,7 @@ running site talks to the delivery API directly.
 
 1. **Envelope relocation + `@kon10/client` core.** Move `apiResponseSchema` et al.
    into the neutral package; ship framework-agnostic `createDeliveryClient`
-   (generic-typed) against `/api/v1`, plus the `@kon10/client/react` binding.
+   (generic-typed) against `/api/v1`, plus the `@kon10/client-react` hooks package.
    Smallest useful unit — immediately usable by hand-written sites.
 2. **`_manifest` endpoint.** Serialize entity/field configs from the runtime,
    RBAC-scoped, hidden fields omitted.
@@ -298,7 +312,7 @@ running site talks to the delivery API directly.
    `npx shadcn add`.
 6. **Second framework — `next/blog`.** Same registry, reusing the TanStack
    template's non-route files; validates the shell/spine split.
-7. **Vue track.** `@kon10/client/vue` binding + `vue/blog` via the shadcn-vue
+7. **Vue track.** `@kon10/client-vue` binding + `vue/blog` via the shadcn-vue
    registry namespace.
 8. **Template gallery + scaffolder.** `docs`, `marketing`, etc. across frameworks;
    a `create-kon10-site` command (or a `--template` / `--framework` flag)
