@@ -1,95 +1,21 @@
 /**
- * The response envelope for the public delivery API (`@kon10/start/api`) —
- * every response, success or failure, is shaped the same way so a client
- * never has to branch on transport before it can branch on outcome:
- *
- *   { data: T,    error: null,     pagination?: ApiPagination }  // success
- *   { data: null, error: ApiError }                              // failure
- *
- * `data` is the resource itself: an object for a single document/global, an
- * array for a list. `pagination` only ever appears alongside a list `data`.
- *
- * Zod-first: `apiResponseSchema()` is the schema clients import to validate a
- * fetched response; `ApiResponse<T>` is the type derived from it. Server-side
- * responses are built with `apiSuccess()` / `apiFailure()` so every call site
- * produces an envelope that satisfies the same schema.
+ * The delivery-API response envelope now lives in `@kon10/client`, the neutral
+ * home shared by both sides of the network boundary — the server (this package)
+ * builds envelopes with `apiSuccess()` / `apiFailure()`, and the delivery client
+ * validates them with `apiResponseSchema()`. This module re-exports that
+ * contract so `@kon10/start/envelope` and every existing internal import keep
+ * resolving unchanged.
  */
-import { z } from '@kon10/core'
-
-/** Stable, machine-readable failure codes the delivery API can return. */
-export const API_ERROR_CODES = {
-  BAD_REQUEST: 'BAD_REQUEST',
-  UNAUTHORIZED: 'UNAUTHORIZED',
-  FORBIDDEN: 'FORBIDDEN',
-  NOT_FOUND: 'NOT_FOUND',
-  METHOD_NOT_ALLOWED: 'METHOD_NOT_ALLOWED',
-  INTERNAL_ERROR: 'INTERNAL_ERROR',
-} as const
-
-export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES]
-
-/** The only shape an error ever takes on the wire. */
-export const apiErrorSchema = z.object({
-  code: z.string(),
-  message: z.string(),
-  /**
-   * Correlation id for this request's server log lines. Present on failures
-   * the server logged (always on `INTERNAL_ERROR`) — quote it when reporting
-   * a problem. Optional and additive: envelopes validated against an older
-   * schema still parse.
-   */
-  requestId: z.string().optional(),
-})
-export type ApiError = z.infer<typeof apiErrorSchema>
-
-/** Present only on list responses. 1-indexed, like the `page`/`pageSize` query params. */
-export const apiPaginationSchema = z.object({
-  page: z.number().int().positive(),
-  pageSize: z.number().int().positive(),
-  total: z.number().int().nonnegative(),
-  hasMore: z.boolean(),
-})
-export type ApiPagination = z.infer<typeof apiPaginationSchema>
-
-/**
- * Build the full envelope schema for one endpoint's `data` shape, e.g.
- * `apiResponseSchema(z.array(postSchema))` for a list, `apiResponseSchema(postSchema)`
- * for a single resource. Clients use this to validate/parse a fetched response.
- */
-export function apiResponseSchema<T extends z.ZodTypeAny>(dataSchema: T) {
-  return z.union([
-    z.object({
-      data: dataSchema,
-      error: z.null(),
-      pagination: apiPaginationSchema.optional(),
-    }),
-    z.object({
-      data: z.null(),
-      error: apiErrorSchema,
-    }),
-  ])
-}
-
-/** The plain TS equivalent of `apiResponseSchema()`, for typing without invoking Zod. */
-export type ApiResponse<T> =
-  | { data: T; error: null; pagination?: ApiPagination }
-  | { data: null; error: ApiError }
-
-/** Build a success envelope. Pass `pagination` only when `data` is a list page. */
-export function apiSuccess<T>(data: T, pagination?: ApiPagination): ApiResponse<T> {
-  return pagination ? { data, error: null, pagination } : { data, error: null }
-}
-
-/** Build a failure envelope. `data` is always `null` on failure. */
-export function apiFailure(
-  code: ApiErrorCode,
-  message: string,
-  requestId?: string,
-): ApiResponse<never> {
-  return { data: null, error: requestId ? { code, message, requestId } : { code, message } }
-}
-
-/** Derive the `pagination` block from a list page's page/pageSize/total. */
-export function apiPaginationOf(total: number, page: number, pageSize: number): ApiPagination {
-  return { page, pageSize, total, hasMore: page * pageSize < total }
-}
+export {
+  API_ERROR_CODES,
+  apiErrorSchema,
+  apiPaginationSchema,
+  apiResponseSchema,
+  apiSuccess,
+  apiFailure,
+  apiPaginationOf,
+  type ApiErrorCode,
+  type ApiError,
+  type ApiPagination,
+  type ApiResponse,
+} from '@kon10/client'

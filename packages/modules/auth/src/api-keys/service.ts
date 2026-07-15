@@ -17,6 +17,7 @@ import {
   apiKeyDisplayPrefix,
   generateApiKeyToken,
   hashApiKeyToken,
+  type ApiKeyClass,
 } from './token.js'
 
 /** The principal a verified API key resolves to. */
@@ -27,13 +28,35 @@ export interface ApiKeyPrincipal {
   name: string
   roles: string[]
   permissions: string[]
+  /** `true` for a publishable (`kon10_pk_…`) key — read-only, published content. */
+  publishable: boolean
+  /** Origins a publishable key may be used from; empty/undefined = any. */
+  allowedOrigins?: string[]
+  /** Per-key request budget per minute; undefined = no per-key limit. */
+  rateLimitPerMinute?: number
 }
 
 export interface CreateApiKeyInput {
   name: string
+  /** Secret (default) or publishable. */
+  type?: ApiKeyClass
   /** Role document ids whose permissions the key carries. */
   roles?: string[]
+  /** Origins a publishable key may be used from. */
+  allowedOrigins?: string[]
+  /** Per-key request budget per minute. */
+  rateLimitPerMinute?: number
   expiresAt?: Date
+}
+
+/** Parse the stored comma-separated origins into a trimmed list (or undefined). */
+function parseOrigins(raw: unknown): string[] | undefined {
+  if (typeof raw !== 'string') return undefined
+  const list = raw
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean)
+  return list.length > 0 ? list : undefined
 }
 
 /**
@@ -44,13 +67,17 @@ export async function createApiKey(
   kon10: Kon10Instance,
   input: CreateApiKeyInput,
 ): Promise<{ id: string; token: string }> {
-  const token = generateApiKeyToken()
+  const type: ApiKeyClass = input.type ?? 'secret'
+  const token = generateApiKeyToken(type)
   const doc = await kon10.db.create(API_KEYS_SLUG, {
     name: input.name,
     keyHash: await hashApiKeyToken(token),
     prefix: apiKeyDisplayPrefix(token),
+    type,
     roles: input.roles ?? [],
     enabled: true,
+    ...(input.allowedOrigins?.length ? { allowedOrigins: input.allowedOrigins.join(',') } : {}),
+    ...(input.rateLimitPerMinute != null ? { rateLimitPerMinute: input.rateLimitPerMinute } : {}),
     ...(input.expiresAt ? { expiresAt: input.expiresAt.toISOString() } : {}),
   })
   return { id: doc.id, token }
@@ -77,11 +104,19 @@ export async function verifyApiKeyToken(
   }
   const roleIds = Array.isArray(doc.roles) ? (doc.roles as string[]) : []
   const { roles, permissions } = await resolveRoleGrants(kon10, roleIds)
+  const publishable = doc.type === 'publishable'
+  const rateLimitPerMinute =
+    typeof doc.rateLimitPerMinute === 'number' && doc.rateLimitPerMinute > 0
+      ? doc.rateLimitPerMinute
+      : undefined
   return {
     id: `apikey:${doc.id}`,
     kind: 'api-key',
     name: typeof doc.name === 'string' ? doc.name : '',
     roles,
     permissions,
+    publishable,
+    allowedOrigins: parseOrigins(doc.allowedOrigins),
+    rateLimitPerMinute,
   }
 }

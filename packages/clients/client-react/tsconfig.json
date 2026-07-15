@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
@@ -9,7 +9,7 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "composite": true
   },
-  "references": [{ "path": "../core" }, { "path": "../clients/client" }],
+  "references": [{ "path": "../client" }],
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["dist", "node_modules"]
 }

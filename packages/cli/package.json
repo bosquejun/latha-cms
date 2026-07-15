@@ -1,0 +1,53 @@
+{
+  "name": "@kon10/cli",
+  "version": "0.1.0",
+  "description": "Kon10 developer CLI — generate typed content schemas from a Studio's delivery manifest.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "kon10": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/lib.d.ts",
+      "import": "./dist/lib.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsc -p tsconfig.json && node --test $(find dist -name '*.test.js' -print)",
+    "test:coverage": "tsc -p tsconfig.json && node --test --experimental-test-coverage $(find dist -name '*.test.js' -print)"
+  },
+  "dependencies": {
+    "@kon10/client": "workspace:^",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bosquejun/kon10.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/bosquejun/kon10#readme",
+  "bugs": "https://github.com/bosquejun/kon10/issues",
+  "keywords": [
+    "kon10",
+    "cms",
+    "headless-cms",
+    "cli",
+    "typegen",
+    "codegen"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

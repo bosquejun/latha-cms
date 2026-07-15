@@ -107,7 +107,11 @@ export {
 } from './api-keys/service.js'
 export {
   API_KEY_TOKEN_PREFIX,
+  PUBLISHABLE_TOKEN_PREFIX,
+  SECRET_TOKEN_PREFIX,
+  apiKeyClassOf,
   apiKeyDisplayPrefix,
   generateApiKeyToken,
   hashApiKeyToken,
+  type ApiKeyClass,
 } from './api-keys/token.js'

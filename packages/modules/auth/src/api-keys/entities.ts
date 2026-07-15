@@ -12,9 +12,12 @@
 import {
   boolean,
   date,
+  number,
   relationship,
+  select,
   stampFields,
   text,
+  z,
   type Entity,
 } from '@kon10/core'
 import { invalidate } from '@kon10/cache'
@@ -34,19 +37,38 @@ export const apiKeysEntity: Entity = {
     // Managed through the API Keys settings page (`@kon10/auth/studio`).
     hidden: true,
     useAsTitle: 'name',
-    defaultColumns: ['name', 'prefix', 'enabled'],
+    defaultColumns: ['name', 'type', 'prefix', 'enabled'],
     labels: { singular: 'API Key', plural: 'API Keys' },
   },
   fields: stampFields({
     name: text({ required: true }),
     // SHA-256 of the full token; the token itself is never stored.
     keyHash: text({ required: true, unique: true, meta: { hidden: true } }),
-    // Identifying head of the token (`kon10_Ab12Cd34`), safe to display.
+    // Identifying head of the token (`kon10_pk_Ab12Cd34`), safe to display.
     prefix: text({ required: true }),
+    // `publishable` keys are safe to embed in client code — read-only, published
+    // content only, optionally origin-bound and rate-limited. `secret` keys are
+    // server-only with broader access. Legacy keys (no type) resolve as secret.
+    type: select({
+      options: z.enum(['secret', 'publishable']),
+      defaultValue: 'secret',
+      meta: { description: 'Secret (server-only) or publishable (safe in client code).' },
+    }),
     roles: relationship({
       to: ROLES_SLUG,
       many: true,
       meta: { description: 'Roles whose permissions this key carries.' },
+    }),
+    // Publishable-key guardrails.
+    allowedOrigins: text({
+      meta: {
+        description:
+          'Comma-separated Origins a publishable key may be used from. Empty = any origin.',
+      },
+    }),
+    rateLimitPerMinute: number({
+      integer: true,
+      meta: { description: 'Max requests/minute for this key. Empty = no per-key limit.' },
     }),
     enabled: boolean({ defaultValue: true }),
     expiresAt: date({
