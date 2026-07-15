@@ -261,9 +261,11 @@ is a design smell to fix rather than special-case.
 ## 4. Proposed Layout
 
 ```
-packages/client/            @kon10/client — framework-agnostic core: delivery SDK + envelope contract
-packages/client-react/      @kon10/client-react — React hooks: useList / useDoc / useSingle (ships first)
-packages/client-vue/        @kon10/client-vue — Vue composables (added with the Vue template)
+packages/clients/           client family — grouped like packages/modules/* and packages/plugins/*
+                            (add `packages/clients/*` to pnpm-workspace.yaml)
+  client/                     @kon10/client — framework-agnostic core: delivery SDK + envelope contract
+  client-react/               @kon10/client-react — React hooks: useList / useDoc / useSingle (ships first)
+  client-vue/                 @kon10/client-vue — Vue composables (added with the Vue template)
 packages/cli/               kon10 typegen  (new, or extend an existing CLI) — framework-agnostic
 packages/start/src/api.ts   + GET /api/v1/_manifest
 registry/                   type-checked template source, namespaced by framework
