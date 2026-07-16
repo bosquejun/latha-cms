@@ -17,6 +17,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import { physical, rootRoute, route } from '@tanstack/virtual-file-routes'
 import { DEFAULT_API_PATH, DEFAULT_RPC_PATH } from '@kon10/studio-sdk'
+import type { StudioBrandingConfig } from '@kon10/core'
 import { DEFAULT_MODULE_ROUTES_PATH } from './module-routes.js'
 
 type TanStackStartOptions = NonNullable<Parameters<typeof tanstackStart>[0]>
@@ -179,6 +180,7 @@ export function kon10Start(
   ]
   if (options.studio !== false) {
     extra.push(studioExtensionsPlugin(options.studio?.dir ?? 'src/studio', configPath))
+    extra.push(studioConfigPlugin(configPath))
   }
 
   return [
@@ -310,10 +312,11 @@ export async function readModuleUiSpecifiers(
  * this server's `root` — the same project root — so a relative `./kon10.config.ts`
  * still points at the real file.
  */
-async function loadSpecifiersAtBuild(
+async function withBuildConfigLoader<T>(
   root: string,
   configPath: string,
-): Promise<string[]> {
+  use: (load: (id: string) => Promise<unknown>) => Promise<T>,
+): Promise<T> {
   // `vite` is not a declared dependency of this package (it arrives transitively
   // at the app level via TanStack Start). This code only ever runs at build time
   // inside that app context, where `vite` is installed — so resolve it from the
@@ -339,13 +342,19 @@ async function loadSpecifiersAtBuild(
     logLevel: 'silent',
   })
   try {
-    return await readModuleUiSpecifiers(
-      (id) => viteServer.ssrLoadModule(id),
-      CONFIG_MODULE_ID,
-    )
+    return await use((id) => viteServer.ssrLoadModule(id))
   } finally {
     await viteServer.close()
   }
+}
+
+function loadSpecifiersAtBuild(
+  root: string,
+  configPath: string,
+): Promise<string[]> {
+  return withBuildConfigLoader(root, configPath, (load) =>
+    readModuleUiSpecifiers(load, CONFIG_MODULE_ID),
+  )
 }
 
 /**
@@ -437,4 +446,89 @@ const appExtensions = collectStudioExtensions({
 // Modules first, app last — the app overrides module UI on key conflict.
 export const studioExtensions = mergeExtensions([${moduleList ? moduleList + ', ' : ''}appExtensions])
 `
+}
+
+const STUDIO_CONFIG_VIRTUAL_ID = 'virtual:kon10/studio-config'
+const STUDIO_CONFIG_RESOLVED_ID = '\0' + STUDIO_CONFIG_VIRTUAL_ID
+
+interface StudioBrandingCarrier {
+  studio?: { branding?: StudioBrandingConfig }
+}
+
+/**
+ * Load the app's `kon10.config` and read its `studio.branding` block — the
+ * serializable branding an app declares once in config. Reads static data only;
+ * never bootstraps an instance. Same load contract as `readModuleUiSpecifiers`.
+ */
+export async function readStudioBranding(
+  load: (id: string) => Promise<unknown>,
+  configPath: string,
+): Promise<StudioBrandingConfig> {
+  const mod = (await load(configPath)) as { default?: StudioBrandingCarrier }
+  return mod.default?.studio?.branding ?? {}
+}
+
+/**
+ * Resolves `virtual:kon10/studio-config` to a **client-safe** module carrying
+ * the app's `studio.branding` as plain JSON — the config→client bridge for
+ * branding, mirroring how `virtual:kon10/studio-extensions` bridges Studio UI.
+ * The app wires it into `<Kon10Provider branding={studioConfig.branding}>`.
+ */
+function studioConfigPlugin(configPath: string): VitePluginLike {
+  let branding: StudioBrandingConfig | null = null
+  let server: { ssrLoadModule: (id: string) => Promise<unknown> } | undefined
+  let root = process.cwd()
+
+  return {
+    name: 'kon10:studio-config',
+    configResolved(config: { root: string }) {
+      root = config.root
+    },
+    configureServer(s: { ssrLoadModule: (id: string) => Promise<unknown> }) {
+      server = s
+    },
+    resolveId(id) {
+      return id === STUDIO_CONFIG_VIRTUAL_ID ? STUDIO_CONFIG_RESOLVED_ID : undefined
+    },
+    async load(id) {
+      if (id !== STUDIO_CONFIG_RESOLVED_ID) return undefined
+      if (branding === null) {
+        if (server) {
+          // Dev: tolerate transient config-load failures (HMR/partial edits).
+          try {
+            branding = await readStudioBranding(
+              (m) => server!.ssrLoadModule(m),
+              CONFIG_MODULE_ID,
+            )
+          } catch (err) {
+            console.warn(
+              '[kon10] studio branding: config not loadable yet; ' +
+                'using defaults for now —',
+              err instanceof Error ? err.message : err,
+            )
+            branding = {}
+          }
+        } else {
+          // Build: branding is non-critical (the runner defaults everything), so
+          // fall back to empty rather than failing the whole build.
+          try {
+            branding = await withBuildConfigLoader(root, configPath, (load) =>
+              readStudioBranding(load, CONFIG_MODULE_ID),
+            )
+          } catch (err) {
+            console.warn(
+              '[kon10] studio branding: could not read config at build; ' +
+                'using defaults —',
+              err instanceof Error ? err.message : err,
+            )
+            branding = {}
+          }
+        }
+      }
+      return (
+        `export const studioConfig = ${JSON.stringify({ branding })}\n` +
+        `export default studioConfig\n`
+      )
+    },
+  }
 }

@@ -122,6 +122,19 @@ export function buildConfig(
   return defineConfig({
     db,
 
+    // Studio branding — declared here in config (the single source of truth),
+    // read by @kon10/start and rendered on the login screen and Studio shell.
+    // `logo` would be an image URL/path (e.g. '/logo.svg'); omitted here so the
+    // default Kon10 mark is used.
+    studio: {
+      branding: {
+        appName: 'Kon10',
+        tagline: 'Everything you publish, in one place.',
+        taglineSubtitle:
+          'Model content, manage media, and ship a fast delivery API — all from your Studio.',
+      },
+    },
+
     plugins: [
       // slugPlugin wires generation + uniqueness hooks into every entity below
       // that carries a slug() field (posts, pages).

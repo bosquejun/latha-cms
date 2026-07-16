@@ -31,10 +31,11 @@ export interface Kon10Branding {
    */
   appName?: string
   /**
-   * Brand logo element rendered as the mark on the login screen and in the
-   * Studio shell. Any element works (an `<img>`, an inline SVG component, …);
-   * it is sized by its container, so give it `h-full w-full` or a fixed size.
-   * Falls back to a lettermark derived from `appName` when omitted.
+   * Brand logo rendered as the mark on the login screen and in the Studio
+   * shell. A **string** is treated as an image URL/path (as it arrives from
+   * `kon10.config`'s serializable `studio.branding.logo`); a **React element**
+   * (an inline SVG component, a custom `<img>`, …) is rendered as-is. It is
+   * sized by its container. Falls back to the default mark when omitted.
    */
   logo?: ReactNode
   /** Login-screen heading. Defaults to `Welcome back`. */

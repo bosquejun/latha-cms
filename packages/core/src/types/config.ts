@@ -224,12 +224,45 @@ export interface DeliveryApiConfig {
   cache?: DeliveryCacheOption
 }
 
+/**
+ * Studio branding — a serializable passthrough that runners (e.g. `@kon10/start`)
+ * read to brand the Studio shell and the login screen. The kernel never reads
+ * it, the same contract as `studioPath`. Every field is optional; the runner
+ * applies its own defaults. Because it must survive serialization into the
+ * client bundle, `logo` is an image URL/path (not a component).
+ */
+export interface StudioBrandingConfig {
+  /** Product / brand name — the wordmark, plus the login subtitle and footer. */
+  appName?: string
+  /** Brand logo image URL/path (e.g. `/logo.svg`), rendered as the mark. */
+  logo?: string
+  /** Login-screen heading. */
+  loginTitle?: string
+  /** Login-screen subheading under the title. */
+  loginSubtitle?: string
+  /** Headline on the login screen's branded side panel. */
+  tagline?: string
+  /** Supporting line under {@link StudioBrandingConfig.tagline}. */
+  taglineSubtitle?: string
+}
+
+/**
+ * Top-level Studio configuration — a passthrough runners read; the kernel never
+ * acts on it (the same contract as `studioPath`/`api`).
+ */
+export interface StudioConfig {
+  /** Branding for the Studio shell and login screen. */
+  branding?: StudioBrandingConfig
+}
+
 export interface Kon10Config {
   db: DBAdapter
   modules: Module[]
   plugins?: Plugin[]
   /** Base path the Studio UI is mounted under. Defaults to `/studio`. */
   studioPath?: string
+  /** Studio-level config (branding, …), read by runners — see {@link StudioConfig}. */
+  studio?: StudioConfig
   /** Public delivery-API settings, read by runners — see {@link DeliveryApiConfig}. */
   api?: DeliveryApiConfig
   /**

@@ -1,7 +1,7 @@
 // packages/start/src/vite.studio-extensions.test.ts
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readModuleUiSpecifiers, buildModuleSource } from './vite.js'
+import { readModuleUiSpecifiers, buildModuleSource, readStudioBranding } from './vite.js'
 
 test('readModuleUiSpecifiers extracts and de-dupes module studio.ui strings', async () => {
   const fakeLoad = async () => ({
@@ -42,4 +42,22 @@ test('buildModuleSource imports each specifier and merges with the app glob', ()
   assert.match(src, /collectStudioExtensions/)
   assert.match(src, /export const studioExtensions/)
   assert.match(src, /mergeExtensions\(\[mod0,\s*appExtensions\]\)/)
+})
+
+test('readStudioBranding returns the config studio.branding block', async () => {
+  const fakeLoad = async () => ({
+    default: {
+      studio: {
+        branding: { appName: 'Acme', logo: '/logo.svg', tagline: 'Ship it.' },
+      },
+    },
+  })
+  const branding = await readStudioBranding(fakeLoad, 'virtual:kon10/config')
+  assert.deepEqual(branding, { appName: 'Acme', logo: '/logo.svg', tagline: 'Ship it.' })
+})
+
+test('readStudioBranding defaults to an empty object when unset', async () => {
+  const fakeLoad = async () => ({ default: { modules: [] } })
+  const branding = await readStudioBranding(fakeLoad, 'virtual:kon10/config')
+  assert.deepEqual(branding, {})
 })

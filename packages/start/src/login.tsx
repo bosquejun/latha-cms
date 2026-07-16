@@ -22,7 +22,7 @@ import {
 } from '@kon10/ui'
 import { useKon10 } from '@kon10/studio-sdk'
 import { ArrowRight, CircleAlert } from 'lucide-react'
-import { Kon10Logo } from './logo.js'
+import { resolveBrandLogo } from './logo.js'
 
 export function Kon10Login() {
   const { client, basePath, branding } = useKon10()
@@ -32,7 +32,7 @@ export function Kon10Login() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  const logo = branding.logo ?? <Kon10Logo />
+  const logo = resolveBrandLogo(branding.logo)
   const title = branding.loginTitle ?? 'Welcome back'
   const subtitle = branding.loginSubtitle ?? `Sign in to continue to ${branding.appName}`
   const tagline = branding.tagline ?? 'Everything you publish, in one place.'

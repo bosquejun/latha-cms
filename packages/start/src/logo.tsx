@@ -9,8 +9,24 @@
  * never touch this — it's only the default.
  */
 
+import type { ReactNode } from 'react'
+
 const LIME = '#D4EE4F'
 const INK = '#0B0B0B'
+
+/**
+ * Resolve a `branding.logo` into a renderable mark. A string is an image
+ * URL/path (as it arrives from `kon10.config`'s serializable `studio.branding`)
+ * and becomes an `<img>`; a React element is used as-is; nothing falls back to
+ * the default {@link Kon10Logo}.
+ */
+export function resolveBrandLogo(logo: ReactNode | undefined): ReactNode {
+  if (logo == null || logo === '') return <Kon10Logo />
+  if (typeof logo === 'string') {
+    return <img src={logo} alt="" className="size-full object-contain" />
+  }
+  return logo
+}
 
 export function Kon10Logo({ className }: { className?: string }) {
   return (

@@ -19,6 +19,16 @@ export default defineConfig({
     authToken: process.env.TURSO_AUTH_TOKEN,
   }),
 
+  // Studio branding — shown on the login screen and in the Studio shell. Drop a
+  // logo in `public/` and set `logo: '/logo.svg'` to replace the default mark.
+  studio: {
+    branding: {
+      appName: 'Kon10',
+      tagline: 'Everything you publish, in one place.',
+      taglineSubtitle: 'Model content, manage media, and ship a fast delivery API.',
+    },
+  },
+
   modules: [
     UsersModule(),
     // AUTH_SECRET is required in production (the runtime refuses to boot

@@ -211,28 +211,42 @@ active tab's rail items nest beneath it.
 
 ## Branding — logo, name, and the login screen
 
-The Studio shell and the `/login` screen are brandable from one place: the
-`branding` prop on `<Kon10Provider>`. Every field is optional and falls back to
-the Kon10 defaults (the `KO` mark and the "Kon10" wordmark), so an app rebrands
-the whole Studio without forking any component.
+Branding is **config-driven**: declare it once in `kon10.config.ts` under
+`studio.branding`, and it brands both the Studio shell and the `/login` screen.
+Every field is optional and falls back to the Kon10 defaults (the `KO` mark and
+the "Kon10" wordmark), so an app rebrands the whole Studio without forking any
+component.
+
+```ts
+// kon10.config.ts
+export default defineConfig({
+  db: /* … */,
+  studio: {
+    branding: {
+      appName: 'Acme CMS',
+      logo: '/logo.svg',            // an image URL/path in your `public/`
+      loginTitle: 'Sign in to Acme',
+      loginSubtitle: 'Manage your content and media.',
+      tagline: 'Ship content faster.',
+      taglineSubtitle: 'One Studio for your whole team.',
+    },
+  },
+  modules: [/* … */],
+})
+```
+
+Because `kon10.config.ts` is server-loaded, the `kon10Start()` Vite plugin lifts
+`studio.branding` into a **client-safe** virtual module, `virtual:kon10/studio-config`
+(the same config→client bridge that `virtual:kon10/studio-extensions` uses for
+Studio UI). Wire it into the provider once — the scaffold already does this:
 
 ```tsx
 // src/routes/__root.tsx
 import { Kon10Provider } from '@kon10/start'
 import { studioExtensions } from 'virtual:kon10/studio-extensions'
-import AcmeLogo from '../assets/logo.svg?react' // or any element / <img>
+import { studioConfig } from 'virtual:kon10/studio-config'
 
-<Kon10Provider
-  extensions={studioExtensions}
-  branding={{
-    appName: 'Acme CMS',
-    logo: <AcmeLogo />,
-    loginTitle: 'Sign in to Acme',
-    loginSubtitle: 'Manage your content and media.',
-    tagline: 'Ship content faster.',
-    taglineSubtitle: 'One Studio for your whole team.',
-  }}
->
+<Kon10Provider branding={studioConfig.branding} extensions={studioExtensions}>
   <Outlet />
 </Kon10Provider>
 ```
@@ -250,11 +264,22 @@ The login screen is a split layout: a branded ink panel (logo, `appName`,
 `tagline`, `taglineSubtitle`) beside the form on `lg+`, collapsing to a
 centered form with a compact brand header below `lg`.
 
-The `logo` is any React node — an inline SVG component, an `<img>`, whatever —
-sized by its container (give it `h-full w-full` if it doesn't fill). Branding is
-presentation only and client-side, the same as the rest of the provider's props;
-it never travels over RPC. The default mark is exported as `Kon10Logo` from
-`@kon10/start` if you want to compose against it.
+Because config must serialize into the client bundle, `studio.branding.logo` is
+an **image URL/path** (e.g. `/logo.svg`). If you'd rather pass a React element
+for the logo — an inline SVG component, a custom `<img>` — the `branding` prop
+on `<Kon10Provider>` also accepts a `ReactNode` `logo`, which overrides the
+config value:
+
+```tsx
+<Kon10Provider
+  branding={{ ...studioConfig.branding, logo: <AcmeLogo /> }}
+  extensions={studioExtensions}
+>
+```
+
+Branding is presentation only and client-side; it never travels over RPC. The
+default mark is exported as `Kon10Logo` from `@kon10/start` if you want to
+compose against it.
 
 ## Architecture notes
 

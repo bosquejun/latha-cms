@@ -50,7 +50,7 @@ import {
 import { SettingsIcon } from 'lucide-animated'
 import type { NavIcon } from '@kon10/studio-sdk'
 import { UserMenu } from './UserMenu.js'
-import { Kon10Logo } from './logo.js'
+import { resolveBrandLogo } from './logo.js'
 
 function RouterLink({ href, className, children, onClick, ...handlers }: NavLinkProps) {
   return (
@@ -412,7 +412,7 @@ export function Kon10Studio() {
         currentPath={pathname}
         LinkComponent={RouterLink}
         brand={branding.appName}
-        logo={branding.logo ?? <Kon10Logo />}
+        logo={resolveBrandLogo(branding.logo)}
         userMenu={
           <UserMenu
             email={session.data.email}
