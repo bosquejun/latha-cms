@@ -43,11 +43,19 @@ config → Zod schema → API → database → an auto-generated Studio UI.
 - **Delivery API** (`@kon10/start`) — a read-only public REST surface
   (`/api/v1/…`) with a stable response envelope, CORS, pagination, and
   filtering.
+- **Delivery client** (`@kon10/client` / `@kon10/client-react`) — a
+  framework-agnostic, read-only SDK over that public API, plus React hooks
+  (`useList` / `useDoc` / `useSingle`) over it.
+- **Plugins** — cross-cutting capabilities that augment other modules'
+  entities: the slug plugin (`@kon10/slug`) and the SEO metadata plugin
+  (`@kon10/seo`).
 - **Observability** — structured, pino-compatible logging with one request
   line per RPC/API call and a `requestId` on every failure envelope
-  (`KON10_LOG_LEVEL`, `logger` config key).
-- **Tooling** — `create-kon10-app` scaffolder, the slug plugin
-  (`@kon10/slug`), and a playground app.
+  (`KON10_LOG_LEVEL`, `logger` config key), plus a vendor-neutral tracer
+  contract with a Sentry/OpenTelemetry implementation (`@kon10/sentry`).
+- **Tooling** — `create-kon10-app` scaffolder, `@kon10/cli` (`kon10 typegen`
+  generates typed content schemas from a Studio's delivery manifest), the
+  shadcn registry builder (`@kon10/registry`), and a playground app.
 
 ## Packages
 
@@ -64,6 +72,12 @@ config → Zod schema → API → database → an auto-generated Studio UI.
 | `@kon10/storage` | `packages/modules/storage` | `DBAdapter`s — Turso/libsql and Postgres, additive schema reconciliation |
 | `@kon10/cache` | `packages/modules/cache` | `CacheAdapter`s — in-memory and Redis |
 | `@kon10/slug` | `packages/plugins/slug` | Slug plugin — generation + uniqueness hooks, `slug()` field |
+| `@kon10/seo` | `packages/plugins/seo` | SEO plugin — injectable metadata field, backend derivation + Studio preview |
+| `@kon10/sentry` | `packages/plugins/sentry` | Sentry plugin — wires the kernel tracer contract to Sentry via OpenTelemetry |
+| `@kon10/client` | `packages/clients/client` | Framework-agnostic headless delivery SDK over the public content API |
+| `@kon10/client-react` | `packages/clients/client-react` | React hooks over `@kon10/client` |
+| `@kon10/cli` | `packages/cli` | `kon10 typegen` — typed content schemas from a Studio's delivery manifest |
+| `@kon10/registry` | `packages/registry` | Builds distributable shadcn registry-item JSON for content-site templates |
 | `create-kon10-app` | `packages/create-kon10-app` | Project scaffolder |
 | `@kon10/playground` | `apps/playground` | TanStack Start dev/test harness |
 
@@ -261,7 +275,10 @@ correlated with its logs. Details in [deployment](./docs/deployment.md).
 Shipped in v1: kernel, content (collections/documents/taxonomies, drafts,
 blocks), auth (sessions, RBAC, API keys), users, media (local + S3/R2),
 storage (Turso/SQLite + Postgres), delivery-API caching (memory/Redis), the
-Studio with its extension system, structured logging, and `create-kon10-app`.
+Studio with its extension system, the slug and SEO plugins, structured
+logging with a vendor-neutral tracer (Sentry via `@kon10/sentry`), the
+headless delivery client (`@kon10/client` + React hooks), typed schema
+codegen (`kon10 typegen`), and `create-kon10-app`.
 
 Planned next (in no particular order):
 
