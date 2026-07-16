@@ -1,18 +1,19 @@
 /**
  * Kon10Logo — the default Kon10 brand mark: the black "KO" monogram on the
- * signature lime tile. It's a self-contained inline SVG (no external asset, no
+ * signature gold tile. It's a self-contained inline SVG (no external asset, no
  * theme inversion — a brand mark keeps its own colors in light and dark), so it
  * ships inside the package and renders anywhere the login screen or Studio
  * shell needs a fallback logo.
  *
- * Apps that want their own logo pass `branding.logo` to `<Kon10Provider>` and
- * never touch this — it's only the default.
+ * Apps that want their own logo pass `branding.logo` to `<Kon10Provider>` (a
+ * URL from `studio.branding.logo`, or a React element) and never touch this —
+ * it's only the default.
  */
 
 import type { ReactNode } from 'react'
 
-const LIME = '#D4EE4F'
-const INK = '#0B0B0B'
+const GOLD = '#FFDE59'
+const INK = '#0A0A0A'
 
 /**
  * Resolve a `branding.logo` into a renderable mark. A string is an image
@@ -37,33 +38,15 @@ export function Kon10Logo({ className }: { className?: string }) {
       className={className}
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Lime tile */}
-      <rect width="256" height="256" rx="60" fill={LIME} />
+      {/* Gold tile */}
+      <rect width="256" height="256" rx="58" fill={GOLD} />
       {/* Ink panel */}
-      <rect x="48" y="48" width="160" height="160" rx="4" fill={INK} />
-      {/* "K" — lime strokes cut from the ink panel */}
-      <g
-        stroke={LIME}
-        strokeWidth="18"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      >
-        <path d="M80 82 V174" />
-        <path d="M80 128 L122 82" />
-        <path d="M80 128 L122 174" />
-      </g>
-      {/* "O" — lime ring with an ink counter */}
-      <rect
-        x="140"
-        y="82"
-        width="40"
-        height="92"
-        rx="20"
-        fill="none"
-        stroke={LIME}
-        strokeWidth="16"
-      />
+      <rect x="36" y="36" width="184" height="184" rx="6" fill={INK} />
+      {/* "K" — gold counters cut from the ink panel */}
+      <path d="M60 69 L101 69 L60 128 L101 187 L60 187 Z" fill={GOLD} />
+      <path d="M141 69 L92 128 L141 187 Z" fill={GOLD} />
+      {/* "O" — gold pill */}
+      <rect x="158" y="68" width="37" height="121" rx="18.5" fill={GOLD} />
     </svg>
   )
 }
