@@ -2,7 +2,26 @@
   "$schema": "https://unpkg.com/@changesets/config@3.1.4/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "fixed": [],
+  "fixed": [
+    [
+      "@kon10/auth",
+      "@kon10/cache",
+      "@kon10/cli",
+      "@kon10/client",
+      "@kon10/client-react",
+      "@kon10/content",
+      "@kon10/core",
+      "@kon10/media",
+      "@kon10/sentry",
+      "@kon10/seo",
+      "@kon10/slug",
+      "@kon10/start",
+      "@kon10/storage",
+      "@kon10/studio-sdk",
+      "@kon10/ui",
+      "@kon10/users"
+    ]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
