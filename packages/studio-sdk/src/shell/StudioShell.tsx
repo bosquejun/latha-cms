@@ -31,6 +31,8 @@ export interface StudioShellProps {
   currentPath?: string
   LinkComponent?: ComponentType<NavLinkProps>
   brand?: string
+  /** Brand logo element for the mark; falls back to a lettermark from `brand`. */
+  logo?: ReactNode
   userMenu?: ReactNode
   /** Width of the rail + page container. Defaults to the centered max-width tier. */
   contentWidth?: 'default' | 'full'
@@ -42,6 +44,7 @@ export function StudioShell({
   currentPath,
   LinkComponent,
   brand = 'Kon10',
+  logo,
   userMenu,
   contentWidth = 'default',
   children,
@@ -61,7 +64,7 @@ export function StudioShell({
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground [--shell-top:var(--header-height)] lg:[--shell-top:calc(var(--header-height)+var(--subnav-height))]">
-      <MainTopNav brand={brand} onMenuClick={() => setMenuOpen(true)}>
+      <MainTopNav brand={brand} logo={logo} onMenuClick={() => setMenuOpen(true)}>
         <div className="flex items-center gap-group">
           <Slot zone="shell.topbar.start" className="flex items-center gap-inline" />
           {userMenu}
@@ -77,6 +80,7 @@ export function StudioShell({
         activeSubKey={activeSubKey}
         LinkComponent={LinkComponent}
         brand={brand}
+        logo={logo}
       />
       <div className="min-h-0 flex-1">
         <div

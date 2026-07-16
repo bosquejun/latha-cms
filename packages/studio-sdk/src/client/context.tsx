@@ -18,6 +18,37 @@ import {
 import { registerFieldRenderer } from '../fields/registry.js'
 import { createKon10Client, type Kon10Client } from './client.js'
 
+/**
+ * Presentation-only branding for the login screen and Studio shell. These are
+ * React props (the `logo` is a `ReactNode`), not persisted/validated config, so
+ * this is a plain interface rather than a Zod schema — the same contract as the
+ * rest of {@link Kon10ProviderProps}.
+ */
+export interface Kon10Branding {
+  /**
+   * Product / brand name shown as the wordmark in the Studio shell and on the
+   * login screen. Defaults to `Kon10`.
+   */
+  appName?: string
+  /**
+   * Brand logo element rendered as the mark on the login screen and in the
+   * Studio shell. Any element works (an `<img>`, an inline SVG component, …);
+   * it is sized by its container, so give it `h-full w-full` or a fixed size.
+   * Falls back to a lettermark derived from `appName` when omitted.
+   */
+  logo?: ReactNode
+  /** Login-screen heading. Defaults to `Welcome back`. */
+  loginTitle?: string
+  /**
+   * Login-screen subheading under the title. Defaults to
+   * `Sign in to continue to <appName>`.
+   */
+  loginSubtitle?: string
+}
+
+/** Branding after the provider has applied defaults — `appName` is guaranteed. */
+export type ResolvedBranding = Kon10Branding & { appName: string }
+
 export interface Kon10ContextValue {
   client: Kon10Client
   /** Base path the Studio is mounted under. Defaults to `/studio`. */
@@ -26,6 +57,8 @@ export interface Kon10ContextValue {
   loginPath: string
   /** The resolved extension registry (empty when no extensions are provided). */
   extensions: ExtensionRegistry
+  /** Resolved branding for the login screen and Studio shell. */
+  branding: ResolvedBranding
 }
 
 const Kon10Context = createContext<Kon10ContextValue | null>(null)
@@ -45,6 +78,12 @@ export interface Kon10ProviderProps {
    * or build one by hand with `defineStudioExtensions`.
    */
   extensions?: StudioExtensions
+  /**
+   * Branding for the login screen and Studio shell — app name, logo, and the
+   * login copy. Every field is optional and falls back to Kon10 defaults, so
+   * apps can rebrand the whole Studio from this one place. See {@link Kon10Branding}.
+   */
+  branding?: Kon10Branding
   children: ReactNode
 }
 
@@ -53,6 +92,7 @@ export function Kon10Provider({
   basePath = '/studio',
   loginPath = '/login',
   extensions,
+  branding,
   children,
 }: Kon10ProviderProps) {
   // Default to the framework's RPC client; pass one only to customize transport.
@@ -69,9 +109,15 @@ export function Kon10Provider({
     return reg
   }, [extensions])
 
+  // Resolve branding once, guaranteeing `appName` so consumers never re-default.
+  const resolvedBranding = useMemo<ResolvedBranding>(
+    () => ({ appName: 'Kon10', ...branding }),
+    [branding],
+  )
+
   const value = useMemo<Kon10ContextValue>(
-    () => ({ client: resolved, basePath, loginPath, extensions: registry }),
-    [resolved, basePath, loginPath, registry],
+    () => ({ client: resolved, basePath, loginPath, extensions: registry, branding: resolvedBranding }),
+    [resolved, basePath, loginPath, registry, resolvedBranding],
   )
 
   return (

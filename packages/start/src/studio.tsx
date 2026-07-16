@@ -50,6 +50,7 @@ import {
 import { SettingsIcon } from 'lucide-animated'
 import type { NavIcon } from '@kon10/studio-sdk'
 import { UserMenu } from './UserMenu.js'
+import { Kon10Logo } from './logo.js'
 
 function RouterLink({ href, className, children, onClick, ...handlers }: NavLinkProps) {
   return (
@@ -348,7 +349,7 @@ function Centered({ children }: { children: React.ReactNode }) {
 }
 
 export function Kon10Studio() {
-  const { client, basePath, loginPath, extensions } = useKon10()
+  const { client, basePath, loginPath, extensions, branding } = useKon10()
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const { theme, setTheme } = useTheme()
@@ -410,7 +411,8 @@ export function Kon10Studio() {
         navItems={navItems}
         currentPath={pathname}
         LinkComponent={RouterLink}
-        brand="Kon10"
+        brand={branding.appName}
+        logo={branding.logo ?? <Kon10Logo />}
         userMenu={
           <UserMenu
             email={session.data.email}

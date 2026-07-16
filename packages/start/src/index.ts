@@ -28,9 +28,12 @@ export {
   useKon10,
   type Kon10ProviderProps,
   type Kon10ContextValue,
+  type Kon10Branding,
+  type ResolvedBranding,
 } from '@kon10/studio-sdk'
 export { Kon10Studio } from './studio.js'
 export { Kon10Login } from './login.js'
+export { Kon10Logo } from './logo.js'
 export { useAsync, type AsyncState } from '@kon10/studio-sdk'
 
 // Studio extension authoring surface — re-exported so apps import from one place.

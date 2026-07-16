@@ -23,6 +23,8 @@ export {
   useStudioNavigate,
   type Kon10ProviderProps,
   type Kon10ContextValue,
+  type Kon10Branding,
+  type ResolvedBranding,
 } from './context.js'
 export { useAsync, type AsyncState } from './hooks.js'
 export {

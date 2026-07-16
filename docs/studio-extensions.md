@@ -209,6 +209,45 @@ a fold toggle (`defaultCollapsed` starts it folded — it still opens for the
 active page). Below `lg` both bars collapse into a hamburger menu where the
 active tab's rail items nest beneath it.
 
+## Branding — logo, name, and the login screen
+
+The Studio shell and the `/login` screen are brandable from one place: the
+`branding` prop on `<Kon10Provider>`. Every field is optional and falls back to
+the Kon10 defaults (the `KO` mark and the "Kon10" wordmark), so an app rebrands
+the whole Studio without forking any component.
+
+```tsx
+// src/routes/__root.tsx
+import { Kon10Provider } from '@kon10/start'
+import { studioExtensions } from 'virtual:kon10/studio-extensions'
+import AcmeLogo from '../assets/logo.svg?react' // or any element / <img>
+
+<Kon10Provider
+  extensions={studioExtensions}
+  branding={{
+    appName: 'Acme CMS',
+    logo: <AcmeLogo />,
+    loginTitle: 'Sign in to Acme',
+    loginSubtitle: 'Manage your content and media.',
+  }}
+>
+  <Outlet />
+</Kon10Provider>
+```
+
+| Field | Where it shows | Default |
+|---|---|---|
+| `appName` | Shell wordmark, login subtitle, login footer | `Kon10` |
+| `logo` | Shell mark (top nav + mobile menu) and the login mark | The `Kon10Logo` `KO` mark |
+| `loginTitle` | Login heading | `Welcome back` |
+| `loginSubtitle` | Login subheading | `Sign in to continue to <appName>` |
+
+The `logo` is any React node — an inline SVG component, an `<img>`, whatever —
+sized by its container (give it `h-full w-full` if it doesn't fill). Branding is
+presentation only and client-side, the same as the rest of the provider's props;
+it never travels over RPC. The default mark is exported as `Kon10Logo` from
+`@kon10/start` if you want to compose against it.
+
 ## Architecture notes
 
 - The engine lives in `@kon10/studio-sdk` (`src/extensions/`): the `StudioZone`

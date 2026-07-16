@@ -10,11 +10,13 @@ import { Menu } from 'lucide-react'
 
 export interface MainTopNavProps {
   brand?: string
+  /** Brand logo element for the mark; falls back to a lettermark from `brand`. */
+  logo?: ReactNode
   onMenuClick?: () => void
   children?: ReactNode
 }
 
-export function MainTopNav({ brand = 'Kon10', onMenuClick, children }: MainTopNavProps) {
+export function MainTopNav({ brand = 'Kon10', logo, onMenuClick, children }: MainTopNavProps) {
   return (
     <header className="sticky top-0 z-40 flex h-(--header-height) items-center justify-between gap-group border-b border-nav-border bg-nav px-nav text-nav-foreground">
       <div className="flex min-w-0 items-center gap-inline">
@@ -28,9 +30,15 @@ export function MainTopNav({ brand = 'Kon10', onMenuClick, children }: MainTopNa
         >
           <Menu />
         </Button>
-        <span className="grid size-7 shrink-0 place-items-center rounded-[var(--radius-md)] bg-primary text-sm font-semibold text-primary-foreground">
-          {brand.charAt(0).toUpperCase()}
-        </span>
+        {logo ? (
+          <span className="grid size-7 shrink-0 place-items-center overflow-hidden rounded-[var(--radius-md)] [&_img]:size-full [&_svg]:size-full">
+            {logo}
+          </span>
+        ) : (
+          <span className="grid size-7 shrink-0 place-items-center rounded-[var(--radius-md)] bg-primary text-sm font-semibold text-primary-foreground">
+            {brand.charAt(0).toUpperCase()}
+          </span>
+        )}
         {/* The wordmark yields to actions on phones — the logo mark keeps the
             bar branded, and the mobile menu shows the full brand. */}
         <span className="truncate text-base font-semibold tracking-tight max-sm:hidden">

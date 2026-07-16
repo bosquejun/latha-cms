@@ -11,7 +11,7 @@
  * hidden` (kept in the transition list so the slide-out finishes first) so
  * off-screen links can't be focused or read by assistive tech.
  */
-import { useEffect, type ComponentType } from 'react'
+import { useEffect, type ComponentType, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { Button, cn } from '@kon10/ui'
 import { Slot } from '../extensions/Slot.js'
@@ -25,6 +25,8 @@ export interface MobileMenuProps {
   activeSubKey?: string
   LinkComponent?: ComponentType<NavLinkProps>
   brand?: string
+  /** Brand logo element for the mark; falls back to a lettermark from `brand`. */
+  logo?: ReactNode
 }
 
 const itemClass = (active: boolean) =>
@@ -44,6 +46,7 @@ export function MobileMenu({
   activeSubKey,
   LinkComponent,
   brand = 'Kon10',
+  logo,
 }: MobileMenuProps) {
   useEffect(() => {
     if (!open) return
@@ -109,9 +112,15 @@ export function MobileMenu({
         {/* Sheet header — mirrors the top bar brand, plus a close button. */}
         <div className="flex h-(--header-height) shrink-0 items-center justify-between gap-inline border-b border-nav-border px-nav">
           <div className="flex min-w-0 items-center gap-inline">
-            <span className="grid size-7 shrink-0 place-items-center rounded-[var(--radius-md)] bg-primary text-sm font-semibold text-primary-foreground">
-              {brand.charAt(0).toUpperCase()}
-            </span>
+            {logo ? (
+              <span className="grid size-7 shrink-0 place-items-center overflow-hidden rounded-[var(--radius-md)] [&_img]:size-full [&_svg]:size-full">
+                {logo}
+              </span>
+            ) : (
+              <span className="grid size-7 shrink-0 place-items-center rounded-[var(--radius-md)] bg-primary text-sm font-semibold text-primary-foreground">
+                {brand.charAt(0).toUpperCase()}
+              </span>
+            )}
             <span className="truncate text-base font-semibold tracking-tight">{brand}</span>
           </div>
           <Button
