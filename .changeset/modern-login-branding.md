@@ -5,14 +5,16 @@
 
 feat(studio): modern, brandable login screen and Studio branding
 
-The `/login` screen is redesigned with a cleaner, minimal layout (centered logo
-mark, password show/hide, inline error alert) and is now fully brandable
-alongside the Studio shell via a new `branding` prop on `<Kon10Provider>`:
+The `/login` screen is redesigned as a modern, minimal split layout — a branded
+ink side panel beside a clean form (password show/hide, inline error alert) —
+and is now fully brandable alongside the Studio shell via a new `branding` prop
+on `<Kon10Provider>`:
 
-- `branding.appName` — wordmark shown in the shell, login subtitle, and footer
+- `branding.appName` — wordmark shown in the shell, login side panel, and footer
 - `branding.logo` — a React node used as the brand mark on the login screen and
   in the top nav / mobile menu (falls back to the new `Kon10Logo` `KO` mark)
-- `branding.loginTitle` / `branding.loginSubtitle` — login copy
+- `branding.loginTitle` / `branding.loginSubtitle` — login form copy
+- `branding.tagline` / `branding.taglineSubtitle` — login side-panel copy
 
 All fields are optional and default to the Kon10 mark and copy, so existing apps
 render the new default branding with no changes. `Kon10Logo`, `Kon10Branding`,

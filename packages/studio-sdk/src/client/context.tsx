@@ -44,6 +44,13 @@ export interface Kon10Branding {
    * `Sign in to continue to <appName>`.
    */
   loginSubtitle?: string
+  /**
+   * Headline shown on the login screen's branded side panel (the large ink
+   * panel beside the form on `lg+`). Keep it short. Has a Kon10 default.
+   */
+  tagline?: string
+  /** Supporting line under {@link Kon10Branding.tagline}. Has a Kon10 default. */
+  taglineSubtitle?: string
 }
 
 /** Branding after the provider has applied defaults — `appName` is guaranteed. */

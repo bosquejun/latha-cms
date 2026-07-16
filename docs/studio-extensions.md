@@ -229,6 +229,8 @@ import AcmeLogo from '../assets/logo.svg?react' // or any element / <img>
     logo: <AcmeLogo />,
     loginTitle: 'Sign in to Acme',
     loginSubtitle: 'Manage your content and media.',
+    tagline: 'Ship content faster.',
+    taglineSubtitle: 'One Studio for your whole team.',
   }}
 >
   <Outlet />
@@ -241,6 +243,12 @@ import AcmeLogo from '../assets/logo.svg?react' // or any element / <img>
 | `logo` | Shell mark (top nav + mobile menu) and the login mark | The `Kon10Logo` `KO` mark |
 | `loginTitle` | Login heading | `Welcome back` |
 | `loginSubtitle` | Login subheading | `Sign in to continue to <appName>` |
+| `tagline` | Headline on the login side panel (`lg+`) | Kon10 default |
+| `taglineSubtitle` | Supporting line under the tagline | Kon10 default |
+
+The login screen is a split layout: a branded ink panel (logo, `appName`,
+`tagline`, `taglineSubtitle`) beside the form on `lg+`, collapsing to a
+centered form with a compact brand header below `lg`.
 
 The `logo` is any React node — an inline SVG component, an `<img>`, whatever —
 sized by its container (give it `h-full w-full` if it doesn't fill). Branding is
