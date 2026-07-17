@@ -17,9 +17,13 @@ export {
   getSubjectStore,
   setSubjectStore,
   DEFAULT_USERS_SLUG,
+  type CreateSubjectInput,
   type Subject,
   type SubjectStore,
 } from './subject-store.js'
+
+// First-run setup: the derived token gating `POST auth/setup` in production.
+export { setupToken, verifySetupToken, setupTokenRequired } from './setup.js'
 
 export { hashPassword, verifyPassword } from './crypto.js'
 
@@ -51,8 +55,13 @@ export {
   loginRoute,
   logoutRoute,
   currentUserRoute,
+  setupRoute,
+  setupStatusRoute,
+  setupInputSchema,
+  MIN_PASSWORD_LENGTH,
   toSessionUser,
   type SessionUser,
+  type SetupInput,
 } from './api/index.js'
 
 // RBAC: permission helpers, catalog, entities, and seeding.

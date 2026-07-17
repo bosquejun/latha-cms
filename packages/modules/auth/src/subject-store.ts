@@ -31,11 +31,32 @@ export interface Subject {
   [key: string]: unknown
 }
 
+/** What first-run setup needs to mint a subject. `roles` are role ids. */
+export interface CreateSubjectInput {
+  email: string
+  passwordHash: string
+  name?: string
+  roles?: string[]
+  [key: string]: unknown
+}
+
 export interface SubjectStore {
   /** Find a subject by email (including the password hash), or `null`. */
   findByEmail(email: string): Promise<Subject | null>
   /** Find a subject by id (e.g. from a verified session), or `null`. */
   findById(id: string): Promise<Subject | null>
+  /**
+   * Total subjects — used to detect a fresh install for first-run setup.
+   * Optional: a store that cannot count (e.g. an external IdP) omits it and
+   * thereby opts out of the setup flow.
+   */
+  count?(): Promise<number>
+  /**
+   * Create a subject. Optional for the same reason as {@link SubjectStore.count} —
+   * an external identity provider owns its own account creation, so a store
+   * that omits this declines first-run setup rather than half-supporting it.
+   */
+  create?(input: CreateSubjectInput): Promise<Subject>
 }
 
 // Run lookups as the system principal (superadmin) so auth's own reads are
@@ -76,6 +97,14 @@ export function entitySubjectStore(
       return cached(kon10, userIdKey(slug, id), AUTH_CACHE_TTL_SECONDS, async () => {
         return (await operations.findOne(systemCtx(kon10), slug, id)) as Subject | null
       })
+    },
+    async count() {
+      ensure()
+      return operations.count(systemCtx(kon10), slug)
+    },
+    async create(input) {
+      ensure()
+      return (await operations.create(systemCtx(kon10), slug, input)) as Subject
     },
   }
 }
