@@ -47,16 +47,16 @@ export function TelemetryToggles() {
     <div className="divide-y divide-border">
       <Row
         title="Share usage data"
-        description="Send usage data to help make the Studio better."
+        description="Send usage data to help make the Studio better. On by default."
         checked={enabled}
         onCheckedChange={(next) => (next ? grant() : deny())}
       />
       <Row
-        title="Stay anonymous"
-        description="On by default. Turn this off to include your email, so your usage is linked to your account."
-        checked={anonymous}
+        title="Link to your account"
+        description="Your usage is linked to your account so we can see how it is used. Turn this off to share it anonymously instead."
+        checked={!anonymous}
         disabled={!enabled}
-        onCheckedChange={setAnonymous}
+        onCheckedChange={(next) => setAnonymous(!next)}
       />
     </div>
   )

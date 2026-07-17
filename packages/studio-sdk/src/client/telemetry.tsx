@@ -58,15 +58,18 @@ export function getTelemetryConsent(userId: string): TelemetryConsent {
   return value === 'granted' || value === 'denied' ? value : 'unset'
 }
 
-/** Read the stored anonymity preference. Defaults to `true` (anonymous). */
+/**
+ * Read the stored anonymity preference. Defaults to `false` — usage is linked to
+ * the user's account by default; they opt in to anonymity.
+ */
 export function getTelemetryAnonymous(userId: string): boolean {
-  return readLocal(`${ANON_PREFIX}${userId}`) !== '0'
+  return readLocal(`${ANON_PREFIX}${userId}`) === '1'
 }
 
 export interface TelemetryConsentValue {
   /** Current consent. `'unset'` until the user chooses. */
   status: TelemetryConsent
-  /** Whether events stay anonymous (no email attached). Defaults to `true`. */
+  /** Whether events are anonymized (no account identifier). Defaults to `false`. */
   anonymous: boolean
   /** Record consent (allow monitoring). */
   grant(): void
@@ -91,7 +94,8 @@ export function TelemetryConsentProvider({
   children: ReactNode
 }) {
   const [status, setStatus] = useState<TelemetryConsent>('unset')
-  const [anonymous, setAnonymousState] = useState(true)
+  // Identified by default; the user opts in to anonymity.
+  const [anonymous, setAnonymousState] = useState(false)
 
   // localStorage/cookies are client-only — read after mount to stay SSR-safe.
   useEffect(() => {

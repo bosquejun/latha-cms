@@ -72,8 +72,8 @@ export function telemetryPlugin(options: TelemetryPluginOptions = {}): Plugin {
         cms.logger.info(
           { plugin: 'telemetry' },
           'Kon10 collects usage data to help make the product better. We never ' +
-            'see the content you manage, and it stays anonymous by default. To ' +
-            'turn it off, set KON10_DISABLE_TELEMETRY=1 (or DO_NOT_TRACK=1).',
+            'see the content you manage. To turn it off, set ' +
+            'KON10_DISABLE_TELEMETRY=1 (or DO_NOT_TRACK=1).',
         )
         markNotified(env)
       }
