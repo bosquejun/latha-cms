@@ -32,6 +32,7 @@ test('scaffold copies the template, renames gitignore, stamps the name, writes .
       'src/styles.css',
       'src/routes/__root.tsx',
       'src/routes/index.tsx',
+      'src/studio/settings/telemetry.tsx',
     ]) {
       assert.ok(existsSync(join(target, f)), `missing ${f}`)
     }
@@ -44,6 +45,11 @@ test('scaffold copies the template, renames gitignore, stamps the name, writes .
     }
     assert.equal(pkg.name, 'demo-app')
     assert.ok(pkg.dependencies['@kon10/start'])
+    assert.ok(pkg.dependencies['@kon10/telemetry'])
+
+    const config = readFileSync(join(target, 'kon10.config.ts'), 'utf8')
+    assert.match(config, /mode:\s*'opt-out'/)
+    assert.match(config, /manageUrl:\s*'\/studio\/settings\/telemetry'/)
 
     const env = readFileSync(join(target, '.env'), 'utf8')
     const secret = /^AUTH_SECRET=(.+)$/m.exec(env)?.[1]

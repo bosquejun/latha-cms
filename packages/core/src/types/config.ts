@@ -72,7 +72,7 @@ export interface Kon10Instance {
   /**
    * The instance telemetry sink — a no-op by default, or whichever `Telemetry`
    * a plugin registered via `registerTelemetry` (e.g. `@kon10/telemetry`).
-   * Runners and modules emit anonymous product/technical events through this;
+   * Runners and modules emit allow-listed product/technical events through this;
    * a no-op sink costs nothing.
    */
   telemetry: Telemetry
@@ -268,11 +268,10 @@ export interface StudioBrandingConfig {
 }
 
 /**
- * A one-time, dismissible transparency notice shown in the Studio on first
- * sign-in — e.g. to disclose that the instance sends operational telemetry. It
- * is informational only: it does NOT gate or toggle telemetry (that's the
- * operator's decision, made by adding/removing an observability plugin). A
- * serializable passthrough runners read; the kernel never acts on it.
+ * A one-time, dismissible telemetry notice shown in the Studio on first sign-in.
+ * Depending on its mode it can disclose collection or record per-user product
+ * telemetry choices. A serializable passthrough runners read; the kernel never
+ * acts on it directly.
  */
 export interface StudioTelemetryNoticeConfig {
   /** Show the notice. Default `false` (no notice). */
@@ -281,8 +280,8 @@ export interface StudioTelemetryNoticeConfig {
    * How the first-login dialog behaves. Each records the choice per-user,
    * readable via `useTelemetryConsent()`:
    * - `'notice'` (default) — disclosure with a single acknowledge button.
-   * - `'opt-out'` — telemetry is on by default; the user chooses **Turn off**
-   *   (deny) or **Keep anonymous** (allow, no email). Matches the opt-out posture.
+   * - `'opt-out'` — telemetry is on by default; the user may turn it off or
+   *   remove the link to their account.
    * - `'opt-in'` — telemetry off until the user chooses **Allow** / **No thanks**.
    */
   mode?: 'notice' | 'opt-out' | 'opt-in'

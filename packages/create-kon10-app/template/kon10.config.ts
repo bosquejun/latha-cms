@@ -20,7 +20,7 @@ export default defineConfig({
     authToken: process.env.TURSO_AUTH_TOKEN,
   }),
 
-  // Anonymous, opt-out usage telemetry (à la Medusa). Inert until you set a
+  // Opt-out usage telemetry with per-user anonymity controls (à la Medusa). Inert until you set a
   // PostHog key (`KON10_TELEMETRY_POSTHOG_KEY`); then it's on by default. Opt
   // out with `KON10_DISABLE_TELEMETRY=1` or the cross-tool `DO_NOT_TRACK=1`.
   plugins: [telemetryPlugin()],
@@ -33,16 +33,17 @@ export default defineConfig({
       tagline: 'Everything you publish, in one place.',
       taglineSubtitle: 'Model content, manage media, and ship a fast delivery API.',
     },
-    // One-time disclosure shown in the Studio on first sign-in, pairing with the
-    // opt-out telemetry above. `mode: 'opt-in'` turns it into an Allow/No-thanks
-    // consent prompt instead. Remove it (or the telemetry plugin) if you don't
-    // collect telemetry.
+    // Medusa-style opt-out controls shown on first sign-in. The same choices are
+    // available later under Settings → Telemetry. Use `mode: 'opt-in'` instead
+    // to require an explicit Allow choice before Studio events are collected.
     telemetryNotice: {
       enabled: true,
-      mode: 'notice',
+      mode: 'opt-out',
+      manageUrl: '/studio/settings/telemetry',
       message:
-        'We collect usage data to help make this app better. We never see the ' +
-        'content you manage. To turn it off, set KON10_DISABLE_TELEMETRY=1.',
+        'We collect usage data to help make the Studio better. It is linked to ' +
+        'your account by default, and we never see the content you manage. You ' +
+        'can make it anonymous or turn it off below.',
       // policyUrl: 'https://your-site.com/privacy',
     },
   },

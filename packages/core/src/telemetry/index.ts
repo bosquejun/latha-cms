@@ -6,9 +6,10 @@
  * registers a real sink (PostHog). The kernel and runners emit events through
  * `cms.telemetry` unconditionally; a no-op costs nothing.
  *
- * Events carry only anonymous, non-identifying properties — never user content,
- * credentials, or PII. That contract is the caller's responsibility; core just
- * moves events to whatever sink is registered.
+ * Events must carry only allow-listed usage properties — never user content,
+ * credentials, or direct PII. Account-linked product events may use an opaque
+ * user id unless the user selects anonymous sharing. That contract is the
+ * caller's responsibility; core just moves events to the registered sink.
  */
 
 export type TelemetryPropertyValue = string | number | boolean
@@ -16,7 +17,7 @@ export type TelemetryPropertyValue = string | number | boolean
 export interface TelemetryEvent {
   /** Event name, e.g. `'kon10_boot'` or `'studio_action'`. */
   name: string
-  /** Anonymous, non-identifying properties. `undefined` values are dropped. */
+  /** Allow-listed usage properties. `undefined` values are dropped. */
   properties?: Record<string, TelemetryPropertyValue | undefined>
 }
 

@@ -3,9 +3,10 @@
  * sign-in when `studio.telemetryNotice.enabled` is set. Two modes:
  *
  *  - `'notice'` (default): a disclosure with a single "Got it" acknowledge.
- *  - `'opt-in'`: asks consent for anonymous tracking (Allow / No thanks). The
- *    choice is recorded via `useTelemetryConsent()`; Kon10 tracks nothing
- *    itself, so gate your own analytics on a `'granted'` consent.
+ *  - `'opt-out'`: collection is on by default, with controls to disable it or
+ *    remove the account link.
+ *  - `'opt-in'`: asks for consent (Allow / No thanks); the server requires an
+ *    explicit grant before it captures Studio product events.
  *
  * The "seen" / consent state is stored per-user in `localStorage`, so this shows
  * once per user per browser — no schema or RPC changes.
@@ -101,8 +102,8 @@ export function TelemetryNotice({ userId }: { userId: string }) {
 
   if (mode === 'opt-out') {
     return (
-      // Dismissing keeps whatever the switches are set to (default: on,
-      // anonymous) and stops re-prompting via the ack flag.
+      // Dismissing keeps whatever the switches are set to (default: on and
+      // account-linked) and stops re-prompting via the ack flag.
       <Dialog open={open} onOpenChange={(next) => !next && acknowledge()}>
         <DialogContent>
           <DialogHeader>

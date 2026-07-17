@@ -261,8 +261,27 @@ export async function dispatchKon10Rpc(
 }
 
 /** Dispatch a single RPC request against the running instance. */
-/** Studio actions worth an anonymous product event — mutations only, to keep volume sane. */
+/** Studio actions worth a product event — mutations only, to keep volume sane. */
 const TRACKED_TELEMETRY_ACTIONS = new Set(['create', 'update', 'remove', 'saveGlobal'])
+
+type TelemetryConsent = 'granted' | 'denied' | 'unset'
+type TelemetryMode = 'notice' | 'opt-out' | 'opt-in'
+
+/** Normalize the browser preference before applying the configured consent policy. */
+export function parseTelemetryConsent(value: string | undefined): TelemetryConsent {
+  return value === 'granted' || value === 'denied' ? value : 'unset'
+}
+
+/**
+ * Decide whether a Studio product event may be captured. Opt-in requires an
+ * explicit grant; notice and opt-out modes collect until the user declines.
+ */
+export function shouldCaptureStudioTelemetry(
+  mode: TelemetryMode,
+  consent: TelemetryConsent,
+): boolean {
+  return mode === 'opt-in' ? consent === 'granted' : consent !== 'denied'
+}
 
 /** Read one cookie value off a request's `Cookie` header. */
 function readCookie(request: Request, name: string): string | undefined {
@@ -314,7 +333,12 @@ export async function handleKon10Request(
     // sets from the Telemetry settings): skipped when the user turned tracking
     // off, and carries the user id by default (linked to their account) unless
     // they anonymized. A no-op unless a telemetry sink is registered.
-    if (TRACKED_TELEMETRY_ACTIONS.has(input.action) && readCookie(request, 'kon10_tm_consent') !== 'denied') {
+    const telemetryMode = config.studio?.telemetryNotice?.mode ?? 'notice'
+    const telemetryConsent = parseTelemetryConsent(readCookie(request, 'kon10_tm_consent'))
+    if (
+      TRACKED_TELEMETRY_ACTIONS.has(input.action) &&
+      shouldCaptureStudioTelemetry(telemetryMode, telemetryConsent)
+    ) {
       const anonymize = readCookie(request, 'kon10_tm_anon') === '1'
       const userId = anonymize ? undefined : (sessionUser as { id?: string } | null)?.id
       kon10.telemetry.capture({
