@@ -51,6 +51,7 @@ import { SettingsIcon } from 'lucide-animated'
 import type { NavIcon } from '@kon10/studio-sdk'
 import { UserMenu } from './UserMenu.js'
 import { resolveBrandLogo } from './logo.js'
+import { TelemetryNotice } from './TelemetryNotice.js'
 
 function RouterLink({ href, className, children, onClick, ...handlers }: NavLinkProps) {
   return (
@@ -428,6 +429,7 @@ export function Kon10Studio() {
       >
         <StudioView route={route} nav={mainNav} routeBase={inSettings ? settingsRoot : basePath} />
       </StudioShell>
+      <TelemetryNotice userId={session.data.id} />
       </StudioNavigateProvider>
     </PermissionsProvider>
   )

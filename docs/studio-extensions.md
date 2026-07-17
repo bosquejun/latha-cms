@@ -327,6 +327,32 @@ There are three levels, smallest change first:
    yourself. Keep `Kon10Provider`'s `loginPath` pointed at wherever you mount it,
    so the Studio redirects unauthenticated users to the right place.
 
+## Telemetry transparency notice
+
+Kon10 itself never phones home. If you add an observability plugin
+(`@kon10/sentry`, or any tracer) so **your** instance sends operational
+telemetry to **your** backend, you can disclose that to Studio users with a
+one-time, dismissible notice — declared in `kon10.config.ts`:
+
+```ts
+studio: {
+  telemetryNotice: {
+    enabled: true,
+    // title/message have sensible defaults; override to match what you collect
+    message: 'This Studio sends anonymous performance and error traces to our
+      monitoring backend. No content is collected.',
+    policyUrl: 'https://acme.com/privacy', // optional "Learn more" link
+  },
+}
+```
+
+It shows once per user (per browser, stored in `localStorage`) on first sign-in.
+It is **informational only** — acknowledging it does not toggle telemetry. Whether
+telemetry runs is the operator's decision, made by adding/removing the plugin; the
+notice is transparency, not a consent gate. Omit `telemetryNotice` (or leave
+`enabled` off) and no notice renders. Wire it through the provider like branding:
+`<Kon10Provider telemetryNotice={studioConfig.telemetryNotice} …>`.
+
 ## Architecture notes
 
 - The engine lives in `@kon10/studio-sdk` (`src/extensions/`): the `StudioZone`

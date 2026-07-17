@@ -50,3 +50,9 @@ Beyond branding, the login screen is customizable two more ways:
   login route so the app can own `src/routes/login.tsx` (reuse `<Kon10Login>` or
   build a bespoke page with `client.login()`); the Studio route and extension
   discovery are unaffected.
+
+The Studio also gains an optional, one-time **telemetry transparency notice**:
+set `studio.telemetryNotice.enabled` to disclose (once per user, via
+`localStorage`) that your instance sends operational telemetry. It is
+informational only — it never gates telemetry — and carried client-side through
+the same `virtual:kon10/studio-config` module (`telemetryNotice`).

@@ -25,6 +25,7 @@ export {
   type Kon10ContextValue,
   type Kon10Branding,
   type ResolvedBranding,
+  type Kon10TelemetryNotice,
 } from './context.js'
 export { useAsync, type AsyncState } from './hooks.js'
 export {

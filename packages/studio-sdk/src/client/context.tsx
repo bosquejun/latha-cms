@@ -62,6 +62,23 @@ export interface Kon10Branding {
 /** Branding after the provider has applied defaults — `appName` is guaranteed. */
 export type ResolvedBranding = Kon10Branding & { appName: string }
 
+/**
+ * A one-time, dismissible transparency notice shown in the Studio on first
+ * sign-in (e.g. disclosing operational telemetry). Informational only — it
+ * never gates telemetry. Mirrors `StudioTelemetryNoticeConfig` in `@kon10/core`
+ * (all serializable), and arrives from `kon10.config`'s `studio.telemetryNotice`.
+ */
+export interface Kon10TelemetryNotice {
+  /** Show the notice. Default `false`. */
+  enabled?: boolean
+  /** Dialog title. Has a sensible default. */
+  title?: string
+  /** Dialog body. Has a sensible default. */
+  message?: string
+  /** Optional policy link, shown as "Learn more". */
+  policyUrl?: string
+}
+
 export interface Kon10ContextValue {
   client: Kon10Client
   /** Base path the Studio is mounted under. Defaults to `/studio`. */
@@ -72,6 +89,8 @@ export interface Kon10ContextValue {
   extensions: ExtensionRegistry
   /** Resolved branding for the login screen and Studio shell. */
   branding: ResolvedBranding
+  /** Studio transparency notice (disabled by default). */
+  telemetryNotice: Kon10TelemetryNotice
 }
 
 const Kon10Context = createContext<Kon10ContextValue | null>(null)
@@ -97,6 +116,12 @@ export interface Kon10ProviderProps {
    * apps can rebrand the whole Studio from this one place. See {@link Kon10Branding}.
    */
   branding?: Kon10Branding
+  /**
+   * One-time transparency notice shown in the Studio (disabled unless
+   * `enabled`). Typically wired from `studioConfig.telemetryNotice`
+   * (`virtual:kon10/studio-config`). See {@link Kon10TelemetryNotice}.
+   */
+  telemetryNotice?: Kon10TelemetryNotice
   children: ReactNode
 }
 
@@ -106,6 +131,7 @@ export function Kon10Provider({
   loginPath = '/login',
   extensions,
   branding,
+  telemetryNotice,
   children,
 }: Kon10ProviderProps) {
   // Default to the framework's RPC client; pass one only to customize transport.
@@ -128,9 +154,22 @@ export function Kon10Provider({
     [branding],
   )
 
+  // Stable identity when unset so consumers' effects don't re-fire each render.
+  const resolvedNotice = useMemo<Kon10TelemetryNotice>(
+    () => telemetryNotice ?? {},
+    [telemetryNotice],
+  )
+
   const value = useMemo<Kon10ContextValue>(
-    () => ({ client: resolved, basePath, loginPath, extensions: registry, branding: resolvedBranding }),
-    [resolved, basePath, loginPath, registry, resolvedBranding],
+    () => ({
+      client: resolved,
+      basePath,
+      loginPath,
+      extensions: registry,
+      branding: resolvedBranding,
+      telemetryNotice: resolvedNotice,
+    }),
+    [resolved, basePath, loginPath, registry, resolvedBranding, resolvedNotice],
   )
 
   return (

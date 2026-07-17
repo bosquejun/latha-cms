@@ -1,7 +1,12 @@
 // packages/start/src/vite.studio-extensions.test.ts
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readModuleUiSpecifiers, buildModuleSource, readStudioBranding } from './vite.js'
+import {
+  readModuleUiSpecifiers,
+  buildModuleSource,
+  readStudioBranding,
+  readStudioClientConfig,
+} from './vite.js'
 
 test('readModuleUiSpecifiers extracts and de-dupes module studio.ui strings', async () => {
   const fakeLoad = async () => ({
@@ -60,4 +65,26 @@ test('readStudioBranding defaults to an empty object when unset', async () => {
   const fakeLoad = async () => ({ default: { modules: [] } })
   const branding = await readStudioBranding(fakeLoad, 'virtual:kon10/config')
   assert.deepEqual(branding, {})
+})
+
+test('readStudioClientConfig returns branding + telemetryNotice', async () => {
+  const fakeLoad = async () => ({
+    default: {
+      studio: {
+        branding: { appName: 'Acme' },
+        telemetryNotice: { enabled: true, policyUrl: '/privacy' },
+      },
+    },
+  })
+  const cfg = await readStudioClientConfig(fakeLoad, 'virtual:kon10/config')
+  assert.deepEqual(cfg, {
+    branding: { appName: 'Acme' },
+    telemetryNotice: { enabled: true, policyUrl: '/privacy' },
+  })
+})
+
+test('readStudioClientConfig defaults both slices to empty objects', async () => {
+  const fakeLoad = async () => ({ default: { modules: [] } })
+  const cfg = await readStudioClientConfig(fakeLoad, 'virtual:kon10/config')
+  assert.deepEqual(cfg, { branding: {}, telemetryNotice: {} })
 })

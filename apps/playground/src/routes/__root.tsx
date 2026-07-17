@@ -41,6 +41,7 @@ function RootComponent() {
         basePath="/studio"
         loginPath="/login"
         branding={studioConfig.branding}
+        telemetryNotice={studioConfig.telemetryNotice}
         extensions={studioExtensions}
       >
         <Outlet />

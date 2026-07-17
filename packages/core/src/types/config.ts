@@ -254,12 +254,32 @@ export interface StudioBrandingConfig {
 }
 
 /**
+ * A one-time, dismissible transparency notice shown in the Studio on first
+ * sign-in — e.g. to disclose that the instance sends operational telemetry. It
+ * is informational only: it does NOT gate or toggle telemetry (that's the
+ * operator's decision, made by adding/removing an observability plugin). A
+ * serializable passthrough runners read; the kernel never acts on it.
+ */
+export interface StudioTelemetryNoticeConfig {
+  /** Show the notice. Default `false` (no notice). */
+  enabled?: boolean
+  /** Dialog title. Has a sensible default. */
+  title?: string
+  /** Dialog body. Has a sensible default; set it to describe what you collect. */
+  message?: string
+  /** Optional link to a privacy / telemetry policy, shown as "Learn more". */
+  policyUrl?: string
+}
+
+/**
  * Top-level Studio configuration — a passthrough runners read; the kernel never
  * acts on it (the same contract as `studioPath`/`api`).
  */
 export interface StudioConfig {
   /** Branding for the Studio shell and login screen. */
   branding?: StudioBrandingConfig
+  /** One-time transparency notice shown in the Studio — see {@link StudioTelemetryNoticeConfig}. */
+  telemetryNotice?: StudioTelemetryNoticeConfig
 }
 
 export interface Kon10Config {

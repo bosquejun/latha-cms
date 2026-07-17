@@ -17,7 +17,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import { physical, rootRoute, route } from '@tanstack/virtual-file-routes'
 import { DEFAULT_API_PATH, DEFAULT_RPC_PATH } from '@kon10/studio-sdk'
-import type { StudioBrandingConfig } from '@kon10/core'
+import type { StudioBrandingConfig, StudioTelemetryNoticeConfig } from '@kon10/core'
 import { DEFAULT_MODULE_ROUTES_PATH } from './module-routes.js'
 
 type TanStackStartOptions = NonNullable<Parameters<typeof tanstackStart>[0]>
@@ -463,8 +463,17 @@ export const studioExtensions = mergeExtensions([${moduleList ? moduleList + ', 
 const STUDIO_CONFIG_VIRTUAL_ID = 'virtual:kon10/studio-config'
 const STUDIO_CONFIG_RESOLVED_ID = '\0' + STUDIO_CONFIG_VIRTUAL_ID
 
-interface StudioBrandingCarrier {
-  studio?: { branding?: StudioBrandingConfig }
+interface StudioConfigCarrier {
+  studio?: {
+    branding?: StudioBrandingConfig
+    telemetryNotice?: StudioTelemetryNoticeConfig
+  }
+}
+
+/** The client-safe slice of `studio` config carried by `virtual:kon10/studio-config`. */
+export interface StudioClientConfig {
+  branding: StudioBrandingConfig
+  telemetryNotice: StudioTelemetryNoticeConfig
 }
 
 /**
@@ -476,20 +485,40 @@ export async function readStudioBranding(
   load: (id: string) => Promise<unknown>,
   configPath: string,
 ): Promise<StudioBrandingConfig> {
-  const mod = (await load(configPath)) as { default?: StudioBrandingCarrier }
+  const mod = (await load(configPath)) as { default?: StudioConfigCarrier }
   return mod.default?.studio?.branding ?? {}
 }
 
 /**
+ * Read the client-safe slice of `studio` config (branding + telemetry notice)
+ * the Studio needs at runtime. Same static-load contract as
+ * {@link readStudioBranding}; defaults each field to an empty object.
+ */
+export async function readStudioClientConfig(
+  load: (id: string) => Promise<unknown>,
+  configPath: string,
+): Promise<StudioClientConfig> {
+  const mod = (await load(configPath)) as { default?: StudioConfigCarrier }
+  const studio = mod.default?.studio ?? {}
+  return {
+    branding: studio.branding ?? {},
+    telemetryNotice: studio.telemetryNotice ?? {},
+  }
+}
+
+/**
  * Resolves `virtual:kon10/studio-config` to a **client-safe** module carrying
- * the app's `studio.branding` as plain JSON — the config→client bridge for
- * branding, mirroring how `virtual:kon10/studio-extensions` bridges Studio UI.
- * The app wires it into `<Kon10Provider branding={studioConfig.branding}>`.
+ * the app's `studio.branding` + `studio.telemetryNotice` as plain JSON — the
+ * config→client bridge for branding and the transparency notice, mirroring how
+ * `virtual:kon10/studio-extensions` bridges Studio UI. The app wires it into
+ * `<Kon10Provider branding={studioConfig.branding} …>`.
  */
 function studioConfigPlugin(configPath: string): VitePluginLike {
-  let branding: StudioBrandingConfig | null = null
+  let studioConfig: StudioClientConfig | null = null
   let server: { ssrLoadModule: (id: string) => Promise<unknown> } | undefined
   let root = process.cwd()
+
+  const EMPTY: StudioClientConfig = { branding: {}, telemetryNotice: {} }
 
   return {
     name: 'kon10:studio-config',
@@ -504,41 +533,39 @@ function studioConfigPlugin(configPath: string): VitePluginLike {
     },
     async load(id) {
       if (id !== STUDIO_CONFIG_RESOLVED_ID) return undefined
-      if (branding === null) {
+      if (studioConfig === null) {
         if (server) {
           // Dev: tolerate transient config-load failures (HMR/partial edits).
           try {
-            branding = await readStudioBranding(
+            studioConfig = await readStudioClientConfig(
               (m) => server!.ssrLoadModule(m),
               CONFIG_MODULE_ID,
             )
           } catch (err) {
             console.warn(
-              '[kon10] studio branding: config not loadable yet; ' +
-                'using defaults for now —',
+              '[kon10] studio config: not loadable yet; using defaults for now —',
               err instanceof Error ? err.message : err,
             )
-            branding = {}
+            studioConfig = EMPTY
           }
         } else {
-          // Build: branding is non-critical (the runner defaults everything), so
-          // fall back to empty rather than failing the whole build.
+          // Build: non-critical (the runner defaults everything), so fall back
+          // to empty rather than failing the whole build.
           try {
-            branding = await withBuildConfigLoader(root, configPath, (load) =>
-              readStudioBranding(load, CONFIG_MODULE_ID),
+            studioConfig = await withBuildConfigLoader(root, configPath, (load) =>
+              readStudioClientConfig(load, CONFIG_MODULE_ID),
             )
           } catch (err) {
             console.warn(
-              '[kon10] studio branding: could not read config at build; ' +
-                'using defaults —',
+              '[kon10] studio config: could not read config at build; using defaults —',
               err instanceof Error ? err.message : err,
             )
-            branding = {}
+            studioConfig = EMPTY
           }
         }
       }
       return (
-        `export const studioConfig = ${JSON.stringify({ branding })}\n` +
+        `export const studioConfig = ${JSON.stringify(studioConfig)}\n` +
         `export default studioConfig\n`
       )
     },

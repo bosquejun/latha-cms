@@ -30,6 +30,7 @@ export {
   type Kon10ContextValue,
   type Kon10Branding,
   type ResolvedBranding,
+  type Kon10TelemetryNotice,
 } from '@kon10/studio-sdk'
 export { Kon10Studio } from './studio.js'
 export { Kon10Login } from './login.js'

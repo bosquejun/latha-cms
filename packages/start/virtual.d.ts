@@ -23,12 +23,16 @@ declare module 'virtual:kon10/config' {
 }
 
 declare module 'virtual:kon10/studio-config' {
-  import type { StudioBrandingConfig } from '@kon10/core'
+  import type { StudioBrandingConfig, StudioTelemetryNoticeConfig } from '@kon10/core'
   /**
    * Client-safe Studio config read from the app's `kon10.config` — the
-   * serializable `studio.branding` block. Wire it into the provider:
-   * `<Kon10Provider branding={studioConfig.branding} …>`.
+   * serializable `studio.branding` + `studio.telemetryNotice` blocks. Wire it
+   * into the provider: `<Kon10Provider branding={studioConfig.branding}
+   * telemetryNotice={studioConfig.telemetryNotice} …>`.
    */
-  export const studioConfig: { branding: StudioBrandingConfig }
+  export const studioConfig: {
+    branding: StudioBrandingConfig
+    telemetryNotice: StudioTelemetryNoticeConfig
+  }
   export default studioConfig
 }

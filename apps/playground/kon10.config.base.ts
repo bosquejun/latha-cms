@@ -136,6 +136,12 @@ export function buildConfig(
         // registration route/page. Omit to hide it (no public sign-up).
         signUpUrl: '/signup',
       },
+      // A one-time, dismissible transparency notice shown on first sign-in.
+      // Informational only — it does not gate telemetry. Off by default.
+      telemetryNotice: {
+        enabled: true,
+        policyUrl: 'https://example.com/privacy',
+      },
     },
 
     plugins: [
