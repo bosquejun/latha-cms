@@ -47,3 +47,13 @@ test('keyPrefix namespaces every key sent to the client', async () => {
   assert.equal(client.store.has('a'), false)
   assert.equal(await cache.get('a'), 1)
 })
+
+test('constructing with a url does not connect eagerly (build-safe)', () => {
+  // Regression: `new Redis(url)` used to dial the moment `redisCache()` ran,
+  // so importing a config that calls it during a build triggered a connection
+  // attempt (ECONNREFUSED). The default client now uses `lazyConnect`, so
+  // construction is side-effect-free — no throw, no unhandled 'error' event.
+  assert.doesNotThrow(() => {
+    redisCache({ url: 'redis://127.0.0.1:6390' })
+  })
+})

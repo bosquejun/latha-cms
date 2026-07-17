@@ -31,7 +31,7 @@ export interface RedisCacheOptions {
 }
 
 export function redisCache(options: RedisCacheOptions = {}): CacheAdapter {
-  const client: RedisClientLike = options.client ?? new Redis(options.url ?? 'redis://localhost:6379')
+  const client: RedisClientLike = options.client ?? createDefaultClient(options.url)
   const prefixed = (key: string) => (options.keyPrefix ? `${options.keyPrefix}${key}` : key)
 
   return {
@@ -54,4 +54,30 @@ export function redisCache(options: RedisCacheOptions = {}): CacheAdapter {
       return (await client.exists(prefixed(key))) === 1
     },
   }
+}
+
+/**
+ * Constructs the default `ioredis` client for the `url`-based path.
+ *
+ * `lazyConnect: true` is load-bearing: without it, `new Redis(url)` opens the
+ * TCP connection the instant the client is constructed — so merely importing a
+ * config that calls `redisCache()` dials Redis. During a build (e.g. Vercel
+ * evaluating `kon10.config.*.ts`) there is no Redis to reach and the env var
+ * often isn't populated yet, so that eager dial surfaces as
+ * `ECONNREFUSED 127.0.0.1:6379` (the localhost fallback). Deferring the
+ * connection keeps construction side-effect-free; it opens on the first
+ * delivery-API read at runtime instead.
+ *
+ * The `error` listener is equally load-bearing: an `ioredis` client is an
+ * `EventEmitter`, and an `'error'` event with no listener is re-thrown by Node
+ * as an unhandled exception ("Unhandled error event"). Listening keeps
+ * transient connection errors from crashing the process — ioredis reconnects
+ * on its own.
+ */
+function createDefaultClient(url?: string): RedisClientLike {
+  const client = new Redis(url ?? 'redis://localhost:6379', { lazyConnect: true })
+  client.on('error', (err: Error) => {
+    console.error('[kon10:cache] redis client error:', err.message)
+  })
+  return client
 }
