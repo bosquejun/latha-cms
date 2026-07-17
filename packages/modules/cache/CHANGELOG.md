@@ -1,5 +1,12 @@
 # @kon10/cache
 
+## 1.0.2
+
+### Patch Changes
+
+- Updated dependencies [edeab7e]
+  - @kon10/core@1.0.2
+
 ## 1.0.1
 
 ### Patch Changes
