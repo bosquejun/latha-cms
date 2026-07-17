@@ -1,5 +1,19 @@
 # @kon10/seo
 
+## 1.0.1
+
+### Patch Changes
+
+- Updated dependencies [6e7fe1c]
+- Updated dependencies [de47700]
+- Updated dependencies [fe180c5]
+- Updated dependencies [5c52497]
+- Updated dependencies [424296e]
+  - @kon10/core@1.0.1
+  - @kon10/studio-sdk@1.0.1
+  - @kon10/start@1.0.1
+  - @kon10/ui@1.0.1
+
 ## 1.0.0
 
 ### Patch Changes
