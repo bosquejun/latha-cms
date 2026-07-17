@@ -23,7 +23,18 @@ export {
   useStudioNavigate,
   type Kon10ProviderProps,
   type Kon10ContextValue,
+  type Kon10Branding,
+  type ResolvedBranding,
+  type Kon10TelemetryNotice,
 } from './context.js'
+export {
+  TelemetryConsentProvider,
+  useTelemetryConsent,
+  getTelemetryConsent,
+  getTelemetryAnonymous,
+  type TelemetryConsent,
+  type TelemetryConsentValue,
+} from './telemetry.js'
 export { useAsync, type AsyncState } from './hooks.js'
 export {
   Kon10RpcInputSchema,

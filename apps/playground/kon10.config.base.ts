@@ -61,6 +61,7 @@ import {
 import { media, MediaModule } from '@kon10/media'
 import { CacheModule, inMemoryCache } from '@kon10/cache'
 import { sentryTracingPlugin } from '@kon10/sentry'
+import { telemetryPlugin } from '@kon10/telemetry'
 import { slug, slugPlugin } from '@kon10/slug'
 import { seo, socialGraph, seoPlugin } from '@kon10/seo'
 
@@ -122,7 +123,37 @@ export function buildConfig(
   return defineConfig({
     db,
 
+    // Studio branding — declared here in config (the single source of truth),
+    // read by @kon10/start and rendered on the login screen and Studio shell.
+    // `logo` would be an image URL/path (e.g. '/logo.svg'); omitted here so the
+    // default Kon10 mark is used.
+    studio: {
+      branding: {
+        appName: 'Kon10',
+        tagline: 'Everything you publish, in one place.',
+        taglineSubtitle:
+          'Model content, manage media, and ship a fast delivery API, all from your Studio.',
+        // Opt into a "Sign up" button on the login screen; point it at your
+        // registration route/page. Omit to hide it (no public sign-up).
+        signUpUrl: '/signup',
+      },
+      // First-login dialog. Telemetry is on by default (opt-out), so this lets
+      // the user Turn off or Keep anonymous; `manageUrl` links to the full
+      // toggles (incl. sharing email). `mode: 'notice'` just discloses;
+      // `mode: 'opt-in'` flips to Allow / No-thanks. Off unless `enabled`.
+      telemetryNotice: {
+        enabled: true,
+        mode: 'opt-out',
+        manageUrl: '/studio/settings/telemetry',
+        policyUrl: 'https://example.com/privacy',
+      },
+    },
+
     plugins: [
+      // Anonymous, opt-out usage telemetry (à la Medusa). Inert until a PostHog
+      // key is set (`KON10_TELEMETRY_POSTHOG_KEY`); then it's on by default and
+      // opted out via `KON10_DISABLE_TELEMETRY=1` / `DO_NOT_TRACK=1`.
+      telemetryPlugin(),
       // slugPlugin wires generation + uniqueness hooks into every entity below
       // that carries a slug() field (posts, pages).
       slugPlugin(),

@@ -64,6 +64,9 @@ importers:
       '@kon10/studio-sdk':
         specifier: workspace:^
         version: link:../../packages/studio-sdk
+      '@kon10/telemetry':
+        specifier: workspace:^
+        version: link:../../packages/plugins/telemetry
       '@kon10/ui':
         specifier: workspace:^
         version: link:../../packages/ui
@@ -430,6 +433,22 @@ importers:
       vite:
         specifier: ^7.0.0
         version: 7.3.5(@types/node@22.20.0)(jiti@2.7.0)(lightningcss@1.32.0)
+
+  packages/plugins/telemetry:
+    dependencies:
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@kon10/core':
+        specifier: workspace:^
+        version: link:../../core
+      '@types/node':
+        specifier: ^22.10.0
+        version: 22.20.0
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
 
   packages/registry:
     dependencies:

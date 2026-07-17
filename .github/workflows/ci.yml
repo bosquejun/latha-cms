@@ -110,8 +110,8 @@ jobs:
               "@kon10/client": "clients/client",
               "@kon10/content": "modules/content", "@kon10/core": "core",
               "@kon10/start": "start", "@kon10/storage": "modules/storage",
-              "@kon10/studio-sdk": "studio-sdk", "@kon10/ui": "ui",
-              "@kon10/users": "modules/users",
+              "@kon10/studio-sdk": "studio-sdk", "@kon10/telemetry": "plugins/telemetry",
+              "@kon10/ui": "ui", "@kon10/users": "modules/users",
             };
             j.pnpm = { overrides: Object.fromEntries(Object.entries(map).map(
               ([n, d]) => [n, "file:" + process.env.GITHUB_WORKSPACE + "/packages/" + d],

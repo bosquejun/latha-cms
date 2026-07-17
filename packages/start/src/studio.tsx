@@ -32,6 +32,7 @@ import {
   type ShellNavItem,
   type ShellNavSubItem,
   PermissionsProvider,
+  TelemetryConsentProvider,
   StudioNavigateProvider,
   useCan,
   useKon10,
@@ -50,6 +51,8 @@ import {
 import { SettingsIcon } from 'lucide-animated'
 import type { NavIcon } from '@kon10/studio-sdk'
 import { UserMenu } from './UserMenu.js'
+import { resolveBrandLogo } from './logo.js'
+import { TelemetryNotice } from './TelemetryNotice.js'
 
 function RouterLink({ href, className, children, onClick, ...handlers }: NavLinkProps) {
   return (
@@ -348,7 +351,7 @@ function Centered({ children }: { children: React.ReactNode }) {
 }
 
 export function Kon10Studio() {
-  const { client, basePath, loginPath, extensions } = useKon10()
+  const { client, basePath, loginPath, extensions, branding } = useKon10()
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const { theme, setTheme } = useTheme()
@@ -403,6 +406,9 @@ export function Kon10Studio() {
 
   return (
     <PermissionsProvider permissions={session.data.permissions}>
+      {/* Make the user's telemetry-consent choice available to the notice and
+          to any operator analytics rendered inside the Studio. */}
+      <TelemetryConsentProvider userId={session.data.id}>
       {/* Bridge the router so extension pages can navigate client-side
           (URL-driven master-detail views, redirects) without a router dep. */}
       <StudioNavigateProvider navigate={(href) => void navigate({ to: href })}>
@@ -410,7 +416,8 @@ export function Kon10Studio() {
         navItems={navItems}
         currentPath={pathname}
         LinkComponent={RouterLink}
-        brand="Kon10"
+        brand={branding.appName}
+        logo={resolveBrandLogo(branding.logo)}
         userMenu={
           <UserMenu
             email={session.data.email}
@@ -426,7 +433,9 @@ export function Kon10Studio() {
       >
         <StudioView route={route} nav={mainNav} routeBase={inSettings ? settingsRoot : basePath} />
       </StudioShell>
+      <TelemetryNotice userId={session.data.id} />
       </StudioNavigateProvider>
+      </TelemetryConsentProvider>
     </PermissionsProvider>
   )
 }

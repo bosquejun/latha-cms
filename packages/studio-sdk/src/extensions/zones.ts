@@ -37,6 +37,16 @@ export const STUDIO_ZONES = [
   // Global (single-cardinality) entity view (entity-scoped).
   'global.before',
   'global.after',
+
+  // Login screen (pre-auth — rendered outside the Studio shell, so these are
+  // the only zones available before a session exists). `login.aside` drops into
+  // the branded side panel; `login.form.after` is the spot for SSO buttons or a
+  // "forgot password?" link.
+  'login.aside',
+  'login.header',
+  'login.form.before',
+  'login.form.after',
+  'login.footer',
 ] as const
 
 export type StudioZone = (typeof STUDIO_ZONES)[number]

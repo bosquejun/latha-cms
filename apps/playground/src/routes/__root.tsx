@@ -10,6 +10,7 @@ import type { ReactNode } from 'react'
 import { Kon10Provider } from '@kon10/start'
 import { mergeExtensions } from '@kon10/studio-sdk'
 import { studioExtensions as baseExtensions } from 'virtual:kon10/studio-extensions'
+import { studioConfig } from 'virtual:kon10/studio-config'
 import { FileTextIcon, FileStackIcon, FolderTreeIcon } from 'lucide-animated'
 import appCss from '../styles.css?url'
 
@@ -36,7 +37,13 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
-      <Kon10Provider basePath="/studio" loginPath="/login" extensions={studioExtensions}>
+      <Kon10Provider
+        basePath="/studio"
+        loginPath="/login"
+        branding={studioConfig.branding}
+        telemetryNotice={studioConfig.telemetryNotice}
+        extensions={studioExtensions}
+      >
         <Outlet />
       </Kon10Provider>
     </RootDocument>

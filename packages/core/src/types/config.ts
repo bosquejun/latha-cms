@@ -8,6 +8,7 @@ import type { Guard } from './guard.js'
 import type { FieldTypeEntry } from '../fields/registry.js'
 import type { Logger } from '../logger/index.js'
 import type { Tracer } from '../tracing/index.js'
+import type { Telemetry } from '../telemetry/index.js'
 
 /** Forward reference to the live instance; defined in `bootstrap`. */
 export interface Kon10Instance {
@@ -68,6 +69,19 @@ export interface Kon10Instance {
    * core never opines on tracing backends, only on this seam.
    */
   registerTracer(tracer: Tracer): void
+  /**
+   * The instance telemetry sink — a no-op by default, or whichever `Telemetry`
+   * a plugin registered via `registerTelemetry` (e.g. `@kon10/telemetry`).
+   * Runners and modules emit anonymous product/technical events through this;
+   * a no-op sink costs nothing.
+   */
+  telemetry: Telemetry
+  /**
+   * Register the instance-wide telemetry sink (typically from a plugin's
+   * `onInit`, e.g. `@kon10/telemetry`). Same shape as `registerTracer` — core
+   * never opines on analytics backends, only on this seam.
+   */
+  registerTelemetry(telemetry: Telemetry): void
   ready: boolean
 }
 
@@ -224,12 +238,87 @@ export interface DeliveryApiConfig {
   cache?: DeliveryCacheOption
 }
 
+/**
+ * Studio branding — a serializable passthrough that runners (e.g. `@kon10/start`)
+ * read to brand the Studio shell and the login screen. The kernel never reads
+ * it, the same contract as `studioPath`. Every field is optional; the runner
+ * applies its own defaults. Because it must survive serialization into the
+ * client bundle, `logo` is an image URL/path (not a component).
+ */
+export interface StudioBrandingConfig {
+  /** Product / brand name — the wordmark, plus the login subtitle and footer. */
+  appName?: string
+  /** Brand logo image URL/path (e.g. `/logo.svg`), rendered as the mark. */
+  logo?: string
+  /** Login-screen heading. */
+  loginTitle?: string
+  /** Login-screen subheading under the title. */
+  loginSubtitle?: string
+  /**
+   * Sign-up destination (a URL/path). When set, the login screen shows a
+   * "Sign up" action linking here; omit it and no sign-up button is rendered
+   * (a Studio has no public registration by default). Wiring the destination —
+   * a route, a hosted registration page — is the app's responsibility.
+   */
+  signUpUrl?: string
+  /** Headline on the login screen's branded side panel. */
+  tagline?: string
+  /** Supporting line under {@link StudioBrandingConfig.tagline}. */
+  taglineSubtitle?: string
+}
+
+/**
+ * A one-time, dismissible transparency notice shown in the Studio on first
+ * sign-in — e.g. to disclose that the instance sends operational telemetry. It
+ * is informational only: it does NOT gate or toggle telemetry (that's the
+ * operator's decision, made by adding/removing an observability plugin). A
+ * serializable passthrough runners read; the kernel never acts on it.
+ */
+export interface StudioTelemetryNoticeConfig {
+  /** Show the notice. Default `false` (no notice). */
+  enabled?: boolean
+  /**
+   * How the first-login dialog behaves. Each records the choice per-user,
+   * readable via `useTelemetryConsent()`:
+   * - `'notice'` (default) — disclosure with a single acknowledge button.
+   * - `'opt-out'` — telemetry is on by default; the user chooses **Turn off**
+   *   (deny) or **Keep anonymous** (allow, no email). Matches the opt-out posture.
+   * - `'opt-in'` — telemetry off until the user chooses **Allow** / **No thanks**.
+   */
+  mode?: 'notice' | 'opt-out' | 'opt-in'
+  /** Dialog title. Has a sensible default. */
+  title?: string
+  /** Dialog body. Has a sensible default; set it to describe what you collect. */
+  message?: string
+  /** Optional link to a privacy / telemetry policy, shown as "Learn more". */
+  policyUrl?: string
+  /**
+   * Optional in-Studio path to the telemetry opt-out settings (e.g.
+   * `/studio/settings/telemetry`). When set, the dialog shows a "Manage" button
+   * that navigates there, so first-login users can find the opt-outs.
+   */
+  manageUrl?: string
+}
+
+/**
+ * Top-level Studio configuration — a passthrough runners read; the kernel never
+ * acts on it (the same contract as `studioPath`/`api`).
+ */
+export interface StudioConfig {
+  /** Branding for the Studio shell and login screen. */
+  branding?: StudioBrandingConfig
+  /** One-time transparency notice shown in the Studio — see {@link StudioTelemetryNoticeConfig}. */
+  telemetryNotice?: StudioTelemetryNoticeConfig
+}
+
 export interface Kon10Config {
   db: DBAdapter
   modules: Module[]
   plugins?: Plugin[]
   /** Base path the Studio UI is mounted under. Defaults to `/studio`. */
   studioPath?: string
+  /** Studio-level config (branding, …), read by runners — see {@link StudioConfig}. */
+  studio?: StudioConfig
   /** Public delivery-API settings, read by runners — see {@link DeliveryApiConfig}. */
   api?: DeliveryApiConfig
   /**

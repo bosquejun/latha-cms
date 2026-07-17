@@ -17,6 +17,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import { physical, rootRoute, route } from '@tanstack/virtual-file-routes'
 import { DEFAULT_API_PATH, DEFAULT_RPC_PATH } from '@kon10/studio-sdk'
+import type { StudioBrandingConfig, StudioTelemetryNoticeConfig } from '@kon10/core'
 import { DEFAULT_MODULE_ROUTES_PATH } from './module-routes.js'
 
 type TanStackStartOptions = NonNullable<Parameters<typeof tanstackStart>[0]>
@@ -107,8 +108,15 @@ function toSourcePath(distAbs: string): string {
 }
 
 export interface Kon10StartOptions {
-  /** Where the sign-in screen mounts. Default `/login`. */
-  loginPath?: string
+  /**
+   * Where the built-in sign-in screen mounts. Default `/login`. Pass `false` to
+   * NOT mount the framework login route at all — the app then owns `/login` with
+   * its own `src/routes/login.tsx` (render `<Kon10Login>` to reuse the default,
+   * or build a bespoke page with `useKon10().client.login()`). The Studio route
+   * and extension discovery are untouched. Keep `Kon10Provider`'s `loginPath`
+   * pointed at wherever the app mounts it.
+   */
+  loginPath?: string | false
   /** Studio base path; the Studio mounts as a catch-all under it. Default `/studio`. */
   studioBasePath?: string
   /**
@@ -136,7 +144,10 @@ export interface Kon10StartOptions {
 export function kon10Start(
   options: Kon10StartOptions = {},
 ): TanStackStartPlugins {
-  const loginPath = options.loginPath ?? '/login'
+  // `loginPath: false` means the app mounts its own login route — don't inject
+  // the built-in one (which would collide with the app's `/login`).
+  const mountLogin = options.loginPath !== false
+  const loginPath = typeof options.loginPath === 'string' ? options.loginPath : '/login'
   const studioBasePath = options.studioBasePath ?? '/studio'
   const configPath = options.configPath ?? './kon10.config.ts'
 
@@ -148,7 +159,9 @@ export function kon10Start(
     ...(options.studio === false
       ? []
       : [
-          route(loginPath, routeFile('@kon10/start/routes/login')),
+          ...(mountLogin
+            ? [route(loginPath, routeFile('@kon10/start/routes/login'))]
+            : []),
           route(`${studioBasePath}/$`, routeFile('@kon10/start/routes/studio')),
         ]),
     route(DEFAULT_RPC_PATH, routeFile('@kon10/start/routes/rpc')),
@@ -179,6 +192,7 @@ export function kon10Start(
   ]
   if (options.studio !== false) {
     extra.push(studioExtensionsPlugin(options.studio?.dir ?? 'src/studio', configPath))
+    extra.push(studioConfigPlugin(configPath))
   }
 
   return [
@@ -310,10 +324,11 @@ export async function readModuleUiSpecifiers(
  * this server's `root` — the same project root — so a relative `./kon10.config.ts`
  * still points at the real file.
  */
-async function loadSpecifiersAtBuild(
+async function withBuildConfigLoader<T>(
   root: string,
   configPath: string,
-): Promise<string[]> {
+  use: (load: (id: string) => Promise<unknown>) => Promise<T>,
+): Promise<T> {
   // `vite` is not a declared dependency of this package (it arrives transitively
   // at the app level via TanStack Start). This code only ever runs at build time
   // inside that app context, where `vite` is installed — so resolve it from the
@@ -339,13 +354,19 @@ async function loadSpecifiersAtBuild(
     logLevel: 'silent',
   })
   try {
-    return await readModuleUiSpecifiers(
-      (id) => viteServer.ssrLoadModule(id),
-      CONFIG_MODULE_ID,
-    )
+    return await use((id) => viteServer.ssrLoadModule(id))
   } finally {
     await viteServer.close()
   }
+}
+
+function loadSpecifiersAtBuild(
+  root: string,
+  configPath: string,
+): Promise<string[]> {
+  return withBuildConfigLoader(root, configPath, (load) =>
+    readModuleUiSpecifiers(load, CONFIG_MODULE_ID),
+  )
 }
 
 /**
@@ -437,4 +458,116 @@ const appExtensions = collectStudioExtensions({
 // Modules first, app last — the app overrides module UI on key conflict.
 export const studioExtensions = mergeExtensions([${moduleList ? moduleList + ', ' : ''}appExtensions])
 `
+}
+
+const STUDIO_CONFIG_VIRTUAL_ID = 'virtual:kon10/studio-config'
+const STUDIO_CONFIG_RESOLVED_ID = '\0' + STUDIO_CONFIG_VIRTUAL_ID
+
+interface StudioConfigCarrier {
+  studio?: {
+    branding?: StudioBrandingConfig
+    telemetryNotice?: StudioTelemetryNoticeConfig
+  }
+}
+
+/** The client-safe slice of `studio` config carried by `virtual:kon10/studio-config`. */
+export interface StudioClientConfig {
+  branding: StudioBrandingConfig
+  telemetryNotice: StudioTelemetryNoticeConfig
+}
+
+/**
+ * Load the app's `kon10.config` and read its `studio.branding` block — the
+ * serializable branding an app declares once in config. Reads static data only;
+ * never bootstraps an instance. Same load contract as `readModuleUiSpecifiers`.
+ */
+export async function readStudioBranding(
+  load: (id: string) => Promise<unknown>,
+  configPath: string,
+): Promise<StudioBrandingConfig> {
+  const mod = (await load(configPath)) as { default?: StudioConfigCarrier }
+  return mod.default?.studio?.branding ?? {}
+}
+
+/**
+ * Read the client-safe slice of `studio` config (branding + telemetry notice)
+ * the Studio needs at runtime. Same static-load contract as
+ * {@link readStudioBranding}; defaults each field to an empty object.
+ */
+export async function readStudioClientConfig(
+  load: (id: string) => Promise<unknown>,
+  configPath: string,
+): Promise<StudioClientConfig> {
+  const mod = (await load(configPath)) as { default?: StudioConfigCarrier }
+  const studio = mod.default?.studio ?? {}
+  return {
+    branding: studio.branding ?? {},
+    telemetryNotice: studio.telemetryNotice ?? {},
+  }
+}
+
+/**
+ * Resolves `virtual:kon10/studio-config` to a **client-safe** module carrying
+ * the app's `studio.branding` + `studio.telemetryNotice` as plain JSON — the
+ * config→client bridge for branding and the transparency notice, mirroring how
+ * `virtual:kon10/studio-extensions` bridges Studio UI. The app wires it into
+ * `<Kon10Provider branding={studioConfig.branding} …>`.
+ */
+function studioConfigPlugin(configPath: string): VitePluginLike {
+  let studioConfig: StudioClientConfig | null = null
+  let server: { ssrLoadModule: (id: string) => Promise<unknown> } | undefined
+  let root = process.cwd()
+
+  const EMPTY: StudioClientConfig = { branding: {}, telemetryNotice: {} }
+
+  return {
+    name: 'kon10:studio-config',
+    configResolved(config: { root: string }) {
+      root = config.root
+    },
+    configureServer(s: { ssrLoadModule: (id: string) => Promise<unknown> }) {
+      server = s
+    },
+    resolveId(id) {
+      return id === STUDIO_CONFIG_VIRTUAL_ID ? STUDIO_CONFIG_RESOLVED_ID : undefined
+    },
+    async load(id) {
+      if (id !== STUDIO_CONFIG_RESOLVED_ID) return undefined
+      if (studioConfig === null) {
+        if (server) {
+          // Dev: tolerate transient config-load failures (HMR/partial edits).
+          try {
+            studioConfig = await readStudioClientConfig(
+              (m) => server!.ssrLoadModule(m),
+              CONFIG_MODULE_ID,
+            )
+          } catch (err) {
+            console.warn(
+              '[kon10] studio config: not loadable yet; using defaults for now —',
+              err instanceof Error ? err.message : err,
+            )
+            studioConfig = EMPTY
+          }
+        } else {
+          // Build: non-critical (the runner defaults everything), so fall back
+          // to empty rather than failing the whole build.
+          try {
+            studioConfig = await withBuildConfigLoader(root, configPath, (load) =>
+              readStudioClientConfig(load, CONFIG_MODULE_ID),
+            )
+          } catch (err) {
+            console.warn(
+              '[kon10] studio config: could not read config at build; using defaults —',
+              err instanceof Error ? err.message : err,
+            )
+            studioConfig = EMPTY
+          }
+        }
+      }
+      return (
+        `export const studioConfig = ${JSON.stringify(studioConfig)}\n` +
+        `export default studioConfig\n`
+      )
+    },
+  }
 }

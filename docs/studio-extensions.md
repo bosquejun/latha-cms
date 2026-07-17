@@ -92,6 +92,22 @@ The full catalogue (`STUDIO_ZONES`):
 | `form.before` / `form.after` | Top/bottom of the form's main column | `entity`, `recordId` |
 | `form.sidebar.before` / `form.sidebar.after` | Around the form's meta sidebar | `entity`, `recordId` |
 | `global.before` / `global.after` | Around a global (single-record) entity view | `entity` |
+| `login.aside` | A branded side panel, for login layouts that have one | — |
+| `login.header` | Above the login form's heading | — |
+| `login.form.before` / `login.form.after` | Inside the login form, around the fields (extra actions, a "forgot password?" link) | — |
+| `login.footer` | Below the login card | — |
+
+The `login.*` zones render on the **pre-auth** sign-in screen (outside the
+Studio shell), so a widget there needs no session — e.g. a "forgot password?"
+link in `login.form.after`:
+
+```tsx
+// src/studio/widgets/login-forgot.tsx
+export const config = defineWidgetConfig({ zone: 'login.form.after' })
+export default function LoginForgot() {
+  return <a href="/reset-password">Forgot password?</a>
+}
+```
 
 Every widget receives a `WidgetContext`: the active `zone`, plus `entity` /
 `recordId` / `data` in entity-scoped zones. Bail out for entities you don't
@@ -208,6 +224,157 @@ settings-area module), `studio.nav.collapsible: true` turns the heading into
 a fold toggle (`defaultCollapsed` starts it folded — it still opens for the
 active page). Below `lg` both bars collapse into a hamburger menu where the
 active tab's rail items nest beneath it.
+
+## Branding — logo, name, and the login screen
+
+Branding is **config-driven**: declare it once in `kon10.config.ts` under
+`studio.branding`, and it brands both the Studio shell and the `/login` screen.
+Every field is optional and falls back to the Kon10 defaults (the `KO` mark and
+the "Kon10" wordmark), so an app rebrands the whole Studio without forking any
+component.
+
+```ts
+// kon10.config.ts
+export default defineConfig({
+  db: /* … */,
+  studio: {
+    branding: {
+      appName: 'Acme CMS',
+      logo: '/logo.svg',            // an image URL/path in your `public/`
+      loginTitle: 'Sign in to Acme',
+      loginSubtitle: 'Manage your content and media.',
+      tagline: 'Ship content faster.',
+      taglineSubtitle: 'One Studio for your whole team.',
+    },
+  },
+  modules: [/* … */],
+})
+```
+
+Because `kon10.config.ts` is server-loaded, the `kon10Start()` Vite plugin lifts
+`studio.branding` into a **client-safe** virtual module, `virtual:kon10/studio-config`
+(the same config→client bridge that `virtual:kon10/studio-extensions` uses for
+Studio UI). Wire it into the provider once — the scaffold already does this:
+
+```tsx
+// src/routes/__root.tsx
+import { Kon10Provider } from '@kon10/start'
+import { studioExtensions } from 'virtual:kon10/studio-extensions'
+import { studioConfig } from 'virtual:kon10/studio-config'
+
+<Kon10Provider branding={studioConfig.branding} extensions={studioExtensions}>
+  <Outlet />
+</Kon10Provider>
+```
+
+| Field | Where it shows | Default |
+|---|---|---|
+| `appName` | Shell wordmark, login subtitle, login footer | `Kon10` |
+| `logo` | Shell mark (top nav + mobile menu) and the login mark | The `Kon10Logo` `KO` mark |
+| `loginTitle` | Login heading | `Welcome back` |
+| `loginSubtitle` | Login subheading | `Sign in to continue to <appName>` |
+| `signUpUrl` | Set to show a "Sign up" button linking here; omit to hide it | — (no sign-up) |
+| `tagline` | Brand headline — surfaced by side-panel login layouts and the `login.aside` zone | Kon10 default |
+| `taglineSubtitle` | Supporting line under the tagline | Kon10 default |
+
+The default login screen is a centered card over a branded backdrop (the logo
+above a single form card, scaling to one column at any width). `tagline` /
+`taglineSubtitle` are brand metadata that a side-panel layout — a custom login
+route, or a widget in the `login.aside` zone — can render.
+
+Because config must serialize into the client bundle, `studio.branding.logo` is
+an **image URL/path** (e.g. `/logo.svg`). If you'd rather pass a React element
+for the logo — an inline SVG component, a custom `<img>` — the `branding` prop
+on `<Kon10Provider>` also accepts a `ReactNode` `logo`, which overrides the
+config value:
+
+```tsx
+<Kon10Provider
+  branding={{ ...studioConfig.branding, logo: <AcmeLogo /> }}
+  extensions={studioExtensions}
+>
+```
+
+Branding is presentation only and client-side; it never travels over RPC. The
+default mark is exported as `Kon10Logo` from `@kon10/start` if you want to
+compose against it.
+
+### Customizing the login screen
+
+There are three levels, smallest change first:
+
+1. **Branding** (above) — logo, name, copy, tagline. Covers most cases.
+2. **Login zones** — inject into the stock login without replacing it: an extra
+   action (`login.form.after`), a legal footer (`login.footer`), an announcement
+   in the side panel (`login.aside`). See the zone catalogue above.
+3. **Full override** — own the route. Disable the built-in login route and
+   provide your own, for a completely custom layout or auth flow:
+
+   ```ts
+   // vite.config.ts — don't mount the framework login route
+   export default defineConfig({ plugins: [kon10Start({ loginPath: false }), viteReact()] })
+   ```
+
+   ```tsx
+   // src/routes/login.tsx — the app now owns /login
+   import { createFileRoute } from '@tanstack/react-router'
+   import { Kon10Login } from '@kon10/start' // reuse the default…
+
+   export const Route = createFileRoute('/login')({ component: Kon10Login })
+   ```
+
+   Or build a bespoke page and call `useKon10().client.login(email, password)`
+   yourself. Keep `Kon10Provider`'s `loginPath` pointed at wherever you mount it,
+   so the Studio redirects unauthenticated users to the right place.
+
+## Telemetry: disclosure & anonymous-tracking opt-in
+
+Kon10 itself never phones home. `studio.telemetryNotice` shows a one-time dialog
+in the Studio on first sign-in, in one of two modes:
+
+```ts
+studio: {
+  telemetryNotice: {
+    enabled: true,
+    mode: 'notice',   // 'notice' (disclosure) | 'opt-in' (consent)
+    message: '…describe what you collect…',   // sensible defaults if omitted
+    policyUrl: 'https://acme.com/privacy',     // optional "Learn more" link
+  },
+}
+```
+
+- **`'notice'` (default)** — a disclosure with a single "Got it". Informational
+  only: acknowledging it does *not* toggle anything. Use it to be transparent
+  that your instance sends operational telemetry (e.g. via `@kon10/sentry`).
+- **`'opt-in'`** — asks consent for **anonymous tracking** (Allow / No thanks).
+  The choice is recorded per-user and readable via `useTelemetryConsent()`.
+
+Either way it shows once per user (stored in `localStorage`), and is wired
+through the provider like branding:
+`<Kon10Provider telemetryNotice={studioConfig.telemetryNotice} …>`.
+
+### Gating your analytics on consent
+
+Kon10 collects nothing itself — opt-in gives you the **consent primitive**, and
+you gate your own anonymous analytics on it:
+
+```tsx
+import { useTelemetryConsent } from '@kon10/start'
+
+function Analytics() {
+  const { status, grant, deny } = useTelemetryConsent() // 'granted' | 'denied' | 'unset'
+  useEffect(() => {
+    if (status === 'granted') startAnalytics()  // your SDK; nothing runs until granted
+  }, [status])
+  return null
+}
+```
+
+`grant()` / `deny()` also let you build a "usage analytics" toggle in a settings
+page so users can change their mind. Outside the Studio, `getTelemetryConsent(userId)`
+reads the same stored value. (Consent lives in `localStorage`, so it's per-user
+per-browser — fine for anonymous analytics; use a server-side record if you need
+an auditable consent trail.)
 
 ## Architecture notes
 
