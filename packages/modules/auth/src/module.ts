@@ -27,7 +27,13 @@ import { rbacEntities } from './rbac/entities.js'
 import { createRbacGuard } from './rbac/guard.js'
 import { syncCatalog, getCatalog } from './rbac/catalog.js'
 import { defaultRoles, seedRoles, type RoleSeed } from './rbac/seed.js'
-import { loginRoute, logoutRoute, currentUserRoute } from './api/index.js'
+import {
+  loginRoute,
+  logoutRoute,
+  currentUserRoute,
+  setupRoute,
+  setupStatusRoute,
+} from './api/index.js'
 import {
   entitySubjectStore,
   setSubjectStore,
@@ -77,6 +83,10 @@ export function AuthModule(config: AuthModuleConfig): Module {
       login: loginRoute,
       logout: logoutRoute,
       'current-user': currentUserRoute,
+      // Public by necessity — a fresh install has no account to authenticate
+      // as. Gated by emptiness, plus a derived token in production.
+      setup: setupRoute,
+      'setup-status': setupStatusRoute,
     },
 
     onInit(kon10) {

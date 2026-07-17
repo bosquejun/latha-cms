@@ -56,3 +56,64 @@ test('login/logout/currentUser throw with a custom serverFn transport', async ()
   await assert.rejects(() => client.logout(), /default fetch transport/)
   await assert.rejects(() => client.currentUser(), /default fetch transport/)
 })
+
+test('setupStatus GETs the auth module route', async (t) => {
+  const calls: { url: string; init: RequestInit }[] = []
+  t.mock.method(globalThis, 'fetch', async (url: string, init: RequestInit) => {
+    calls.push({ url, init })
+    return new Response(
+      JSON.stringify({ supported: true, needsSetup: true, tokenRequired: false }),
+      { status: 200 },
+    )
+  })
+
+  const client = createKon10Client()
+  const status = await client.setupStatus()
+
+  assert.deepEqual(status, { supported: true, needsSetup: true, tokenRequired: false })
+  assert.equal(calls.length, 1)
+  assert.match(calls[0]!.url, /\/__kon10\/modules\/auth\/setup-status$/)
+  assert.equal(calls[0]!.init.method, 'GET')
+})
+
+test('setup posts the admin details to the auth module route', async (t) => {
+  const calls: { url: string; init: RequestInit }[] = []
+  t.mock.method(globalThis, 'fetch', async (url: string, init: RequestInit) => {
+    calls.push({ url, init })
+    return new Response(JSON.stringify({ ok: true, user: { id: 'u1' } }), { status: 200 })
+  })
+
+  const client = createKon10Client()
+  const result = await client.setup({
+    email: 'admin@example.com',
+    password: 'a-good-long-password',
+    name: 'Admin',
+    token: 'tok',
+  })
+
+  assert.equal(result.ok, true)
+  assert.match(calls[0]!.url, /\/__kon10\/modules\/auth\/setup$/)
+  assert.equal(calls[0]!.init.method, 'POST')
+  assert.deepEqual(JSON.parse(calls[0]!.init.body as string), {
+    email: 'admin@example.com',
+    password: 'a-good-long-password',
+    name: 'Admin',
+    token: 'tok',
+  })
+})
+
+test('setupStatus reports a needsSetup=false install without throwing', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => {
+    return new Response(
+      JSON.stringify({ supported: true, needsSetup: false, tokenRequired: false }),
+      { status: 200 },
+    )
+  })
+
+  const client = createKon10Client()
+  assert.deepEqual(await client.setupStatus(), {
+    supported: true,
+    needsSetup: false,
+    tokenRequired: false,
+  })
+})

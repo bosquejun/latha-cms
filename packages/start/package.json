@@ -27,6 +27,11 @@
       "development": "./src/routes/login.tsx",
       "import": "./dist/routes/login.js"
     },
+    "./routes/setup": {
+      "types": "./dist/routes/setup.d.ts",
+      "development": "./src/routes/setup.tsx",
+      "import": "./dist/routes/setup.js"
+    },
     "./routes/studio": {
       "types": "./dist/routes/studio.d.ts",
       "development": "./src/routes/studio.tsx",

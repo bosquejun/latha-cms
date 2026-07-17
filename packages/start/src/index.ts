@@ -44,6 +44,7 @@ export { TelemetrySettings } from './TelemetrySettings.js'
 export { TelemetryToggles } from './TelemetryToggles.js'
 export { Kon10Studio } from './studio.js'
 export { Kon10Login } from './login.js'
+export { Kon10Setup } from './setup.js'
 export { Kon10Logo } from './logo.js'
 export { useAsync, type AsyncState } from '@kon10/studio-sdk'
 

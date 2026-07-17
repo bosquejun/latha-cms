@@ -92,12 +92,24 @@ pnpm install
 pnpm dev                         # http://localhost:3000
 ```
 
-On first run it seeds an admin user so you can sign in at `/studio`:
+On first run there are no users yet, so the app sends you to `/setup` to create
+your admin account. Once it exists, `/setup` closes itself and you sign in at
+`/login` as normal.
 
+In production `/setup` additionally requires a token derived from your
+`AUTH_SECRET` — otherwise a public deploy would stay claimable by whoever found
+the URL first. The page tells you the command; it's:
+
+```bash
+node -e "console.log(require('crypto').createHmac('sha256',process.env.AUTH_SECRET).update('kon10:setup').digest('base64url'))"
 ```
-email:    admin@kon10.dev   (override with ADMIN_EMAIL)
-password: password          (override with ADMIN_PASSWORD)
-```
+
+Then open `/setup?token=…`. The token stops working the moment an admin exists.
+
+For automation (CI, E2E, throwaway environments), set **both** `ADMIN_EMAIL`
+and `ADMIN_PASSWORD` to seed an admin on first boot and skip `/setup` entirely.
+They're only read while the users table is empty. Prefer `/setup` for anything
+real — it keeps a password out of your environment.
 
 The scaffolder writes a generated `AUTH_SECRET` to `.env`; production
 deployments must set it themselves (see [deployment](./docs/deployment.md)).

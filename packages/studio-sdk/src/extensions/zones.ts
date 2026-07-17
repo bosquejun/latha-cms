@@ -47,6 +47,14 @@ export const STUDIO_ZONES = [
   'login.form.before',
   'login.form.after',
   'login.footer',
+
+  // First-run setup screen (pre-auth, and pre-*account* — rendered once, on an
+  // install with no users). Mirrors the login zones so an extension can dress
+  // both screens the same way.
+  'setup.header',
+  'setup.form.before',
+  'setup.form.after',
+  'setup.footer',
 ] as const
 
 export type StudioZone = (typeof STUDIO_ZONES)[number]

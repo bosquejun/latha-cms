@@ -4,7 +4,13 @@
  * `@kon10/auth/studio` can consume it without a dependency cycle.
  */
 
-export { createKon10Client, type Kon10Client, type Kon10ClientOptions } from './client.js'
+export {
+  createKon10Client,
+  type Kon10Client,
+  type Kon10ClientOptions,
+  type SetupInput,
+  type SetupStatus,
+} from './client.js'
 export {
   kon10RpcValidator,
   DEFAULT_RPC_PATH,
@@ -12,6 +18,8 @@ export {
   DEFAULT_LOGIN_PATH,
   DEFAULT_LOGOUT_PATH,
   DEFAULT_CURRENT_USER_PATH,
+  DEFAULT_SETUP_PATH,
+  DEFAULT_SETUP_STATUS_PATH,
   DEFAULT_API_PATH,
 } from './default-rpc.js'
 export {

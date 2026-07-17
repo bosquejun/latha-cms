@@ -117,6 +117,14 @@ export interface Kon10StartOptions {
    * pointed at wherever the app mounts it.
    */
   loginPath?: string | false
+  /**
+   * Where the first-run setup screen mounts. Default `/setup`. Pass `false` to
+   * not mount it — the app then owns first-admin creation (render
+   * `<Kon10Setup>` from its own route, or drive `useKon10().client.setup()`
+   * directly). The route only ever does anything on an install with no users;
+   * once one exists it redirects to `loginPath`.
+   */
+  setupPath?: string | false
   /** Studio base path; the Studio mounts as a catch-all under it. Default `/studio`. */
   studioBasePath?: string
   /**
@@ -148,6 +156,8 @@ export function kon10Start(
   // the built-in one (which would collide with the app's `/login`).
   const mountLogin = options.loginPath !== false
   const loginPath = typeof options.loginPath === 'string' ? options.loginPath : '/login'
+  const mountSetup = options.setupPath !== false
+  const setupPath = typeof options.setupPath === 'string' ? options.setupPath : '/setup'
   const studioBasePath = options.studioBasePath ?? '/studio'
   const configPath = options.configPath ?? './kon10.config.ts'
 
@@ -161,6 +171,9 @@ export function kon10Start(
       : [
           ...(mountLogin
             ? [route(loginPath, routeFile('@kon10/start/routes/login'))]
+            : []),
+          ...(mountSetup
+            ? [route(setupPath, routeFile('@kon10/start/routes/setup'))]
             : []),
           route(`${studioBasePath}/$`, routeFile('@kon10/start/routes/studio')),
         ]),

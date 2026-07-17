@@ -17,6 +17,8 @@ import {
   DEFAULT_LOGIN_PATH,
   DEFAULT_LOGOUT_PATH,
   DEFAULT_CURRENT_USER_PATH,
+  DEFAULT_SETUP_PATH,
+  DEFAULT_SETUP_STATUS_PATH,
 } from './default-rpc.js'
 import type {
   EntityDescriptor,
@@ -53,8 +55,40 @@ export interface Kon10Client {
     password: string,
   ): Promise<{ ok: boolean; user: SessionUser | null; error?: string }>
   logout(): Promise<{ ok: true }>
+  /** Whether this install still needs its first admin, and whether it can have one. */
+  setupStatus(): Promise<SetupStatus>
+  /** Create the first admin. Only succeeds while the install has no users. */
+  setup(input: SetupInput): Promise<{ ok: boolean; user: SessionUser | null; error?: string }>
   /** Upload a file via the dedicated multipart route (not the JSON RPC path). */
   upload(file: File, extra?: Record<string, string>): Promise<JsonDoc>
+}
+
+/**
+ * First-run setup state. `supported` is false when the identity source cannot
+ * create accounts (e.g. an external IdP), in which case there is no setup flow
+ * to route anyone to.
+ */
+export interface SetupStatus {
+  supported: boolean
+  needsSetup: boolean
+  /**
+   * Whether `setup()` demands a token (production only). Reported by the
+   * server because it tracks server state the client cannot infer.
+   */
+  tokenRequired: boolean
+}
+
+/**
+ * The first admin's details. Duck-typed rather than imported from
+ * `@kon10/auth` (an optional peer here) — the JSON wire format is the contract,
+ * and the server re-validates every field regardless.
+ */
+export interface SetupInput {
+  email: string
+  password: string
+  name?: string
+  /** Required in production only; derived from `AUTH_SECRET`. */
+  token?: string
 }
 
 /** Options for the default (fetch-based) client transport. */
@@ -168,6 +202,29 @@ export function createKon10Client(
         )
       }
       return fetchJson<{ ok: true }>(DEFAULT_LOGOUT_PATH, { method: 'POST' })
+    },
+    setupStatus: async () => {
+      if (serverFn) {
+        throw new Error(
+          'client.setupStatus() requires the default fetch transport (no custom serverFn support yet).',
+        )
+      }
+      return fetchJson<SetupStatus>(DEFAULT_SETUP_STATUS_PATH, { method: 'GET' })
+    },
+    setup: async (input) => {
+      if (serverFn) {
+        throw new Error(
+          'client.setup() requires the default fetch transport (no custom serverFn support yet).',
+        )
+      }
+      return fetchJson<{ ok: boolean; user: SessionUser | null; error?: string }>(
+        DEFAULT_SETUP_PATH,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(input),
+        },
+      )
     },
     upload: async (file, extra) => {
       if (serverFn) {
