@@ -263,6 +263,14 @@ export interface StudioBrandingConfig {
 export interface StudioTelemetryNoticeConfig {
   /** Show the notice. Default `false` (no notice). */
   enabled?: boolean
+  /**
+   * `'notice'` (default) — a disclosure with a single acknowledge button.
+   * `'opt-in'` — ask consent for anonymous tracking: the user chooses Allow /
+   * No thanks, and the choice is recorded per-user and readable via
+   * `useTelemetryConsent()`. Kon10 still collects nothing itself — gate your own
+   * analytics on a `'granted'` consent.
+   */
+  mode?: 'notice' | 'opt-in'
   /** Dialog title. Has a sensible default. */
   title?: string
   /** Dialog body. Has a sensible default; set it to describe what you collect. */

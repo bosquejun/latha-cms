@@ -71,6 +71,12 @@ export type ResolvedBranding = Kon10Branding & { appName: string }
 export interface Kon10TelemetryNotice {
   /** Show the notice. Default `false`. */
   enabled?: boolean
+  /**
+   * `'notice'` (default) — disclosure with an acknowledge button.
+   * `'opt-in'` — ask consent (Allow / No thanks); the choice is readable via
+   * `useTelemetryConsent()`.
+   */
+  mode?: 'notice' | 'opt-in'
   /** Dialog title. Has a sensible default. */
   title?: string
   /** Dialog body. Has a sensible default. */

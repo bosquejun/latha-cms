@@ -327,31 +327,54 @@ There are three levels, smallest change first:
    yourself. Keep `Kon10Provider`'s `loginPath` pointed at wherever you mount it,
    so the Studio redirects unauthenticated users to the right place.
 
-## Telemetry transparency notice
+## Telemetry: disclosure & anonymous-tracking opt-in
 
-Kon10 itself never phones home. If you add an observability plugin
-(`@kon10/sentry`, or any tracer) so **your** instance sends operational
-telemetry to **your** backend, you can disclose that to Studio users with a
-one-time, dismissible notice — declared in `kon10.config.ts`:
+Kon10 itself never phones home. `studio.telemetryNotice` shows a one-time dialog
+in the Studio on first sign-in, in one of two modes:
 
 ```ts
 studio: {
   telemetryNotice: {
     enabled: true,
-    // title/message have sensible defaults; override to match what you collect
-    message: 'This Studio sends anonymous performance and error traces to our
-      monitoring backend. No content is collected.',
-    policyUrl: 'https://acme.com/privacy', // optional "Learn more" link
+    mode: 'notice',   // 'notice' (disclosure) | 'opt-in' (consent)
+    message: '…describe what you collect…',   // sensible defaults if omitted
+    policyUrl: 'https://acme.com/privacy',     // optional "Learn more" link
   },
 }
 ```
 
-It shows once per user (per browser, stored in `localStorage`) on first sign-in.
-It is **informational only** — acknowledging it does not toggle telemetry. Whether
-telemetry runs is the operator's decision, made by adding/removing the plugin; the
-notice is transparency, not a consent gate. Omit `telemetryNotice` (or leave
-`enabled` off) and no notice renders. Wire it through the provider like branding:
+- **`'notice'` (default)** — a disclosure with a single "Got it". Informational
+  only: acknowledging it does *not* toggle anything. Use it to be transparent
+  that your instance sends operational telemetry (e.g. via `@kon10/sentry`).
+- **`'opt-in'`** — asks consent for **anonymous tracking** (Allow / No thanks).
+  The choice is recorded per-user and readable via `useTelemetryConsent()`.
+
+Either way it shows once per user (stored in `localStorage`), and is wired
+through the provider like branding:
 `<Kon10Provider telemetryNotice={studioConfig.telemetryNotice} …>`.
+
+### Gating your analytics on consent
+
+Kon10 collects nothing itself — opt-in gives you the **consent primitive**, and
+you gate your own anonymous analytics on it:
+
+```tsx
+import { useTelemetryConsent } from '@kon10/start'
+
+function Analytics() {
+  const { status, grant, deny } = useTelemetryConsent() // 'granted' | 'denied' | 'unset'
+  useEffect(() => {
+    if (status === 'granted') startAnalytics()  // your SDK; nothing runs until granted
+  }, [status])
+  return null
+}
+```
+
+`grant()` / `deny()` also let you build a "usage analytics" toggle in a settings
+page so users can change their mind. Outside the Studio, `getTelemetryConsent(userId)`
+reads the same stored value. (Consent lives in `localStorage`, so it's per-user
+per-browser — fine for anonymous analytics; use a server-side record if you need
+an auditable consent trail.)
 
 ## Architecture notes
 

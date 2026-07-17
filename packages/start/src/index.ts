@@ -32,6 +32,13 @@ export {
   type ResolvedBranding,
   type Kon10TelemetryNotice,
 } from '@kon10/studio-sdk'
+export {
+  useTelemetryConsent,
+  getTelemetryConsent,
+  TelemetryConsentProvider,
+  type TelemetryConsent,
+  type TelemetryConsentValue,
+} from '@kon10/studio-sdk'
 export { Kon10Studio } from './studio.js'
 export { Kon10Login } from './login.js'
 export { Kon10Logo } from './logo.js'

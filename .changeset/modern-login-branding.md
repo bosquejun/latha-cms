@@ -51,8 +51,14 @@ Beyond branding, the login screen is customizable two more ways:
   build a bespoke page with `client.login()`); the Studio route and extension
   discovery are unaffected.
 
-The Studio also gains an optional, one-time **telemetry transparency notice**:
-set `studio.telemetryNotice.enabled` to disclose (once per user, via
-`localStorage`) that your instance sends operational telemetry. It is
-informational only — it never gates telemetry — and carried client-side through
-the same `virtual:kon10/studio-config` module (`telemetryNotice`).
+The Studio also gains an optional, one-time **telemetry dialog** on first
+sign-in (`studio.telemetryNotice`, carried client-side via
+`virtual:kon10/studio-config`), in two modes:
+
+- `mode: 'notice'` (default) — a disclosure with an acknowledge button;
+  informational only, never gates telemetry.
+- `mode: 'opt-in'` — asks consent for anonymous tracking (Allow / No thanks).
+  The per-user choice is recorded (in `localStorage`) and exposed via
+  `useTelemetryConsent()` / `getTelemetryConsent()` / `TelemetryConsentProvider`,
+  so operators gate their own analytics on a `'granted'` consent. Kon10 collects
+  nothing itself.
