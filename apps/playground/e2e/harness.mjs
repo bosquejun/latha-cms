@@ -52,9 +52,26 @@ export async function login(page, baseURL, user = ADMIN) {
     await submit.click()
     try {
       await page.waitForURL('**/studio**', { timeout: 15_000 })
+      await dismissTelemetryNotice(page)
       return
     } catch {
       if (attempt === 3) throw new Error('login did not navigate to /studio')
     }
+  }
+}
+
+/**
+ * Close the first-login telemetry dialog if it appears. It's a modal that
+ * overlays the Studio, so it would block clicks in the flows that follow;
+ * Escape acknowledges + dismisses it (and it won't reopen this session).
+ */
+async function dismissTelemetryNotice(page) {
+  try {
+    const dialog = page.getByRole('dialog')
+    await dialog.waitFor({ state: 'visible', timeout: 3_000 })
+    await page.keyboard.press('Escape')
+    await dialog.waitFor({ state: 'hidden', timeout: 3_000 })
+  } catch {
+    // No dialog (telemetry notice disabled, or already dismissed) — carry on.
   }
 }
