@@ -278,13 +278,14 @@ export interface StudioTelemetryNoticeConfig {
   /** Show the notice. Default `false` (no notice). */
   enabled?: boolean
   /**
-   * `'notice'` (default) — a disclosure with a single acknowledge button.
-   * `'opt-in'` — ask consent for anonymous tracking: the user chooses Allow /
-   * No thanks, and the choice is recorded per-user and readable via
-   * `useTelemetryConsent()`. Kon10 still collects nothing itself — gate your own
-   * analytics on a `'granted'` consent.
+   * How the first-login dialog behaves. Each records the choice per-user,
+   * readable via `useTelemetryConsent()`:
+   * - `'notice'` (default) — disclosure with a single acknowledge button.
+   * - `'opt-out'` — telemetry is on by default; the user chooses **Turn off**
+   *   (deny) or **Keep anonymous** (allow, no email). Matches the opt-out posture.
+   * - `'opt-in'` — telemetry off until the user chooses **Allow** / **No thanks**.
    */
-  mode?: 'notice' | 'opt-in'
+  mode?: 'notice' | 'opt-out' | 'opt-in'
   /** Dialog title. Has a sensible default. */
   title?: string
   /** Dialog body. Has a sensible default; set it to describe what you collect. */

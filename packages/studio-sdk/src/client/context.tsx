@@ -72,11 +72,12 @@ export interface Kon10TelemetryNotice {
   /** Show the notice. Default `false`. */
   enabled?: boolean
   /**
-   * `'notice'` (default) — disclosure with an acknowledge button.
-   * `'opt-in'` — ask consent (Allow / No thanks); the choice is readable via
-   * `useTelemetryConsent()`.
+   * First-login dialog behavior:
+   * - `'notice'` (default) — disclosure with an acknowledge button.
+   * - `'opt-out'` — on by default; Turn off (deny) / Keep anonymous (allow).
+   * - `'opt-in'` — off until Allow / No thanks.
    */
-  mode?: 'notice' | 'opt-in'
+  mode?: 'notice' | 'opt-out' | 'opt-in'
   /** Dialog title. Has a sensible default. */
   title?: string
   /** Dialog body. Has a sensible default. */

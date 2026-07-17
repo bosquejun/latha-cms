@@ -137,13 +137,13 @@ export function buildConfig(
         // registration route/page. Omit to hide it (no public sign-up).
         signUpUrl: '/signup',
       },
-      // One-time dialog on first sign-in. Since telemetry is opt-out (on by
-      // default), this discloses it and points users at the opt-out toggles via
-      // `manageUrl`. Switch to `mode: 'opt-in'` for an Allow / No-thanks consent
-      // prompt instead. Off entirely unless `enabled`.
+      // First-login dialog. Telemetry is on by default (opt-out), so this lets
+      // the user Turn off or Keep anonymous; `manageUrl` links to the full
+      // toggles (incl. sharing email). `mode: 'notice'` just discloses;
+      // `mode: 'opt-in'` flips to Allow / No-thanks. Off unless `enabled`.
       telemetryNotice: {
         enabled: true,
-        mode: 'notice',
+        mode: 'opt-out',
         manageUrl: '/studio/settings/telemetry',
         policyUrl: 'https://example.com/privacy',
       },

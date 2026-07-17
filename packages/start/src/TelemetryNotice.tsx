@@ -35,6 +35,12 @@ const DEFAULT_OPTIN_MESSAGE =
   'Allow anonymous usage analytics to help improve the product. No content you ' +
   'manage and no personal data is collected, and you can change this anytime.'
 
+const DEFAULT_OPTOUT_MESSAGE =
+  'This Studio shares anonymous usage data — technical and product events — to ' +
+  'help improve it. No content, credentials, or personal data are collected. You ' +
+  'can turn it off, or keep it on but anonymous. Change this anytime in the ' +
+  'telemetry settings.'
+
 export function TelemetryNotice({ userId }: { userId: string }) {
   const { telemetryNotice, branding } = useKon10()
   const consent = useTelemetryConsent()
@@ -42,13 +48,15 @@ export function TelemetryNotice({ userId }: { userId: string }) {
   const [open, setOpen] = useState(false)
 
   const enabled = telemetryNotice.enabled === true
-  const optIn = telemetryNotice.mode === 'opt-in'
+  const mode = telemetryNotice.mode ?? 'notice'
+  // opt-in and opt-out both prompt for an explicit choice; notice just informs.
+  const choice = mode === 'opt-in' || mode === 'opt-out'
   const ackKey = `${ACK_PREFIX}${userId}`
 
   useEffect(() => {
     if (!enabled) return
-    if (optIn) {
-      // Opt-in: prompt until the user makes an explicit choice.
+    if (choice) {
+      // Prompt until the user makes an explicit choice.
       setOpen(consent.status === 'unset')
       return
     }
@@ -58,7 +66,7 @@ export function TelemetryNotice({ userId }: { userId: string }) {
     } catch {
       // No storage (SSR / privacy mode) — don't nag; skip.
     }
-  }, [enabled, optIn, consent.status, ackKey])
+  }, [enabled, choice, consent.status, ackKey])
 
   if (!enabled) return null
 
@@ -92,7 +100,43 @@ export function TelemetryNotice({ userId }: { userId: string }) {
     </Button>
   )
 
-  if (optIn) {
+  // Accept the default: keep telemetry on, anonymous (no email).
+  const keepAnonymous = () => {
+    consent.setAnonymous(true)
+    consent.grant()
+  }
+
+  if (mode === 'opt-out') {
+    return (
+      <Dialog
+        open={open}
+        // Dismissing keeps the default (on, anonymous) and stops re-prompting.
+        onOpenChange={(next) => {
+          if (!next) keepAnonymous()
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {telemetryNotice.title ?? `Help improve ${branding.appName}`}
+            </DialogTitle>
+            <DialogDescription>
+              {telemetryNotice.message ?? DEFAULT_OPTOUT_MESSAGE}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            {policyLink}
+            <Button variant="ghost" onClick={() => consent.deny()}>
+              Turn off
+            </Button>
+            <Button onClick={keepAnonymous}>Keep anonymous</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  if (mode === 'opt-in') {
     return (
       <Dialog
         open={open}
