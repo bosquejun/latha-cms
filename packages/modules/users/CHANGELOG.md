@@ -1,5 +1,11 @@
 # @kon10/users
 
+## 1.0.3
+
+### Patch Changes
+
+- @kon10/core@1.0.3
+
 ## 1.0.2
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@kon10/auth",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Kon10 auth — session-based authentication, password hashing, AuthModule, and Studio UI.",
   "type": "module",
   "license": "MIT",

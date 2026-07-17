@@ -1,5 +1,16 @@
 # @kon10/start
 
+## 1.0.3
+
+### Patch Changes
+
+- @kon10/auth@1.0.3
+- @kon10/client@1.0.3
+- @kon10/content@1.0.3
+- @kon10/core@1.0.3
+- @kon10/studio-sdk@1.0.3
+- @kon10/ui@1.0.3
+
 ## 1.0.2
 
 ### Patch Changes

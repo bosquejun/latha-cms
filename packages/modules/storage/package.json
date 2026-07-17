@@ -1,6 +1,6 @@
 {
   "name": "@kon10/storage",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Kon10 storage — Turso (libsql) + Postgres/Supabase DBAdapters.",
   "type": "module",
   "license": "MIT",

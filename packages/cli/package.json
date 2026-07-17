@@ -1,6 +1,6 @@
 {
   "name": "@kon10/cli",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Kon10 developer CLI — generate typed content schemas from a Studio's delivery manifest.",
   "type": "module",
   "license": "MIT",

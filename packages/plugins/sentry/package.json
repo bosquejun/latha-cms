@@ -1,6 +1,6 @@
 {
   "name": "@kon10/sentry",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Kon10 Sentry plugin — wires the kernel's tracer contract to Sentry via OpenTelemetry.",
   "type": "module",
   "license": "MIT",

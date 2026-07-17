@@ -1,6 +1,6 @@
 {
   "name": "@kon10/seo",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Kon10 SEO plugin — an injectable search & social metadata field with backend derivation and a Studio preview.",
   "type": "module",
   "license": "MIT",

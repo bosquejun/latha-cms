@@ -1,6 +1,6 @@
 {
   "name": "@kon10/slug",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Kon10 slug plugin — template-based slug field with uniqueness and Studio UX.",
   "type": "module",
   "license": "MIT",
