@@ -33,6 +33,19 @@ export default defineConfig({
       tagline: 'Everything you publish, in one place.',
       taglineSubtitle: 'Model content, manage media, and ship a fast delivery API.',
     },
+    // One-time disclosure shown in the Studio on first sign-in, pairing with the
+    // opt-out telemetry above. `mode: 'opt-in'` turns it into an Allow/No-thanks
+    // consent prompt instead. Remove it (or the telemetry plugin) if you don't
+    // collect telemetry.
+    telemetryNotice: {
+      enabled: true,
+      mode: 'notice',
+      message:
+        'This app sends anonymous usage telemetry (technical + product events) ' +
+        'to help improve it. No content, credentials, or personal data are ' +
+        'collected. Disable it any time with KON10_DISABLE_TELEMETRY=1.',
+      // policyUrl: 'https://your-site.com/privacy',
+    },
   },
 
   modules: [
