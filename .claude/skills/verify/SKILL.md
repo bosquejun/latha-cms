@@ -19,11 +19,15 @@ externalizes `@libsql/client` and fails at runtime with `ERR_MODULE_NOT_FOUND`
 (pnpm keeps it out of `.output/server/node_modules`):
 
 ```bash
-cd apps/playground && pnpm dev   # vite dev on http://localhost:3000
+# Seed an admin so you can log straight in, instead of walking /setup:
+cd apps/playground && ADMIN_EMAIL=admin@kon10.dev ADMIN_PASSWORD=password pnpm dev
 ```
 
-Uses `apps/playground/local.db` (libsql). First run seeds an admin:
-`admin@kon10.dev` / `password` (see `kon10.config.base.ts` seed).
+Uses `apps/playground/local.db` (libsql). **No admin is seeded unless BOTH
+`ADMIN_EMAIL` and `ADMIN_PASSWORD` are set** (see `kon10.config.base.ts` seed) —
+without them the install starts empty and `/login` redirects to `/setup` to
+create the first admin. Set them as above for verification runs; the E2E suite
+does the same in `e2e/server.mjs`.
 
 ## Drive
 
@@ -32,6 +36,10 @@ Playwright with the pre-installed browser (`executablePath: '/opt/pw-browsers/ch
 (two inputs + submit); the auth POST goes to `/__kon10/modules/auth/login`.
 Loading `/studio/...` unauthenticated renders a client-side "Redirecting…"
 splash — always log in via `/login` first, then `waitForURL('**/studio**')`.
+
+To verify first-run setup instead, start with the two `ADMIN_*` vars unset and
+a deleted `local.db`; `/login` then redirects to `/setup` (name/email/password
++ submit), which signs the new admin in and lands on `/studio`.
 
 Useful routes: `/studio` (dashboard), `/studio/content/<slug>` (lists),
 `/studio/documents/<slug>` (singletons, e.g. `landing-page`, `footer`),

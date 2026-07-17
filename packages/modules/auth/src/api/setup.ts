@@ -19,6 +19,7 @@ import { hashPassword } from '../crypto.js'
 import { createSessionToken } from '../session.js'
 import { resolveAuthOptions } from '../config.js'
 import { serializeSetCookie } from '../cookie.js'
+import { getUserById } from '../service.js'
 import { getRoleByName } from '../rbac/seed.js'
 import { setupTokenRequired, verifySetupToken } from '../setup.js'
 import { getSubjectStore, type SubjectStore } from '../subject-store.js'
@@ -56,11 +57,20 @@ function fail(error: string): Response {
 }
 
 async function handleSetupStatus({ cms }: ModuleRouteContext): Promise<Response> {
+  // `tokenRequired` is reported up front so the setup page can ask for the
+  // token before the form, rather than letting someone fill it all in and only
+  // then fail. Whether a token is needed is server state (it tracks NODE_ENV),
+  // so the client cannot infer it.
+  const tokenRequired = setupTokenRequired()
   const store = getSubjectStore(cms)
   if (!supportsSetup(store)) {
-    return Response.json({ supported: false, needsSetup: false })
+    return Response.json({ supported: false, needsSetup: false, tokenRequired })
   }
-  return Response.json({ supported: true, needsSetup: (await store.count()) === 0 })
+  return Response.json({
+    supported: true,
+    needsSetup: (await store.count()) === 0,
+    tokenRequired,
+  })
 }
 
 async function handleSetup({ cms, request }: ModuleRouteContext): Promise<Response> {
@@ -97,6 +107,12 @@ async function handleSetup({ cms, request }: ModuleRouteContext): Promise<Respon
     roles: adminRole ? [adminRole.id] : [],
   })
 
+  // Re-read through `getUserById` so the response carries resolved role names
+  // and effective permissions — the same wire shape `loginRoute` returns.
+  // `store.create` hands back the raw stored subject (role *ids*, no
+  // permissions), which would make setup and login disagree about the same user.
+  const user = (await getUserById(cms, subject.id)) ?? (subject as AuthUser)
+
   const sessionToken = await createSessionToken({ sub: subject.id }, opts.secret, opts.sessionTtlSeconds)
   const cookie = serializeSetCookie(opts.cookieName, sessionToken, {
     httpOnly: true,
@@ -107,7 +123,7 @@ async function handleSetup({ cms, request }: ModuleRouteContext): Promise<Respon
   })
 
   return Response.json(
-    { ok: true, user: toSessionUser(subject as AuthUser) },
+    { ok: true, user: toSessionUser(user) },
     { headers: { 'set-cookie': cookie } },
   )
 }

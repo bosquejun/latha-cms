@@ -67,7 +67,7 @@ const VALID = { email: 'admin@example.com', password: 'a-good-long-password', na
 test('setupStatusRoute reports setup is needed on an empty install', async () => {
   const cms = await boot()
   const res = await setupStatusRoute.handler({ cms, principal: null, request: statusRequest() })
-  assert.deepEqual(await res.json(), { supported: true, needsSetup: true })
+  assert.deepEqual(await res.json(), { supported: true, needsSetup: true, tokenRequired: false })
 })
 
 test('setupStatusRoute reports setup is done once a user exists', async () => {
@@ -75,13 +75,23 @@ test('setupStatusRoute reports setup is done once a user exists', async () => {
   await setupRoute.handler({ cms, principal: null, request: setupRequest(VALID) })
 
   const res = await setupStatusRoute.handler({ cms, principal: null, request: statusRequest() })
-  assert.deepEqual(await res.json(), { supported: true, needsSetup: false })
+  assert.deepEqual(await res.json(), { supported: true, needsSetup: false, tokenRequired: false })
 })
 
 test('setupStatusRoute reports unsupported when the store cannot create subjects', async () => {
   const cms = await bootExternalIdp()
   const res = await setupStatusRoute.handler({ cms, principal: null, request: statusRequest() })
-  assert.deepEqual(await res.json(), { supported: false, needsSetup: false })
+  assert.deepEqual(await res.json(), { supported: false, needsSetup: false, tokenRequired: false })
+})
+
+test('setupStatusRoute tells the client a token is required in production', async () => {
+  const cms = await boot()
+  await inProduction(async () => {
+    const res = await setupStatusRoute.handler({ cms, principal: null, request: statusRequest() })
+    // The page needs this up front, so it can ask for the token rather than
+    // letting someone fill the whole form and only then fail.
+    assert.deepEqual(await res.json(), { supported: true, needsSetup: true, tokenRequired: true })
+  })
 })
 
 test('setupRoute creates the first admin and starts a session', async () => {
@@ -95,6 +105,19 @@ test('setupRoute creates the first admin and starts a session', async () => {
   const setCookie = res.headers.get('set-cookie')
   assert.ok(setCookie, 'setup should sign the new admin in')
   assert.match(setCookie!, /^kon10_session=/)
+})
+
+test('setupRoute returns the admin with roles and permissions resolved, as login does', async () => {
+  const cms = await boot()
+  const res = await setupRoute.handler({ cms, principal: null, request: setupRequest(VALID) })
+
+  // Same wire shape as `loginRoute`: resolved role *names* and effective
+  // permissions, not the raw stored role ids with an empty permission list.
+  const body = (await res.json()) as {
+    user: { roles: string[]; permissions: string[] }
+  }
+  assert.deepEqual(body.user.roles, ['admin', 'authenticated'])
+  assert.deepEqual(body.user.permissions, ['*'])
 })
 
 test('setupRoute grants the first admin the seeded admin role', async () => {
