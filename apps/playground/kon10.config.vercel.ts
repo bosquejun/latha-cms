@@ -3,11 +3,11 @@
  *
  * @libsql/client (Turso's driver, used by `kon10.config.ts`) dynamically
  * requires a platform-specific native binding that doesn't survive
- * serverless bundling/tracing. The `postgres` (porsager) driver is pure
- * JS/TCP with zero native dependencies, so it sidesteps the problem
+ * serverless bundling/tracing. Kysely's Postgres dialect (the `pg` driver)
+ * is pure JS/TCP with zero native dependencies, so it sidesteps the problem
  * entirely — works against a self-hosted Postgres or Supabase; for Supabase
- * on Vercel, use the *pooled* connection string (`prepare: false` below is
- * required for pgBouncer's transaction mode).
+ * on Vercel, use the *pooled* connection string (`pg`'s unnamed prepared
+ * statements are compatible with pgBouncer's transaction mode as-is).
  *
  * Media storage is likewise swapped for `s3Storage`: `localDiskStorage`
  * writes into `public/uploads`, which doesn't persist on Vercel's serverless
@@ -33,7 +33,6 @@ import { buildConfig } from './kon10.config.base.js'
 export default buildConfig(
   postgresAdapter({
     url: process.env.DATABASE_URL!,
-    prepare: false,
   }),
   s3Storage({
     bucket: process.env.S3_BUCKET!,

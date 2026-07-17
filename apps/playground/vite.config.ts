@@ -26,7 +26,7 @@ export default defineConfig(({ command }) => ({
     // `configPath` picks the DB adapter's entrypoint: Vercel sets `VERCEL` in
     // both its build and runtime environments, so this resolves once, in
     // plain Node.js code here — never bundled — before either config module
-    // is touched. That keeps @libsql/client (local dev) and `postgres`
+    // is touched. That keeps @libsql/client (local dev) and `pg`
     // (Vercel) in entirely separate module graphs per build, rather than a
     // runtime branch inside one bundle that would pull both in.
     kon10Start({

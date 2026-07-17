@@ -26,7 +26,9 @@
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
-    "postgres": "^3.4.5"
+    "@libsql/kysely-libsql": "^0.4.1",
+    "kysely": "^0.29.4",
+    "pg": "^8.22.0"
   },
   "peerDependencies": {
     "@kon10/core": "workspace:^"
@@ -34,6 +36,7 @@
   "devDependencies": {
     "@kon10/core": "workspace:^",
     "@types/node": "^22.10.0",
+    "@types/pg": "^8.20.0",
     "typescript": "^5.7.2"
   },
   "repository": {
