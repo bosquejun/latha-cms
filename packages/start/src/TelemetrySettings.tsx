@@ -22,7 +22,7 @@ export function TelemetrySettings() {
     <>
       <PageHeader
         title="Telemetry"
-        description={`Choose what usage data you share with ${branding.appName}. It stays anonymous, and never includes your content.`}
+        description={`Choose what usage data you share with ${branding.appName}, and whether it stays anonymous. We never see the content you manage.`}
       />
       <Card className="p-0">
         <TelemetryToggles />

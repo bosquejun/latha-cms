@@ -28,18 +28,18 @@ const ACK_PREFIX = 'kon10-telemetry-ack:'
 
 const DEFAULT_NOTICE_TITLE = 'About usage data'
 const DEFAULT_NOTICE_MESSAGE =
-  'We collect a little anonymous usage data to help make the Studio better. ' +
-  'We never see your content or personal details. You can turn this off any ' +
-  'time in Settings.'
+  'We collect usage data to help make the Studio better. We never see the ' +
+  'content you manage, and it stays anonymous by default. You can change this ' +
+  'any time in Settings.'
 
 const DEFAULT_OPTIN_MESSAGE =
-  'Help make the Studio better by sharing anonymous usage data. We never see ' +
-  'your content or personal details, and you can change this any time.'
+  'Help make the Studio better by sharing usage data. We never see the content ' +
+  'you manage, and it stays anonymous by default. You can change this any time.'
 
 const DEFAULT_OPTOUT_MESSAGE =
-  'We collect a little anonymous usage data to help make the Studio better. ' +
-  'We never see your content or personal details. You are in control, so pick ' +
-  'what works for you below.'
+  'We collect usage data to help make the Studio better. We never see the ' +
+  'content you manage, and it stays anonymous by default. Pick what you are ' +
+  'comfortable with below.'
 
 export function TelemetryNotice({ userId }: { userId: string }) {
   const { telemetryNotice, branding } = useKon10()

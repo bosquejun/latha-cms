@@ -41,9 +41,9 @@ export default defineConfig({
       enabled: true,
       mode: 'notice',
       message:
-        'We collect a little anonymous usage data to help make this app better. ' +
-        'We never see your content or personal details. To turn it off, set ' +
-        'KON10_DISABLE_TELEMETRY=1.',
+        'We collect usage data to help make this app better. We never see the ' +
+        'content you manage, and it stays anonymous by default. To turn it off, ' +
+        'set KON10_DISABLE_TELEMETRY=1.',
       // policyUrl: 'https://your-site.com/privacy',
     },
   },
