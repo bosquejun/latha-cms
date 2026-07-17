@@ -92,7 +92,7 @@ The full catalogue (`STUDIO_ZONES`):
 | `form.before` / `form.after` | Top/bottom of the form's main column | `entity`, `recordId` |
 | `form.sidebar.before` / `form.sidebar.after` | Around the form's meta sidebar | `entity`, `recordId` |
 | `global.before` / `global.after` | Around a global (single-record) entity view | `entity` |
-| `login.aside` | The login screen's branded side panel (`lg+`) | — |
+| `login.aside` | A branded side panel, for login layouts that have one | — |
 | `login.header` | Above the login form's heading | — |
 | `login.form.before` / `login.form.after` | Inside the login form, around the fields (SSO button, "forgot password?") | — |
 | `login.footer` | Below the login card | — |
@@ -273,12 +273,13 @@ import { studioConfig } from 'virtual:kon10/studio-config'
 | `logo` | Shell mark (top nav + mobile menu) and the login mark | The `Kon10Logo` `KO` mark |
 | `loginTitle` | Login heading | `Welcome back` |
 | `loginSubtitle` | Login subheading | `Sign in to continue to <appName>` |
-| `tagline` | Headline on the login side panel (`lg+`) | Kon10 default |
+| `tagline` | Brand headline — surfaced by side-panel login layouts and the `login.aside` zone | Kon10 default |
 | `taglineSubtitle` | Supporting line under the tagline | Kon10 default |
 
-The login screen is a split layout: a branded ink panel (logo, `appName`,
-`tagline`, `taglineSubtitle`) beside the form on `lg+`, collapsing to a
-centered form with a compact brand header below `lg`.
+The default login screen is a centered card over a branded backdrop (the logo
+above a single form card, scaling to one column at any width). `tagline` /
+`taglineSubtitle` are brand metadata that a side-panel layout — a custom login
+route, or a widget in the `login.aside` zone — can render.
 
 Because config must serialize into the client bundle, `studio.branding.logo` is
 an **image URL/path** (e.g. `/logo.svg`). If you'd rather pass a React element

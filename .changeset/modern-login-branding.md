@@ -26,9 +26,9 @@ studio: {
   passthrough (serializable; the kernel never reads it, same contract as `studioPath`).
 - `@kon10/start` — the `kon10Start()` Vite plugin lifts `studio.branding` into a new
   client-safe `virtual:kon10/studio-config` module (mirroring `virtual:kon10/studio-extensions`).
-  The `/login` screen is redesigned as a modern, minimal split layout (branded ink
-  side panel + clean form with password show/hide and an inline error alert).
-  `Kon10Logo` and `resolveBrandLogo` are exported.
+  The `/login` screen is redesigned as a modern, minimal centered card over a
+  branded backdrop (logo above a single form card with password show/hide and an
+  inline error alert). `Kon10Logo` and `resolveBrandLogo` are exported.
 - `@kon10/studio-sdk` — `<Kon10Provider>` accepts a `branding` prop
   (`Kon10Branding`), threaded through to the login screen and the shell
   (`StudioShell` / top nav / mobile menu gain an optional `logo`). The prop's

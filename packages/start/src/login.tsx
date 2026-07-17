@@ -1,13 +1,14 @@
 /**
  * Kon10Login — drop-in sign-in screen. Mount it at the configured `loginPath`.
  *
- * A modern, minimal split screen: a branded ink panel (echoing the logo's
- * black + lime) beside a clean form. Everything visible — logo, app name, the
- * login copy, and the side-panel tagline — comes from `branding` on
- * `<Kon10Provider>` (see {@link Kon10Branding}), so an app rebrands this screen
- * without forking it. Below `lg` the panel drops away and the form centers with
- * a compact brand header. With no branding configured it renders the default
- * Kon10 mark and copy.
+ * A modern, minimal centered layout: a single card floats over a branded ink
+ * backdrop (soft gold glow + faint grid), with the logo above the card.
+ * Everything visible — logo, app name, and the login copy — comes from
+ * `branding` on `<Kon10Provider>` (see {@link Kon10Branding}), so an app
+ * rebrands this screen without forking it. Injection zones (`login.header`,
+ * `login.form.before/after`, `login.footer`) let extensions add to it (e.g. an
+ * SSO button) without replacing it. With no branding configured it renders the
+ * default Kon10 mark and copy.
  */
 
 import { useNavigate } from '@tanstack/react-router'
@@ -16,6 +17,7 @@ import {
   Alert,
   AlertDescription,
   Button,
+  Card,
   Field,
   Input,
   PasswordInput,
@@ -35,10 +37,6 @@ export function Kon10Login() {
   const logo = resolveBrandLogo(branding.logo)
   const title = branding.loginTitle ?? 'Welcome back'
   const subtitle = branding.loginSubtitle ?? `Sign in to continue to ${branding.appName}`
-  const tagline = branding.tagline ?? 'Everything you publish, in one place.'
-  const taglineSubtitle =
-    branding.taglineSubtitle ??
-    'Model content, manage media, and ship a fast delivery API — all from your Studio.'
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -57,59 +55,39 @@ export function Kon10Login() {
   }
 
   return (
-    <main className="min-h-screen w-full bg-background text-foreground lg:grid lg:grid-cols-[1.05fr_1fr] xl:grid-cols-2">
-      {/* Branded side panel — fixed ink, mirroring the logo (black tile + lime
-          mark), so it reads on-brand in either app theme. Hidden below lg. */}
-      <aside className="relative hidden flex-col justify-between overflow-hidden bg-[#0B0B0B] p-10 text-white lg:flex xl:p-14">
-        {/* Lime glow bleeding in from a corner */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-32 -top-32 size-[520px] rounded-full blur-3xl [background:radial-gradient(circle,color-mix(in_oklch,var(--color-primary)_38%,transparent),transparent_70%)]"
-        />
-        {/* Fine grid, faded toward the edges */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.05]"
-          style={{
-            backgroundImage:
-              'linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)',
-            backgroundSize: '44px 44px',
-            maskImage:
-              'radial-gradient(120% 90% at 30% 20%, #000 30%, transparent 75%)',
-            WebkitMaskImage:
-              'radial-gradient(120% 90% at 30% 20%, #000 30%, transparent 75%)',
-          }}
-        />
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0B0B0B] p-page text-foreground">
+      {/* Gold brand glow, top-center. Decorative only. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-0 h-[560px] w-[760px] -translate-x-1/2 -translate-y-1/3 rounded-full blur-3xl [background:radial-gradient(circle,color-mix(in_oklch,#FFDE59_20%,transparent),transparent_70%)]"
+      />
+      {/* Fine grid, faded toward the edges. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.04]"
+        style={{
+          backgroundImage:
+            'linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)',
+          backgroundSize: '46px 46px',
+          maskImage: 'radial-gradient(90% 60% at 50% 0%, #000 40%, transparent 80%)',
+          WebkitMaskImage: 'radial-gradient(90% 60% at 50% 0%, #000 40%, transparent 80%)',
+        }}
+      />
 
-        <div className="relative flex items-center gap-inline">
-          <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-[var(--radius-md)] [&_svg]:size-full">
+      <div className="relative z-10 w-full max-w-[400px]">
+        <Slot zone="login.header" className="mb-page-gap flex flex-col gap-group" />
+
+        {/* Logo above the card. */}
+        <div className="mb-page-gap flex justify-center">
+          <span className="grid size-16 place-items-center overflow-hidden rounded-[var(--radius-lg)] shadow-lg ring-1 ring-white/10 [&_svg]:size-full">
             {logo}
           </span>
-          <span className="text-lg font-semibold tracking-tight">{branding.appName}</span>
         </div>
 
-        <div className="relative flex flex-col gap-group">
-          <h2 className="max-w-md text-balance text-4xl font-semibold leading-[1.1] tracking-tight">
-            {tagline}
-          </h2>
-          <p className="max-w-md text-pretty text-white/55">{taglineSubtitle}</p>
-          <Slot zone="login.aside" className="flex flex-col gap-group" />
-        </div>
-      </aside>
-
-      {/* Form side */}
-      <div className="flex min-h-screen items-center justify-center p-page">
-        <div className="w-full max-w-[380px]">
-          <Slot zone="login.header" className="mb-page-gap flex flex-col gap-group" />
-          <div className="mb-page-gap flex flex-col items-center gap-group text-center lg:items-start lg:text-left">
-            {/* Compact mark — only when the side panel is hidden. */}
-            <span className="grid size-12 place-items-center overflow-hidden rounded-[var(--radius-lg)] shadow-sm ring-1 ring-border lg:hidden [&_svg]:size-full">
-              {logo}
-            </span>
-            <div className="flex flex-col gap-tight">
-              <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-              <p className="text-small text-muted-foreground">{subtitle}</p>
-            </div>
+        <Card className="gap-card-gap border-white/10 bg-white/[0.03] p-card backdrop-blur-sm">
+          <div className="flex flex-col gap-tight text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+            <p className="text-small text-muted-foreground">{subtitle}</p>
           </div>
 
           <form onSubmit={onSubmit} className="flex flex-col gap-form" noValidate>
@@ -153,12 +131,12 @@ export function Kon10Login() {
             </Button>
             <Slot zone="login.form.after" className="flex flex-col gap-form" />
           </form>
+        </Card>
 
-          <p className="mt-section text-caption text-muted-foreground">
-            Powered by {branding.appName}
-          </p>
-          <Slot zone="login.footer" className="mt-group flex flex-col gap-tight" />
-        </div>
+        <p className="mt-group text-center text-caption text-muted-foreground">
+          Powered by {branding.appName}
+        </p>
+        <Slot zone="login.footer" className="mt-group flex flex-col gap-tight" />
       </div>
     </main>
   )
