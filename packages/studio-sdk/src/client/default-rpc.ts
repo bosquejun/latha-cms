@@ -35,6 +35,13 @@ export const DEFAULT_LOGOUT_PATH = '/__kon10/modules/auth/logout'
 export const DEFAULT_CURRENT_USER_PATH = '/__kon10/modules/auth/current-user'
 
 /**
+ * First-run setup, mounted the same way and public for the same reason: a
+ * fresh install has no session to gate them with.
+ */
+export const DEFAULT_SETUP_PATH = '/__kon10/modules/auth/setup'
+export const DEFAULT_SETUP_STATUS_PATH = '/__kon10/modules/auth/setup-status'
+
+/**
  * Where the public content delivery API is mounted — the read-only REST
  * surface headless consumers fetch, as opposed to the Studio-gated RPC above.
  * Versioned so the envelope/query semantics can evolve as `/api/v2` alongside
