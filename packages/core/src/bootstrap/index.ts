@@ -139,6 +139,11 @@ class Kon10 implements Kon10Instance {
       await plugin.onInit?.(this)
     }
 
+    // Hand the adapter the tracer now that plugins have had their `onInit` to
+    // register one (e.g. `@kon10/sentry`); before this point `this.tracer` is
+    // still the noop default. `??=` respects an adapter that wired its own.
+    this.db.tracer ??= this.tracer
+
     this.logger.debug({ entities: this.entities.length }, 'migrate start')
     await this.db.migrate(this.entities)
 

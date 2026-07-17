@@ -5,6 +5,7 @@
 
 import type { AnyEntity } from './entity.js'
 import type { Logger } from '../logger/index.js'
+import type { Tracer } from '../tracing/index.js'
 
 /** A JSON-serializable value — the wire shape of any persisted field. */
 export type JsonValue =
@@ -38,6 +39,16 @@ export interface DBAdapter {
    * and writable so adapters still work standalone (fall back to `console`).
    */
   logger?: Logger
+
+  /**
+   * Assigned by the kernel during boot (after plugin `onInit`, so a plugin-
+   * registered tracer — e.g. `@kon10/sentry` — is the one an adapter sees).
+   * Adapters wrap their actual DB round-trips in `kon10.db.*` spans through it,
+   * a finer child of the operation-level (`kon10.find`, …) spans the operations
+   * layer emits. Optional and writable so adapters still work standalone (they
+   * fall back to `noopTracer`).
+   */
+  tracer?: Tracer
 
   /** Establish the connection / run any one-time setup. */
   connect?(): Promise<void>
