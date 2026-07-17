@@ -462,13 +462,15 @@ export function buildConfig(
     seed: async (kon10) => {
       if ((await countUsers(kon10)) === 0) {
         const adminRole = await getRoleByName(kon10, 'admin')
+        const email = process.env.ADMIN_EMAIL ?? 'admin@kon10.dev'
+        const password = process.env.ADMIN_PASSWORD ?? 'password'
         await createUser(kon10, {
-          email: process.env.ADMIN_EMAIL ?? 'admin@kon10.dev',
+          email,
           name: 'Admin',
           roles: adminRole ? [adminRole.id] : [],
-          passwordHash: await hashPassword(process.env.ADMIN_PASSWORD ?? 'password'),
+          passwordHash: await hashPassword(password),
         })
-        console.log('[kon10] seeded admin: admin@kon10.dev / password')
+        console.log(`[kon10] seeded admin: ${email} / ${password}`)
       }
 
       // Seed the `author` role: Studio access plus posts:create/posts:read only —
