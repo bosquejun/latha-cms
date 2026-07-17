@@ -12,7 +12,7 @@
  */
 
 import { useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Alert,
   AlertDescription,
@@ -27,12 +27,27 @@ import { ArrowRight, CircleAlert } from 'lucide-react'
 import { resolveBrandLogo } from './logo.js'
 
 export function Kon10Login() {
-  const { client, basePath, branding } = useKon10()
+  const { client, basePath, setupPath, branding } = useKon10()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+
+  // A fresh install has no account to sign in with, so don't strand anyone on
+  // a sign-in form — send them to create the first admin instead.
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      const status = await client.setupStatus()
+      if (!cancelled && status.supported && status.needsSetup) {
+        void navigate({ to: setupPath })
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [client, navigate, setupPath])
 
   const logo = resolveBrandLogo(branding.logo)
   const title = branding.loginTitle ?? 'Welcome back'
