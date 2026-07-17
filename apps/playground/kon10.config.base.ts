@@ -509,13 +509,19 @@ export function buildConfig(
       }),
     ],
 
-    // First-run seed so login works out of the box. AuthModule has already seeded
-    // the default roles by this point, so we can assign the admin role by id.
+    // First-run seed. AuthModule has already seeded the default roles by this
+    // point, so we can assign the admin role by id.
+    //
+    // The admin is only seeded when BOTH ADMIN_EMAIL and ADMIN_PASSWORD are
+    // set — an opt-in fast path for automation (the E2E suite sets them; see
+    // `e2e/server.mjs`). Left unset, no user is seeded and the app sends you to
+    // `/setup` to create the first admin yourself, which is the default human
+    // path and keeps a real password out of the environment.
     seed: async (kon10) => {
-      if ((await countUsers(kon10)) === 0) {
+      const email = process.env.ADMIN_EMAIL
+      const password = process.env.ADMIN_PASSWORD
+      if (email && password && (await countUsers(kon10)) === 0) {
         const adminRole = await getRoleByName(kon10, 'admin')
-        const email = process.env.ADMIN_EMAIL ?? 'admin@kon10.dev'
-        const password = process.env.ADMIN_PASSWORD ?? 'password'
         await createUser(kon10, {
           email,
           name: 'Admin',
