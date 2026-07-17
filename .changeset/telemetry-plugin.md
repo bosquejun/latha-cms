@@ -1,7 +1,7 @@
 ---
-'@kon10/telemetry': minor
-'@kon10/core': minor
-'@kon10/start': minor
+'@kon10/telemetry': patch
+'@kon10/core': patch
+'@kon10/start': patch
 ---
 
 feat(telemetry): anonymous, opt-out usage analytics (PostHog)
