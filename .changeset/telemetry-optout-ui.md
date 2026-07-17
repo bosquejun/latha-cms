@@ -1,7 +1,7 @@
 ---
-'@kon10/core': minor
-'@kon10/studio-sdk': minor
-'@kon10/start': minor
+'@kon10/core': patch
+'@kon10/studio-sdk': patch
+'@kon10/start': patch
 ---
 
 feat(studio): per-user telemetry opt-out toggles
