@@ -129,6 +129,11 @@ export function Kon10Login() {
                 <ArrowRight className="transition-transform group-hover:translate-x-0.5" />
               )}
             </Button>
+            {branding.signUpUrl && (
+              <Button asChild variant="outline" size="lg" className="w-full">
+                <a href={branding.signUpUrl}>Sign up</a>
+              </Button>
+            )}
             <Slot zone="login.form.after" className="flex flex-col gap-form" />
           </form>
         </Card>

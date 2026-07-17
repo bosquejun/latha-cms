@@ -46,6 +46,11 @@ export interface Kon10Branding {
    */
   loginSubtitle?: string
   /**
+   * Sign-up destination (a URL/path). When set, the login screen shows a
+   * "Sign up" action linking here; omit it and no sign-up button renders.
+   */
+  signUpUrl?: string
+  /**
    * Headline shown on the login screen's branded side panel (the large ink
    * panel beside the form on `lg+`). Keep it short. Has a Kon10 default.
    */

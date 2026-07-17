@@ -94,18 +94,18 @@ The full catalogue (`STUDIO_ZONES`):
 | `global.before` / `global.after` | Around a global (single-record) entity view | `entity` |
 | `login.aside` | A branded side panel, for login layouts that have one | — |
 | `login.header` | Above the login form's heading | — |
-| `login.form.before` / `login.form.after` | Inside the login form, around the fields (SSO button, "forgot password?") | — |
+| `login.form.before` / `login.form.after` | Inside the login form, around the fields (extra actions, a "forgot password?" link) | — |
 | `login.footer` | Below the login card | — |
 
 The `login.*` zones render on the **pre-auth** sign-in screen (outside the
-Studio shell), so a widget there needs no session — e.g. a "Continue with SSO"
-button in `login.form.after`:
+Studio shell), so a widget there needs no session — e.g. a "forgot password?"
+link in `login.form.after`:
 
 ```tsx
-// src/studio/widgets/login-sso.tsx
+// src/studio/widgets/login-forgot.tsx
 export const config = defineWidgetConfig({ zone: 'login.form.after' })
-export default function LoginSso() {
-  return <button onClick={startSso}>Continue with SSO</button>
+export default function LoginForgot() {
+  return <a href="/reset-password">Forgot password?</a>
 }
 ```
 
@@ -273,6 +273,7 @@ import { studioConfig } from 'virtual:kon10/studio-config'
 | `logo` | Shell mark (top nav + mobile menu) and the login mark | The `Kon10Logo` `KO` mark |
 | `loginTitle` | Login heading | `Welcome back` |
 | `loginSubtitle` | Login subheading | `Sign in to continue to <appName>` |
+| `signUpUrl` | Set to show a "Sign up" button linking here; omit to hide it | — (no sign-up) |
 | `tagline` | Brand headline — surfaced by side-panel login layouts and the `login.aside` zone | Kon10 default |
 | `taglineSubtitle` | Supporting line under the tagline | Kon10 default |
 
@@ -303,8 +304,8 @@ compose against it.
 There are three levels, smallest change first:
 
 1. **Branding** (above) — logo, name, copy, tagline. Covers most cases.
-2. **Login zones** — inject into the stock login without replacing it: an SSO
-   button (`login.form.after`), a legal footer (`login.footer`), an announcement
+2. **Login zones** — inject into the stock login without replacing it: an extra
+   action (`login.form.after`), a legal footer (`login.footer`), an announcement
    in the side panel (`login.aside`). See the zone catalogue above.
 3. **Full override** — own the route. Disable the built-in login route and
    provide your own, for a completely custom layout or auth flow:

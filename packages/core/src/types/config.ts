@@ -240,6 +240,13 @@ export interface StudioBrandingConfig {
   loginTitle?: string
   /** Login-screen subheading under the title. */
   loginSubtitle?: string
+  /**
+   * Sign-up destination (a URL/path). When set, the login screen shows a
+   * "Sign up" action linking here; omit it and no sign-up button is rendered
+   * (a Studio has no public registration by default). Wiring the destination —
+   * a route, a hosted registration page — is the app's responsibility.
+   */
+  signUpUrl?: string
   /** Headline on the login screen's branded side panel. */
   tagline?: string
   /** Supporting line under {@link StudioBrandingConfig.tagline}. */
