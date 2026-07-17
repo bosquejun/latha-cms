@@ -71,6 +71,11 @@ export interface Kon10Client {
 export interface SetupStatus {
   supported: boolean
   needsSetup: boolean
+  /**
+   * Whether `setup()` demands a token (production only). Reported by the
+   * server because it tracks server state the client cannot infer.
+   */
+  tokenRequired: boolean
 }
 
 /**

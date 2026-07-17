@@ -61,13 +61,16 @@ test('setupStatus GETs the auth module route', async (t) => {
   const calls: { url: string; init: RequestInit }[] = []
   t.mock.method(globalThis, 'fetch', async (url: string, init: RequestInit) => {
     calls.push({ url, init })
-    return new Response(JSON.stringify({ supported: true, needsSetup: true }), { status: 200 })
+    return new Response(
+      JSON.stringify({ supported: true, needsSetup: true, tokenRequired: false }),
+      { status: 200 },
+    )
   })
 
   const client = createKon10Client()
   const status = await client.setupStatus()
 
-  assert.deepEqual(status, { supported: true, needsSetup: true })
+  assert.deepEqual(status, { supported: true, needsSetup: true, tokenRequired: false })
   assert.equal(calls.length, 1)
   assert.match(calls[0]!.url, /\/__kon10\/modules\/auth\/setup-status$/)
   assert.equal(calls[0]!.init.method, 'GET')
@@ -101,9 +104,16 @@ test('setup posts the admin details to the auth module route', async (t) => {
 
 test('setupStatus reports a needsSetup=false install without throwing', async (t) => {
   t.mock.method(globalThis, 'fetch', async () => {
-    return new Response(JSON.stringify({ supported: true, needsSetup: false }), { status: 200 })
+    return new Response(
+      JSON.stringify({ supported: true, needsSetup: false, tokenRequired: false }),
+      { status: 200 },
+    )
   })
 
   const client = createKon10Client()
-  assert.deepEqual(await client.setupStatus(), { supported: true, needsSetup: false })
+  assert.deepEqual(await client.setupStatus(), {
+    supported: true,
+    needsSetup: false,
+    tokenRequired: false,
+  })
 })

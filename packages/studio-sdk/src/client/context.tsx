@@ -51,6 +51,16 @@ export interface Kon10Branding {
    */
   signUpUrl?: string
   /**
+   * First-run setup heading, shown once on an install with no users.
+   * Defaults to `Welcome to <appName>`.
+   */
+  setupTitle?: string
+  /**
+   * First-run setup subheading. Defaults to
+   * `Create the admin account to get started.`
+   */
+  setupSubtitle?: string
+  /**
    * Headline shown on the login screen's branded side panel (the large ink
    * panel beside the form on `lg+`). Keep it short. Has a Kon10 default.
    */
@@ -94,6 +104,8 @@ export interface Kon10ContextValue {
   basePath: string
   /** Where to send unauthenticated users. Defaults to `/login`. */
   loginPath: string
+  /** Where first-run setup is mounted. Defaults to `/setup`. */
+  setupPath: string
   /** The resolved extension registry (empty when no extensions are provided). */
   extensions: ExtensionRegistry
   /** Resolved branding for the login screen and Studio shell. */
@@ -112,6 +124,12 @@ export interface Kon10ProviderProps {
   client?: Kon10Client
   basePath?: string
   loginPath?: string
+  /**
+   * Where the first-run setup screen is mounted. Keep this pointed at wherever
+   * `kon10Start({ setupPath })` mounts it; the login screen redirects here when
+   * the install has no users yet.
+   */
+  setupPath?: string
   /**
    * Studio UI extensions — custom widgets, pages, dashboard widgets, settings
    * pages, field renderers, and nav links. Pass the object exported by the
@@ -138,6 +156,7 @@ export function Kon10Provider({
   client,
   basePath = '/studio',
   loginPath = '/login',
+  setupPath = '/setup',
   extensions,
   branding,
   telemetryNotice,
@@ -174,11 +193,12 @@ export function Kon10Provider({
       client: resolved,
       basePath,
       loginPath,
+      setupPath,
       extensions: registry,
       branding: resolvedBranding,
       telemetryNotice: resolvedNotice,
     }),
-    [resolved, basePath, loginPath, registry, resolvedBranding, resolvedNotice],
+    [resolved, basePath, loginPath, setupPath, registry, resolvedBranding, resolvedNotice],
   )
 
   return (
