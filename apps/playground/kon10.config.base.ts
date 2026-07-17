@@ -132,7 +132,7 @@ export function buildConfig(
         appName: 'Kon10',
         tagline: 'Everything you publish, in one place.',
         taglineSubtitle:
-          'Model content, manage media, and ship a fast delivery API — all from your Studio.',
+          'Model content, manage media, and ship a fast delivery API, all from your Studio.',
         // Opt into a "Sign up" button on the login screen; point it at your
         // registration route/page. Omit to hide it (no public sign-up).
         signUpUrl: '/signup',

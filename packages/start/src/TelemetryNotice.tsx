@@ -26,20 +26,20 @@ import { TelemetryToggles } from './TelemetryToggles.js'
 
 const ACK_PREFIX = 'kon10-telemetry-ack:'
 
-const DEFAULT_NOTICE_TITLE = 'A note on telemetry'
+const DEFAULT_NOTICE_TITLE = 'About usage data'
 const DEFAULT_NOTICE_MESSAGE =
-  'This Studio sends anonymous usage telemetry — technical and product events — ' +
-  'to help improve it. No content, credentials, or personal data are collected. ' +
-  'You can turn it off any time in the telemetry settings.'
+  'We collect a little anonymous usage data to help make the Studio better. ' +
+  'We never see your content or personal details. You can turn this off any ' +
+  'time in Settings.'
 
 const DEFAULT_OPTIN_MESSAGE =
-  'Allow anonymous usage analytics to help improve the product. No content you ' +
-  'manage and no personal data is collected, and you can change this anytime.'
+  'Help make the Studio better by sharing anonymous usage data. We never see ' +
+  'your content or personal details, and you can change this any time.'
 
 const DEFAULT_OPTOUT_MESSAGE =
-  'This Studio is set to share anonymous usage data — technical and product ' +
-  'events — to help improve it. No content, credentials, or personal data are ' +
-  'collected. Adjust it below, or anytime in the telemetry settings.'
+  'We collect a little anonymous usage data to help make the Studio better. ' +
+  'We never see your content or personal details. You are in control, so pick ' +
+  'what works for you below.'
 
 export function TelemetryNotice({ userId }: { userId: string }) {
   const { telemetryNotice, branding } = useKon10()
@@ -107,7 +107,7 @@ export function TelemetryNotice({ userId }: { userId: string }) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {telemetryNotice.title ?? `Help improve ${branding.appName}`}
+              {telemetryNotice.title ?? `Help make ${branding.appName} better`}
             </DialogTitle>
             <DialogDescription>
               {telemetryNotice.message ?? DEFAULT_OPTOUT_MESSAGE}
@@ -138,7 +138,7 @@ export function TelemetryNotice({ userId }: { userId: string }) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {telemetryNotice.title ?? `Help improve ${branding.appName}?`}
+              {telemetryNotice.title ?? `Help make ${branding.appName} better?`}
             </DialogTitle>
             <DialogDescription>
               {telemetryNotice.message ?? DEFAULT_OPTIN_MESSAGE}
