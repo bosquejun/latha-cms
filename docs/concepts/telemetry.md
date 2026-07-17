@@ -1,6 +1,6 @@
 # Telemetry
 
-Kon10 can collect **anonymous, opt-out** usage telemetry — in the spirit of
+Kon10 can collect **opt-out usage telemetry with per-user anonymity controls** — in the spirit of
 Medusa and Next.js — to help improve the framework. It is provided by the
 `@kon10/telemetry` plugin and ships **on by default in new apps** (the scaffold
 includes it), but transmits nothing until a PostHog key is configured, and is
@@ -8,14 +8,15 @@ easy to turn off.
 
 ## What's collected
 
-Only anonymous, non-identifying data — **never content, credentials, or PII**:
+Only allow-listed usage data — **never content, credentials, or direct PII**:
 
 - **Technical** (`kon10_boot`, once per boot): plugin telemetry version, Node
   version, OS platform + arch, and counts (`modules`, `entities`, whether a
   cache/storage adapter is configured).
 - **Product** (`studio_action`): which Studio **mutations** happen — the action
-  name only (`create` / `update` / `remove` / `saveGlobal`). No slugs, ids, field
-  values, or user identity.
+  name only (`create` / `update` / `remove` / `saveGlobal`). No slugs, document
+  ids, or field values. The authenticated account id is included by default;
+  users can remove it with **Link to your account** in Telemetry settings.
 
 Events are keyed by a random **anonymous instance id** persisted once to
 `~/.config/kon10/telemetry.json` (or `$XDG_CONFIG_HOME`).
@@ -67,15 +68,19 @@ export default TelemetrySettings
 
 - **Usage monitoring** — turn the user's own telemetry off. Product events for
   that user stop (the choice is mirrored to a cookie the server reads).
-- **Stay anonymous** — on by default; turn it off to attach the user's email so
-  their usage is tied to their account.
+- **Link to your account** — on by default; turn it off to omit the user's
+  account id and share Studio events anonymously.
+
+The first-login dialog supports three policies: `notice` discloses collection,
+`opt-out` collects until the user turns it off, and `opt-in` sends no Studio
+product events until the user explicitly chooses **Allow**.
 
 Read or drive the same state anywhere with `useTelemetryConsent()`
 (`status`, `anonymous`, `grant`, `deny`, `setAnonymous`).
 
 On first run (per machine) the plugin logs a one-time disclosure noting that
 telemetry is on and how to disable it. Pair it with the Studio's
-[`studio.telemetryNotice`](../studio-extensions.md#telemetry-disclosure--anonymous-tracking-opt-in)
+[`studio.telemetryNotice`](../studio-extensions.md#telemetry-disclosure-opt-out--opt-in)
 to disclose it in the UI too.
 
 > Instance-level technical events (`kon10_boot`) aren't tied to a user, so a

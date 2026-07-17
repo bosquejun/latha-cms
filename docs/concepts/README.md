@@ -9,7 +9,7 @@ For the project-wide architecture spec, see [`../../SPEC.md`](../../SPEC.md).
 | [**Entities**](./entities.md) | The content model: `Collection`, `Document`, `Taxonomy` — when to use which, fields, and Studio views. |
 | [**RBAC**](./rbac.md) | Authorization: roles, scopes & permissions, the generic guard seam, deny-by-default Studio vs allow-by-default headless. |
 | [**Frameworks**](./frameworks.md) | The framework-integration layer (`@kon10/start`): how an app wires Kon10 into TanStack Start, the RPC endpoint, and the typed client. |
-| [**Telemetry**](./telemetry.md) | Anonymous, opt-out usage analytics via `@kon10/telemetry` (PostHog): what's collected, turning it on, and opting out. |
+| [**Telemetry**](./telemetry.md) | Opt-out usage analytics with per-user anonymity controls via `@kon10/telemetry` (PostHog): what's collected, turning it on, and opting out. |
 
 > **Three things to know up front**
 >

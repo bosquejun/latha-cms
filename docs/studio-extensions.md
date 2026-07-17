@@ -327,36 +327,38 @@ There are three levels, smallest change first:
    yourself. Keep `Kon10Provider`'s `loginPath` pointed at wherever you mount it,
    so the Studio redirects unauthenticated users to the right place.
 
-## Telemetry: disclosure & anonymous-tracking opt-in
+## Telemetry: disclosure, opt-out & opt-in
 
-Kon10 itself never phones home. `studio.telemetryNotice` shows a one-time dialog
-in the Studio on first sign-in, in one of two modes:
+`studio.telemetryNotice` shows a one-time dialog in the Studio on first sign-in.
+When `@kon10/telemetry` is configured, the dialog's choices gate the Studio
+product events it emits; it can also be used with an operator-provided sink:
 
 ```ts
 studio: {
   telemetryNotice: {
     enabled: true,
-    mode: 'notice',   // 'notice' (disclosure) | 'opt-in' (consent)
+    mode: 'opt-out',  // 'notice' | 'opt-out' | 'opt-in'
     message: '…describe what you collect…',   // sensible defaults if omitted
     policyUrl: 'https://acme.com/privacy',     // optional "Learn more" link
+    manageUrl: '/studio/settings/telemetry',  // optional settings destination
   },
 }
 ```
 
 - **`'notice'` (default)** — a disclosure with a single "Got it". Informational
-  only: acknowledging it does *not* toggle anything. Use it to be transparent
-  that your instance sends operational telemetry (e.g. via `@kon10/sentry`).
-- **`'opt-in'`** — asks consent for **anonymous tracking** (Allow / No thanks).
-  The choice is recorded per-user and readable via `useTelemetryConsent()`.
+  only: acknowledging it does *not* toggle anything.
+- **`'opt-out'`** — collection is on by default and the dialog includes controls
+  to turn it off or remove the link to the user's account.
+- **`'opt-in'`** — asks consent (Allow / No thanks). Studio product events are
+  not captured until the user explicitly chooses Allow.
 
 Either way it shows once per user (stored in `localStorage`), and is wired
 through the provider like branding:
 `<Kon10Provider telemetryNotice={studioConfig.telemetryNotice} …>`.
 
-### Gating your analytics on consent
+### Reading consent in custom analytics
 
-Kon10 collects nothing itself — opt-in gives you the **consent primitive**, and
-you gate your own anonymous analytics on it:
+The same consent primitive is available to custom Studio analytics:
 
 ```tsx
 import { useTelemetryConsent } from '@kon10/start'
@@ -370,11 +372,11 @@ function Analytics() {
 }
 ```
 
-`grant()` / `deny()` also let you build a "usage analytics" toggle in a settings
-page so users can change their mind. Outside the Studio, `getTelemetryConsent(userId)`
-reads the same stored value. (Consent lives in `localStorage`, so it's per-user
-per-browser — fine for anonymous analytics; use a server-side record if you need
-an auditable consent trail.)
+`grant()` / `deny()` let users change their mind, while `setAnonymous()` controls
+whether account-linked properties are included. The ready-made
+`TelemetrySettings` page exposes both choices. Outside the Studio,
+`getTelemetryConsent(userId)` reads the same browser-local value. Use a
+server-side record if you need a cross-device or auditable consent trail.
 
 ## Architecture notes
 
