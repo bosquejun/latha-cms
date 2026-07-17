@@ -264,6 +264,18 @@ export async function dispatchKon10Rpc(
 /** Studio actions worth an anonymous product event — mutations only, to keep volume sane. */
 const TRACKED_TELEMETRY_ACTIONS = new Set(['create', 'update', 'remove', 'saveGlobal'])
 
+/** Read one cookie value off a request's `Cookie` header. */
+function readCookie(request: Request, name: string): string | undefined {
+  const header = request.headers.get('cookie')
+  if (!header) return undefined
+  for (const part of header.split(';')) {
+    const eq = part.indexOf('=')
+    if (eq === -1) continue
+    if (part.slice(0, eq).trim() === name) return decodeURIComponent(part.slice(eq + 1).trim())
+  }
+  return undefined
+}
+
 export async function handleKon10Request(
   config: ResolvedConfig,
   rawInput: unknown,
@@ -281,7 +293,7 @@ export async function handleKon10Request(
   const log = kon10.logger.child({ requestId, surface: 'rpc' })
   const started = Date.now()
 
-  const { principal } = await resolvePrincipal(kon10, request)
+  const { sessionUser, principal } = await resolvePrincipal(kon10, request)
   // Principals are opaque to this layer; a defensive `id` read is enough for
   // log correlation and never asserts a shape on the auth module.
   const principalId = (principal as { id?: string } | null)?.id ?? 'anonymous'
@@ -297,11 +309,18 @@ export async function handleKon10Request(
     }
 
     const result = await runKon10Action(kon10, basePath, input, principal, requestId)
-    // Anonymous product signal: which Studio mutations get used. Action name
-    // only — no slug, no ids, no content. A no-op unless a telemetry sink is
-    // registered (`@kon10/telemetry`).
-    if (TRACKED_TELEMETRY_ACTIONS.has(input.action)) {
-      kon10.telemetry.capture({ name: 'studio_action', properties: { action: input.action } })
+    // Product signal: which Studio mutations get used. Action name only — no
+    // slug, ids, or content. Honors the user's per-user opt-out (the
+    // `kon10_tm_consent` cookie the Studio sets from the Telemetry settings):
+    // skipped when they've turned monitoring off, and anonymous unless they've
+    // opted to attach their email. A no-op unless a telemetry sink is registered.
+    if (TRACKED_TELEMETRY_ACTIONS.has(input.action) && readCookie(request, 'kon10_tm_consent') !== 'denied') {
+      const identify = readCookie(request, 'kon10_tm_anon') === '0'
+      const email = identify ? ((sessionUser as { email?: string | null } | null)?.email ?? undefined) : undefined
+      kon10.telemetry.capture({
+        name: 'studio_action',
+        properties: { action: input.action, identified: identify || undefined, email: email ?? undefined },
+      })
     }
     log.info({ ...requestLine, durationMs: Date.now() - started, outcome: 'ok' })
     return result

@@ -31,6 +31,7 @@ export {
   TelemetryConsentProvider,
   useTelemetryConsent,
   getTelemetryConsent,
+  getTelemetryAnonymous,
   type TelemetryConsent,
   type TelemetryConsentValue,
 } from './telemetry.js'

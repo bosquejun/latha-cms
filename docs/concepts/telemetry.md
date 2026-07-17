@@ -44,8 +44,10 @@ Or pass them explicitly: `telemetryPlugin({ posthog: { key, host } })`.
 
 ## Opting out
 
-Telemetry is suppressed (the plugin stays a no-op, sends nothing) when any of
-these hold:
+There are two levels — deployment-wide (operator) and per-user (in the Studio).
+
+**Deployment-wide.** Telemetry is suppressed entirely (the plugin stays a no-op,
+sends nothing) when any of these hold:
 
 - `KON10_DISABLE_TELEMETRY=1`
 - `DO_NOT_TRACK=1` (the cross-tool standard)
@@ -53,10 +55,31 @@ these hold:
 - `telemetryPlugin({ enabled: false })`
 - no PostHog key is configured
 
+**Per-user, in the Studio.** Drop the ready-made settings page in and each user
+gets two toggles:
+
+```tsx
+// src/studio/settings/telemetry.tsx
+import { TelemetrySettings, defineSettingsConfig } from '@kon10/start'
+export const config = defineSettingsConfig({ path: 'telemetry', label: 'Telemetry' })
+export default TelemetrySettings
+```
+
+- **Usage monitoring** — turn the user's own telemetry off. Product events for
+  that user stop (the choice is mirrored to a cookie the server reads).
+- **Stay anonymous** — on by default; turn it off to attach the user's email so
+  their usage is tied to their account.
+
+Read or drive the same state anywhere with `useTelemetryConsent()`
+(`status`, `anonymous`, `grant`, `deny`, `setAnonymous`).
+
 On first run (per machine) the plugin logs a one-time disclosure noting that
 telemetry is on and how to disable it. Pair it with the Studio's
 [`studio.telemetryNotice`](../studio-extensions.md#telemetry-disclosure--anonymous-tracking-opt-in)
 to disclose it in the UI too.
+
+> Instance-level technical events (`kon10_boot`) aren't tied to a user, so a
+> per-user toggle doesn't affect them — use the deployment-wide opt-out for those.
 
 ## How it fits
 
