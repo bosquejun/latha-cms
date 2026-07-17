@@ -18,6 +18,8 @@ import {
   useFormWidth,
   EmptyState,
   LoadingState,
+  ListSkeleton,
+  FormSkeleton,
   PageHeader,
   Slot,
   useExtensions,
@@ -41,7 +43,7 @@ import {
   type NavItem,
   type NavSection,
 } from '@kon10/studio-sdk'
-import { Button, Card, CardHeader, CardTitle, CardDescription, ConfirmDialog, Pagination, toast } from '@kon10/ui'
+import { Button, Card, CardHeader, CardTitle, CardDescription, ConfirmDialog, Pagination, Skeleton, toast } from '@kon10/ui'
 import {
   LayoutDashboard,
   Plus,
@@ -63,6 +65,20 @@ function RouterLink({ href, className, children, onClick, ...handlers }: NavLink
 }
 
 const asEntity = (d: EntityDescriptor) => d as unknown as StudioEntity
+
+/**
+ * Derive a `FormSkeleton`'s shape from an entity descriptor once it's loaded:
+ * one row per non-hidden main field, and a sidebar panel when any field opts
+ * into `meta.sidebar`. Undefined descriptor → the component's own defaults.
+ */
+function formSkeletonShape(d?: EntityDescriptor | null): { fields?: number; sidebar?: boolean } {
+  if (!d) return {}
+  const fields = asEntity(d).fields.filter((f) => !f.meta?.hidden)
+  return {
+    fields: fields.filter((f) => !f.meta?.sidebar).length || undefined,
+    sidebar: fields.some((f) => f.meta?.sidebar),
+  }
+}
 
 /**
  * Narrow-form pages center the WHOLE page — header, toolbar, and fields — as
@@ -534,7 +550,7 @@ function StatCount({ client, item }: { client: ReturnType<typeof useKon10>['clie
   const value = item.cardinality === 'many' ? (count.data?.total ?? '—') : '—'
   return (
     <div className="px-card pb-card pt-tight text-3xl font-semibold tracking-[-0.02em]">
-      {count.loading ? '·' : value}
+      {count.loading ? <Skeleton className="h-8 w-12" /> : value}
     </div>
   )
 }
@@ -552,7 +568,7 @@ function ListView({ slug, base, segment }: { slug: string; base: string; segment
     [slug, offset],
   )
 
-  if (entity.loading || (rows.loading && !rows.data)) return <LoadingState />
+  if (entity.loading || (rows.loading && !rows.data)) return <ListSkeleton />
   if (!entity.data)
     return <p className="text-small text-muted-foreground">Entity not found.</p>
 
@@ -655,9 +671,10 @@ function CreateView({ slug, base, segment }: { slug: string; base: string; segme
     if (managesCreate) void navigate({ to: listHref, replace: true })
   }, [listHref, managesCreate, navigate])
 
+  // Redirecting away — a bare spinner, not a form skeleton that never resolves.
   if (managesCreate) return <LoadingState />
 
-  if (entity.loading) return <LoadingState />
+  if (entity.loading) return <FormSkeleton />
   if (!entity.data) return <p className="text-small text-muted-foreground">Entity not found.</p>
 
   const toList = () => navigate({ to: listHref })
@@ -690,7 +707,9 @@ function EditView({ slug, id, base, segment }: { slug: string; id: string; base:
   const [deleting, setDeleting] = useState(false)
   const formWidth = useFormWidth(entity.data, entity.data ? asEntity(entity.data).fields : [])
 
-  if (entity.loading || doc.loading) return <LoadingState />
+  // Once the entity descriptor is in hand, shape the placeholder to the real
+  // form (field count, whether it has a sidebar) even while the doc loads.
+  if (entity.loading || doc.loading) return <FormSkeleton {...formSkeletonShape(entity.data)} />
   if (!entity.data) return <p className="text-small text-muted-foreground">Entity not found.</p>
   if (!doc.data) return <p className="text-small text-muted-foreground">Not found.</p>
 
@@ -744,7 +763,7 @@ function GlobalView({ slug }: { slug: string }) {
   const value = useAsync(() => client.getGlobal(slug), [slug])
   const formWidth = useFormWidth(entity.data, entity.data ? asEntity(entity.data).fields : [])
 
-  if (entity.loading || value.loading) return <LoadingState />
+  if (entity.loading || value.loading) return <FormSkeleton {...formSkeletonShape(entity.data)} />
   if (!entity.data) return <p className="text-small text-muted-foreground">Entity not found.</p>
 
   return (

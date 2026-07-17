@@ -26,6 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
   Input,
+  Skeleton,
   Switch,
   Table,
   TBody,
@@ -38,7 +39,6 @@ import {
 } from '@kon10/ui'
 import {
   EmptyState,
-  LoadingState,
   PageHeader,
   PageLayout,
   defineSettingsConfig,
@@ -122,7 +122,20 @@ export default function ApiKeys() {
       />
 
       {keys.loading ? (
-        <LoadingState />
+        <Card className="overflow-hidden p-0" role="status" aria-busy="true">
+          <span className="sr-only">Loading</span>
+          <div className="divide-y divide-border">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between gap-group p-sidebar">
+                <div className="flex min-w-0 flex-1 flex-col gap-stack">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="h-5 w-9 shrink-0 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </Card>
       ) : keys.error ? (
         <Card className="p-card text-sm text-destructive">{keys.error}</Card>
       ) : sorted.length === 0 ? (
