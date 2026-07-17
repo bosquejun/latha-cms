@@ -1,6 +1,6 @@
 {
   "name": "@kon10/media",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Kon10 media — MediaModule, storage adapters, and the media field type.",
   "type": "module",
   "license": "MIT",

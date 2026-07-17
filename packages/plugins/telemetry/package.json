@@ -1,6 +1,6 @@
 {
   "name": "@kon10/telemetry",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Kon10 telemetry plugin — anonymous, opt-out product/technical usage analytics via PostHog.",
   "type": "module",
   "license": "MIT",
