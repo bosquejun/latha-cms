@@ -48,6 +48,14 @@ function newId(): string {
   return globalThis.crypto.randomUUID()
 }
 
+/**
+ * Constant key for the transaction-scoped advisory lock that serializes
+ * `migrate()`. Any bigint works as long as every instance of this app uses the
+ * same value; `0x6b6f6e31` spells `kon1` to make it recognisable in
+ * `pg_locks`. See `migrate()` for why the lock is needed.
+ */
+const MIGRATE_ADVISORY_LOCK_KEY = 0x6b6f6e31
+
 class PostgresAdapter implements DBAdapter {
   logger?: Logger
 
@@ -72,28 +80,48 @@ class PostgresAdapter implements DBAdapter {
   }
 
   async migrate(entities: Entity[]): Promise<void> {
-    for (const entity of entities) {
-      const plan = buildTablePlan(entity)
-      this.plans.set(plan.table, plan)
-      await this.sql.unsafe(createTableSQL(plan, 'postgres'))
-      await this.reconcileColumns(plan)
-    }
+    // Serialize concurrent migrations with a transaction-scoped advisory lock.
+    // `CREATE TABLE IF NOT EXISTS` is *not* race-safe in Postgres: two sessions
+    // can both pass the existence check, then collide inserting the table's
+    // implicit composite type into `pg_type`, failing with a duplicate key on
+    // `pg_type_typname_nsp_index`. This is common on serverless platforms
+    // (e.g. Vercel) where several cold-start instances boot and migrate at
+    // once. `pg_advisory_xact_lock` makes the second migration wait for the
+    // first, so by the time it runs the tables already exist and `IF NOT
+    // EXISTS` is a genuine no-op. It must be the *xact* (transaction-scoped)
+    // variant, not the session-scoped `pg_advisory_lock`: behind Supabase's
+    // transaction pooler a "session" is a single transaction, so a
+    // session-scoped lock could be released onto a different backend. The lock
+    // auto-releases when this transaction commits or rolls back.
+    await this.sql.begin(async (tx) => {
+      await tx.unsafe(`SELECT pg_advisory_xact_lock(${MIGRATE_ADVISORY_LOCK_KEY})`)
+      for (const entity of entities) {
+        const plan = buildTablePlan(entity)
+        this.plans.set(plan.table, plan)
+        await tx.unsafe(createTableSQL(plan, 'postgres'))
+        await this.reconcileColumns(plan, tx)
+      }
+    })
   }
 
   /**
    * Additive schema evolution: add any declared column missing from the live
    * table (always nullable — see `alterTableSQL`), and warn about live columns
    * the entity no longer declares. Never drops or retypes.
+   *
+   * `exec` runs the statements; it defaults to the shared pool but `migrate()`
+   * passes its transaction so the reconciliation happens under the same
+   * advisory lock.
    */
-  private async reconcileColumns(plan: TablePlan): Promise<void> {
-    const rows = await this.query(
+  private async reconcileColumns(plan: TablePlan, exec: Pick<Sql, 'unsafe'> = this.sql): Promise<void> {
+    const rows = (await exec.unsafe(
       `SELECT column_name FROM information_schema.columns
        WHERE table_name = $1 AND table_schema = current_schema()`,
-      [plan.table],
-    )
+      [plan.table] as never[],
+    )) as unknown as Record<string, unknown>[]
     const existing = rows.map((row) => String(row.column_name))
     for (const sql of alterTableSQL(plan, existing, 'postgres')) {
-      await this.sql.unsafe(sql)
+      await exec.unsafe(sql)
     }
     for (const name of undeclaredColumns(plan, existing)) {
       const msg = `table "${plan.table}" has a column "${name}" that no field declares; it is left untouched.`
