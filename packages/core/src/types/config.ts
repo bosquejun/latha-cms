@@ -8,6 +8,7 @@ import type { Guard } from './guard.js'
 import type { FieldTypeEntry } from '../fields/registry.js'
 import type { Logger } from '../logger/index.js'
 import type { Tracer } from '../tracing/index.js'
+import type { Telemetry } from '../telemetry/index.js'
 
 /** Forward reference to the live instance; defined in `bootstrap`. */
 export interface Kon10Instance {
@@ -68,6 +69,19 @@ export interface Kon10Instance {
    * core never opines on tracing backends, only on this seam.
    */
   registerTracer(tracer: Tracer): void
+  /**
+   * The instance telemetry sink — a no-op by default, or whichever `Telemetry`
+   * a plugin registered via `registerTelemetry` (e.g. `@kon10/telemetry`).
+   * Runners and modules emit anonymous product/technical events through this;
+   * a no-op sink costs nothing.
+   */
+  telemetry: Telemetry
+  /**
+   * Register the instance-wide telemetry sink (typically from a plugin's
+   * `onInit`, e.g. `@kon10/telemetry`). Same shape as `registerTracer` — core
+   * never opines on analytics backends, only on this seam.
+   */
+  registerTelemetry(telemetry: Telemetry): void
   ready: boolean
 }
 

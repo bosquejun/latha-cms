@@ -19,6 +19,7 @@
     "@kon10/core": "workspace:^",
     "@kon10/media": "workspace:^",
     "@kon10/sentry": "workspace:^",
+    "@kon10/telemetry": "workspace:^",
     "@kon10/seo": "workspace:^",
     "@kon10/slug": "workspace:^",
     "@kon10/start": "workspace:^",

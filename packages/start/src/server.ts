@@ -261,6 +261,9 @@ export async function dispatchKon10Rpc(
 }
 
 /** Dispatch a single RPC request against the running instance. */
+/** Studio actions worth an anonymous product event — mutations only, to keep volume sane. */
+const TRACKED_TELEMETRY_ACTIONS = new Set(['create', 'update', 'remove', 'saveGlobal'])
+
 export async function handleKon10Request(
   config: ResolvedConfig,
   rawInput: unknown,
@@ -294,6 +297,12 @@ export async function handleKon10Request(
     }
 
     const result = await runKon10Action(kon10, basePath, input, principal, requestId)
+    // Anonymous product signal: which Studio mutations get used. Action name
+    // only — no slug, no ids, no content. A no-op unless a telemetry sink is
+    // registered (`@kon10/telemetry`).
+    if (TRACKED_TELEMETRY_ACTIONS.has(input.action)) {
+      kon10.telemetry.capture({ name: 'studio_action', properties: { action: input.action } })
+    }
     log.info({ ...requestLine, durationMs: Date.now() - started, outcome: 'ok' })
     return result
   } catch (err) {

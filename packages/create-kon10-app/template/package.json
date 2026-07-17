@@ -17,6 +17,7 @@
     "@kon10/start": "latest",
     "@kon10/storage": "latest",
     "@kon10/studio-sdk": "latest",
+    "@kon10/telemetry": "latest",
     "@kon10/ui": "latest",
     "@kon10/users": "latest",
     "@libsql/client": "^0.14.0",

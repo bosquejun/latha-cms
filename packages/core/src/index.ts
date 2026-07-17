@@ -62,6 +62,14 @@ export {
   withSpan,
 } from './tracing/index.js'
 
+// Telemetry
+export {
+  type TelemetryPropertyValue,
+  type TelemetryEvent,
+  type Telemetry,
+  noopTelemetry,
+} from './telemetry/index.js'
+
 // Registry
 export { ModuleRegistry } from './registry/index.js'
 
