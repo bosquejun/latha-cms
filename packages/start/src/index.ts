@@ -41,6 +41,7 @@ export {
   type TelemetryConsentValue,
 } from '@kon10/studio-sdk'
 export { TelemetrySettings } from './TelemetrySettings.js'
+export { TelemetryToggles } from './TelemetryToggles.js'
 export { Kon10Studio } from './studio.js'
 export { Kon10Login } from './login.js'
 export { Kon10Logo } from './logo.js'

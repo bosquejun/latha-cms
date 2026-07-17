@@ -22,6 +22,7 @@ import {
   DialogTitle,
 } from '@kon10/ui'
 import { useKon10, useStudioNavigate, useTelemetryConsent } from '@kon10/studio-sdk'
+import { TelemetryToggles } from './TelemetryToggles.js'
 
 const ACK_PREFIX = 'kon10-telemetry-ack:'
 
@@ -36,10 +37,9 @@ const DEFAULT_OPTIN_MESSAGE =
   'manage and no personal data is collected, and you can change this anytime.'
 
 const DEFAULT_OPTOUT_MESSAGE =
-  'This Studio shares anonymous usage data — technical and product events — to ' +
-  'help improve it. No content, credentials, or personal data are collected. You ' +
-  'can turn it off, or keep it on but anonymous. Change this anytime in the ' +
-  'telemetry settings.'
+  'This Studio is set to share anonymous usage data — technical and product ' +
+  'events — to help improve it. No content, credentials, or personal data are ' +
+  'collected. Adjust it below, or anytime in the telemetry settings.'
 
 export function TelemetryNotice({ userId }: { userId: string }) {
   const { telemetryNotice, branding } = useKon10()
@@ -49,24 +49,23 @@ export function TelemetryNotice({ userId }: { userId: string }) {
 
   const enabled = telemetryNotice.enabled === true
   const mode = telemetryNotice.mode ?? 'notice'
-  // opt-in and opt-out both prompt for an explicit choice; notice just informs.
-  const choice = mode === 'opt-in' || mode === 'opt-out'
   const ackKey = `${ACK_PREFIX}${userId}`
 
   useEffect(() => {
     if (!enabled) return
-    if (choice) {
-      // Prompt until the user makes an explicit choice.
+    // Opt-in prompts until an explicit Allow/No-thanks (status-driven). Notice
+    // and opt-out show once (ack-driven) — opt-out edits consent via switches
+    // in place, so it must NOT close the moment a switch flips the status.
+    if (mode === 'opt-in') {
       setOpen(consent.status === 'unset')
       return
     }
-    // Notice: show once, then remember it was acknowledged.
     try {
       if (localStorage.getItem(ackKey) !== 'true') setOpen(true)
     } catch {
       // No storage (SSR / privacy mode) — don't nag; skip.
     }
-  }, [enabled, choice, consent.status, ackKey])
+  }, [enabled, mode, consent.status, ackKey])
 
   if (!enabled) return null
 
@@ -100,21 +99,11 @@ export function TelemetryNotice({ userId }: { userId: string }) {
     </Button>
   )
 
-  // Accept the default: keep telemetry on, anonymous (no email).
-  const keepAnonymous = () => {
-    consent.setAnonymous(true)
-    consent.grant()
-  }
-
   if (mode === 'opt-out') {
     return (
-      <Dialog
-        open={open}
-        // Dismissing keeps the default (on, anonymous) and stops re-prompting.
-        onOpenChange={(next) => {
-          if (!next) keepAnonymous()
-        }}
-      >
+      // Dismissing keeps whatever the switches are set to (default: on,
+      // anonymous) and stops re-prompting via the ack flag.
+      <Dialog open={open} onOpenChange={(next) => !next && acknowledge()}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -124,12 +113,14 @@ export function TelemetryNotice({ userId }: { userId: string }) {
               {telemetryNotice.message ?? DEFAULT_OPTOUT_MESSAGE}
             </DialogDescription>
           </DialogHeader>
+          {/* The same switches as Settings → Telemetry, right here. */}
+          <div className="overflow-hidden rounded-[var(--radius-lg)] border border-border">
+            <TelemetryToggles />
+          </div>
           <DialogFooter>
             {policyLink}
-            <Button variant="ghost" onClick={() => consent.deny()}>
-              Turn off
-            </Button>
-            <Button onClick={keepAnonymous}>Keep anonymous</Button>
+            {manageButton}
+            <Button onClick={acknowledge}>Done</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
