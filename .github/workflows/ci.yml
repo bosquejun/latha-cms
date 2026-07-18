@@ -26,6 +26,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Guard against major changesets
+        run: pnpm changeset:guard
+
       - name: Build packages and apps
         run: pnpm build
 

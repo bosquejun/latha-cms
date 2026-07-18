@@ -1,5 +1,63 @@
 # @kon10/start
 
+## 1.1.0
+
+### Minor Changes
+
+- 296f18a: feat: create the first admin at `/setup` instead of from environment variables
+
+  A fresh install now sends you to a framework-owned `/setup` screen to create the
+  admin account, rather than expecting `ADMIN_EMAIL`/`ADMIN_PASSWORD` with a
+  plaintext password in the environment. Once an admin exists the route closes
+  itself and redirects to `/login`, and `/login` redirects _to_ setup while the
+  install is still empty — so a fresh deploy can't strand you on a sign-in form
+  with no account to use.
+
+  Setup is a capability of the subject store, not an assumption: `SubjectStore`
+  gains optional `count()` and `create()`, and a store that omits them (an
+  external IdP, which owns its own account creation) reports setup as unsupported
+  rather than half-serving it. `entitySubjectStore` implements both through the
+  kernel's generic operations, so `@kon10/auth` still takes no dependency on
+  `@kon10/users`.
+
+  In production `/setup` additionally requires a token derived as
+  `HMAC(AUTH_SECRET, 'kon10:setup')`. Deriving rather than storing it means every
+  serverless instance agrees without shared state, no new env var is needed, and
+  it goes inert the moment a user exists — closing the window where an unattended
+  public deploy stays claimable by whoever finds the URL first. Development
+  requires no token, so first run stays frictionless.
+
+  `ADMIN_EMAIL`/`ADMIN_PASSWORD` still work when **both** are set, as an opt-in
+  fast path for automation (CI, E2E, throwaway environments).
+
+  New public surface: `Kon10Setup` and `kon10Start({ setupPath })` in
+  `@kon10/start`; `client.setupStatus()` / `client.setup()`, `setupPath`, the
+  `setup.*` extension zones, and `setupTitle`/`setupSubtitle` branding in
+  `@kon10/studio-sdk`; `setupRoute`, `setupStatusRoute`, `setupToken`, and
+  `CreateSubjectInput` in `@kon10/auth`.
+
+### Patch Changes
+
+- 11e36ed: feat: layout-shaped loading skeletons on Studio pages
+
+  Every auto-generated Studio page now shows a skeleton that mirrors its own
+  layout while it waits on data, instead of a bare centered spinner — the page
+  keeps its shape and no longer reflows when content lands.
+
+  `@kon10/studio-sdk` gains four composable, CMS-aware skeletons built on the
+  `@kon10/ui` `Skeleton` primitive: `ListSkeleton` (header + table rows),
+  `FormSkeleton` (header + toolbar + field rows, optional sidebar),
+  `DashboardSkeleton` (stat-card grid), and the shared `PageHeaderSkeleton`.
+  `LoadingState` remains the generic fallback and the app-boot indicator.
+
+  `@kon10/start` wires these into the built-in views — list, create, edit, and
+  global forms render the matching skeleton, and edit/global forms derive their
+  skeleton's field count and sidebar from the loaded entity descriptor. Dashboard
+  stat tiles use a small inline skeleton in place of the `·` placeholder.
+  `@kon10/auth`'s API Keys settings page swaps its spinner for a list skeleton.
+
+  - @kon10/client@1.1.0
+
 ## 1.0.3
 
 ### Patch Changes
