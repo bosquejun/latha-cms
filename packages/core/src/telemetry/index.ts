@@ -6,10 +6,9 @@
  * registers a real sink (PostHog). The kernel and runners emit events through
  * `cms.telemetry` unconditionally; a no-op costs nothing.
  *
- * Events must carry only allow-listed usage properties — never user content,
- * credentials, or direct PII. Account-linked product events may use an opaque
- * user id unless the user selects anonymous sharing. That contract is the
- * caller's responsibility; core just moves events to the registered sink.
+ * Events must carry only allow-listed usage properties — never account
+ * identifiers, user content, credentials, or direct PII. Core only moves events
+ * to the registered sink; emitters are responsible for enforcing that contract.
  */
 
 export type TelemetryPropertyValue = string | number | boolean

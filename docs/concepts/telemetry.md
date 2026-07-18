@@ -1,7 +1,7 @@
 # Telemetry
 
-Kon10 can collect **opt-out usage telemetry with per-user anonymity controls** — in the spirit of
-Medusa and Next.js — to help improve the framework. It is provided by the
+Kon10 can collect **account-unlinked, opt-out usage telemetry** — in the spirit
+of Medusa and Next.js — to help improve the framework. It is provided by the
 `@kon10/telemetry` plugin and ships **on by default in new apps** (the scaffold
 includes it), but transmits nothing until a PostHog key is configured, and is
 easy to turn off.
@@ -10,16 +10,25 @@ easy to turn off.
 
 Only allow-listed usage data — **never content, credentials, or direct PII**:
 
-- **Technical** (`kon10_boot`, once per boot): plugin telemetry version, Node
-  version, OS platform + arch, and counts (`modules`, `entities`, whether a
-  cache/storage adapter is configured).
+- **Technical** (`kon10_boot`, once per boot): plugin and Kon10 versions,
+  environment, Node version, OS platform + architecture, container status,
+  module/entity counts, allow-listed entity-kind counts, and whether cache or
+  storage adapters are configured.
 - **Product** (`studio_action`): which Studio **mutations** happen — the action
-  name only (`create` / `update` / `remove` / `saveGlobal`). No slugs, document
-  ids, or field values. The authenticated account id is included by default;
-  users can remove it with **Link to your account** in Telemetry settings.
+  name only (`create` / `update` / `remove` / `saveGlobal`). No account or user
+  identifier, slug, document id, field value, or managed content is sent.
 
-Events are keyed by a random **anonymous instance id** persisted once to
-`~/.config/kon10/telemetry.json` (or `$XDG_CONFIG_HOME`).
+Events are keyed by the random `kon10.telemetryId` that `create-kon10-app`
+stamps into the project's `package.json`. This keeps the identity available in
+production and gives each generated project its own anonymous identity. Projects
+created before this field existed fall back to an id in
+`~/.config/kon10/telemetry.json` (or `$XDG_CONFIG_HOME`). Set
+`KON10_TELEMETRY_INSTANCE_ID` to override either source.
+
+Every event also carries `nodeEnv` from `NODE_ENV` and the installed
+`kon10Version` (or `unknown` when either cannot be resolved), so environments
+and framework-version adoption can be filtered separately. PostHog person
+profiles and GeoIP enrichment are explicitly disabled for these events.
 
 ## Turning it on
 
@@ -57,7 +66,7 @@ sends nothing) when any of these hold:
 - no PostHog key is configured
 
 **Per-user, in the Studio.** Drop the ready-made settings page in and each user
-gets two toggles:
+gets a usage-sharing control:
 
 ```tsx
 // src/studio/settings/telemetry.tsx
@@ -66,17 +75,16 @@ export const config = defineSettingsConfig({ path: 'telemetry', label: 'Telemetr
 export default TelemetrySettings
 ```
 
-- **Usage monitoring** — turn the user's own telemetry off. Product events for
+- **Share Studio actions** — turn the user's own product telemetry off. Product events for
   that user stop (the choice is mirrored to a cookie the server reads).
-- **Link to your account** — on by default; turn it off to omit the user's
-  account id and share Studio events anonymously.
 
 The first-login dialog supports three policies: `notice` discloses collection,
 `opt-out` collects until the user turns it off, and `opt-in` sends no Studio
 product events until the user explicitly chooses **Allow**.
 
 Read or drive the same state anywhere with `useTelemetryConsent()`
-(`status`, `anonymous`, `grant`, `deny`, `setAnonymous`).
+(`status`, `grant`, `deny`). Deprecated anonymity fields remain temporarily as
+always-anonymous no-ops for extension compatibility.
 
 On first run (per machine) the plugin logs a one-time disclosure noting that
 telemetry is on and how to disable it. Pair it with the Studio's

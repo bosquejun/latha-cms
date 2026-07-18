@@ -1,8 +1,7 @@
 /**
- * TelemetryToggles — the two per-user telemetry switches (Usage monitoring,
- * Stay anonymous), shared by the Settings page and the first-login dialog. Each
- * switch drives `useTelemetryConsent()` live, so flipping it here takes effect
- * immediately (and mirrors to the cookies the server reads).
+ * The per-user usage-data control shared by Settings and the first-login dialog.
+ * It drives `useTelemetryConsent()` live and mirrors the choice to the cookie
+ * read by the server.
  */
 
 import { useTelemetryConsent } from '@kon10/studio-sdk'
@@ -12,13 +11,11 @@ function Row({
   title,
   description,
   checked,
-  disabled,
   onCheckedChange,
 }: {
   title: string
   description: string
   checked: boolean
-  disabled?: boolean
   onCheckedChange: (checked: boolean) => void
 }) {
   return (
@@ -29,7 +26,6 @@ function Row({
       </div>
       <Switch
         checked={checked}
-        disabled={disabled}
         onChange={(e) => onCheckedChange(e.currentTarget.checked)}
         aria-label={title}
       />
@@ -38,7 +34,7 @@ function Row({
 }
 
 export function TelemetryToggles() {
-  const { status, anonymous, grant, deny, setAnonymous } = useTelemetryConsent()
+  const { status, grant, deny } = useTelemetryConsent()
   // Opt-out: on unless explicitly denied, so `unset` reads as on — matching the
   // server default when no consent cookie is present.
   const enabled = status !== 'denied'
@@ -46,17 +42,10 @@ export function TelemetryToggles() {
   return (
     <div className="divide-y divide-border">
       <Row
-        title="Share usage data"
-        description="Send usage data to help make the Studio better. On by default."
+        title="Share Studio actions"
+        description="Send allow-listed action names to help improve the Studio. No account identity or managed content is sent."
         checked={enabled}
         onCheckedChange={(next) => (next ? grant() : deny())}
-      />
-      <Row
-        title="Link to your account"
-        description="Your usage is linked to your account so we can see how it is used. Turn this off to share it anonymously instead."
-        checked={!anonymous}
-        disabled={!enabled}
-        onCheckedChange={(next) => setAnonymous(!next)}
       />
     </div>
   )

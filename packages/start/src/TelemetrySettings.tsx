@@ -22,7 +22,7 @@ export function TelemetrySettings() {
     <>
       <PageHeader
         title="Telemetry"
-        description={`Choose whether you share usage data with ${branding.appName}, and whether it is linked to your account. We never see the content you manage.`}
+        description={`Choose whether your Studio actions are shared with ${branding.appName}. Deployment-level technical telemetry is controlled by the app operator. We never send your account identity or managed content.`}
       />
       <Card className="p-0">
         <TelemetryToggles />

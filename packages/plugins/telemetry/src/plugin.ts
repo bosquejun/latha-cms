@@ -13,15 +13,45 @@
  */
 
 import os from 'node:os'
+import fs from 'node:fs'
+import path from 'node:path'
+import { createRequire } from 'node:module'
 import { z } from '@kon10/core'
 import type { Kon10Instance, Plugin } from '@kon10/core'
 import { isTelemetryDisabled } from './env.js'
-import { loadTelemetryStore, markNotified } from './instance-id.js'
+import { loadTelemetryStore, markNotified, readProjectTelemetryId } from './instance-id.js'
 import { createPosthogTelemetry } from './posthog.js'
 
 /** This plugin's own version, sent as a technical property (not the kernel's). */
 const TELEMETRY_VERSION = '1.0.0'
 const DEFAULT_HOST = 'https://us.i.posthog.com'
+
+/** Resolve the installed peer's version without requiring package.json to be exported. */
+function readKon10Version(): string {
+  try {
+    let directory = path.dirname(createRequire(import.meta.url).resolve('@kon10/core'))
+    for (let depth = 0; depth < 4; depth++) {
+      const manifestPath = path.join(directory, 'package.json')
+      if (fs.existsSync(manifestPath)) {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as {
+          name?: unknown
+          version?: unknown
+        }
+        if (manifest.name === '@kon10/core' && typeof manifest.version === 'string') {
+          return manifest.version
+        }
+      }
+      directory = path.dirname(directory)
+    }
+  } catch {
+    // Bundled or otherwise non-standard package layout.
+  }
+  return 'unknown'
+}
+
+function isContainer(env: NodeJS.ProcessEnv): boolean {
+  return Boolean(env.KUBERNETES_SERVICE_HOST || env.CONTAINER) || fs.existsSync('/.dockerenv')
+}
 
 export const telemetryPluginOptionsSchema = z.object({
   /** Force-disable regardless of environment. Default: opt-out via env. */
@@ -59,10 +89,18 @@ export function telemetryPlugin(options: TelemetryPluginOptions = {}): Plugin {
       }
 
       const { store, firstRun } = loadTelemetryStore(env)
+      const distinctId =
+        env.KON10_TELEMETRY_INSTANCE_ID ?? readProjectTelemetryId() ?? store.anonymousId
       const sink = createPosthogTelemetry({
         apiKey: key,
         host,
-        distinctId: store.anonymousId,
+        distinctId,
+        commonProperties: {
+          nodeEnv: env.NODE_ENV ?? 'unknown',
+          kon10Version: readKon10Version(),
+          $process_person_profile: false,
+          $geoip_disable: true,
+        },
         debug: (message, error) => cms.logger.debug({ plugin: 'telemetry', err: error }, message),
       })
       cms.registerTelemetry(sink)
@@ -79,6 +117,13 @@ export function telemetryPlugin(options: TelemetryPluginOptions = {}): Plugin {
       }
 
       // Technical boot event — versions, platform, and anonymous instance shape.
+      const entityKinds = { collection: 0, document: 0, taxonomy: 0, custom: 0 }
+      for (const entity of cms.entities) {
+        if (entity.kind === 'collection') entityKinds.collection++
+        else if (entity.kind === 'document') entityKinds.document++
+        else if (entity.kind === 'taxonomy') entityKinds.taxonomy++
+        else entityKinds.custom++
+      }
       sink.capture({
         name: 'kon10_boot',
         properties: {
@@ -88,8 +133,13 @@ export function telemetryPlugin(options: TelemetryPluginOptions = {}): Plugin {
           arch: os.arch(),
           modules: cms.modules.length,
           entities: cms.entities.length,
+          collections: entityKinds.collection,
+          documents: entityKinds.document,
+          taxonomies: entityKinds.taxonomy,
+          customEntities: entityKinds.custom,
           hasCache: cms.cache != null,
           hasStorage: cms.storage != null,
+          isContainer: isContainer(env),
         },
       })
     },

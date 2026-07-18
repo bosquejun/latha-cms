@@ -11,7 +11,7 @@ afterEach(() => {
   Object.defineProperty(globalThis, 'document', { configurable: true, value: originalDocument })
 })
 
-test('syncTelemetryPreferences replaces stale cookies with the current user preferences', () => {
+test('syncTelemetryPreferences mirrors consent without account-linking state', () => {
   const values = new Map<string, string>([
     ['kon10-telemetry-consent:user-b', 'granted'],
     ['kon10-telemetry-anon:user-b', '1'],
@@ -31,7 +31,7 @@ test('syncTelemetryPreferences replaces stale cookies with the current user pref
     anonymous: true,
   })
   assert.match(cookies[0]!, /^kon10_tm_consent=granted;/)
-  assert.match(cookies[1]!, /^kon10_tm_anon=1;/)
+  assert.equal(cookies.length, 1)
 })
 
 test('syncTelemetryPreferences writes explicit defaults for a new user', () => {
@@ -47,8 +47,8 @@ test('syncTelemetryPreferences writes explicit defaults for a new user', () => {
 
   assert.deepEqual(syncTelemetryPreferences('new-user'), {
     status: 'unset',
-    anonymous: false,
+    anonymous: true,
   })
   assert.match(cookies[0]!, /^kon10_tm_consent=unset;/)
-  assert.match(cookies[1]!, /^kon10_tm_anon=0;/)
+  assert.equal(cookies.length, 1)
 })

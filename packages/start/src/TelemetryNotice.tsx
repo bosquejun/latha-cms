@@ -3,8 +3,8 @@
  * sign-in when `studio.telemetryNotice.enabled` is set. Two modes:
  *
  *  - `'notice'` (default): a disclosure with a single "Got it" acknowledge.
- *  - `'opt-out'`: collection is on by default, with controls to disable it or
- *    remove the account link.
+ *  - `'opt-out'`: anonymous installation telemetry is on by default, with a
+ *    control to disable it.
  *  - `'opt-in'`: asks for consent (Allow / No thanks); the server requires an
  *    explicit grant before it captures Studio product events.
  *
@@ -29,18 +29,20 @@ const ACK_PREFIX = 'kon10-telemetry-ack:'
 
 const DEFAULT_NOTICE_TITLE = 'About usage data'
 const DEFAULT_NOTICE_MESSAGE =
-  'We collect usage data to help make the Studio better. It is linked to your ' +
-  'account, and we never see the content you manage. You can make it anonymous ' +
-  'or turn it off any time in Settings.'
+  'We collect anonymous installation metadata and allow-listed Studio action ' +
+  'names to improve Kon10. We never send your account identity or managed content. ' +
+  'You can turn off Studio action sharing any time in Settings.'
 
 const DEFAULT_OPTIN_MESSAGE =
-  'Help make the Studio better by sharing usage data. We never see the content ' +
-  'you manage, and you can make it anonymous or turn it off any time.'
+  'Help improve Kon10 by sharing allow-listed Studio action names. We never send ' +
+  'your account identity or managed content. Deployment-level technical telemetry ' +
+  'is controlled by the app operator.'
 
 const DEFAULT_OPTOUT_MESSAGE =
-  'We collect usage data to help make the Studio better. It is linked to your ' +
-  'account, and we never see the content you manage. You can make it anonymous ' +
-  'or turn it off below.'
+  'We collect anonymous installation metadata and allow-listed Studio action ' +
+  'names to improve Kon10. We never send your account identity or managed content. ' +
+  'You can turn off Studio action sharing below; the app operator controls ' +
+  'deployment-level technical telemetry.'
 
 export function TelemetryNotice({ userId }: { userId: string }) {
   const { telemetryNotice, branding } = useKon10()
@@ -102,8 +104,8 @@ export function TelemetryNotice({ userId }: { userId: string }) {
 
   if (mode === 'opt-out') {
     return (
-      // Dismissing keeps whatever the switches are set to (default: on and
-      // account-linked) and stops re-prompting via the ack flag.
+      // Dismissing keeps the current usage-sharing choice (default: on) and
+      // stops re-prompting via the acknowledgement flag.
       <Dialog open={open} onOpenChange={(next) => !next && acknowledge()}>
         <DialogContent>
           <DialogHeader>

@@ -340,21 +340,17 @@ export async function handleKon10Request(
 
     const result = await runKon10Action(kon10, basePath, input, principal, requestId)
     // Product signal: which Studio mutations get used. Action name only — no
-    // slug, ids, or content. Honors the per-user choices (cookies the Studio
-    // sets from the Telemetry settings): skipped when the user turned tracking
-    // off, and carries the user id by default (linked to their account) unless
-    // they anonymized. A no-op unless a telemetry sink is registered.
+    // user id, slug, document id, or content. Honors the per-user consent cookie
+    // and is a no-op unless a telemetry sink is registered.
     const telemetryMode = config.studio?.telemetryNotice?.mode ?? 'notice'
     const telemetryConsent = parseTelemetryConsent(readCookie(request, 'kon10_tm_consent'))
     if (
       TRACKED_TELEMETRY_ACTIONS.has(input.action) &&
       shouldCaptureStudioTelemetry(telemetryMode, telemetryConsent)
     ) {
-      const anonymize = readCookie(request, 'kon10_tm_anon') === '1'
-      const userId = anonymize ? undefined : (sessionUser as { id?: string } | null)?.id
       kon10.telemetry.capture({
         name: 'studio_action',
-        properties: { action: input.action, userId },
+        properties: { action: input.action },
       })
     }
     log.info({ ...requestLine, durationMs: Date.now() - started, outcome: 'ok' })
