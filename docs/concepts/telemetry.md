@@ -88,7 +88,7 @@ to disclose it in the UI too.
 
 ## How it fits
 
-`@kon10/core` defines a vendor-neutral `Telemetry` contract (`capture` / `flush`)
+`kon10` defines a vendor-neutral `Telemetry` contract (`capture` / `flush`)
 with a `noopTelemetry` default and a `cms.registerTelemetry()` seam — the same
 shape as the tracer. `@kon10/telemetry` registers a PostHog sink over that seam;
 the runner emits product events through `cms.telemetry`. Core never imports a

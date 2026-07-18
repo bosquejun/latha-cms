@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod'
-import type { FieldTypeEntry } from '@kon10/core'
+import type { FieldTypeEntry } from 'kon10'
 import {
   DEFAULT_MAX_DESCRIPTION_LENGTH,
   DEFAULT_MAX_TITLE_LENGTH,

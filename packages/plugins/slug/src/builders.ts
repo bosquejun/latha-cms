@@ -4,7 +4,7 @@
  * `slugPlugin` can find the fields to attach generation hooks to.
  */
 
-import type { FieldMeta, PhantomMeta } from '@kon10/core'
+import type { FieldMeta, PhantomMeta } from 'kon10'
 
 interface SlugNestedOpts {
   /**

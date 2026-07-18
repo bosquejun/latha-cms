@@ -5,7 +5,7 @@
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import type { CacheAdapter, Doc, JsonValue, Kon10Instance, Query } from '@kon10/core'
+import type { CacheAdapter, Doc, JsonValue, Kon10Instance, Query } from 'kon10'
 import { apiKeysEntity } from './entities.js'
 import { createApiKey, verifyApiKeyToken } from './service.js'
 import {

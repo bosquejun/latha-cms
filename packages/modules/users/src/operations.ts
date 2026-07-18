@@ -4,8 +4,8 @@
  * helpers persist a `passwordHash` and never see a plaintext password.
  */
 
-import { operations } from '@kon10/core'
-import type { Doc, Kon10Instance } from '@kon10/core'
+import { operations } from 'kon10'
+import type { Doc, Kon10Instance } from 'kon10'
 import { USERS_SLUG } from './module.js'
 
 const systemCtx = (kon10: Kon10Instance) => ({

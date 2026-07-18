@@ -33,12 +33,12 @@ These describe what you model in `kon10.config.ts`. (See also the
 ## Runtime & framework vocabulary
 
 These describe how the config becomes a running CMS and how an app talks to it.
-They live mostly in [`@kon10/core`](../../packages/core) and
+They live mostly in [`kon10`](../../packages/core) and
 [`@kon10/start`](../../packages/start).
 
 | Term | Meaning | Where |
 |---|---|---|
-| **Config** | The single source of truth. `defineConfig({...})` returns a `ResolvedConfig`. | `@kon10/core` |
+| **Config** | The single source of truth. `defineConfig({...})` returns a `ResolvedConfig`. | `kon10` |
 | **Instance / Runtime** | The bootstrapped, seeded `Kon10Instance` for a config. Memoized per config, seeded once. | `@kon10/start` `runtime.ts` |
 | **RPC** | The transport for the whole Studio surface: one endpoint, dispatched by an `action`. See [RPC vs API](#rpc-vs-api). | `@kon10/start` |
 | **RPC action** | One member of the `Kon10RpcInput` union — the "procedure" being called. | `{ action: 'list', collection }` |

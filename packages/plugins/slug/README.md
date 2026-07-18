@@ -22,7 +22,7 @@ Use `@kon10/slug` when collections need editor-friendly URL segments or nested p
 ## Example
 
 ```ts
-import { defineConfig, text } from '@kon10/core'
+import { defineConfig, text } from 'kon10'
 import { Collection, ContentModule } from '@kon10/content'
 import { slug, slugPlugin } from '@kon10/slug'
 

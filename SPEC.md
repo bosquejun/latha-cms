@@ -31,7 +31,7 @@ kon10cms/
 ├── apps/
 │   └── playground/                    # TanStack Start app — dev/test harness
 ├── packages/
-│   ├── core/                          # @kon10/core — types, defineConfig, module registry, hook engine, access evaluator
+│   ├── core/                          # kon10 — types, defineConfig, module registry, hook engine, access evaluator
 │   ├── ui/                            # @kon10/ui — design system, primitives, tokens (no CMS knowledge)
 │   ├── studio-sdk/                    # @kon10/studio-sdk — CMS-aware Studio layer, field renderers, shell, registry-driven views
 │   ├── start/                         # @kon10/start — TanStack Start integration: runtime, RPC dispatcher, client, mountable Studio UI
@@ -82,7 +82,7 @@ kon10cms/
 
 ```ts
 // cms.config.ts
-import { defineConfig } from '@kon10/core'
+import { defineConfig } from 'kon10'
 import { AuthModule } from '@kon10/auth'
 import { UsersModule } from '@kon10/users'
 import { ContentModule, Collection, Document, Taxonomy } from '@kon10/content'
@@ -180,7 +180,7 @@ export default defineConfig({
 
 ---
 
-## Core Abstractions (`@kon10/core`)
+## Core Abstractions (`kon10`)
 
 ### Primitives
 
@@ -278,7 +278,7 @@ interface Plugin {
 
 | Package | npm name | Responsibility |
 |---|---|---|
-| `packages/core` | `@kon10/core` | `defineConfig()`, types, module registry, hook engine, access evaluator, Zod schema builder |
+| `packages/core` | `kon10` | `defineConfig()`, types, module registry, hook engine, access evaluator, Zod schema builder |
 | `packages/ui` | `@kon10/ui` | Design system — buttons, inputs, tables, modals, typography, tokens. No CMS knowledge. Usable standalone. |
 | `packages/studio-sdk` | `@kon10/studio-sdk` | CMS-aware Studio layer — field renderers, shell layout, sidebar (registry-driven), collection list/form views. Builds on `@kon10/ui`. |
 | `packages/start` | `@kon10/start` | TanStack Start integration — runtime, RPC dispatcher + server route, typed client, provider, mountable Studio UI. The framework-integration layer. See [docs/concepts/frameworks](./docs/concepts/frameworks.md). |
@@ -378,9 +378,9 @@ Build in phases — do not skip ahead. Each phase must be working end-to-end bef
 
 ### Phase 1 — Foundation
 - [ ] Monorepo scaffold (pnpm + Turborepo)
-- [ ] `@kon10/core` — types, `defineConfig()`, Zod schema builder, module registry skeleton
+- [ ] `kon10` — types, `defineConfig()`, Zod schema builder, module registry skeleton
 - [ ] `@kon10/storage` — `DBAdapter` implementation for Drizzle + Turso
-- [ ] `apps/playground` — TanStack Start app consuming `@kon10/core`
+- [ ] `apps/playground` — TanStack Start app consuming `kon10`
 - [ ] One hardcoded `posts` Collection wired end-to-end (server fn → DB → response)
 
 ### Phase 2 — Config-Driven API
@@ -393,7 +393,7 @@ Build in phases — do not skip ahead. Each phase must be working end-to-end bef
 
 ### Phase 3 — Studio UI Shell
 - [ ] `@kon10/ui` package setup (Tailwind + shadcn/ui base, design tokens, primitives)
-- [ ] `@kon10/studio-sdk` package setup — depends on `@kon10/ui` and `@kon10/core`
+- [ ] `@kon10/studio-sdk` package setup — depends on `@kon10/ui` and `kon10`
 - [ ] Studio shell layout (sidebar + topbar) in `studio-sdk`
 - [ ] Sidebar derived from module registry
 - [ ] TanStack Router Studio routes
@@ -473,7 +473,7 @@ packages/ui/src/
 packages/studio-sdk/src/
 ├── index.ts
 ├── shell/
-│   ├── StudioShell.tsx ← depends on @kon10/ui + @kon10/core registry
+│   ├── StudioShell.tsx ← depends on @kon10/ui + kon10 registry
 │   ├── Sidebar.tsx     ← derived from module registry
 │   └── Topbar.tsx
 ├── views/
@@ -508,7 +508,7 @@ packages/modules/storage/src/
 
 - Always start from `SPEC.md` for context.
 - Phase 1 first — no Studio UI until the kernel works end-to-end.
-- The entry point is `defineConfig()` from `@kon10/core` — not `defineCMS`.
+- The entry point is `defineConfig()` from `kon10` — not `defineCMS`.
 - Zod is the single validation layer. Do not add separate validation logic anywhere.
 - All DB access goes through `DBAdapter` from `@kon10/storage` — never call Drizzle directly from app code.
 - The Studio surface is one **RPC** layer — a single action-dispatched endpoint, not a REST API. In `@kon10/start` it is served by a framework-owned **server route** (`/__kon10/rpc`); apps can also route it through their own `createServerFn`. See [docs/concepts/taxonomy → RPC vs API](./docs/concepts/taxonomy.md#rpc-vs-api) and [frameworks](./docs/concepts/frameworks.md). Keep the dispatcher in `packages/` so it stays reusable.

@@ -24,10 +24,10 @@
     "test:coverage": "tsc -p tsconfig.json && node --test --experimental-test-coverage $(find dist -name '*.test.js' -print)"
   },
   "peerDependencies": {
-    "@kon10/core": "workspace:^"
+    "kon10": "workspace:^"
   },
   "devDependencies": {
-    "@kon10/core": "workspace:^",
+    "kon10": "workspace:^",
     "typescript": "^5.7.2",
     "@types/node": "^22.10.0"
   },

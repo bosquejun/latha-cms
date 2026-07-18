@@ -8,7 +8,7 @@
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { bootstrapKon10, defineConfig, type Kon10Instance } from '@kon10/core'
+import { bootstrapKon10, defineConfig, type Kon10Instance } from 'kon10'
 import { AuthModule } from './module.js'
 import { getSubjectStore } from './subject-store.js'
 import { fakeDb, usersModule } from './test-support.js'

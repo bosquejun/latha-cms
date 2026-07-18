@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod'
-import type { FieldTypeEntry } from '@kon10/core'
+import type { FieldTypeEntry } from 'kon10'
 import { SLUG_PATH_PATTERN, SLUG_SEGMENT_PATTERN } from './slugify.js'
 import { slugTokenSchema } from './template.js'
 

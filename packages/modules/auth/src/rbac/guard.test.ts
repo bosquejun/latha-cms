@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { AccessDeniedError, type GuardContext } from '@kon10/core'
+import { AccessDeniedError, type GuardContext } from 'kon10'
 import { createRbacGuard } from './guard.js'
 
 const guard = createRbacGuard()

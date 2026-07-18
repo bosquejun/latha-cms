@@ -1,6 +1,6 @@
 import { Badge, Button, Card, CardContent, Separator, cn } from '@kon10/ui'
 import { ChevronDown, ChevronUp, GripVertical, Layers, Plus, Trash2, X } from 'lucide-react'
-import type { Field } from '@kon10/core'
+import type { Field } from 'kon10'
 import { useState } from 'react'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'

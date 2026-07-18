@@ -19,7 +19,7 @@ import {
   type Doc,
   type Module,
   type Query,
-} from '@kon10/core'
+} from 'kon10'
 
 /** A minimal in-memory `DBAdapter`: enough for find/count/create/update/delete. */
 export function fakeDb(): DBAdapter {

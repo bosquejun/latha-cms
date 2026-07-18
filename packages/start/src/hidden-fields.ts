@@ -4,7 +4,7 @@
  * (`passwordHash`, `keyHash`, ...) never reaches the browser, not just the
  * Studio form's rendering of it.
  */
-import type { Entity } from '@kon10/core'
+import type { Entity } from 'kon10'
 
 /** Fields whose `meta.hidden` flags credential material — never serialized to a client. */
 export function hiddenFieldNames(entity: Entity): Set<string> {

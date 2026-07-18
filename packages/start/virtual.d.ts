@@ -16,14 +16,14 @@ declare module 'virtual:kon10/studio-extensions' {
 }
 
 declare module 'virtual:kon10/config' {
-  import type { ResolvedConfig } from '@kon10/core'
+  import type { ResolvedConfig } from 'kon10'
   /** Resolves to the consuming app's `kon10.config` module. */
   const config: ResolvedConfig
   export default config
 }
 
 declare module 'virtual:kon10/studio-config' {
-  import type { StudioBrandingConfig, StudioTelemetryNoticeConfig } from '@kon10/core'
+  import type { StudioBrandingConfig, StudioTelemetryNoticeConfig } from 'kon10'
   /**
    * Client-safe Studio config read from the app's `kon10.config` — the
    * serializable `studio.branding` + `studio.telemetryNotice` blocks. Wire it

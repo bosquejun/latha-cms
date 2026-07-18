@@ -9,7 +9,7 @@
  * hold `"<slug>:<operation>"`.
  */
 
-import { AccessDeniedError, type Guard } from '@kon10/core'
+import { AccessDeniedError, type Guard } from 'kon10'
 import { hasPermission, permissionKey } from './permissions.js'
 
 export function createRbacGuard(): Guard {

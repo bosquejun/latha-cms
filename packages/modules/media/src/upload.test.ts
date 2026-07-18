@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { bootstrapKon10, defineConfig, type DBAdapter, type Kon10Instance } from '@kon10/core'
+import { bootstrapKon10, defineConfig, type DBAdapter, type Kon10Instance } from 'kon10'
 import { MediaModule } from './module.js'
 import { uploadRoute } from './upload.js'
 import { MEDIA_SLUG } from './entities.js'

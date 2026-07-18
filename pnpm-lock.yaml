@@ -40,9 +40,6 @@ importers:
       '@kon10/content':
         specifier: workspace:^
         version: link:../../packages/modules/content
-      '@kon10/core':
-        specifier: workspace:^
-        version: link:../../packages/core
       '@kon10/media':
         specifier: workspace:^
         version: link:../../packages/modules/media
@@ -79,6 +76,9 @@ importers:
       '@tanstack/react-start':
         specifier: ^1.168.27
         version: 1.168.27(crossws@0.4.9(srvx@0.11.17))(esbuild@0.27.7)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rolldown@1.1.4)(rollup@4.62.2)(vite@7.3.5(@types/node@26.0.0)(jiti@2.7.0)(lightningcss@1.32.0))
+      kon10:
+        specifier: workspace:^
+        version: link:../../packages/core
       lucide-animated:
         specifier: ^1.0.5
         version: 1.0.5(motion@12.42.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)
@@ -201,9 +201,6 @@ importers:
       '@kon10/cache':
         specifier: workspace:^
         version: link:../cache
-      '@kon10/core':
-        specifier: workspace:^
-        version: link:../../core
       '@kon10/studio-sdk':
         specifier: workspace:^
         version: link:../../studio-sdk
@@ -216,6 +213,9 @@ importers:
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.17
+      kon10:
+        specifier: workspace:^
+        version: link:../../core
       lucide-react:
         specifier: ^1.24.0
         version: 1.24.0(react@19.2.7)
@@ -235,12 +235,12 @@ importers:
         specifier: ^5.11.1
         version: 5.11.1
     devDependencies:
-      '@kon10/core':
-        specifier: workspace:^
-        version: link:../../core
       '@types/node':
         specifier: ^22.10.0
         version: 22.20.0
+      kon10:
+        specifier: workspace:^
+        version: link:../../core
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -251,9 +251,6 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@kon10/core':
-        specifier: workspace:^
-        version: link:../../core
       '@kon10/studio-sdk':
         specifier: workspace:^
         version: link:../../studio-sdk
@@ -266,6 +263,9 @@ importers:
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.17
+      kon10:
+        specifier: workspace:^
+        version: link:../../core
       react:
         specifier: ^19.0.0
         version: 19.2.7
@@ -282,9 +282,6 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@kon10/core':
-        specifier: workspace:^
-        version: link:../../core
       '@kon10/studio-sdk':
         specifier: workspace:^
         version: link:../../studio-sdk
@@ -297,6 +294,9 @@ importers:
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.17
+      kon10:
+        specifier: workspace:^
+        version: link:../../core
       react:
         specifier: ^19.0.0
         version: 19.2.7
@@ -322,27 +322,27 @@ importers:
         specifier: ^8.22.0
         version: 8.22.0
     devDependencies:
-      '@kon10/core':
-        specifier: workspace:^
-        version: link:../../core
       '@types/node':
         specifier: ^22.10.0
         version: 22.20.0
       '@types/pg':
         specifier: ^8.20.0
         version: 8.20.0
+      kon10:
+        specifier: workspace:^
+        version: link:../../core
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
 
   packages/modules/users:
     devDependencies:
-      '@kon10/core':
-        specifier: workspace:^
-        version: link:../../core
       '@types/node':
         specifier: ^22.10.0
         version: 22.20.0
+      kon10:
+        specifier: workspace:^
+        version: link:../../core
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -359,12 +359,12 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@kon10/core':
-        specifier: workspace:^
-        version: link:../../core
       '@types/node':
         specifier: ^22.10.0
         version: 22.20.0
+      kon10:
+        specifier: workspace:^
+        version: link:../../core
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -378,9 +378,6 @@ importers:
       '@kon10/content':
         specifier: workspace:^
         version: link:../../modules/content
-      '@kon10/core':
-        specifier: workspace:^
-        version: link:../../core
       '@kon10/start':
         specifier: workspace:^
         version: link:../../start
@@ -396,6 +393,9 @@ importers:
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.17
+      kon10:
+        specifier: workspace:^
+        version: link:../../core
       react:
         specifier: ^19.0.0
         version: 19.2.7
@@ -415,9 +415,6 @@ importers:
       '@kon10/content':
         specifier: workspace:^
         version: link:../../modules/content
-      '@kon10/core':
-        specifier: workspace:^
-        version: link:../../core
       '@kon10/start':
         specifier: workspace:^
         version: link:../../start
@@ -433,6 +430,9 @@ importers:
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.17
+      kon10:
+        specifier: workspace:^
+        version: link:../../core
       react:
         specifier: ^19.0.0
         version: 19.2.7
@@ -449,12 +449,12 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@kon10/core':
-        specifier: workspace:^
-        version: link:../../core
       '@types/node':
         specifier: ^22.10.0
         version: 22.20.0
+      kon10:
+        specifier: workspace:^
+        version: link:../../core
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -496,9 +496,6 @@ importers:
       '@kon10/content':
         specifier: workspace:^
         version: link:../modules/content
-      '@kon10/core':
-        specifier: workspace:^
-        version: link:../core
       '@kon10/storage':
         specifier: workspace:^
         version: link:../modules/storage
@@ -520,6 +517,9 @@ importers:
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.17
+      kon10:
+        specifier: workspace:^
+        version: link:../core
       react:
         specifier: ^19.0.0
         version: 19.2.7
@@ -569,9 +569,6 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@kon10/core':
-        specifier: workspace:^
-        version: link:../core
       '@kon10/ui':
         specifier: workspace:^
         version: link:../ui
@@ -581,6 +578,9 @@ importers:
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.17
+      kon10:
+        specifier: workspace:^
+        version: link:../core
       react:
         specifier: ^19.0.0
         version: 19.2.7

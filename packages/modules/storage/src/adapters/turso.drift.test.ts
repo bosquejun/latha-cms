@@ -9,7 +9,7 @@
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { stampFields, text, type Entity, type Logger } from '@kon10/core'
+import { stampFields, text, type Entity, type Logger } from 'kon10'
 import { tursoAdapter } from './turso.js'
 
 const withLegacy: Entity = {

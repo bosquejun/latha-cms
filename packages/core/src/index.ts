@@ -1,5 +1,5 @@
 /**
- * @kon10/core — types, `defineConfig()`, module registry, hook engine,
+ * kon10 — types, `defineConfig()`, module registry, hook engine,
  * access evaluator, and the Zod schema builder.
  *
  * This package is the kernel. It has no knowledge of any specific database,

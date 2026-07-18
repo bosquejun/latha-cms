@@ -10,7 +10,7 @@
  * methods this adapter actually calls.
  */
 import { Redis } from 'ioredis'
-import type { CacheAdapter, JsonValue } from '@kon10/core'
+import type { CacheAdapter, JsonValue } from 'kon10'
 
 /** The subset of the `ioredis` client this adapter needs. A real `Redis` instance satisfies it. */
 export interface RedisClientLike {

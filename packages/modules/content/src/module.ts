@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod'
-import { type Module, type AnyEntity, type Kon10Instance } from '@kon10/core'
+import { type Module, type AnyEntity, type Kon10Instance } from 'kon10'
 import type { BlockDefinition } from './builders.js'
 
 export interface ContentModuleConfig {

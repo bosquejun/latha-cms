@@ -13,13 +13,13 @@
  * for free.
  */
 
-import { operations } from '@kon10/core'
+import { operations } from 'kon10'
 import type {
   Doc,
   JsonValue,
   Kon10Instance,
   Query,
-} from '@kon10/core'
+} from 'kon10'
 
 export type JsonDoc = { id: string } & Record<string, JsonValue>
 

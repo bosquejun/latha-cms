@@ -8,8 +8,8 @@
  * only persists whatever hash it is given, keeping storage and crypto separate.
  */
 
-import { relationship, stampFields, text, z } from '@kon10/core'
-import type { FieldsRecord, Module } from '@kon10/core'
+import { relationship, stampFields, text, z } from 'kon10'
+import type { FieldsRecord, Module } from 'kon10'
 
 export const USERS_SLUG = 'users'
 

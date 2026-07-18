@@ -9,7 +9,7 @@
  * `create`) is still enforced by `operations.create` below, same as any other
  * collection write.
  */
-import { operations, type ModuleRoute, type ModuleRouteContext, type OperationContext } from '@kon10/core'
+import { operations, type ModuleRoute, type ModuleRouteContext, type OperationContext } from 'kon10'
 import { MEDIA_SLUG, type MediaEntity } from './entities.js'
 
 function toJson<T>(v: T): T {

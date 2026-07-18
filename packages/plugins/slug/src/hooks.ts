@@ -31,7 +31,7 @@
  * document field. `HookArgs.slug` is always the *entity* slug.
  */
 
-import type { DBAdapter, HookFn } from '@kon10/core'
+import type { DBAdapter, HookFn } from 'kon10'
 import { slugify, slugifyPath } from './slugify.js'
 import { resolveTokens, type SlugToken } from './template.js'
 

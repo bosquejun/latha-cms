@@ -5,7 +5,7 @@ CMS-aware React SDK for Kon10 Studio. It contains the shell, navigation model, e
 ## Install
 
 ```bash
-pnpm add @kon10/studio-sdk @kon10/core @kon10/ui react
+pnpm add @kon10/studio-sdk kon10 @kon10/ui react
 ```
 
 Applications usually receive this package through `@kon10/start`; import it directly when building custom Studio surfaces or framework adapters.

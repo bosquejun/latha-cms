@@ -12,7 +12,7 @@ This is a pnpm + Turborepo monorepo. Workspaces are globbed from `apps/*`, `pack
 
 | Path | Package | What it is |
 |---|---|---|
-| `packages/core` | `@kon10/core` | The kernel — registry, hook engine, access evaluator, field type registry, `defineConfig`/`bootstrapKon10`, logger + tracing contracts |
+| `packages/core` | `kon10` | The kernel — registry, hook engine, access evaluator, field type registry, `defineConfig`/`bootstrapKon10`, logger + tracing contracts |
 | `packages/start` | `@kon10/start` | TanStack Start integration — runtime, RPC dispatcher, client, delivery REST API, Studio mount |
 | `packages/studio-sdk` | `@kon10/studio-sdk` | CMS-aware Studio shell, field renderers, auto-generated views |
 | `packages/ui` | `@kon10/ui` | Pure design system — shadcn/ui primitives and tokens, zero CMS knowledge |
@@ -32,7 +32,7 @@ This is a pnpm + Turborepo monorepo. Workspaces are globbed from `apps/*`, `pack
 | `packages/create-kon10-app` | `create-kon10-app` | Project scaffolder |
 | `apps/playground` | `@kon10/playground` | Dev/test harness app — the app the `verify` and `run` skills drive |
 
-**Dependency direction is always inward toward `@kon10/core`, never across modules.** See "Separation of Concerns" below — it is the load-bearing rule.
+**Dependency direction is always inward toward `kon10`, never across modules.** See "Separation of Concerns" below — it is the load-bearing rule.
 
 Product-facing documentation lives in `docs/` (concepts, deployment, Studio extensions, recipes); `SPEC.md` is the broad project spec; `rfcs/` and `.changeset/*.md` hold design plans and pending release notes. `CONTRIBUTING.md` covers the human contributor workflow.
 
@@ -52,12 +52,12 @@ pnpm test           # run all tests
 pnpm test:coverage  # tests with coverage
 ```
 
-Per-package: `pnpm --filter @kon10/core build`, `pnpm --filter @kon10/content test`, etc.
+Per-package: `pnpm --filter kon10 build`, `pnpm --filter @kon10/content test`, etc.
 
-**Build ordering matters.** `typecheck`, `test`, and `test:coverage` all `dependsOn: ["^build"]` in `turbo.json` — a package is typechecked/tested against its dependencies' *compiled `dist/`*, not their source. After changing `@kon10/core` types, rebuild core before typechecking or testing dependents:
+**Build ordering matters.** `typecheck`, `test`, and `test:coverage` all `dependsOn: ["^build"]` in `turbo.json` — a package is typechecked/tested against its dependencies' *compiled `dist/`*, not their source. After changing `kon10` types, rebuild core before typechecking or testing dependents:
 
 ```bash
-pnpm --filter @kon10/core build && pnpm -r typecheck
+pnpm --filter kon10 build && pnpm -r typecheck
 ```
 
 ### Testing conventions
@@ -89,7 +89,7 @@ Every package has a strict boundary. Nothing crosses it. This is not a soft guid
 
 | Package | What it owns | What it must never contain |
 |---|---|---|
-| `@kon10/core` | Kernel primitives: registry, hook engine, access evaluator, module + plugin lifecycle, field type registry contract, logger + tracer contracts | Module-specific logic, Studio/UI concerns, field types owned by modules |
+| `kon10` | Kernel primitives: registry, hook engine, access evaluator, module + plugin lifecycle, field type registry contract, logger + tracer contracts | Module-specific logic, Studio/UI concerns, field types owned by modules |
 | `@kon10/content` | `ContentModule`, `Collection`/`Document`/`Taxonomy` factories, taxonomy operations, content-specific field types (`taxonomy`) | Auth logic, user logic, media logic |
 | `@kon10/auth` | Session handling, RBAC, guards, publishable API keys | User entity logic, content entity logic |
 | `@kon10/users` | The `users` collection, user operations | Auth session logic |
@@ -101,7 +101,7 @@ Every package has a strict boundary. Nothing crosses it. This is not a soft guid
 | `@kon10/storage` | `DBAdapter` implementations (Turso/libsql, Postgres) — `migrate()` reconciles additively: `CREATE TABLE IF NOT EXISTS` plus `ALTER TABLE ADD COLUMN` for new fields; renames/retypes/removals are never applied and drift is only warned about (`docs/concepts/migrations.md`) | Application logic |
 | `@kon10/client` / `@kon10/client-react` | Read-only delivery SDK over the public content API; React bindings | Any server/kernel internals — it talks HTTP only |
 
-**The test:** If you find yourself importing `@kon10/content` from `@kon10/core`, or `@kon10/auth` from `@kon10/content`, stop. The dependency direction is always inward toward core, never across modules.
+**The test:** If you find yourself importing `@kon10/content` from `kon10`, or `@kon10/auth` from `@kon10/content`, stop. The dependency direction is always inward toward core, never across modules.
 
 ### 2. Zod Is the Single Source of Truth
 
@@ -122,11 +122,11 @@ const textFieldSchema = z.object({
 type TextField = z.infer<typeof textFieldSchema>
 ```
 
-This applies everywhere: field configs, entity shapes, RPC inputs, API responses. If you are writing a TypeScript interface that mirrors something that could be validated, define the Zod schema first. `@kon10/core` re-exports `z` so consumers use the same Zod version.
+This applies everywhere: field configs, entity shapes, RPC inputs, API responses. If you are writing a TypeScript interface that mirrors something that could be validated, define the Zod schema first. `kon10` re-exports `z` so consumers use the same Zod version.
 
 ---
 
-## The Kernel (`@kon10/core`)
+## The Kernel (`kon10`)
 
 The kernel is a pure, domain-agnostic orchestration layer. It:
 - Manages the module + plugin lifecycle (topological resolution, `onInit`, `onReady`) via `bootstrapKon10`
@@ -212,7 +212,7 @@ For TypeScript purposes (compile-time inference), core exports a base `Field` ty
 
 ```ts
 // @kon10/content
-declare module '@kon10/core' {
+declare module 'kon10' {
   interface FieldTypeMap {
     taxonomy: z.infer<typeof taxonomyFieldConfigSchema>
   }
@@ -293,7 +293,7 @@ Do not add new field types outside the registry (`registerFieldType`) — there 
 - Commits are scoped: `feat(content):`, `fix(core):`, `refactor(studio-sdk):`, etc.
 - Do not mix cross-package concerns in one commit unless they are a single atomic change (e.g., an interface rename that must update all consumers simultaneously).
 - After any refactor to core, run `pnpm -r typecheck` before committing.
-- After any change to `@kon10/core` types, rebuild core (`pnpm --filter @kon10/core build`) before typechecking dependent packages.
+- After any change to `kon10` types, rebuild core (`pnpm --filter kon10 build`) before typechecking dependent packages.
 - Add a changeset (`pnpm changeset`) for user-facing package changes.
 
 ## Naming Note: RBAC vs. Studio Branding

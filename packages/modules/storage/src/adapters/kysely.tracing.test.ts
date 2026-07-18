@@ -19,7 +19,7 @@ import {
   type Span,
   type SpanStatus,
   type Tracer,
-} from '@kon10/core'
+} from 'kon10'
 import { tursoAdapter } from './turso.js'
 
 const items: Entity = {

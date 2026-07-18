@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { z } from 'zod'
-import { fieldRegistry, type FieldTypeEntry, type Kon10Instance, type StorageAdapter } from '@kon10/core'
+import { fieldRegistry, type FieldTypeEntry, type Kon10Instance, type StorageAdapter } from 'kon10'
 import { MediaModule } from './module.js'
 import { MEDIA_SLUG } from './entities.js'
 
