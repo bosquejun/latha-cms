@@ -44,6 +44,12 @@ export {
 } from './fields/FieldHeading.js'
 export { EmptyState, type EmptyStateProps } from './shell/EmptyState.js'
 export { LoadingState, type LoadingStateProps } from './shell/LoadingState.js'
+export {
+  PageHeaderSkeleton,
+  ListSkeleton,
+  FormSkeleton,
+  DashboardSkeleton,
+} from './shell/PageSkeleton.js'
 export { PageLayout, type PageLayoutProps } from './shell/PageLayout.js'
 export { WidgetLayout, type WidgetLayoutProps } from './shell/WidgetLayout.js'
 
