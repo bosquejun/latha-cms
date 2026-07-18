@@ -3,8 +3,8 @@
 Kon10 can collect **account-unlinked, opt-out usage telemetry** — in the spirit
 of Medusa and Next.js — to help improve the framework. It is provided by the
 `@kon10/telemetry` plugin and ships **on by default in new apps** (the scaffold
-includes it), but transmits nothing until a PostHog key is configured, and is
-easy to turn off.
+includes it), sending to Kon10's shared PostHog project unless the operator
+overrides the destination or turns telemetry off.
 
 ## What's collected
 
@@ -30,10 +30,10 @@ Every event also carries `nodeEnv` from `NODE_ENV` and the installed
 and framework-version adoption can be filtered separately. PostHog person
 profiles and GeoIP enrichment are explicitly disabled for these events.
 
-## Turning it on
+## Destination and overrides
 
-The plugin is opt-out but **inert until you point it at a sink** — your own
-PostHog project:
+The scaffold includes the opt-out plugin, which sends to Kon10's shared PostHog
+project by default:
 
 ```ts
 // kon10.config.ts
@@ -45,7 +45,7 @@ export default defineConfig({
 ```
 
 ```bash
-# .env — set your PostHog project key (and host, if self-hosted)
+# .env — optional: send to your own PostHog project instead
 KON10_TELEMETRY_POSTHOG_KEY=phc_xxx
 KON10_TELEMETRY_POSTHOG_HOST=https://us.i.posthog.com   # default
 ```
@@ -63,7 +63,6 @@ sends nothing) when any of these hold:
 - `DO_NOT_TRACK=1` (the cross-tool standard)
 - a CI environment (`CI`), or `NODE_ENV=test`
 - `telemetryPlugin({ enabled: false })`
-- no PostHog key is configured
 
 **Per-user, in the Studio.** Drop the ready-made settings page in and each user
 gets a usage-sharing control:

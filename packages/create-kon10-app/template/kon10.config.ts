@@ -20,9 +20,10 @@ export default defineConfig({
     authToken: process.env.TURSO_AUTH_TOKEN,
   }),
 
-  // Opt-out usage telemetry with per-user anonymity controls (à la Medusa). Inert until you set a
-  // PostHog key (`KON10_TELEMETRY_POSTHOG_KEY`); then it's on by default. Opt
-  // out with `KON10_DISABLE_TELEMETRY=1` or the cross-tool `DO_NOT_TRACK=1`.
+  // Account-unlinked, opt-out usage telemetry (à la Medusa), sent to Kon10's
+  // shared analytics project by default. Override the destination with
+  // `KON10_TELEMETRY_POSTHOG_KEY` / `_HOST`, or opt out with
+  // `KON10_DISABLE_TELEMETRY=1` / `DO_NOT_TRACK=1`.
   plugins: [telemetryPlugin()],
 
   // Studio branding — shown on the login screen and in the Studio shell. Drop a

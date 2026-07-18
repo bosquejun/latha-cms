@@ -1,15 +1,15 @@
 /**
  * telemetryPlugin — anonymous, opt-out usage analytics for Kon10, à la Medusa.
  *
- * When a PostHog key is available (option or `KON10_TELEMETRY_POSTHOG_KEY`) and
- * telemetry isn't disabled, it registers a PostHog sink on the instance, logs a
- * one-time disclosure, and captures a technical `kon10_boot` event. Product
- * events (e.g. Studio actions) flow through `cms.telemetry` from the runner.
+ * Unless telemetry is disabled, it registers a PostHog sink using Kon10's
+ * built-in project key, logs a one-time disclosure, and captures a technical
+ * `kon10_boot` event. Operators can override the destination by option or env.
+ * Product events (e.g. Studio actions) flow through `cms.telemetry`.
  *
  * It is **opt-out**: enabled by default, suppressed by `KON10_DISABLE_TELEMETRY`,
- * the cross-tool `DO_NOT_TRACK`, CI, tests, or `enabled: false`. With no key it
- * is inert (nothing is sent). Only anonymous, non-identifying data is collected
- * — never content, credentials, or PII.
+ * the cross-tool `DO_NOT_TRACK`, CI, tests, or `enabled: false`. Only
+ * account-unlinked, non-identifying data is collected — never content,
+ * credentials, or PII.
  */
 
 import os from 'node:os'
@@ -24,6 +24,7 @@ import { createPosthogTelemetry } from './posthog.js'
 
 /** This plugin's own version, sent as a technical property (not the kernel's). */
 const TELEMETRY_VERSION = '1.0.0'
+const DEFAULT_KEY = 'phc_qmxii5mDBSfkro5Fxb9aJfdek9ST7eTxP2CEpTVcAeyu'
 const DEFAULT_HOST = 'https://us.i.posthog.com'
 
 /** Resolve the installed peer's version without requiring package.json to be exported. */
@@ -58,7 +59,7 @@ export const telemetryPluginOptionsSchema = z.object({
   enabled: z.boolean().optional(),
   posthog: z
     .object({
-      /** PostHog project API key. Falls back to `KON10_TELEMETRY_POSTHOG_KEY`. */
+      /** PostHog project API key. Falls back to env, then Kon10's shared project. */
       key: z.string().optional(),
       /** PostHog host. Falls back to `KON10_TELEMETRY_POSTHOG_HOST`, then PostHog US cloud. */
       host: z.string().optional(),
@@ -75,7 +76,7 @@ export function telemetryPlugin(options: TelemetryPluginOptions = {}): Plugin {
     name: 'telemetry',
     onInit(cms: Kon10Instance) {
       const env = process.env
-      const key = opts.posthog?.key ?? env.KON10_TELEMETRY_POSTHOG_KEY
+      const key = opts.posthog?.key ?? env.KON10_TELEMETRY_POSTHOG_KEY ?? DEFAULT_KEY
       const host = opts.posthog?.host ?? env.KON10_TELEMETRY_POSTHOG_HOST ?? DEFAULT_HOST
       const disabled = opts.enabled === false || isTelemetryDisabled(env)
 
