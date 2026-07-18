@@ -13,6 +13,7 @@
       "@kon10/core",
       "@kon10/media",
       "@kon10/sentry",
+      "@kon10/telemetry",
       "@kon10/seo",
       "@kon10/slug",
       "@kon10/start",
