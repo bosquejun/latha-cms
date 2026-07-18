@@ -22,8 +22,12 @@ function fakeCms() {
 
 test('sentryTracingPluginOptionsSchema accepts a valid config and rejects an out-of-range sample rate', () => {
   assert.deepEqual(
-    sentryTracingPluginOptionsSchema.parse({ dsn: 'https://x@sentry.io/1', tracesSampleRate: 0.5 }),
-    { dsn: 'https://x@sentry.io/1', tracesSampleRate: 0.5 },
+    sentryTracingPluginOptionsSchema.parse({
+      dsn: 'https://x@sentry.io/1',
+      tracesSampleRate: 0.5,
+      enableLogs: true,
+    }),
+    { dsn: 'https://x@sentry.io/1', tracesSampleRate: 0.5, enableLogs: true },
   )
   assert.throws(() => sentryTracingPluginOptionsSchema.parse({ tracesSampleRate: 2 }))
 })

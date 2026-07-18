@@ -2,8 +2,9 @@
 
 Kon10 ships a first-class **Sentry** integration for production debugging:
 distributed **tracing**, **error/exception tracking** on both the server and the
-browser, and **source-map upload** so minified stack traces resolve back to the
-original TypeScript. All of it is opt-in and inert until you configure a DSN.
+browser, **log upload**, **Session Replay**, and **source-map upload** so
+minified stack traces resolve back to the original TypeScript. All of it is
+opt-in and inert until you configure a DSN.
 
 Like every observability concern in Kon10, the vendor lives at the edge. The
 kernel (`@kon10/core`) defines three vendor-neutral contracts — `Tracer`, `Telemetry`,
@@ -18,6 +19,8 @@ imports a Sentry SDK.
 | **Tracing** — a span per CRUD op and per hook | Server | `sentryTracingPlugin()` wires the kernel `Tracer` to Sentry via OpenTelemetry |
 | **Server error tracking** — unexpected 500-class faults reported as Issues, tagged with entity/operation | Server (RPC + delivery API) | The runner (`@kon10/start`) reports through `cms.errorReporter`, which the plugin backs with `Sentry.captureException()` |
 | **Browser error tracking** — Studio admin-UI crashes and client exceptions | Browser | `@kon10/sentry/browser` — `initSentryBrowser()` + `<SentryErrorBoundary>` |
+| **Logs** — structured server logs and browser console output | Server + browser | Set `enableLogs: true`; the SDK batches and uploads them to Sentry Logs |
+| **Session Replay** — DOM, input, console, and network context around browser failures | Browser | Set either Replay sample rate; recording is disabled when both are 0 |
 | **Source maps (app bundle)** | Build | `@kon10/sentry/vite` — `sentrySourceMaps()` |
 | **Source maps (published `@kon10/*` packages)** | Release | `pnpm sourcemaps:upload` (`@sentry/cli`) |
 
@@ -37,6 +40,7 @@ export default defineConfig({
           dsn: process.env.SENTRY_DSN,
           environment: process.env.NODE_ENV,
           tracesSampleRate: 1,
+          enableLogs: true,
         })]
       : []),
   ],
@@ -49,6 +53,9 @@ export default defineConfig({
   `Sentry.captureException()`. `@kon10/start` calls it for genuine faults in the
   **RPC dispatcher** and the **delivery API**, tagged with `surface`, `slug`, and
   the operation. Pass **`captureErrors: false`** to register the tracer only.
+- **`enableLogs: true`** enables Sentry Logs and captures Kon10's built-in
+  console-backed structured logger. Hosts that provide a Pino-compatible logger
+  are covered by Sentry's Pino integration.
 
 **Expected control flow is never reported.** Access denials
 (`AccessDeniedError` → 403) and validation failures (`ZodError` → 400/422) are
@@ -70,6 +77,9 @@ initSentryBrowser({
   dsn: import.meta.env.VITE_SENTRY_DSN,
   environment: import.meta.env.MODE,
   release: import.meta.env.VITE_SENTRY_RELEASE,
+  enableLogs: true,
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1,
 })
 
 function Root() {
@@ -84,6 +94,41 @@ function Root() {
 `initSentryBrowser` is a no-op without a `dsn`; guard on `import.meta.env.PROD`
 too if you don't want dev noise. `<SentryErrorBoundary>` reports render crashes
 and shows a minimal fallback (override with the `fallback` prop).
+
+Replay is opt-in. `replaysSessionSampleRate` controls routine session recording,
+while `replaysOnErrorSampleRate` retains sessions containing an error. A useful
+production starting point is `0.1` and `1`, respectively. Sentry masks text and
+blocks media by default; review its Replay privacy configuration before
+unmasking application content.
+
+## Server profiling
+
+Node profiling uses Sentry's native `@sentry/profiling-node` package rather than
+the base Node SDK. Initialize Sentry in the host, then tell the Kon10 plugin to
+reuse that client:
+
+```ts
+import * as Sentry from '@sentry/node'
+import { nodeProfilingIntegration } from '@sentry/profiling-node'
+import { sentryTracingPlugin } from '@kon10/sentry'
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  integrations: [nodeProfilingIntegration()],
+  tracesSampleRate: 0.1,
+  profileSessionSampleRate: 0.1,
+  profileLifecycle: 'trace',
+})
+
+export default defineConfig({
+  plugins: [sentryTracingPlugin({ autoInit: false })],
+})
+```
+
+Install `@sentry/node` and `@sentry/profiling-node` at matching versions in the
+host application. Profiling is intentionally not bundled into `@kon10/sentry`:
+the profiler is a native, platform-specific dependency, while Replay is already
+part of the browser SDK.
 
 ## Source maps
 

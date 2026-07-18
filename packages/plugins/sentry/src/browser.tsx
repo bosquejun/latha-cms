@@ -34,6 +34,18 @@ export const sentryBrowserOptionsSchema = z.object({
   release: z.string().optional(),
   /** Fraction of traces sent, 0–1. Defaults to 0 (no browser performance tracing). */
   tracesSampleRate: z.number().min(0).max(1).optional(),
+  /** Upload browser console output to Sentry Logs. Defaults to `false`. */
+  enableLogs: z.boolean().optional(),
+  /**
+   * Fraction of browser sessions recorded for Session Replay, 0–1.
+   * Defaults to 0 (no routine session recording).
+   */
+  replaysSessionSampleRate: z.number().min(0).max(1).optional(),
+  /**
+   * Fraction of sessions recorded when an error occurs, 0–1.
+   * Defaults to 0; a production-friendly starting point is 1.
+   */
+  replaysOnErrorSampleRate: z.number().min(0).max(1).optional(),
   /** Enable `browserTracingIntegration()` for page-load/navigation spans. Defaults to `false`. */
   browserTracing: z.boolean().optional(),
 })
@@ -49,12 +61,21 @@ export type SentryBrowserOptions = z.infer<typeof sentryBrowserOptionsSchema>
 export function initSentryBrowser(options: SentryBrowserOptions = {}): void {
   const opts = sentryBrowserOptionsSchema.parse(options)
   if (!opts.dsn) return
+  const replayEnabled =
+    (opts.replaysSessionSampleRate ?? 0) > 0 || (opts.replaysOnErrorSampleRate ?? 0) > 0
   Sentry.init({
     dsn: opts.dsn,
     environment: opts.environment,
     release: opts.release,
     tracesSampleRate: opts.tracesSampleRate ?? 0,
-    integrations: opts.browserTracing ? [Sentry.browserTracingIntegration()] : [],
+    enableLogs: opts.enableLogs ?? false,
+    replaysSessionSampleRate: opts.replaysSessionSampleRate ?? 0,
+    replaysOnErrorSampleRate: opts.replaysOnErrorSampleRate ?? 0,
+    integrations: [
+      ...(opts.browserTracing ? [Sentry.browserTracingIntegration()] : []),
+      ...(opts.enableLogs ? [Sentry.consoleLoggingIntegration()] : []),
+      ...(replayEnabled ? [Sentry.replayIntegration()] : []),
+    ],
   })
   registerClientErrorReporter({
     captureException(error, context) {

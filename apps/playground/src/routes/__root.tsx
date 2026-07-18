@@ -23,6 +23,10 @@ initSentryBrowser({
   environment: import.meta.env.MODE,
   // Injected by vite.config.ts (git SHA); '' when not a git checkout.
   release: import.meta.env.VITE_SENTRY_RELEASE || undefined,
+  enableLogs: true,
+  // Keep routine recording low while retaining every session containing an error.
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1,
 })
 
 // Content-module entity kinds → animated sidebar icons. Lives here (not in
