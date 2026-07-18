@@ -45,6 +45,7 @@ import {
 } from '@kon10/studio-sdk'
 import { Button, Card, CardHeader, CardTitle, CardDescription, ConfirmDialog, Pagination, Skeleton, toast } from '@kon10/ui'
 import {
+  CircleAlert,
   LayoutDashboard,
   Plus,
   Settings,
@@ -366,14 +367,45 @@ function Centered({ children }: { children: React.ReactNode }) {
   )
 }
 
+function StudioLoadError({
+  message,
+  onRetry,
+}: {
+  message: string
+  onRetry: () => void
+}) {
+  return (
+    <Centered>
+      <div className="w-full max-w-md px-page" role="alert">
+        <EmptyState
+          icon={CircleAlert}
+          title="Studio couldn’t load"
+          description={message}
+          action={<Button onClick={onRetry}>Try again</Button>}
+        />
+      </div>
+    </Centered>
+  )
+}
+
 export function Kon10Studio() {
   const { client, basePath, loginPath, extensions, branding } = useKon10()
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const { theme, setTheme } = useTheme()
 
-  const session = useAsync(() => client.currentUser(), [])
-  const nav = useAsync(() => client.nav(), [])
+  const session = useAsync(() => client.currentUser(), [], {
+    reportError: true,
+    errorContext: {
+      tags: { surface: 'studio', operation: 'current-user' },
+    },
+  })
+  const nav = useAsync(() => client.nav(), [], {
+    reportError: true,
+    errorContext: {
+      tags: { surface: 'studio', operation: 'navigation' },
+    },
+  })
 
   useEffect(() => {
     if (!session.loading && session.data === null) {
@@ -381,8 +413,28 @@ export function Kon10Studio() {
     }
   }, [session.loading, session.data, loginPath, navigate])
 
-  if (session.loading || nav.loading) return <Centered><LoadingState /></Centered>
+  if (session.loading) return <Centered><LoadingState /></Centered>
+  if (session.error) {
+    return (
+      <StudioLoadError
+        message={session.error}
+        onRetry={() => {
+          session.reload()
+          nav.reload()
+        }}
+      />
+    )
+  }
   if (!session.data) return <Centered>Redirecting…</Centered>
+  if (nav.loading) return <Centered><LoadingState /></Centered>
+  if (nav.error) {
+    return (
+      <StudioLoadError
+        message={nav.error}
+        onRetry={nav.reload}
+      />
+    )
+  }
 
   const navSections = nav.data ?? []
   const route = parseRoute(pathname, basePath, extensions, navSections)

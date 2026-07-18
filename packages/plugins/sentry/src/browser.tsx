@@ -22,6 +22,7 @@
  */
 
 import * as Sentry from '@sentry/react'
+import { registerClientErrorReporter } from '@kon10/core'
 import { z } from 'zod'
 import type { ReactElement, ReactNode } from 'react'
 
@@ -54,6 +55,15 @@ export function initSentryBrowser(options: SentryBrowserOptions = {}): void {
     release: opts.release,
     tracesSampleRate: opts.tracesSampleRate ?? 0,
     integrations: opts.browserTracing ? [Sentry.browserTracingIntegration()] : [],
+  })
+  registerClientErrorReporter({
+    captureException(error, context) {
+      Sentry.captureException(error, {
+        level: context?.severity ?? 'error',
+        tags: context?.tags,
+        extra: context?.extra,
+      })
+    },
   })
 }
 

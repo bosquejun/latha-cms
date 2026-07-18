@@ -125,11 +125,24 @@ async function syncTable<T extends { key: string }>(
   for (const entry of desired) {
     const found = byKey.get(entry.key)
     const data = entry as Record<string, unknown>
-    result.push(
-      found
-        ? await kon10.db.update(slug, found.id, data)
-        : await kon10.db.create(slug, data),
-    )
+    if (found) {
+      result.push(await kon10.db.update(slug, found.id, data))
+      continue
+    }
+
+    try {
+      result.push(await kon10.db.create(slug, data))
+    } catch (error) {
+      // Multiple serverless isolates can bootstrap against the same database
+      // concurrently. If another isolate inserted this unique key after our
+      // initial read, treat its row as the upsert target. Re-querying instead
+      // of matching adapter-specific error codes keeps this portable.
+      const raced = (
+        await kon10.db.find(slug, { where: { key: entry.key }, limit: 1 })
+      )[0]
+      if (!raced) throw error
+      result.push(await kon10.db.update(slug, raced.id, data))
+    }
   }
   return result
 }

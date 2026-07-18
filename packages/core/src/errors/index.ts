@@ -42,3 +42,21 @@ export interface ErrorReporter {
 export const noopErrorReporter: ErrorReporter = {
   captureException() {},
 }
+
+let clientErrorReporter: ErrorReporter = noopErrorReporter
+
+/**
+ * Register the browser-side exception sink used by framework-neutral client
+ * code. Browser monitoring plugins call this during their initialization.
+ */
+export function registerClientErrorReporter(reporter: ErrorReporter): void {
+  clientErrorReporter = reporter
+}
+
+/** Report a handled client exception without coupling UI packages to a vendor. */
+export function reportClientError(
+  error: unknown,
+  context?: ErrorReportContext,
+): void {
+  clientErrorReporter.captureException(error, context)
+}

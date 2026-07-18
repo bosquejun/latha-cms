@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { reportClientError, type ErrorReportContext } from '@kon10/core'
 
 export interface AsyncState<T> {
   data: T | undefined
@@ -7,8 +8,18 @@ export interface AsyncState<T> {
   reload: () => void
 }
 
+export interface AsyncOptions {
+  /** Report a rejected request through the registered browser error reporter. */
+  reportError?: boolean
+  errorContext?: ErrorReportContext
+}
+
 /** Minimal data-fetching hook: runs `fn` on mount / when `deps` change. */
-export function useAsync<T>(fn: () => Promise<T>, deps: unknown[]): AsyncState<T> {
+export function useAsync<T>(
+  fn: () => Promise<T>,
+  deps: unknown[],
+  options: AsyncOptions = {},
+): AsyncState<T> {
   const [state, setState] = useState<{
     data?: T
     loading: boolean
@@ -21,14 +32,14 @@ export function useAsync<T>(fn: () => Promise<T>, deps: unknown[]): AsyncState<T
     setState({ loading: true })
     fn()
       .then((data) => active && setState({ data, loading: false }))
-      .catch(
-        (e) =>
-          active &&
-          setState({
-            loading: false,
-            error: e instanceof Error ? e.message : String(e),
-          }),
-      )
+      .catch((e) => {
+        if (!active) return
+        if (options.reportError) reportClientError(e, options.errorContext)
+        setState({
+          loading: false,
+          error: e instanceof Error ? e.message : String(e),
+        })
+      })
     return () => {
       active = false
     }

@@ -126,49 +126,63 @@ class Kon10 implements Kon10Instance {
 
   async boot(): Promise<this> {
     const started = Date.now()
+    let stage = 'registry'
 
-    this.registry.registerAll(this.config.modules)
-    this.modules = this.registry.resolve()
+    try {
+      this.registry.registerAll(this.config.modules)
+      this.modules = this.registry.resolve()
 
-    this.entities = this.registry.collectEntities()
-    for (const entity of this.entities) this.entityIndex.set(entity.slug, entity)
+      this.entities = this.registry.collectEntities()
+      for (const entity of this.entities) this.entityIndex.set(entity.slug, entity)
 
-    this.db.logger ??= this.logger.child({ component: 'db' })
-    await this.db.connect?.()
+      stage = 'module-init'
+      for (const module of this.modules) {
+        this.logger.debug({ module: module.name }, 'module onInit')
+        await module.onInit?.(this)
+      }
 
-    for (const module of this.modules) {
-      this.logger.debug({ module: module.name }, 'module onInit')
-      await module.onInit?.(this)
+      stage = 'plugin-init'
+      for (const plugin of this.config.plugins) {
+        this.logger.debug({ plugin: plugin.name }, 'plugin onInit')
+        await plugin.onInit?.(this)
+      }
+
+      // Initialize observability before connecting so DB connection failures
+      // are reported by plugins such as @kon10/sentry.
+      this.db.logger ??= this.logger.child({ component: 'db' })
+      this.db.tracer ??= this.tracer
+
+      stage = 'db-connect'
+      await this.db.connect?.()
+
+      stage = 'db-migrate'
+      this.logger.debug({ entities: this.entities.length }, 'migrate start')
+      await this.db.migrate(this.entities)
+
+      stage = 'module-ready'
+      for (const module of this.modules) {
+        this.logger.debug({ module: module.name }, 'module onReady')
+        await module.onReady?.(this)
+      }
+
+      this.ready = true
+      this.logger.info(
+        {
+          modules: this.modules.length,
+          entities: this.entities.length,
+          durationMs: Date.now() - started,
+        },
+        'kon10 booted',
+      )
+      return this
+    } catch (error) {
+      this.errorReporter.captureException(error, {
+        severity: 'fatal',
+        tags: { surface: 'bootstrap', stage },
+        extra: { durationMs: Date.now() - started },
+      })
+      throw error
     }
-
-    for (const plugin of this.config.plugins) {
-      this.logger.debug({ plugin: plugin.name }, 'plugin onInit')
-      await plugin.onInit?.(this)
-    }
-
-    // Hand the adapter the tracer now that plugins have had their `onInit` to
-    // register one (e.g. `@kon10/sentry`); before this point `this.tracer` is
-    // still the noop default. `??=` respects an adapter that wired its own.
-    this.db.tracer ??= this.tracer
-
-    this.logger.debug({ entities: this.entities.length }, 'migrate start')
-    await this.db.migrate(this.entities)
-
-    for (const module of this.modules) {
-      this.logger.debug({ module: module.name }, 'module onReady')
-      await module.onReady?.(this)
-    }
-
-    this.ready = true
-    this.logger.info(
-      {
-        modules: this.modules.length,
-        entities: this.entities.length,
-        durationMs: Date.now() - started,
-      },
-      'kon10 booted',
-    )
-    return this
   }
 }
 
