@@ -5,7 +5,7 @@
  * this file by @kon10/start. Add fields, collections, and modules here.
  */
 
-import { defineConfig } from 'kon10'
+import { defineConfig } from '@kon10/core'
 import { AuthModule, getRoleByName, hashPassword } from '@kon10/auth'
 import { CacheModule, inMemoryCache } from '@kon10/cache'
 import { Collection, ContentModule, Document, date, richtext, text } from '@kon10/content'

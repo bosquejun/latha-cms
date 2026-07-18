@@ -7,12 +7,12 @@
  * function and ship plain JSON to the client.
  */
 
-import type { Entity, Field } from 'kon10'
+import type { Entity, Field } from '@kon10/core'
 
 /**
  * Studio-sdk's own vocabulary for entity flavors. Core has no concept of these
  * — it only knows `cardinality`/`hierarchical`. Modules tag their entities
- * with the opaque `entity.kind` string (see `Entity.kind` in `kon10`);
+ * with the opaque `entity.kind` string (see `Entity.kind` in `@kon10/core`);
  * `kindOf` below reads that tag, falling back to a cardinality-derived guess
  * for entities that don't set it.
  */

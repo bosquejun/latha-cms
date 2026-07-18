@@ -22,7 +22,7 @@ import {
   type Doc,
   type Query,
   type ResolvedConfig,
-} from 'kon10'
+} from '@kon10/core'
 import {
   Collection,
   ContentModule,

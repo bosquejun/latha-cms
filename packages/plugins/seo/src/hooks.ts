@@ -10,7 +10,7 @@
  * only to a title we derived, never wrapping a hand-written one twice.
  */
 
-import type { HookFn } from 'kon10'
+import type { HookFn } from '@kon10/core'
 import type { SeoData } from './schema.js'
 import { applyTitleTemplate, resolveTemplate } from './template.js'
 

@@ -13,8 +13,8 @@
  */
 
 import os from 'node:os'
-import { z } from 'kon10'
-import type { Kon10Instance, Plugin } from 'kon10'
+import { z } from '@kon10/core'
+import type { Kon10Instance, Plugin } from '@kon10/core'
 import { isTelemetryDisabled } from './env.js'
 import { loadTelemetryStore, markNotified } from './instance-id.js'
 import { createPosthogTelemetry } from './posthog.js'

@@ -12,7 +12,7 @@
  */
 
 import { z } from 'zod'
-import type { JsonValue } from 'kon10'
+import type { JsonValue } from '@kon10/core'
 
 export const Kon10RpcInputSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('nav') }),

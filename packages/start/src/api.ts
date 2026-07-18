@@ -55,7 +55,7 @@ import {
   type Query,
   type QuerySort,
   type ResolvedConfig,
-} from 'kon10'
+} from '@kon10/core'
 import { verifyApiKeyToken, API_KEY_TOKEN_PREFIX, type ApiKeyPrincipal } from '@kon10/auth'
 import { DEFAULT_API_PATH } from '@kon10/studio-sdk'
 import { getRuntime } from './runtime.js'

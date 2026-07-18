@@ -3,7 +3,7 @@
  *
  * `buildZodSchema(fields)` already rebuilds the document schema in the
  * browser from the literal field configs (core's built-in types register on
- * `kon10` import; module-owned types fall back to `z.unknown()` — real
+ * `@kon10/core` import; module-owned types fall back to `z.unknown()` — real
  * validation always runs on the server).
  *
  * Fields defined with the builders' `schema` escape hatch carry an extra
@@ -15,7 +15,7 @@
  * field schema; the server remains the source of truth.
  */
 
-import { buildZodSchema, z, type Field } from 'kon10'
+import { buildZodSchema, z, type Field } from '@kon10/core'
 
 /** The wire shape of a field descriptor that may carry a JSON Schema mirror. */
 type WireField = Field & { jsonSchema?: Record<string, unknown> }

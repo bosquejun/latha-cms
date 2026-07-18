@@ -12,8 +12,8 @@
  * stateless service helpers can reach it with only a `Kon10Instance`.
  */
 
-import { operations } from 'kon10'
-import type { Kon10Instance } from 'kon10'
+import { operations } from '@kon10/core'
+import type { Kon10Instance } from '@kon10/core'
 import { cached } from '@kon10/cache'
 import { AUTH_CACHE_TTL_SECONDS, userIdKey } from './cache.js'
 

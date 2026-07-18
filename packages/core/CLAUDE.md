@@ -1,4 +1,4 @@
-# kon10 — The Kernel
+# @kon10/core — The Kernel
 
 Pure, domain-agnostic orchestration layer. Everything else in the monorepo depends inward on this package; it depends on nothing but `zod`.
 
@@ -30,8 +30,8 @@ The test: if you're importing `@kon10/content` (or any module) from here, stop.
 - **Entities are structural.** The kernel branches only on `cardinality` (`'many'` | `'single'`) and `hierarchical` — never on what a module *calls* an entity. `kind?: string` is an opaque passthrough the kernel never reads.
 - **No hardcoded field union.** `Field` is built from the registry; there is no `types/field.ts` switch. Add field types via `registerFieldType`, never by editing core.
 - **Belongs-in-core test:** would a minimal CMS with only users, no content, no auth, no Studio, need this? If no, it belongs in the relevant module.
-- After editing core types, **rebuild before typechecking dependents**: `pnpm --filter kon10 build && pnpm -r typecheck`. Dependents typecheck against `dist/`, not source.
+- After editing core types, **rebuild before typechecking dependents**: `pnpm --filter @kon10/core build && pnpm -r typecheck`. Dependents typecheck against `dist/`, not source.
 
 ## Tests
 
-Colocated `*.test.ts`, run via `node:test` against compiled `dist/`. `pnpm --filter kon10 test`.
+Colocated `*.test.ts`, run via `node:test` against compiled `dist/`. `pnpm --filter @kon10/core test`.

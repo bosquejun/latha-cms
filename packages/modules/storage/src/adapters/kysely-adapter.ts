@@ -37,7 +37,7 @@ import {
   type Query,
   type Span,
   type Tracer,
-} from 'kon10'
+} from '@kon10/core'
 import {
   alterTableSQL,
   buildTablePlan,

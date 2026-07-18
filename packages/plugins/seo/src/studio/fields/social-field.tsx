@@ -14,7 +14,7 @@
 import { Input, Separator, Textarea } from '@kon10/ui'
 import { type FieldControlProps, getFieldRenderer, useFieldValue } from '@kon10/studio-sdk'
 import { useKon10, useAsync, type JsonDoc } from '@kon10/start'
-import type { Field, FieldMeta } from 'kon10'
+import type { Field, FieldMeta } from '@kon10/core'
 import { OG_TYPES, TWITTER_CARDS, type SeoData, type SocialData } from '../../schema.js'
 import { LabeledField } from '../ui.js'
 

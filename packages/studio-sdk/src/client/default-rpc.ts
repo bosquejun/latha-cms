@@ -17,7 +17,7 @@ export const DEFAULT_RPC_PATH = '/__kon10/rpc'
  * Where `@kon10/media`'s upload endpoint is mounted. Binary payloads can't go
  * through the JSON-only RPC route, so uploads get their own dedicated
  * multipart endpoint — declared by the media module itself as a route (see
- * `ModuleRoutes` in `kon10`) at `<module.name>/upload`, and served by
+ * `ModuleRoutes` in `@kon10/core`) at `<module.name>/upload`, and served by
  * the runner's generic module-route dispatcher under
  * `DEFAULT_MODULE_ROUTES_PATH`.
  */
@@ -25,7 +25,7 @@ export const DEFAULT_UPLOAD_PATH = '/__kon10/modules/media/upload'
 
 /**
  * Where `@kon10/auth`'s login/logout/current-user endpoints are mounted.
- * These are ordinary module routes (see `ModuleRoutes` in `kon10`),
+ * These are ordinary module routes (see `ModuleRoutes` in `@kon10/core`),
  * declared by the auth module itself at `<module.name>/login` etc. and
  * served by the runner's generic module-route dispatcher — not special-cased
  * RPC actions, since they must run without an existing Studio session.

@@ -5,7 +5,7 @@ Authorization in Kon10 is **role-based access control (RBAC)**, owned by
 granted is derived from your config, while *roles* and *who has them* are data
 you manage in the Studio UI.
 
-> The kernel (`kon10`) knows nothing about users, roles, or permissions.
+> The kernel (`@kon10/core`) knows nothing about users, roles, or permissions.
 > It exposes a generic **guard seam** and an opaque **principal**; `@kon10/auth`
 > plugs RBAC into that seam. See [Frameworks](./frameworks.md) for the request
 > flow.

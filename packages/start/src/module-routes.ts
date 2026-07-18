@@ -8,7 +8,7 @@
  * package), and calls the handler. Everything else — what the route does,
  * which entity it touches — is the module's business, not this runner's.
  */
-import { consoleLogger, type ModuleRoute, type ResolvedConfig } from 'kon10'
+import { consoleLogger, type ModuleRoute, type ResolvedConfig } from '@kon10/core'
 import { hasPermission, STUDIO_ACCESS } from '@kon10/auth'
 import { getRuntime } from './runtime.js'
 import { resolvePrincipal } from './server.js'

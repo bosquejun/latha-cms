@@ -1,6 +1,6 @@
 # @kon10/sentry
 
-OpenTelemetry tracing for Kon10, backed by Sentry. Registers a `Tracer` (see `kon10`'s tracing contract) so every CRUD operation in `operations.ts` and every hook invocation gets a span, reported through Sentry's OpenTelemetry integration.
+OpenTelemetry tracing for Kon10, backed by Sentry. Registers a `Tracer` (see `@kon10/core`'s tracing contract) so every CRUD operation in `operations.ts` and every hook invocation gets a span, reported through Sentry's OpenTelemetry integration.
 
 ## Install
 
@@ -10,7 +10,7 @@ pnpm add @kon10/sentry
 
 ## When to use this package
 
-Use `@kon10/sentry` when you want Kon10's built-in tracing (CRUD operations, hooks) to show up in Sentry's Performance/Tracing view. Kon10's tracer contract is OpenTelemetry-shaped, not Sentry-specific — this plugin is one possible backend; swapping it for a different OTel exporter later doesn't require touching your entities, hooks, or `kon10` itself.
+Use `@kon10/sentry` when you want Kon10's built-in tracing (CRUD operations, hooks) to show up in Sentry's Performance/Tracing view. Kon10's tracer contract is OpenTelemetry-shaped, not Sentry-specific — this plugin is one possible backend; swapping it for a different OTel exporter later doesn't require touching your entities, hooks, or `@kon10/core` itself.
 
 ## Public API
 
@@ -20,7 +20,7 @@ Use `@kon10/sentry` when you want Kon10's built-in tracing (CRUD operations, hoo
 ## Example
 
 ```ts
-import { defineConfig } from 'kon10'
+import { defineConfig } from '@kon10/core'
 import { sentryTracingPlugin } from '@kon10/sentry'
 
 export default defineConfig({

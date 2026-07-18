@@ -1,7 +1,7 @@
 /**
  * Auth-owned principal + adapter types.
  *
- * These used to live in `kon10`, but the kernel is auth-agnostic: it only
+ * These used to live in `@kon10/core`, but the kernel is auth-agnostic: it only
  * knows an opaque `principal`. `@kon10/auth` is the module that gives that
  * principal a concrete shape (`AuthUser`) and casts to it inside its access
  * functions and the RBAC guard.

@@ -29,7 +29,7 @@ for (const file of files) {
   for (const rawLine of match[1].split(/\r?\n/)) {
     const line = rawLine.trim()
     if (!line) continue
-    // Frontmatter lines look like: 'kon10': major
+    // Frontmatter lines look like: '@kon10/core': major
     const bump = line.split(':').pop()?.trim().replace(/^['"]|['"]$/g, '')
     if (bump === 'major') {
       offenders.push(`${file}: ${line}`)
