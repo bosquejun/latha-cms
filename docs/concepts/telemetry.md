@@ -1,10 +1,10 @@
 # Telemetry
 
-Kon10 can collect **account-unlinked, opt-out usage telemetry** — in the spirit
-of Medusa and Next.js — to help improve the framework. It is provided by the
+Kon10 can collect **account-unlinked, opt-out usage telemetry** to help improve
+the framework. It is provided by the
 `@kon10/telemetry` plugin and ships **on by default in new apps** (the scaffold
-includes it), but transmits nothing until a PostHog key is configured, and is
-easy to turn off.
+includes it), sending to Kon10's shared PostHog project unless the operator
+turns telemetry off.
 
 ## What's collected
 
@@ -18,7 +18,7 @@ Only allow-listed usage data — **never content, credentials, or direct PII**:
   name only (`create` / `update` / `remove` / `saveGlobal`). No account or user
   identifier, slug, document id, field value, or managed content is sent.
 
-Events are keyed by the random `kon10.telemetryId` that `create-kon10-app`
+Events are keyed by the random `kon10.projectId` that `create-kon10-app`
 stamps into the project's `package.json`. This keeps the identity available in
 production and gives each generated project its own anonymous identity. Projects
 created before this field existed fall back to an id in
@@ -30,10 +30,10 @@ Every event also carries `nodeEnv` from `NODE_ENV` and the installed
 and framework-version adoption can be filtered separately. PostHog person
 profiles and GeoIP enrichment are explicitly disabled for these events.
 
-## Turning it on
+## Destination
 
-The plugin is opt-out but **inert until you point it at a sink** — your own
-PostHog project:
+The scaffold includes the opt-out plugin, which sends only to Kon10's shared
+PostHog US Cloud project:
 
 ```ts
 // kon10.config.ts
@@ -43,14 +43,6 @@ export default defineConfig({
   plugins: [telemetryPlugin()],   // included by the scaffold
 })
 ```
-
-```bash
-# .env — set your PostHog project key (and host, if self-hosted)
-KON10_TELEMETRY_POSTHOG_KEY=phc_xxx
-KON10_TELEMETRY_POSTHOG_HOST=https://us.i.posthog.com   # default
-```
-
-Or pass them explicitly: `telemetryPlugin({ posthog: { key, host } })`.
 
 ## Opting out
 
@@ -63,7 +55,6 @@ sends nothing) when any of these hold:
 - `DO_NOT_TRACK=1` (the cross-tool standard)
 - a CI environment (`CI`), or `NODE_ENV=test`
 - `telemetryPlugin({ enabled: false })`
-- no PostHog key is configured
 
 **Per-user, in the Studio.** Drop the ready-made settings page in and each user
 gets a usage-sharing control:

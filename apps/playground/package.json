@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "kon10": {
+    "projectId": "31169ddb-fc96-499b-a1e6-596eb8c5874f"
+  },
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "vite build",

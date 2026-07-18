@@ -1,15 +1,15 @@
 /**
- * telemetryPlugin — anonymous, opt-out usage analytics for Kon10, à la Medusa.
+ * telemetryPlugin — account-unlinked, opt-out usage analytics for Kon10.
  *
- * When a PostHog key is available (option or `KON10_TELEMETRY_POSTHOG_KEY`) and
- * telemetry isn't disabled, it registers a PostHog sink on the instance, logs a
- * one-time disclosure, and captures a technical `kon10_boot` event. Product
- * events (e.g. Studio actions) flow through `cms.telemetry` from the runner.
+ * Unless telemetry is disabled, it registers a PostHog sink using Kon10's
+ * built-in project key, logs a one-time disclosure, and captures a technical
+ * `kon10_boot` event. Product events (e.g. Studio actions) flow through
+ * `cms.telemetry`.
  *
  * It is **opt-out**: enabled by default, suppressed by `KON10_DISABLE_TELEMETRY`,
- * the cross-tool `DO_NOT_TRACK`, CI, tests, or `enabled: false`. With no key it
- * is inert (nothing is sent). Only anonymous, non-identifying data is collected
- * — never content, credentials, or PII.
+ * the cross-tool `DO_NOT_TRACK`, CI, tests, or `enabled: false`. Only
+ * account-unlinked, non-identifying data is collected — never content,
+ * credentials, or PII.
  */
 
 import os from 'node:os'
@@ -19,11 +19,12 @@ import { createRequire } from 'node:module'
 import { z } from '@kon10/core'
 import type { Kon10Instance, Plugin } from '@kon10/core'
 import { isTelemetryDisabled } from './env.js'
-import { loadTelemetryStore, markNotified, readProjectTelemetryId } from './instance-id.js'
+import { loadTelemetryStore, markNotified, readProjectId } from './instance-id.js'
 import { createPosthogTelemetry } from './posthog.js'
 
 /** This plugin's own version, sent as a technical property (not the kernel's). */
 const TELEMETRY_VERSION = '1.0.0'
+const DEFAULT_KEY = 'phc_qmxii5mDBSfkro5Fxb9aJfdek9ST7eTxP2CEpTVcAeyu'
 const DEFAULT_HOST = 'https://us.i.posthog.com'
 
 /** Resolve the installed peer's version without requiring package.json to be exported. */
@@ -56,14 +57,6 @@ function isContainer(env: NodeJS.ProcessEnv): boolean {
 export const telemetryPluginOptionsSchema = z.object({
   /** Force-disable regardless of environment. Default: opt-out via env. */
   enabled: z.boolean().optional(),
-  posthog: z
-    .object({
-      /** PostHog project API key. Falls back to `KON10_TELEMETRY_POSTHOG_KEY`. */
-      key: z.string().optional(),
-      /** PostHog host. Falls back to `KON10_TELEMETRY_POSTHOG_HOST`, then PostHog US cloud. */
-      host: z.string().optional(),
-    })
-    .optional(),
 })
 
 export type TelemetryPluginOptions = z.infer<typeof telemetryPluginOptionsSchema>
@@ -75,14 +68,12 @@ export function telemetryPlugin(options: TelemetryPluginOptions = {}): Plugin {
     name: 'telemetry',
     onInit(cms: Kon10Instance) {
       const env = process.env
-      const key = opts.posthog?.key ?? env.KON10_TELEMETRY_POSTHOG_KEY
-      const host = opts.posthog?.host ?? env.KON10_TELEMETRY_POSTHOG_HOST ?? DEFAULT_HOST
       const disabled = opts.enabled === false || isTelemetryDisabled(env)
 
-      if (disabled || !key) {
+      if (disabled) {
         // Leave `cms.telemetry` as the no-op default — nothing is ever sent.
         cms.logger.debug(
-          { plugin: 'telemetry', reason: disabled ? 'disabled' : 'no-key' },
+          { plugin: 'telemetry', reason: 'disabled' },
           'telemetry inert',
         )
         return
@@ -90,10 +81,10 @@ export function telemetryPlugin(options: TelemetryPluginOptions = {}): Plugin {
 
       const { store, firstRun } = loadTelemetryStore(env)
       const distinctId =
-        env.KON10_TELEMETRY_INSTANCE_ID ?? readProjectTelemetryId() ?? store.anonymousId
+        env.KON10_TELEMETRY_INSTANCE_ID ?? readProjectId() ?? store.anonymousId
       const sink = createPosthogTelemetry({
-        apiKey: key,
-        host,
+        apiKey: DEFAULT_KEY,
+        host: DEFAULT_HOST,
         distinctId,
         commonProperties: {
           nodeEnv: env.NODE_ENV ?? 'unknown',
@@ -105,7 +96,7 @@ export function telemetryPlugin(options: TelemetryPluginOptions = {}): Plugin {
       })
       cms.registerTelemetry(sink)
 
-      // First-run disclosure (once per machine), Medusa-style.
+      // First-run disclosure, once per machine.
       if (firstRun || !store.notified) {
         cms.logger.info(
           { plugin: 'telemetry' },

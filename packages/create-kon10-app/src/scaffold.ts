@@ -45,7 +45,7 @@ export function scaffold({ targetDir, projectName, templateDir }: ScaffoldOption
   const pkgPath = join(targetDir, 'package.json')
   const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as Record<string, unknown>
   pkg['name'] = projectName
-  pkg['kon10'] = { telemetryId: randomUUID() }
+  pkg['kon10'] = { projectId: randomUUID() }
   writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
 
   // 32 random bytes satisfies the production requirement enforced by

@@ -2,7 +2,7 @@
  * Injection zones — the catalogue of named places in the Studio UI where devs
  * can attach custom widgets.
  *
- * The naming follows `<surface>.<position>` (à la Medusa's injection zones), so
+ * The naming follows `<surface>.<position>`, so
  * a zone reads as a sentence: `list.before` renders before a collection list,
  * `form.sidebar.after` renders below the form's meta sidebar. Adding a zone is a
  * two-step change: add the literal here, then drop a `<Slot zone="…" />` at the

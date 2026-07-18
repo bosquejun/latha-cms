@@ -42,11 +42,11 @@ test('scaffold copies the template, renames gitignore, stamps the name, writes .
     const pkg = JSON.parse(readFileSync(join(target, 'package.json'), 'utf8')) as {
       name: string
       dependencies: Record<string, string>
-      kon10: { telemetryId: string }
+      kon10: { projectId: string }
     }
     assert.equal(pkg.name, 'demo-app')
     assert.match(
-      pkg.kon10.telemetryId,
+      pkg.kon10.projectId,
       /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
     )
     assert.ok(pkg.dependencies['@kon10/start'])
@@ -74,13 +74,13 @@ test('scaffold generates a distinct AUTH_SECRET per project', () => {
     const secretOf = (dir: string) =>
       /^AUTH_SECRET=(.+)$/m.exec(readFileSync(join(parent, dir, '.env'), 'utf8'))?.[1]
     assert.notEqual(secretOf('a'), secretOf('b'))
-    const telemetryIdOf = (dir: string) =>
+    const projectIdOf = (dir: string) =>
       (
         JSON.parse(readFileSync(join(parent, dir, 'package.json'), 'utf8')) as {
-          kon10: { telemetryId: string }
+          kon10: { projectId: string }
         }
-      ).kon10.telemetryId
-    assert.notEqual(telemetryIdOf('a'), telemetryIdOf('b'))
+      ).kon10.projectId
+    assert.notEqual(projectIdOf('a'), projectIdOf('b'))
   } finally {
     rmSync(parent, { recursive: true, force: true })
   }
