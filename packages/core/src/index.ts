@@ -76,6 +76,8 @@ export {
   type ErrorReportContext,
   type ErrorReporter,
   noopErrorReporter,
+  registerClientErrorReporter,
+  reportClientError,
 } from './errors/index.js'
 
 // Registry

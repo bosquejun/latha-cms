@@ -108,13 +108,19 @@ export async function seedRoles(
       .map((key) => catalog?.permissionIdByKey.get(key))
       .filter((id): id is string => typeof id === 'string')
 
-    await kon10.db.create(ROLES_SLUG, {
-      name: role.name,
-      label: role.label ?? role.name,
-      description: role.description ?? '',
-      permissions: permissionIds,
-      system: role.system ?? false,
-    })
+    try {
+      await kon10.db.create(ROLES_SLUG, {
+        name: role.name,
+        label: role.label ?? role.name,
+        description: role.description ?? '',
+        permissions: permissionIds,
+        system: role.system ?? false,
+      })
+    } catch (error) {
+      // Another serverless isolate may have observed the same empty table and
+      // won this unique-name insert. Its seed is already the desired outcome.
+      if (!(await getRoleByName(kon10, role.name))) throw error
+    }
   }
 }
 
