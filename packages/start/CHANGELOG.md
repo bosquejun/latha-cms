@@ -1,5 +1,18 @@
 # @kon10/start
 
+## 1.4.0
+
+### Minor Changes
+
+- 0423039: Make framework usage telemetry account-unlinked: Studio events no longer include
+  user identifiers, and the account-linking control is removed. New projects get a
+  stable project telemetry UUID, while events include the Kon10 version and
+  environment. Boot telemetry adds only low-risk container and entity-kind counts.
+
+### Patch Changes
+
+- @kon10/client@1.4.0
+
 ## 1.3.2
 
 ### Patch Changes

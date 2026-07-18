@@ -1,6 +1,6 @@
 {
   "name": "@kon10/content",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": "Kon10 ContentModule — Collection, Document, Taxonomy, and the config-driven content API.",
   "type": "module",
   "license": "MIT",
