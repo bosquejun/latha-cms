@@ -1,5 +1,11 @@
 # @kon10/start
 
+## 1.3.1
+
+### Patch Changes
+
+- @kon10/client@1.3.1
+
 ## 1.3.0
 
 ### Minor Changes

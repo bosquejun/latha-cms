@@ -1,5 +1,14 @@
 # @kon10/storage
 
+## 1.3.1
+
+### Patch Changes
+
+- 7d13f9b: Scope PostgreSQL schema reconciliation to the active schema and make additive
+  column migrations idempotent. This prevents Supabase's `auth.users` table and
+  concurrent serverless boots from causing duplicate-column errors against the
+  application's `users` table.
+
 ## 1.3.0
 
 ## 1.2.0
