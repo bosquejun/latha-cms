@@ -9,5 +9,3 @@ Make framework usage telemetry account-unlinked: Studio events no longer include
 user identifiers, and the account-linking control is removed. New projects get a
 stable project telemetry UUID, while events include the Kon10 version and
 environment. Boot telemetry adds only low-risk container and entity-kind counts.
-The plugin now sends to Kon10's shared PostHog project by default while retaining
-destination overrides and all existing opt-outs.
