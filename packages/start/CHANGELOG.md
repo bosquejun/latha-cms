@@ -1,5 +1,16 @@
 # @kon10/start
 
+## 1.3.2
+
+### Patch Changes
+
+- 6c3a60f: Capture handled Studio loading failures in browser monitoring and report
+  database connection, migration, and module-ready bootstrap failures through the
+  configured backend error reporter.
+- 6c3a60f: Show Studio bootstrap and RPC failures as a retryable error state instead of
+  leaving the interface on its unauthenticated redirect fallback.
+  - @kon10/client@1.3.2
+
 ## 1.3.1
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @kon10/studio-sdk
 
+## 1.3.2
+
+### Patch Changes
+
+- 6c3a60f: Capture handled Studio loading failures in browser monitoring and report
+  database connection, migration, and module-ready bootstrap failures through the
+  configured backend error reporter.
+
 ## 1.3.1
 
 ## 1.3.0

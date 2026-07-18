@@ -1,5 +1,12 @@
 # @kon10/auth
 
+## 1.3.2
+
+### Patch Changes
+
+- 6c3a60f: Make RBAC catalog synchronization and first-run role seeding safe when multiple
+  serverless instances bootstrap concurrently.
+
 ## 1.3.1
 
 ## 1.3.0
