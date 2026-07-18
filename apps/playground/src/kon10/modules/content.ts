@@ -1,24 +1,4 @@
-/**
- * kon10.config.base.ts — everything except the DB and storage adapters.
- *
- * Split out so the two environment-specific entrypoints (`kon10.config.ts`
- * for local dev, `kon10.config.vercel.ts` for Vercel) can each pass their own
- * `DBAdapter`/`StorageAdapter` without duplicating the rest of the app's
- * schema/modules/seed. `vite.config.ts` picks which entrypoint to build
- * against, so only one pair's module graph (and its dependencies) is ever
- * reachable in a given build — not a runtime branch inside one bundle.
- */
-
-import {
-  defineConfig,
-  operations,
-  z,
-  type CacheAdapter,
-  type DBAdapter,
-  type FieldsRecord,
-  type ResolvedConfig,
-  type StorageAdapter,
-} from '@kon10/core'
+import { z } from '@kon10/core'
 import {
   Collection,
   ContentModule,
@@ -38,7 +18,6 @@ import {
   testimonialBlock,
   faqBlock,
   galleryBlock,
-  boolean,
   date,
   group,
   number,
@@ -48,154 +27,15 @@ import {
   taxonomy,
   text,
 } from '@kon10/content'
-import { UsersModule } from '@kon10/users'
-import { countUsers, createUser } from '@kon10/users'
-import {
-  AuthModule,
-  getCatalog,
-  getRoleByName,
-  hashPassword,
-  hasPermission,
-  type AuthUser,
-} from '@kon10/auth'
-import { media, MediaModule } from '@kon10/media'
-import { CacheModule, inMemoryCache } from '@kon10/cache'
-import { sentryTracingPlugin } from '@kon10/sentry'
-import { telemetryPlugin } from '@kon10/telemetry'
-import { slug, slugPlugin } from '@kon10/slug'
-import { seo, socialGraph, seoPlugin } from '@kon10/seo'
+import { hasPermission, type AuthUser } from '@kon10/auth'
+import { media } from '@kon10/media'
+import { slug } from '@kon10/slug'
+import { seo, socialGraph } from '@kon10/seo'
+import { linkFields } from '../fields/link.js'
+import { hexColor } from '../fields/validators.js'
 
-// `text({ schema: ... })` escape hatch — no dedicated `color` field type
-// exists (or is needed) for a `#rrggbb` string; `inputType: 'color'` on the
-// text renderer already gets a native color picker.
-const hexColor = () => z.string().regex(/^#[0-9a-f]{6}$/i, 'Use a 6-digit hex color, e.g. #171717')
-
-// Same escape hatch, for a site-relative route (e.g. `/shop`) that isn't
-// backed by a `pages`/`posts` entity — an app route the CMS doesn't know
-// about, as opposed to `url` (an external, fully-qualified link).
-const internalPath = () => z.string().regex(/^\//, 'Path must start with /, e.g. /shop')
-
-/**
- * The link-target shape shared by every menu link: top-level nav items,
- * their one level of dropdown children, and footer column links. Defined
- * once so the four `linkType` variants (and which field backs each) can't
- * drift between the three places a menu link is declared.
- */
-function linkFields(opts: { withNewTab?: boolean } = {}): FieldsRecord {
-  const fields: FieldsRecord = {
-    label: text({ required: true }),
-    linkType: select({
-      options: z.enum(['page', 'post', 'url', 'path']),
-      defaultValue: 'page',
-      meta: { label: 'Link Type' },
-    }),
-    page: relationship({ to: 'pages', meta: { showIf: { field: 'linkType', equals: 'page' } } }),
-    post: relationship({ to: 'posts', meta: { showIf: { field: 'linkType', equals: 'post' } } }),
-    url: text({
-      schema: z.url(),
-      meta: {
-        label: 'External URL',
-        placeholder: 'https://…',
-        showIf: { field: 'linkType', equals: 'url' },
-      },
-    }),
-    path: text({
-      schema: internalPath(),
-      meta: {
-        label: 'Internal Path',
-        placeholder: '/shop',
-        description: 'A site route not backed by a CMS page.',
-        showIf: { field: 'linkType', equals: 'path' },
-      },
-    }),
-  }
-  if (opts.withNewTab) {
-    fields.openInNewTab = boolean({ meta: { label: 'Open in New Tab' } })
-  }
-  return fields
-}
-
-export function buildConfig(
-  db: DBAdapter,
-  storage: StorageAdapter,
-  cache: CacheAdapter = inMemoryCache(),
-): ResolvedConfig {
-  return defineConfig({
-    db,
-
-    // Studio branding — declared here in config (the single source of truth),
-    // read by @kon10/start and rendered on the login screen and Studio shell.
-    // `logo` would be an image URL/path (e.g. '/logo.svg'); omitted here so the
-    // default Kon10 mark is used.
-    studio: {
-      branding: {
-        appName: 'Kon10',
-        tagline: 'Everything you publish, in one place.',
-        taglineSubtitle:
-          'Model content, manage media, and ship a fast delivery API, all from your Studio.',
-        // Opt into a "Sign up" button on the login screen; point it at your
-        // registration route/page. Omit to hide it (no public sign-up).
-        signUpUrl: '/signup',
-      },
-      // First-login dialog. Telemetry is anonymous and on by default (opt-out),
-      // so this lets the user turn it off; `manageUrl` links to the same setting.
-      // `mode: 'notice'` just discloses;
-      // `mode: 'opt-in'` flips to Allow / No-thanks. Off unless `enabled`.
-      telemetryNotice: {
-        enabled: true,
-        mode: 'opt-out',
-        manageUrl: '/studio/settings/telemetry',
-        policyUrl: 'https://example.com/privacy',
-      },
-    },
-
-    plugins: [
-      // Account-unlinked, opt-out usage telemetry sent to Kon10's shared
-      // PostHog project. Opt out with `KON10_DISABLE_TELEMETRY=1` /
-      // `DO_NOT_TRACK=1`.
-      telemetryPlugin(),
-      // slugPlugin wires generation + uniqueness hooks into every entity below
-      // that carries a slug() field (posts, pages).
-      slugPlugin(),
-      // seoPlugin registers the `seo` field type and its derivation hooks. It
-      // wires every entity carrying a seo() field (posts, landing-page) and
-      // *also* injects one into `pages` via `inject` — so pages get search &
-      // social metadata without a field declared on the entity. `titleTemplate`
-      // wraps any auto-derived title site-wide.
-      seoPlugin({ inject: ['pages'], titleTemplate: '%s · Kon10' }),
-      // Only registered when a DSN is configured — otherwise cms.tracer and
-      // cms.errorReporter stay the built-in no-ops and every operation/hook
-      // span is free. When on, it also registers a Sentry error reporter, so
-      // the RPC + delivery-API boundaries report genuine 500s as Issues.
-      // Browser-side error tracking is wired separately in src/routes/__root.tsx
-      // (@kon10/sentry/browser) and source-map upload in vite.config.ts.
-      ...(process.env.SENTRY_DSN
-        ? [
-            sentryTracingPlugin({
-              dsn: process.env.SENTRY_DSN,
-              environment: process.env.NODE_ENV,
-              tracesSampleRate: 1,
-              enableLogs: true,
-            }),
-          ]
-        : []),
-    ],
-
-    modules: [
-      UsersModule(),
-
-      // AuthModule owns RBAC: it seeds the admin/editor/viewer roles on first run
-      // and syncs the scope/permission catalog from the entities below.
-      AuthModule({ secret: process.env.AUTH_SECRET ?? 'kon10-dev-secret-change-me' }),
-
-      MediaModule({ storage }),
-
-      // Read-through caching for the public delivery API — see
-      // `@kon10/cache`'s `CacheModule`. Entities can opt out or override the
-      // TTL via their own `api.cache`.
-      CacheModule({ cache }),
-
-      ContentModule({
+export function createContentModule() {
+  return ContentModule({
         // Delivery-API reads land at /api/v1/contents/posts, /api/v1/contents/pages,
         // etc. instead of the module's default name-derived prefix (/api/v1/content/...).
         apiPrefix: 'contents',
@@ -511,76 +351,5 @@ export function buildConfig(
             },
           }),
         ],
-      }),
-    ],
-
-    // First-run seed. AuthModule has already seeded the default roles by this
-    // point, so we can assign the admin role by id.
-    //
-    // The admin is only seeded when BOTH ADMIN_EMAIL and ADMIN_PASSWORD are
-    // set — an opt-in fast path for automation (the E2E suite sets them; see
-    // `e2e/server.mjs`). Left unset, no user is seeded and the app sends you to
-    // `/setup` to create the first admin yourself, which is the default human
-    // path and keeps a real password out of the environment.
-    seed: async (kon10) => {
-      const email = process.env.ADMIN_EMAIL
-      const password = process.env.ADMIN_PASSWORD
-      if (email && password && (await countUsers(kon10)) === 0) {
-        const adminRole = await getRoleByName(kon10, 'admin')
-        await createUser(kon10, {
-          email,
-          name: 'Admin',
-          roles: adminRole ? [adminRole.id] : [],
-          passwordHash: await hashPassword(password),
-        })
-        console.log(`[kon10] seeded admin: ${email} / ${password}`)
-      }
-
-      // Seed the `author` role: Studio access plus posts:create/posts:read only —
-      // no blanket posts:update/posts:delete, so the posts `access` predicates
-      // above fall back to the id === doc.author ownership check for holders of
-      // this role. AuthModule's own default-role seeding has already run and
-      // synced the catalog by this point (see runtime.ts: bootstrap completes
-      // before `seed` runs), so permission keys are already resolvable to ids.
-      if (!(await getRoleByName(kon10, 'author'))) {
-        const catalog = getCatalog(kon10)
-        const permissionIds = ['studio:access', 'posts:create', 'posts:read']
-          .map((key) => catalog?.permissionIdByKey.get(key))
-          .filter((id): id is string => typeof id === 'string')
-        await kon10.db.create('roles', {
-          name: 'author',
-          label: 'Author',
-          description: 'Can write and manage their own posts.',
-          permissions: permissionIds,
-          system: false,
-        })
-        console.log('[kon10] seeded role: author')
-      }
-
-      // Seed a few taxonomy terms so the category/tags pickers have options.
-      // A system principal bypasses RBAC guards, matching how users are seeded.
-      const sys = { cms: kon10, principal: { id: '__system__', permissions: ['*'] } }
-
-      if ((await kon10.db.count('categories')) === 0) {
-        const eng = await operations.create(sys, 'categories', {
-          name: 'Engineering',
-          slug: 'engineering',
-        })
-        await operations.create(sys, 'categories', {
-          name: 'Frameworks',
-          slug: 'frameworks',
-          parent: eng.id,
-        })
-        await operations.create(sys, 'categories', { name: 'Design', slug: 'design' })
-        console.log('[kon10] seeded categories')
-      }
-
-      if ((await kon10.db.count('tags')) === 0) {
-        for (const name of ['nextjs', 'cms', 'release']) {
-          await operations.create(sys, 'tags', { name, slug: name })
-        }
-        console.log('[kon10] seeded tags')
-      }
-    },
   })
 }

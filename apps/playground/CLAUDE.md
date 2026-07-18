@@ -6,7 +6,7 @@ See root [`CLAUDE.md`](../../CLAUDE.md) for global rules.
 
 ## What's here
 
-- **Config** — `kon10.config.ts` (+ `kon10.config.base.ts`, `kon10.config.vercel.ts`): a real `kon10.config.ts` wiring the db adapter, modules, and plugins. The canonical example of how an app composes Kon10.
+- **Config** — thin environment entrypoints (`kon10.config.ts`, `kon10.config.vercel.ts`) compose the project configuration in `src/kon10/`. Domain modules live in `src/kon10/modules/`, reusable field builders and schemas in `src/kon10/fields/`, and cross-cutting plugins, Studio settings, and seed data beside the main composition file. This is the canonical example of how an app composes Kon10.
 - **App** — `src/` (`router.tsx`, `routes/`, `styles.css`): the TanStack Start app that mounts the Studio + delivery API via `@kon10/start`.
 - **E2E** — `e2e/`: Playwright specs that drive the real Studio UI (login, CRUD, media upload, extensions). Run with `pnpm --filter @kon10/playground test:e2e`.
 

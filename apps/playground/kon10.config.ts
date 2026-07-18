@@ -7,19 +7,19 @@
  * filesystem in dev. The delivery-API cache uses `inMemoryCache()`: a single
  * dev process is the only reader/writer, so nothing needs to be shared. See
  * `kon10.config.vercel.ts` for the Postgres/S3/Redis entrypoint used on
- * Vercel, and `kon10.config.base.ts` for everything the two share.
+ * Vercel. Shared project configuration lives under `src/kon10`.
  */
 
 import { tursoAdapter } from '@kon10/storage'
 import { localDiskStorage } from '@kon10/media'
 import { inMemoryCache } from '@kon10/cache'
-import { buildConfig } from './kon10.config.base.js'
+import { createKon10Config } from './src/kon10/config.js'
 
-export default buildConfig(
-  tursoAdapter({
+export default createKon10Config({
+  db: tursoAdapter({
     url: process.env.TURSO_DATABASE_URL ?? 'file:local.db',
     authToken: process.env.TURSO_AUTH_TOKEN,
   }),
-  localDiskStorage({ dir: './public/uploads', publicPath: '/uploads' }),
-  inMemoryCache(),
-)
+  storage: localDiskStorage({ dir: './public/uploads', publicPath: '/uploads' }),
+  cache: inMemoryCache(),
+})

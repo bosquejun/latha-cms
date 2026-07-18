@@ -8,6 +8,6 @@
     "composite": false,
     "types": ["vite/client"]
   },
-  "include": ["src", "kon10.config.ts", "kon10.config.base.ts", "kon10.config.vercel.ts", "vite.config.ts"],
+  "include": ["src", "kon10.config.ts", "kon10.config.vercel.ts", "vite.config.ts"],
   "exclude": ["node_modules", "dist", ".output"]
 }

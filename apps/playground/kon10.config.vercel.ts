@@ -28,13 +28,13 @@
 import { postgresAdapter } from '@kon10/storage'
 import { s3Storage } from '@kon10/media'
 import { redisCache } from '@kon10/cache'
-import { buildConfig } from './kon10.config.base.js'
+import { createKon10Config } from './src/kon10/config.js'
 
-export default buildConfig(
-  postgresAdapter({
+export default createKon10Config({
+  db: postgresAdapter({
     url: process.env.DATABASE_URL!,
   }),
-  s3Storage({
+  storage: s3Storage({
     bucket: process.env.S3_BUCKET!,
     region: process.env.S3_REGION ?? 'auto',
     accessKeyId: process.env.S3_ACCESS_KEY_ID!,
@@ -42,5 +42,5 @@ export default buildConfig(
     endpoint: process.env.S3_ENDPOINT,
     publicUrl: process.env.S3_PUBLIC_URL,
   }),
-  redisCache({ url: process.env.REDIS_URL }),
-)
+  cache: redisCache({ url: process.env.REDIS_URL }),
+})
