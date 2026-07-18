@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import type { AnyEntity } from 'kon10'
+import type { AnyEntity } from '@kon10/core'
 import { inferFrom } from './defaults.js'
 
 const entity = (fields: Array<Record<string, unknown>>, studio?: Record<string, unknown>): AnyEntity =>

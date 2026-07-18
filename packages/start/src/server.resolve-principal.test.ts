@@ -21,7 +21,7 @@ import {
   type JsonValue,
   type Kon10Instance,
   type Query,
-} from 'kon10'
+} from '@kon10/core'
 import { AuthModule, createSessionToken, resolveAuthOptions } from '@kon10/auth'
 import { CacheModule } from '@kon10/cache'
 import { resolvePrincipal } from './server.js'

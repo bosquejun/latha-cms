@@ -6,7 +6,7 @@
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { text, select, z } from 'kon10'
+import { text, select, z } from '@kon10/core'
 import { Collection, Document, Taxonomy } from './entities.js'
 
 test('Collection defaults to the drafts workflow', () => {

@@ -1,5 +1,5 @@
 {
-  "name": "kon10",
+  "name": "@kon10/core",
   "version": "1.2.0",
   "description": "Kon10 kernel — types, defineConfig, module registry, hook engine, access evaluator, Zod schema builder.",
   "type": "module",

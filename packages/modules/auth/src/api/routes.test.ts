@@ -16,7 +16,7 @@ import {
   type Doc,
   type Kon10Instance,
   type Query,
-} from 'kon10'
+} from '@kon10/core'
 import { AuthModule } from '../module.js'
 import { hashPassword } from '../crypto.js'
 import { loginRoute } from './login.js'

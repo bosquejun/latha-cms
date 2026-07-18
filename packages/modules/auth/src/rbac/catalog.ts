@@ -12,7 +12,7 @@
  * The id↔key maps are cached per instance for fast enforcement and seeding.
  */
 
-import type { Doc, Kon10Instance } from 'kon10'
+import type { Doc, Kon10Instance } from '@kon10/core'
 import { STUDIO_ACCESS, SUPERADMIN, permissionKey } from './permissions.js'
 import { PERMISSIONS_SLUG, SCOPES_SLUG } from './entities.js'
 

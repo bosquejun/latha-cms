@@ -6,9 +6,9 @@
  * alongside that registration, not in core.
  */
 
-import type { FieldMeta, PhantomMeta, FieldsRecord } from 'kon10'
-import { stampFields } from 'kon10'
-import type { Field } from 'kon10'
+import type { FieldMeta, PhantomMeta, FieldsRecord } from '@kon10/core'
+import { stampFields } from '@kon10/core'
+import type { Field } from '@kon10/core'
 
 /* -------------------------------------------------------------------------- */
 /*  taxonomy                                                                   */

@@ -12,7 +12,7 @@
  * immediately (the session token only carries the user id).
  */
 
-import type { Kon10Instance } from 'kon10'
+import type { Kon10Instance } from '@kon10/core'
 import { cached } from '@kon10/cache'
 import { AUTH_CACHE_TTL_SECONDS, roleIdKey, roleNameKey } from '../cache.js'
 import { getCatalog, type RbacCatalog } from './catalog.js'

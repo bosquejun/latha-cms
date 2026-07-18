@@ -18,7 +18,7 @@ import {
   type JsonValue,
   type Query,
   type ResolvedConfig,
-} from 'kon10'
+} from '@kon10/core'
 import { AuthModule, createApiKey } from '@kon10/auth'
 import { CacheModule, inMemoryCache } from '@kon10/cache'
 import { handleDeliveryRequest } from './api.js'

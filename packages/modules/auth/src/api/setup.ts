@@ -13,7 +13,7 @@
  * Like the login route, the session cookie is set directly on the returned
  * `Response`, so these run under any runner that speaks Fetch.
  */
-import { z, type ModuleRoute, type ModuleRouteContext } from 'kon10'
+import { z, type ModuleRoute, type ModuleRouteContext } from '@kon10/core'
 import type { AuthUser } from '../types.js'
 import { hashPassword } from '../crypto.js'
 import { createSessionToken } from '../session.js'

@@ -9,8 +9,8 @@
 
 import { test, before } from 'node:test'
 import assert from 'node:assert/strict'
-import { AccessDeniedError } from 'kon10'
-import type { ResolvedConfig } from 'kon10'
+import { AccessDeniedError } from '@kon10/core'
+import type { ResolvedConfig } from '@kon10/core'
 import { handleModuleRoute } from '../module-routes.js'
 import { ADMIN_EMAIL, ADMIN_PASSWORD, buildTestConfig, login, memoryAdapter, rpc } from './fixture.js'
 

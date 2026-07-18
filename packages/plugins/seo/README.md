@@ -40,7 +40,7 @@ Both styles work together — pick per entity.
 one per tab:
 
 ```ts
-import { defineConfig, text } from 'kon10'
+import { defineConfig, text } from '@kon10/core'
 import { Collection, ContentModule } from '@kon10/content'
 import { seo, socialGraph, seoPlugin } from '@kon10/seo'
 

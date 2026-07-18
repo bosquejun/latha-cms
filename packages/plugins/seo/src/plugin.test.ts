@@ -6,7 +6,7 @@ import {
   type FieldTypeEntry,
   type HookFn,
   type Kon10Instance,
-} from 'kon10'
+} from '@kon10/core'
 import { seoPlugin } from './plugin.js'
 import { seoFieldConfigSchema, socialFieldConfigSchema } from './field.js'
 

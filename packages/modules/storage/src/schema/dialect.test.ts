@@ -8,7 +8,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { buildTablePlan, createTableSQL } from './generator.js'
 import { toPg, rowToDocPg } from './pg-marshal.js'
-import { registerFieldType, z, type Entity } from 'kon10'
+import { registerFieldType, z, type Entity } from '@kon10/core'
 
 const posts = {
   cardinality: 'many',

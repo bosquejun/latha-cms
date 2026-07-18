@@ -122,7 +122,7 @@ currently live in `@kon10/start/envelope`. The client cannot depend on
 `@kon10/start` (server integration). Move the envelope contract into
 `@kon10/client` as its neutral home, and have `@kon10/start` import it from
 there. This keeps one Zod source of truth for the wire format shared by both
-sides. (Alternative: park the envelope in `kon10`; rejected because the
+sides. (Alternative: park the envelope in `@kon10/core`; rejected because the
 envelope is a delivery-API concern, not a kernel primitive.)
 
 ### 3.2 Typing bridge — schema manifest + `kon10 typegen`

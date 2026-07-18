@@ -13,7 +13,7 @@
     "@kon10/auth": "latest",
     "@kon10/cache": "latest",
     "@kon10/content": "latest",
-    "kon10": "latest",
+    "@kon10/core": "latest",
     "@kon10/start": "latest",
     "@kon10/storage": "latest",
     "@kon10/studio-sdk": "latest",

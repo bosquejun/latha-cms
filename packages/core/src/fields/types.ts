@@ -10,7 +10,7 @@
  *
  * ```ts
  * // @kon10/content (taxonomy field)
- * declare module 'kon10' {
+ * declare module '@kon10/core' {
  *   interface FieldTypeMap {
  *     taxonomy: BaseFieldConfig & z.infer<typeof taxonomyFieldConfigSchema>
  *   }
@@ -45,7 +45,7 @@ import type {
  *
  * ```ts
  * // in @kon10/studio-sdk
- * declare module 'kon10' {
+ * declare module '@kon10/core' {
  *   interface RichTextExtensions {
  *     nodes?: Klass<LexicalNode>[]
  *     plugins?: ReactNode[]

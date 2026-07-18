@@ -37,7 +37,7 @@
 import { useMemo, useState } from 'react'
 import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import type { Field } from 'kon10'
+import type { Field } from '@kon10/core'
 import { Button, Sheet, SheetContent, SheetHeader, SheetTitle, Tabs, cn, toast } from '@kon10/ui'
 import { SlidersHorizontal, Trash2 } from 'lucide-react'
 import { useId } from 'react'

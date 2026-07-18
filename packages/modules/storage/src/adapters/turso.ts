@@ -13,7 +13,7 @@
 
 import { Kysely } from 'kysely'
 import { LibsqlDialect } from '@libsql/kysely-libsql'
-import type { DBAdapter } from 'kon10'
+import type { DBAdapter } from '@kon10/core'
 import { KyselyAdapter } from './kysely-adapter.js'
 
 export interface TursoAdapterOptions {

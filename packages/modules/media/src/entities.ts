@@ -1,4 +1,4 @@
-import { relationship, stampFields, text, number, type Entity, type FieldsRecord } from 'kon10'
+import { relationship, stampFields, text, number, type Entity, type FieldsRecord } from '@kon10/core'
 
 export const MEDIA_SLUG = 'media'
 

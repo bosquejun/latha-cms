@@ -9,7 +9,7 @@
  * group: 'SEO' } })` with `socialGraph({ meta: { group: 'Social Graph' } })`.
  */
 
-import type { FieldMeta, PhantomMeta } from 'kon10'
+import type { FieldMeta, PhantomMeta } from '@kon10/core'
 import type { SeoData, SocialData } from './schema.js'
 
 export interface SeoOpts {

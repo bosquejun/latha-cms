@@ -19,7 +19,7 @@ import {
   text,
   z,
   type Entity,
-} from 'kon10'
+} from '@kon10/core'
 import { invalidate } from '@kon10/cache'
 import { apiKeyHashKey } from '../cache.js'
 import { ROLES_SLUG } from '../rbac/entities.js'
