@@ -137,9 +137,9 @@ export function buildConfig(
         // registration route/page. Omit to hide it (no public sign-up).
         signUpUrl: '/signup',
       },
-      // First-login dialog. Telemetry is on by default (opt-out), so this lets
-      // the user Turn off or Keep anonymous; `manageUrl` links to the full
-      // toggles (incl. sharing email). `mode: 'notice'` just discloses;
+      // First-login dialog. Telemetry is anonymous and on by default (opt-out),
+      // so this lets the user turn it off; `manageUrl` links to the same setting.
+      // `mode: 'notice'` just discloses;
       // `mode: 'opt-in'` flips to Allow / No-thanks. Off unless `enabled`.
       telemetryNotice: {
         enabled: true,

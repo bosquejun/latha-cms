@@ -6,7 +6,7 @@
  * `.env` with a fresh `AUTH_SECRET` (secrets are generated, never templated).
  */
 
-import { randomBytes } from 'node:crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
 import { cpSync, existsSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -45,6 +45,7 @@ export function scaffold({ targetDir, projectName, templateDir }: ScaffoldOption
   const pkgPath = join(targetDir, 'package.json')
   const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as Record<string, unknown>
   pkg['name'] = projectName
+  pkg['kon10'] = { telemetryId: randomUUID() }
   writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
 
   // 32 random bytes satisfies the production requirement enforced by

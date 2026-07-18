@@ -347,8 +347,8 @@ studio: {
 
 - **`'notice'` (default)** — a disclosure with a single "Got it". Informational
   only: acknowledging it does *not* toggle anything.
-- **`'opt-out'`** — collection is on by default and the dialog includes controls
-  to turn it off or remove the link to the user's account.
+- **`'opt-out'`** — anonymous installation telemetry is on by default and the
+  dialog includes a control to turn it off.
 - **`'opt-in'`** — asks consent (Allow / No thanks). Studio product events are
   not captured until the user explicitly chooses Allow.
 
@@ -372,9 +372,9 @@ function Analytics() {
 }
 ```
 
-`grant()` / `deny()` let users change their mind, while `setAnonymous()` controls
-whether account-linked properties are included. The ready-made
-`TelemetrySettings` page exposes both choices. Outside the Studio,
+`grant()` / `deny()` let users change their mind. Kon10 framework telemetry
+never includes account-linked properties. The ready-made `TelemetrySettings`
+page exposes the usage-sharing choice. Outside the Studio,
 `getTelemetryConsent(userId)` reads the same browser-local value. Use a
 server-side record if you need a cross-device or auditable consent trail.
 

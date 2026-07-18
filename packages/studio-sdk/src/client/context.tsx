@@ -84,7 +84,8 @@ export interface Kon10TelemetryNotice {
   /**
    * First-login dialog behavior:
    * - `'notice'` (default) — disclosure with an acknowledge button.
-   * - `'opt-out'` — on by default; Turn off (deny) / Keep anonymous (allow).
+   * - `'opt-out'` — anonymous installation telemetry is on by default, with an
+   *   option to turn it off.
    * - `'opt-in'` — off until Allow / No thanks.
    */
   mode?: 'notice' | 'opt-out' | 'opt-in'

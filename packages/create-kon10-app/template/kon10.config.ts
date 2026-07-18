@@ -41,9 +41,9 @@ export default defineConfig({
       mode: 'opt-out',
       manageUrl: '/studio/settings/telemetry',
       message:
-        'We collect usage data to help make the Studio better. It is linked to ' +
-        'your account by default, and we never see the content you manage. You ' +
-        'can make it anonymous or turn it off below.',
+        'We collect anonymous installation metadata and allow-listed Studio ' +
+        'action names to improve Kon10. We never send your account identity or ' +
+        'managed content. You can turn off Studio action sharing below.',
       // policyUrl: 'https://your-site.com/privacy',
     },
   },

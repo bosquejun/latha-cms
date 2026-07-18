@@ -21,6 +21,19 @@ export interface TelemetryStore {
   notified?: boolean
 }
 
+/** Read the project identity stamped by create-kon10-app. */
+export function readProjectTelemetryId(cwd = process.cwd()): string | undefined {
+  try {
+    const manifest = JSON.parse(
+      fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'),
+    ) as { kon10?: { telemetryId?: unknown } }
+    const id = manifest.kon10?.telemetryId
+    return typeof id === 'string' && id.length > 0 ? id : undefined
+  } catch {
+    return undefined
+  }
+}
+
 function storeFile(env: NodeJS.ProcessEnv = process.env): string {
   const base = env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config')
   return path.join(base, 'kon10', 'telemetry.json')
