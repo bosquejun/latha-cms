@@ -20,10 +20,8 @@ export default defineConfig({
     authToken: process.env.TURSO_AUTH_TOKEN,
   }),
 
-  // Account-unlinked, opt-out usage telemetry (à la Medusa), sent to Kon10's
-  // shared analytics project by default. Override the destination with
-  // `KON10_TELEMETRY_POSTHOG_KEY` / `_HOST`, or opt out with
-  // `KON10_DISABLE_TELEMETRY=1` / `DO_NOT_TRACK=1`.
+  // Account-unlinked, opt-out usage telemetry sent to Kon10's shared analytics
+  // project. Opt out with `KON10_DISABLE_TELEMETRY=1` / `DO_NOT_TRACK=1`.
   plugins: [telemetryPlugin()],
 
   // Studio branding — shown on the login screen and in the Studio shell. Drop a
@@ -34,7 +32,7 @@ export default defineConfig({
       tagline: 'Everything you publish, in one place.',
       taglineSubtitle: 'Model content, manage media, and ship a fast delivery API.',
     },
-    // Medusa-style opt-out controls shown on first sign-in. The same choices are
+    // Opt-out controls shown on first sign-in. The same choice is
     // available later under Settings → Telemetry. Use `mode: 'opt-in'` instead
     // to require an explicit Allow choice before Studio events are collected.
     telemetryNotice: {

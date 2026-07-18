@@ -229,7 +229,7 @@ pagination? }` envelope.
 ## Customizing the Studio
 
 The auto-generated Studio is extensible through a structured set of **injection
-zones** and **custom pages** — the Kon10 take on Medusa's admin extensions.
+zones** and **custom pages** — Kon10's extension-oriented Studio surface.
 Drop files under `src/studio/` and the `kon10Start()` Vite plugin auto-collects
 them into `virtual:kon10/studio-extensions`, which you hand to the provider:
 

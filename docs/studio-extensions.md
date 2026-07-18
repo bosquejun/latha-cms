@@ -3,7 +3,7 @@
 Kon10 ships a config-driven Studio, but every project eventually needs to bolt
 something onto it — a banner, an extra page, a tweak to a form. The **Studio
 extension system** gives devs a structured set of *places* to attach custom
-React components, in the spirit of Medusa's admin injection zones.
+React components through typed Studio injection zones.
 
 There are seven surfaces:
 

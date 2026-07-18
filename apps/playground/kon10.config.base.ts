@@ -150,9 +150,8 @@ export function buildConfig(
     },
 
     plugins: [
-      // Account-unlinked, opt-out usage telemetry (à la Medusa), sent to
-      // Kon10's shared PostHog project by default. The destination can be
-      // overridden by env; opt out with `KON10_DISABLE_TELEMETRY=1` /
+      // Account-unlinked, opt-out usage telemetry sent to Kon10's shared
+      // PostHog project. Opt out with `KON10_DISABLE_TELEMETRY=1` /
       // `DO_NOT_TRACK=1`.
       telemetryPlugin(),
       // slugPlugin wires generation + uniqueness hooks into every entity below

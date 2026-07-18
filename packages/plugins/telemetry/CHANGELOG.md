@@ -6,7 +6,7 @@
 
 - 424296e: feat(telemetry): anonymous, opt-out usage analytics (PostHog)
 
-  Add framework telemetry in the spirit of Medusa/Next.js — **on by default**
+  Add account-unlinked framework telemetry — **on by default**
   (the scaffold includes it), **anonymous**, and **opt-out**.
 
   - `@kon10/core` — a vendor-neutral `Telemetry` contract (`capture` / `flush`)
@@ -17,7 +17,7 @@
     (`~/.config/kon10/telemetry.json`), a technical `kon10_boot` event, and a
     one-time first-run disclosure. Opt-out via `KON10_DISABLE_TELEMETRY`,
     `DO_NOT_TRACK`, CI, `NODE_ENV=test`, or `enabled: false`; inert until a PostHog
-    key (`KON10_TELEMETRY_POSTHOG_KEY`) is configured.
+    shared ingestion destination is enabled.
   - `@kon10/start` — emits an anonymous `studio_action` product event (action name
     only) on Studio mutations through `cms.telemetry`.
 
