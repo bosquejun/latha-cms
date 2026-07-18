@@ -1,6 +1,6 @@
 {
   "name": "@kon10/cache",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Kon10 cache — CacheAdapter implementations (in-memory, Redis).",
   "type": "module",
   "license": "MIT",

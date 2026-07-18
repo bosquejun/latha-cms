@@ -1,6 +1,6 @@
 {
   "name": "kon10",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Kon10 kernel — types, defineConfig, module registry, hook engine, access evaluator, Zod schema builder.",
   "type": "module",
   "license": "MIT",
