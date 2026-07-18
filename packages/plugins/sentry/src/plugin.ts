@@ -43,6 +43,14 @@ export const sentryTracingPluginOptionsSchema = z.object({
   release: z.string().optional(),
   /** Fraction of traces sent to Sentry, 0–1. Defaults to 1 (every trace). */
   tracesSampleRate: z.number().min(0).max(1).optional(),
+  /**
+   * Upload application logs to Sentry Logs. Defaults to `false`.
+   *
+   * Kon10's built-in logger writes through `console`, so enabling this also
+   * installs Sentry's console logging integration. Sentry's default Pino
+   * integration continues to cover hosts that supply a Pino logger.
+   */
+  enableLogs: z.boolean().optional(),
   /** Call `Sentry.init()` with the options above. Defaults to `true`. */
   autoInit: z.boolean().optional(),
   /** Name passed to `trace.getTracer()`. Defaults to `'kon10'`. */
@@ -121,6 +129,8 @@ export function sentryTracingPlugin(options: SentryTracingPluginOptions = {}): P
           environment: opts.environment,
           release: opts.release ?? process.env.SENTRY_RELEASE,
           tracesSampleRate: opts.tracesSampleRate ?? 1,
+          enableLogs: opts.enableLogs ?? false,
+          integrations: opts.enableLogs ? [Sentry.consoleLoggingIntegration()] : [],
         })
       }
       cms.registerTracer(toKon10Tracer(trace.getTracer(opts.tracerName ?? 'kon10')))
@@ -128,7 +138,11 @@ export function sentryTracingPlugin(options: SentryTracingPluginOptions = {}): P
         cms.registerErrorReporter(sentryErrorReporter())
       }
       cms.logger.info(
-        { plugin: 'sentry', errorTracking: opts.captureErrors !== false },
+        {
+          plugin: 'sentry',
+          errorTracking: opts.captureErrors !== false,
+          logUpload: opts.enableLogs ?? false,
+        },
         'tracing registered (Sentry via OpenTelemetry)',
       )
     },
