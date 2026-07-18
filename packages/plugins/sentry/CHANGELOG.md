@@ -1,5 +1,12 @@
 # @kon10/sentry
 
+## 1.4.0
+
+### Minor Changes
+
+- a6d0641: Add opt-in Sentry Logs upload for server and browser integrations through the
+  new `enableLogs` option, plus browser Session Replay sampling.
+
 ## 1.3.2
 
 ### Patch Changes

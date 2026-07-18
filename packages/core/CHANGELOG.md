@@ -1,5 +1,7 @@
 # @kon10/core
 
+## 1.4.0
+
 ## 1.3.2
 
 ### Patch Changes
