@@ -35,8 +35,8 @@ test('alterTableSQL adds only the missing columns, unconstrained', () => {
 test('alterTableSQL uses native Postgres types', () => {
   const sql = alterTableSQL(plan, ['id', 'title', 'createdAt', 'updatedAt'], 'postgres')
   assert.deepEqual(sql, [
-    'ALTER TABLE "posts" ADD COLUMN "views" BIGINT;',
-    'ALTER TABLE "posts" ADD COLUMN "featured" BOOLEAN;',
+    'ALTER TABLE "posts" ADD COLUMN IF NOT EXISTS "views" BIGINT;',
+    'ALTER TABLE "posts" ADD COLUMN IF NOT EXISTS "featured" BOOLEAN;',
   ])
 })
 

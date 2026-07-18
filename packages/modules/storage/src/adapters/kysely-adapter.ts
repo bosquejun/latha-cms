@@ -98,9 +98,23 @@ export class KyselyAdapter implements DBAdapter {
    * `PRAGMA table_info` and a Postgres `information_schema` query.
    */
   private async reconcileColumns(plan: TablePlan): Promise<void> {
-    const tables = await this.db.introspection.getTables()
-    const table = tables.find((t) => t.name === plan.table)
-    const existing = table ? table.columns.map((c) => c.name) : []
+    // Postgres can contain same-named tables in multiple schemas (Supabase has
+    // both `auth.users` and an application's `public.users`). Kysely returns
+    // schema metadata for all visible tables, so selecting by name alone can
+    // reconcile against `auth.users` and then run an unqualified ALTER against
+    // `public.users`. Restrict the lookup to the active schema, matching the
+    // schema PostgreSQL resolves for our unqualified DDL and queries.
+    const existing =
+      this.dialect === 'postgres'
+        ? (
+            await sql<{ column_name: string }>`
+              SELECT column_name
+              FROM information_schema.columns
+              WHERE table_name = ${plan.table}
+                AND table_schema = current_schema()
+            `.execute(this.db)
+          ).rows.map((row) => row.column_name)
+        : await this.sqliteColumns(plan)
 
     for (const ddl of alterTableSQL(plan, existing, this.dialect)) {
       await sql.raw(ddl).execute(this.db)
@@ -110,6 +124,12 @@ export class KyselyAdapter implements DBAdapter {
       if (this.logger) this.logger.warn({ table: plan.table, column: name }, msg)
       else console.warn(`[kon10] ${msg}`)
     }
+  }
+
+  private async sqliteColumns(plan: TablePlan): Promise<string[]> {
+    const tables = await this.db.introspection.getTables()
+    const table = tables.find((candidate) => candidate.name === plan.table)
+    return table ? table.columns.map((column) => column.name) : []
   }
 
   private plan(slug: string): TablePlan {

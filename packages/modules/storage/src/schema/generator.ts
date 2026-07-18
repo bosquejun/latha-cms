@@ -250,15 +250,17 @@ export function alterTableSQL(
   const out: string[] = []
   for (const col of plan.columns) {
     if (existing.has(col.name)) continue
+    const ifNotExists = dialect === 'postgres' ? ' IF NOT EXISTS' : ''
     out.push(
-      `ALTER TABLE "${plan.table}" ADD COLUMN "${col.name}" ${ddlTypeForColumn(col, dialect)};`,
+      `ALTER TABLE "${plan.table}" ADD COLUMN${ifNotExists} "${col.name}" ${ddlTypeForColumn(col, dialect)};`,
     )
   }
   if (plan.timestamps) {
     for (const name of ['createdAt', 'updatedAt']) {
       if (existing.has(name)) continue
+      const ifNotExists = dialect === 'postgres' ? ' IF NOT EXISTS' : ''
       out.push(
-        `ALTER TABLE "${plan.table}" ADD COLUMN "${name}" ${timestampType(dialect)};`,
+        `ALTER TABLE "${plan.table}" ADD COLUMN${ifNotExists} "${name}" ${timestampType(dialect)};`,
       )
     }
   }
