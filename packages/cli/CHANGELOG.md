@@ -1,5 +1,11 @@
 # @kon10/cli
 
+## 1.1.0
+
+### Patch Changes
+
+- @kon10/client@1.1.0
+
 ## 1.0.3
 
 ### Patch Changes
