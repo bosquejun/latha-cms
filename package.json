@@ -10,7 +10,8 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "test:coverage": "turbo run test:coverage"
+    "test:coverage": "turbo run test:coverage",
+    "changeset:guard": "node scripts/check-no-major-changeset.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",
