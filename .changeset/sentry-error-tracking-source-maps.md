@@ -23,3 +23,9 @@ Add Sentry error/exception tracking and source-map upload.
 Also adds a repo `sourcemaps:upload` script (`@sentry/cli`) that uploads every
 published package's `dist/` source maps for a release, so server-side stack
 traces from `@kon10/*` de-minify too.
+
+The release identifier auto-derives from the git commit SHA — `@kon10/sentry/vite`
+exports `resolveSentryRelease()` (explicit → `SENTRY_RELEASE` → git SHA), the
+server plugin accepts a `release` (defaulting to `SENTRY_RELEASE`), and both the
+Vite upload and the per-package script use the same default, so the runtime and
+the uploaded maps agree without anyone hand-setting a release.

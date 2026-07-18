@@ -16,18 +16,35 @@
 //   SENTRY_AUTH_TOKEN   required — token with project write + release scope
 //   SENTRY_ORG          required — org slug
 //   SENTRY_PROJECT      required — project slug
-//   SENTRY_RELEASE      required — release name; MUST match the runtime release
+//   SENTRY_RELEASE      optional — release name; defaults to the git commit SHA
+//                       (must match the runtime release, which defaults the same way)
 //   SENTRY_URL          optional — self-hosted Sentry base URL
 //
 // Requires the `@sentry/cli` binary. pnpm skips its install script by default;
 // run `pnpm approve-builds` (or set the token in CI where builds are approved)
 // so the binary is present.
 
+import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
+
+/** SENTRY_RELEASE, or the git commit SHA — the same default `@kon10/sentry/vite` uses. */
+function resolveRelease() {
+  if (process.env.SENTRY_RELEASE) return process.env.SENTRY_RELEASE
+  try {
+    return execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: repoRoot,
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+      .toString()
+      .trim() || undefined
+  } catch {
+    return undefined
+  }
+}
 
 // Workspace globs from pnpm-workspace.yaml, expanded to their parent dirs.
 const PACKAGE_PARENTS = [
@@ -37,15 +54,22 @@ const PACKAGE_PARENTS = [
   'packages/plugins',
 ]
 
-const { SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT, SENTRY_RELEASE, SENTRY_URL } = process.env
+const { SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT, SENTRY_URL } = process.env
 
 if (!SENTRY_AUTH_TOKEN) {
   console.log('[kon10] sourcemaps: no SENTRY_AUTH_TOKEN set — skipping upload.')
   process.exit(0)
 }
-const missing = ['SENTRY_ORG', 'SENTRY_PROJECT', 'SENTRY_RELEASE'].filter((k) => !process.env[k])
+const missing = ['SENTRY_ORG', 'SENTRY_PROJECT'].filter((k) => !process.env[k])
 if (missing.length > 0) {
   console.error(`[kon10] sourcemaps: missing required env: ${missing.join(', ')}`)
+  process.exit(1)
+}
+const SENTRY_RELEASE = resolveRelease()
+if (!SENTRY_RELEASE) {
+  console.error(
+    '[kon10] sourcemaps: no SENTRY_RELEASE set and not a git checkout — cannot derive a release.',
+  )
   process.exit(1)
 }
 

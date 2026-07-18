@@ -104,10 +104,38 @@ export default defineConfig({
 ```
 
 A **no-op unless `SENTRY_AUTH_TOKEN` is set**, so local/dev builds are
-unaffected and never fail. It reads `SENTRY_ORG`, `SENTRY_PROJECT`,
-`SENTRY_RELEASE`, and optional `SENTRY_URL` from the environment (or pass them
-as options). Match the `release` to `initSentryBrowser`'s so uploaded maps
-resolve the right event.
+unaffected and never fail. It reads `SENTRY_ORG`, `SENTRY_PROJECT`, and optional
+`SENTRY_URL` from the environment (or pass them as options).
+
+### Automating the release
+
+You never have to hand-set a release. `@kon10/sentry/vite` exports
+**`resolveSentryRelease()`**, which resolves — in order — an explicit value,
+`SENTRY_RELEASE`, then the **git commit SHA**. Compute it once in
+`vite.config.ts` (Node context, where git is reachable) and thread the *same*
+value to the upload and the client, so the runtime and the uploaded maps always
+agree:
+
+```ts
+// vite.config.ts
+import { sentrySourceMaps, resolveSentryRelease } from '@kon10/sentry/vite'
+
+const release = resolveSentryRelease()   // git SHA by default
+
+export default defineConfig({
+  build: { sourcemap: true },
+  // Inject it so `import.meta.env.VITE_SENTRY_RELEASE` (read by
+  // initSentryBrowser) is the exact value the maps upload under — no env needed.
+  define: {
+    'import.meta.env.VITE_SENTRY_RELEASE': JSON.stringify(release ?? ''),
+  },
+  plugins: [kon10Start(), viteReact(), ...sentrySourceMaps({ release })],
+})
+```
+
+For the **server** plugin, set `SENTRY_RELEASE` at deploy time to that same
+commit SHA (CI usually has it); the plugin defaults its release to
+`process.env.SENTRY_RELEASE`. The playground does exactly this wiring — copy it.
 
 ### Published `@kon10/*` packages — `pnpm sourcemaps:upload`
 
@@ -132,7 +160,8 @@ friendly no-op, so it's safe to wire into a pipeline unconditionally.
 | `VITE_SENTRY_DSN` | browser | Client-exposed DSN (Vite inlines `VITE_*`) |
 | `SENTRY_AUTH_TOKEN` | source-map upload | Project write + release scope; **without it, uploads are skipped** |
 | `SENTRY_ORG` / `SENTRY_PROJECT` | source-map upload | Sentry org/project slugs |
-| `SENTRY_RELEASE` / `VITE_SENTRY_RELEASE` | runtime + upload | Must match so events resolve their maps |
+| `SENTRY_RELEASE` | server runtime + upload | Optional — defaults to the git commit SHA via `resolveSentryRelease()`; set at deploy time for the server process |
+| `VITE_SENTRY_RELEASE` | browser | Optional — inject it from `resolveSentryRelease()` in `vite.config.ts` (see above) rather than setting it by hand |
 | `SENTRY_URL` | source-map upload | Optional — self-hosted Sentry base URL |
 
 ## How it fits

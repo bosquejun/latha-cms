@@ -21,7 +21,8 @@ import appCss from '../styles.css?url'
 initSentryBrowser({
   dsn: import.meta.env.VITE_SENTRY_DSN,
   environment: import.meta.env.MODE,
-  release: import.meta.env.VITE_SENTRY_RELEASE,
+  // Injected by vite.config.ts (git SHA); '' when not a git checkout.
+  release: import.meta.env.VITE_SENTRY_RELEASE || undefined,
 })
 
 // Content-module entity kinds → animated sidebar icons. Lives here (not in

@@ -22,7 +22,37 @@
  * resolve the right event.
  */
 
+import { execFileSync } from 'node:child_process'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
+
+/**
+ * Resolve a release identifier without anyone having to set `SENTRY_RELEASE` by
+ * hand: an explicit value wins, then `SENTRY_RELEASE`, then the current git
+ * commit SHA (what `@sentry/cli` itself proposes), then `undefined`.
+ *
+ * The point of a release is that the *runtime* value (`initSentryBrowser` /
+ * the server plugin) and the *uploaded maps* value match exactly — deriving
+ * both from one call to this makes that automatic. Call it once in
+ * `vite.config.ts` (Node context, where git is reachable) and thread the result
+ * to both `sentrySourceMaps({ release })` and the client (e.g. a `define` for
+ * `import.meta.env.VITE_SENTRY_RELEASE`). Node-only — never call it from
+ * browser code.
+ */
+export function resolveSentryRelease(explicit?: string): string | undefined {
+  if (explicit) return explicit
+  if (process.env.SENTRY_RELEASE) return process.env.SENTRY_RELEASE
+  try {
+    const sha = execFileSync('git', ['rev-parse', 'HEAD'], {
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+      .toString()
+      .trim()
+    return sha || undefined
+  } catch {
+    // Not a git checkout (or git unavailable) — leave it unset.
+    return undefined
+  }
+}
 
 export interface SentrySourceMapsOptions {
   /** Sentry org slug. Defaults to `SENTRY_ORG`. */
@@ -31,7 +61,10 @@ export interface SentrySourceMapsOptions {
   project?: string
   /** Auth token with project write + release scope. Defaults to `SENTRY_AUTH_TOKEN`. */
   authToken?: string
-  /** Release name — match the runtime `release`. Defaults to `SENTRY_RELEASE`. */
+  /**
+   * Release name — match the runtime `release`. Defaults to `SENTRY_RELEASE`,
+   * then the git commit SHA (see {@link resolveSentryRelease}).
+   */
   release?: string
   /** Self-hosted Sentry URL. Defaults to `SENTRY_URL` (or Sentry SaaS). */
   url?: string
@@ -54,7 +87,9 @@ export function sentrySourceMaps(
   // rather than failing local/dev builds that have no Sentry credentials.
   if (!authToken) return []
 
-  const release = options.release ?? process.env.SENTRY_RELEASE
+  // Auto-derive from git when not given, so uploaded maps carry the same
+  // release the runtime reports under without any env wiring.
+  const release = resolveSentryRelease(options.release)
   return sentryVitePlugin({
     org: options.org ?? process.env.SENTRY_ORG,
     project: options.project ?? process.env.SENTRY_PROJECT,

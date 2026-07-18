@@ -34,6 +34,13 @@ export const sentryTracingPluginOptionsSchema = z.object({
   /** Sentry DSN. Required unless `autoInit: false`. */
   dsn: z.string().optional(),
   environment: z.string().optional(),
+  /**
+   * Release identifier — should match the browser (`initSentryBrowser`) and the
+   * uploaded source maps so server events de-minify. Defaults to
+   * `process.env.SENTRY_RELEASE` (set it at deploy time, e.g. to the commit SHA
+   * `@kon10/sentry/vite` uploads under).
+   */
+  release: z.string().optional(),
   /** Fraction of traces sent to Sentry, 0–1. Defaults to 1 (every trace). */
   tracesSampleRate: z.number().min(0).max(1).optional(),
   /** Call `Sentry.init()` with the options above. Defaults to `true`. */
@@ -112,6 +119,7 @@ export function sentryTracingPlugin(options: SentryTracingPluginOptions = {}): P
         Sentry.init({
           dsn: opts.dsn,
           environment: opts.environment,
+          release: opts.release ?? process.env.SENTRY_RELEASE,
           tracesSampleRate: opts.tracesSampleRate ?? 1,
         })
       }
