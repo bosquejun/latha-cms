@@ -18,7 +18,7 @@ import {
   type FieldsRecord,
   type ResolvedConfig,
   type StorageAdapter,
-} from '@kon10/core'
+} from 'kon10'
 import {
   Collection,
   ContentModule,

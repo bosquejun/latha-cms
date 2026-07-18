@@ -10,7 +10,7 @@
       "@kon10/client",
       "@kon10/client-react",
       "@kon10/content",
-      "@kon10/core",
+      "kon10",
       "@kon10/media",
       "@kon10/sentry",
       "@kon10/seo",

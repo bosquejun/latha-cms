@@ -28,7 +28,7 @@ pnpm test           # run all tests (node:test, runs against dist)
 
 | Path | Package | What it is |
 |---|---|---|
-| `packages/core` | `@kon10/core` | The kernel — registry, hooks, access, field registry |
+| `packages/core` | `kon10` | The kernel — registry, hooks, access, field registry |
 | `packages/start` | `@kon10/start` | TanStack Start integration, RPC + delivery API |
 | `packages/studio-sdk` | `@kon10/studio-sdk` | Studio UI shell and views |
 | `packages/ui` | `@kon10/ui` | Pure design system (no CMS knowledge) |
@@ -40,7 +40,7 @@ pnpm test           # run all tests (node:test, runs against dist)
 ## The two rules that will get your PR bounced
 
 1. **Separation of concerns is absolute.** Package boundaries are strict;
-   dependencies point inward toward `@kon10/core`, never across modules.
+   dependencies point inward toward `kon10`, never across modules.
    See the table in `CLAUDE.md`.
 2. **Zod is the single source of truth.** Define the Zod schema first and
    derive TypeScript types with `z.infer<>`. Never write a TS interface and
@@ -54,8 +54,8 @@ pnpm test           # run all tests (node:test, runs against dist)
 3. Keep commits scoped: `feat(content): …`, `fix(core): …`,
    `refactor(studio-sdk): …`. Don't mix cross-package concerns in one
    commit unless they're a single atomic change.
-4. After changing `@kon10/core` types, rebuild core before typechecking
-   dependents: `pnpm --filter @kon10/core build && pnpm -r typecheck`.
+4. After changing `kon10` types, rebuild core before typechecking
+   dependents: `pnpm --filter kon10 build && pnpm -r typecheck`.
 5. **Add a changeset** describing your change for the release notes:
    `pnpm changeset` (pick the affected packages and a semver bump).
    Docs-only or CI-only changes don't need one.

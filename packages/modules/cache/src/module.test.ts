@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { bootstrapKon10, defineConfig } from '@kon10/core'
-import type { CacheAdapter, DBAdapter } from '@kon10/core'
+import { bootstrapKon10, defineConfig } from 'kon10'
+import type { CacheAdapter, DBAdapter } from 'kon10'
 import { CacheModule } from './module.js'
 
 function fakeDb(): DBAdapter {

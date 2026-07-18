@@ -4,7 +4,7 @@
  * own upload/picker renderer without teaching the generic relationship
  * renderer anything about media — same rationale as `taxonomy`.
  */
-import type { FieldMeta, PhantomMeta } from '@kon10/core'
+import type { FieldMeta, PhantomMeta } from 'kon10'
 
 interface MediaOpts {
   required?: boolean

@@ -19,7 +19,7 @@
 import { useState } from 'react'
 import { Button, Card, CardContent, cn } from '@kon10/ui'
 import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
-import type { Field } from '@kon10/core'
+import type { Field } from 'kon10'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 import { getFieldRenderer } from '../registry.js'

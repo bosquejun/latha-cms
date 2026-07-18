@@ -7,7 +7,7 @@
  * renderers stay simple and independently testable.
  */
 
-import type { Field } from '@kon10/core'
+import type { Field } from 'kon10'
 import type { ReactNode } from 'react'
 import type { FieldHeadingLevel } from './FieldHeading.js'
 

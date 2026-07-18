@@ -18,7 +18,7 @@
  * (e.g. an external IdP) — so auth can run standalone.
  */
 
-import type { Kon10Instance, Module } from '@kon10/core'
+import type { Kon10Instance, Module } from 'kon10'
 import { invalidate } from '@kon10/cache'
 import { userIdKey } from './cache.js'
 import { DEFAULT_COOKIE_NAME } from './service.js'

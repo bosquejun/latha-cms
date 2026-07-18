@@ -11,8 +11,8 @@
  * ```
  */
 
-import { z, text, richtext, select, array, boolean } from '@kon10/core'
-import type { AnyFieldDef, FieldMeta } from '@kon10/core'
+import { z, text, richtext, select, array, boolean } from 'kon10'
+import type { AnyFieldDef, FieldMeta } from 'kon10'
 import type { BlockInput } from './builders.js'
 
 /**

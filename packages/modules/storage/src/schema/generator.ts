@@ -13,8 +13,8 @@
  *   group | array | *(many)                                                  → TEXT (JSON)
  */
 
-import { buildZodSchema } from '@kon10/core'
-import type { Entity, Field } from '@kon10/core'
+import { buildZodSchema } from 'kon10'
+import type { Entity, Field } from 'kon10'
 
 export type ColumnKind = 'text' | 'integer' | 'real' | 'boolean' | 'json'
 

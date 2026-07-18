@@ -14,7 +14,7 @@ import {
   stampFields,
   text,
   type Entity,
-} from '@kon10/core'
+} from 'kon10'
 import { invalidate } from '@kon10/cache'
 import { roleIdKey, roleNameKey } from '../cache.js'
 

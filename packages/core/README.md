@@ -1,18 +1,18 @@
-# @kon10/core
+# kon10
 
 Kon10's framework-agnostic kernel. It defines the configuration model, module and plugin contracts, entity/field types, access evaluation, hooks, the module registry, and local CRUD operations.
 
 ## Install
 
 ```bash
-pnpm add @kon10/core zod
+pnpm add kon10 zod
 ```
 
 > In this monorepo the package is consumed through pnpm workspaces.
 
 ## When to use this package
 
-Use `@kon10/core` when you are authoring a Kon10 config, building a first- or third-party module, defining fields, or calling the local operations API from server-side code. The package intentionally has no database, storage, routing, or UI dependency.
+Use `kon10` when you are authoring a Kon10 config, building a first- or third-party module, defining fields, or calling the local operations API from server-side code. The package intentionally has no database, storage, routing, or UI dependency.
 
 ## Public API
 
@@ -25,7 +25,7 @@ Use `@kon10/core` when you are authoring a Kon10 config, building a first- or th
 ## Example
 
 ```ts
-import { buildZodSchema, text, type InferDoc } from '@kon10/core'
+import { buildZodSchema, text, type InferDoc } from 'kon10'
 
 const fields = {
   title: text({ required: true }),

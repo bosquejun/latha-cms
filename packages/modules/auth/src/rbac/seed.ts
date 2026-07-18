@@ -16,7 +16,7 @@
  * admins refine roles in the UI. An app can override via `AuthModule({ roles })`.
  */
 
-import type { Kon10Instance } from '@kon10/core'
+import type { Kon10Instance } from 'kon10'
 import { getCatalog, type RbacCatalog } from './catalog.js'
 import { ROLES_SLUG } from './entities.js'
 import {

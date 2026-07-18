@@ -17,7 +17,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import { physical, rootRoute, route } from '@tanstack/virtual-file-routes'
 import { DEFAULT_API_PATH, DEFAULT_RPC_PATH } from '@kon10/studio-sdk'
-import type { StudioBrandingConfig, StudioTelemetryNoticeConfig } from '@kon10/core'
+import type { StudioBrandingConfig, StudioTelemetryNoticeConfig } from 'kon10'
 import { DEFAULT_MODULE_ROUTES_PATH } from './module-routes.js'
 
 type TanStackStartOptions = NonNullable<Parameters<typeof tanstackStart>[0]>

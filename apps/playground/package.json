@@ -16,7 +16,7 @@
     "@kon10/auth": "workspace:^",
     "@kon10/cache": "workspace:^",
     "@kon10/content": "workspace:^",
-    "@kon10/core": "workspace:^",
+    "kon10": "workspace:^",
     "@kon10/media": "workspace:^",
     "@kon10/sentry": "workspace:^",
     "@kon10/telemetry": "workspace:^",

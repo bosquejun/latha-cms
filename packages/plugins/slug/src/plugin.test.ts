@@ -6,7 +6,7 @@ import {
   type FieldTypeEntry,
   type HookFn,
   type Kon10Instance,
-} from '@kon10/core'
+} from 'kon10'
 import { slugFieldConfigSchema } from './field.js'
 import { slugPlugin } from './plugin.js'
 

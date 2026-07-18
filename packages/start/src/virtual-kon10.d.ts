@@ -4,7 +4,7 @@
  * route handler.
  */
 declare module 'virtual:kon10/config' {
-  import type { ResolvedConfig } from '@kon10/core'
+  import type { ResolvedConfig } from 'kon10'
   const config: ResolvedConfig
   export default config
 }

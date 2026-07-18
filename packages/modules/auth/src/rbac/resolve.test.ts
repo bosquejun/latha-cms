@@ -5,7 +5,7 @@
  */
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import type { CacheAdapter, Doc, JsonValue, Kon10Instance, Query } from '@kon10/core'
+import type { CacheAdapter, Doc, JsonValue, Kon10Instance, Query } from 'kon10'
 import { getRolePermissions, resolveRoleGrants } from './resolve.js'
 import { rolesEntity } from './entities.js'
 

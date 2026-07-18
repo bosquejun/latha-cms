@@ -24,7 +24,7 @@ import {
   type EntityHooks,
   type FieldsRecord,
   type InferDoc,
-} from '@kon10/core'
+} from 'kon10'
 
 export type Collection<TDoc = Record<string, unknown>> = Entity<TDoc> & { cardinality: 'many' }
 export type Document<TDoc = Record<string, unknown>> = Entity<TDoc> & { cardinality: 'single' }

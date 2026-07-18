@@ -7,7 +7,7 @@
  * supply a custom store.
  */
 
-import type { Kon10Instance } from '@kon10/core'
+import type { Kon10Instance } from 'kon10'
 import type { AuthUser } from './types.js'
 import { verifyPassword } from './crypto.js'
 import { verifySessionToken } from './session.js'

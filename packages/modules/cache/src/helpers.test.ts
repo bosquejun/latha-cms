@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import type { CacheAdapter, JsonValue, Kon10Instance } from '@kon10/core'
+import type { CacheAdapter, JsonValue, Kon10Instance } from 'kon10'
 import { cached, invalidate } from './helpers.js'
 
 function spyCache(): CacheAdapter & { getKeys: string[]; setKeys: string[] } {

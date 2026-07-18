@@ -22,11 +22,11 @@
  * by design (same as `media`/`taxonomy`), the path regex runs on the server.
  */
 
-import type { BaseFieldConfig } from '@kon10/core'
+import type { BaseFieldConfig } from 'kon10'
 import type { SlugToken } from './template.js'
 
 // Augment core's FieldTypeMap so consumers get the slug field type.
-declare module '@kon10/core' {
+declare module 'kon10' {
   interface FieldTypeMap {
     slug: BaseFieldConfig & {
       type: 'slug'

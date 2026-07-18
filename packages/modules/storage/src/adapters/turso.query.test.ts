@@ -7,7 +7,7 @@
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { boolean, number, stampFields, text, type Entity } from '@kon10/core'
+import { boolean, number, stampFields, text, type Entity } from 'kon10'
 import { tursoAdapter } from './turso.js'
 
 const items: Entity = {

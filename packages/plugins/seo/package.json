@@ -29,7 +29,7 @@
     "test:coverage": "tsc -p tsconfig.json && node --test --experimental-test-coverage $(find dist -name '*.test.js' -print)"
   },
   "peerDependencies": {
-    "@kon10/core": "workspace:^",
+    "kon10": "workspace:^",
     "@kon10/studio-sdk": "workspace:^",
     "@kon10/start": "workspace:^",
     "@kon10/ui": "workspace:^",
@@ -54,7 +54,7 @@
   },
   "devDependencies": {
     "@kon10/content": "workspace:^",
-    "@kon10/core": "workspace:^",
+    "kon10": "workspace:^",
     "@kon10/studio-sdk": "workspace:^",
     "@kon10/start": "workspace:^",
     "@kon10/ui": "workspace:^",

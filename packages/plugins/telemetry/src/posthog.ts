@@ -5,7 +5,7 @@
  * failures drop the batch silently.
  */
 
-import type { Telemetry, TelemetryEvent, TelemetryPropertyValue } from '@kon10/core'
+import type { Telemetry, TelemetryEvent, TelemetryPropertyValue } from 'kon10'
 
 export interface PosthogTelemetryOptions {
   /** PostHog project API key (`phc_...`). */

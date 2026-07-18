@@ -28,10 +28,10 @@
  * design (same as `media`/`taxonomy`/`slug`); real validation runs on the server.
  */
 
-import type { BaseFieldConfig } from '@kon10/core'
+import type { BaseFieldConfig } from 'kon10'
 
 // Augment core's FieldTypeMap so consumers get the seo + socialGraph field types.
-declare module '@kon10/core' {
+declare module 'kon10' {
   interface FieldTypeMap {
     seo: BaseFieldConfig & {
       type: 'seo'

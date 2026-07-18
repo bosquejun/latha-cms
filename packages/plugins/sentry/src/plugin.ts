@@ -7,7 +7,7 @@
  * so a tracer obtained afterwards through `@opentelemetry/api`'s
  * `trace.getTracer()` reports through to Sentry. This plugin does exactly
  * that, then calls `cms.registerTracer()` with the result — Sentry never
- * appears anywhere in `@kon10/core`, `operations.ts`, or the hook engine.
+ * appears anywhere in `kon10`, `operations.ts`, or the hook engine.
  * Swapping Sentry for another OTel backend later (Honeycomb, Datadog, a
  * plain OTLP collector) means writing a different plugin against the same
  * `Tracer` contract, not touching the kernel.
@@ -21,7 +21,7 @@ import { trace } from '@opentelemetry/api'
 import type { Span as OtelSpan, Tracer as OtelTracer } from '@opentelemetry/api'
 import * as Sentry from '@sentry/node'
 import { z } from 'zod'
-import type { Kon10Instance, Plugin, Span, Tracer } from '@kon10/core'
+import type { Kon10Instance, Plugin, Span, Tracer } from 'kon10'
 
 export const sentryTracingPluginOptionsSchema = z.object({
   /** Sentry DSN. Required unless `autoInit: false`. */

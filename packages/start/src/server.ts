@@ -21,7 +21,7 @@ import {
   type Module,
   type OperationContext,
   type ResolvedConfig,
-} from '@kon10/core'
+} from 'kon10'
 import {
   getSessionUser,
   getPublicPrincipal,
@@ -30,8 +30,8 @@ import {
   STUDIO_ACCESS,
   type AuthUser,
 } from '@kon10/auth'
-import { AccessDeniedError } from '@kon10/core'
-import type { JsonValue } from '@kon10/core'
+import { AccessDeniedError } from 'kon10'
+import type { JsonValue } from 'kon10'
 import { getRuntime } from './runtime.js'
 import { labelsOf, Kon10RpcInputSchema, type Kon10RpcInput } from '@kon10/studio-sdk'
 import type { EntityDescriptor, NavItem, NavSection } from '@kon10/studio-sdk'

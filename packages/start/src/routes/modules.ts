@@ -1,6 +1,6 @@
 /**
  * Framework-owned catch-all for module-contributed routes. A module declares
- * `routes` on its `Module` object (see `ModuleRoutes` in `@kon10/core`) and
+ * `routes` on its `Module` object (see `ModuleRoutes` in `kon10`) and
  * this single server route dispatches to them — the consuming app and
  * `@kon10/start` itself need no per-module wiring.
  *

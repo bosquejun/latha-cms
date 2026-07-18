@@ -22,7 +22,7 @@
  * slug fields nested in group/array are out of scope.
  */
 
-import type { AnyEntity, Kon10Instance, Plugin } from '@kon10/core'
+import type { AnyEntity, Kon10Instance, Plugin } from 'kon10'
 import { slugFieldEntry } from './field.js'
 import { createSlugHooks, type SlugHookTarget, type SlugNestedTarget } from './hooks.js'
 import { compileTokens, parseTemplate } from './template.js'

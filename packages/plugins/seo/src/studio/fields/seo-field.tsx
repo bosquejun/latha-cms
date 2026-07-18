@@ -13,7 +13,7 @@
 import { useState } from 'react'
 import { Badge, Card, CardContent, Input, Separator, Switch, Textarea } from '@kon10/ui'
 import { type FieldControlProps, useFieldValue } from '@kon10/studio-sdk'
-import type { Field } from '@kon10/core'
+import type { Field } from 'kon10'
 import { DEFAULT_MAX_DESCRIPTION_LENGTH, DEFAULT_MAX_TITLE_LENGTH, type SeoData } from '../../schema.js'
 import { applyTitleTemplate, resolveTemplate, templateTokens } from '../../template.js'
 import { CharCounter, LabeledField } from '../ui.js'

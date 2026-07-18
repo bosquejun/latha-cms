@@ -5,7 +5,7 @@
  * normalize an untouched `''`/`false`/`[]` back to `null`/absent before
  * submit.
  */
-import type { Field } from '@kon10/core'
+import type { Field } from 'kon10'
 
 export function defaultForField(field: Field): unknown {
   if (field.defaultValue !== undefined) return field.defaultValue

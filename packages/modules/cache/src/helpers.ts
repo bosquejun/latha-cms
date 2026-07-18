@@ -6,7 +6,7 @@
  * (it also has to attach CORS headers on every path, so this helper
  * doesn't fit it cleanly).
  */
-import type { JsonValue, Kon10Instance } from '@kon10/core'
+import type { JsonValue, Kon10Instance } from 'kon10'
 
 /**
  * Read `key` from `kon10.cache` if one is registered; otherwise always

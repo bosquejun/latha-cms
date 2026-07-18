@@ -9,7 +9,7 @@
  * use — serverless filesystems (Vercel included) don't persist writes.
  */
 import { createHash, randomUUID } from 'node:crypto'
-import type { StorageAdapter } from '@kon10/core'
+import type { StorageAdapter } from 'kon10'
 import { signS3Request } from './sigv4.js'
 
 export interface S3StorageOptions {

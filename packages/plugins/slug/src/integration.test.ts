@@ -19,7 +19,7 @@ import {
   type Doc,
   type Kon10Instance,
   type Query,
-} from '@kon10/core'
+} from 'kon10'
 import { Collection, ContentModule, relationship, text } from '@kon10/content'
 import { slug } from './builders.js'
 import { slugPlugin } from './plugin.js'

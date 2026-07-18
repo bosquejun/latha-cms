@@ -2,10 +2,10 @@
  * @kon10/media — MediaModule, storage adapters, and the media field type.
  */
 
-import type { BaseFieldConfig } from '@kon10/core'
+import type { BaseFieldConfig } from 'kon10'
 
 // Augment core's FieldTypeMap so consumers get the media field type.
-declare module '@kon10/core' {
+declare module 'kon10' {
   interface FieldTypeMap {
     media: BaseFieldConfig & { type: 'media' }
   }

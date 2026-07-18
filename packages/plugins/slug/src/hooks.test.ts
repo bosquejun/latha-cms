@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import type { DBAdapter, Doc, Kon10Instance } from '@kon10/core'
+import type { DBAdapter, Doc, Kon10Instance } from 'kon10'
 import {
   createSlugHooks,
   ensureUniqueSlug,

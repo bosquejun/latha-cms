@@ -2,7 +2,7 @@
 
 A backend-only **plugin** that implements the kernel's vendor-neutral tracer contract over Sentry via OpenTelemetry. This is the one place a concrete observability vendor is allowed to appear.
 
-See root [`CLAUDE.md`](../../CLAUDE.md) for global rules and the tracer contract in `@kon10/core`.
+See root [`CLAUDE.md`](../../CLAUDE.md) for global rules and the tracer contract in `kon10`.
 
 ## Owns
 

@@ -28,10 +28,10 @@
     "ioredis": "^5.11.1"
   },
   "peerDependencies": {
-    "@kon10/core": "workspace:^"
+    "kon10": "workspace:^"
   },
   "devDependencies": {
-    "@kon10/core": "workspace:^",
+    "kon10": "workspace:^",
     "@types/node": "^22.10.0",
     "typescript": "^5.7.2"
   },

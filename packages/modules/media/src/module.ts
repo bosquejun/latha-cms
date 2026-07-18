@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { Kon10Instance, Module, StorageAdapter } from '@kon10/core'
+import type { Kon10Instance, Module, StorageAdapter } from 'kon10'
 import { buildMediaEntity } from './entities.js'
 import { uploadRoute } from './upload.js'
 

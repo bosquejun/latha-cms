@@ -19,7 +19,7 @@ import {
   type Doc,
   type Entity,
   type Query,
-} from '@kon10/core'
+} from 'kon10'
 import { AuthModule, createSessionToken, resolveAuthOptions } from '@kon10/auth'
 import { handleKon10Request } from './server.js'
 import { getRuntime } from './runtime.js'

@@ -13,7 +13,7 @@
 
 import { Kysely, PostgresDialect } from 'kysely'
 import { Pool, type PoolConfig } from 'pg'
-import type { DBAdapter } from '@kon10/core'
+import type { DBAdapter } from 'kon10'
 import { KyselyAdapter } from './kysely-adapter.js'
 
 export interface PostgresAdapterOptions {

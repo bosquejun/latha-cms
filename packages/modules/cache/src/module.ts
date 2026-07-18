@@ -1,4 +1,4 @@
-import type { CacheAdapter, Kon10Instance, Module } from '@kon10/core'
+import type { CacheAdapter, Kon10Instance, Module } from 'kon10'
 
 export interface CacheModuleConfig {
   /** The cache adapter to register (e.g. `inMemoryCache()`, `redisCache({ url })`). */

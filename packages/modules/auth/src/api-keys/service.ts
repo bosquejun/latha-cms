@@ -7,7 +7,7 @@
  * key revocation take effect immediately.
  */
 
-import type { Kon10Instance } from '@kon10/core'
+import type { Kon10Instance } from 'kon10'
 import { cached } from '@kon10/cache'
 import { AUTH_CACHE_TTL_SECONDS, apiKeyHashKey } from '../cache.js'
 import { resolveRoleGrants } from '../rbac/resolve.js'
