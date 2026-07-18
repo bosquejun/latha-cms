@@ -6,7 +6,7 @@ browser, and **source-map upload** so minified stack traces resolve back to the
 original TypeScript. All of it is opt-in and inert until you configure a DSN.
 
 Like every observability concern in Kon10, the vendor lives at the edge. The
-kernel (`kon10`) defines three vendor-neutral contracts — `Tracer`, `Telemetry`,
+kernel (`@kon10/core`) defines three vendor-neutral contracts — `Tracer`, `Telemetry`,
 and `ErrorReporter` — each with a no-op default and a `register*` seam. The
 `@kon10/sentry` plugin fills the tracer and error-reporter seams; core never
 imports a Sentry SDK.
@@ -166,7 +166,7 @@ friendly no-op, so it's safe to wire into a pipeline unconditionally.
 
 ## How it fits
 
-`kon10` defines a vendor-neutral **`ErrorReporter`** contract
+`@kon10/core` defines a vendor-neutral **`ErrorReporter`** contract
 (`captureException(error, context)`) with a `noopErrorReporter` default and a
 `cms.registerErrorReporter()` seam — the same shape as the `Tracer` and
 `Telemetry` seams. `@kon10/sentry` registers a Sentry-backed reporter over it;

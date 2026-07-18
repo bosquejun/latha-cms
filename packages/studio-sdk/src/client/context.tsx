@@ -75,7 +75,7 @@ export type ResolvedBranding = Kon10Branding & { appName: string }
 /**
  * A one-time, dismissible transparency notice shown in the Studio on first
  * sign-in (e.g. disclosing operational telemetry). Informational only — it
- * never gates telemetry. Mirrors `StudioTelemetryNoticeConfig` in `kon10`
+ * never gates telemetry. Mirrors `StudioTelemetryNoticeConfig` in `@kon10/core`
  * (all serializable), and arrives from `kon10.config`'s `studio.telemetryNotice`.
  */
 export interface Kon10TelemetryNotice {

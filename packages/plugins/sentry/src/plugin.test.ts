@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { silentLogger } from 'kon10'
-import type { Kon10Instance } from 'kon10'
+import { silentLogger } from '@kon10/core'
+import type { Kon10Instance } from '@kon10/core'
 import { sentryTracingPlugin, sentryTracingPluginOptionsSchema } from './plugin.js'
 
 function fakeCms() {

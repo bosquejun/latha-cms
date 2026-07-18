@@ -16,7 +16,7 @@ import {
   type DBAdapter,
   type Entity,
   type LogLevel,
-} from 'kon10'
+} from '@kon10/core'
 import { AuthModule } from '@kon10/auth'
 import { handleDeliveryRequest } from './api.js'
 import { apiResponseSchema, type ApiResponse } from './envelope.js'

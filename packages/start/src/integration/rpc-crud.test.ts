@@ -8,8 +8,8 @@
 
 import { test, before } from 'node:test'
 import assert from 'node:assert/strict'
-import { AccessDeniedError } from 'kon10'
-import type { ResolvedConfig } from 'kon10'
+import { AccessDeniedError } from '@kon10/core'
+import type { ResolvedConfig } from '@kon10/core'
 import type { JsonDoc, NavSection, PageResult } from '@kon10/studio-sdk'
 import { ADMIN_EMAIL, ADMIN_PASSWORD, buildTestConfig, login, memoryAdapter, rpc } from './fixture.js'
 

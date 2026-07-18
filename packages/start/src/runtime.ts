@@ -5,7 +5,7 @@
  * process share a single instance (and run `config.seed` exactly once).
  */
 
-import { bootstrapKon10, type Kon10Instance, type ResolvedConfig } from 'kon10'
+import { bootstrapKon10, type Kon10Instance, type ResolvedConfig } from '@kon10/core'
 
 // Avoid a hard @types/node dependency for env vars.
 declare const process: { env: Record<string, string | undefined> }

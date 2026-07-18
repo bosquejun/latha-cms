@@ -1,7 +1,7 @@
 /**
  * @kon10/studio-sdk — the CMS-aware Studio layer.
  *
- * Builds on `@kon10/ui` (design system) and `kon10` (kernel). Provides
+ * Builds on `@kon10/ui` (design system) and `@kon10/core` (kernel). Provides
  * the Studio shell (top-nav layout), the registry-driven navigation, the field
  * renderer registry, and the auto-generated collection/document views. It owns
  * no data fetching or routing — the app wires those in and passes data +

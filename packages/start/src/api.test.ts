@@ -21,7 +21,7 @@ import {
   type Entity,
   type Query,
   type ResolvedConfig,
-} from 'kon10'
+} from '@kon10/core'
 import { AuthModule, createApiKey } from '@kon10/auth'
 import { handleDeliveryRequest, handleDeliveryPreflight } from './api.js'
 import { getRuntime } from './runtime.js'

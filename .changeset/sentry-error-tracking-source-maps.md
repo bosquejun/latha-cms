@@ -1,12 +1,12 @@
 ---
-"kon10": minor
+"@kon10/core": minor
 "@kon10/sentry": minor
 "@kon10/start": minor
 ---
 
 Add Sentry error/exception tracking and source-map upload.
 
-- **`kon10`**: new vendor-neutral `ErrorReporter` contract (`captureException`,
+- **`@kon10/core`**: new vendor-neutral `ErrorReporter` contract (`captureException`,
   `noopErrorReporter`) with a `cms.registerErrorReporter()` seam — the same
   shape as the `Tracer`/`Telemetry` seams. Core still imports no vendor SDK.
 - **`@kon10/sentry`**: the server plugin now registers an `ErrorReporter` over

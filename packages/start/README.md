@@ -5,7 +5,7 @@ TanStack Start integration for Kon10. This package provides the Studio and login
 ## Install
 
 ```bash
-pnpm add @kon10/start kon10 @kon10/studio-sdk @kon10/ui @tanstack/react-start @tanstack/react-router react
+pnpm add @kon10/start @kon10/core @kon10/studio-sdk @kon10/ui @tanstack/react-start @tanstack/react-router react
 ```
 
 ## When to use this package

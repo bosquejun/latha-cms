@@ -15,7 +15,7 @@ import {
   type Entity,
   type ErrorReportContext,
   type Plugin,
-} from 'kon10'
+} from '@kon10/core'
 import { AuthModule } from '@kon10/auth'
 import { handleDeliveryRequest } from './api.js'
 

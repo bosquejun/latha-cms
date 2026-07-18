@@ -21,7 +21,7 @@ config → Zod schema → API → database → an auto-generated Studio UI.
 
 ## What's in the box
 
-- **Kernel** (`kon10`) — module registry with topological resolution,
+- **Kernel** (`@kon10/core`) — module registry with topological resolution,
   before/after lifecycle hooks, access predicates + pluggable guards, and a
   Zod-first field registry: one schema drives API validation, form validation,
   and TypeScript inference.
@@ -61,7 +61,7 @@ config → Zod schema → API → database → an auto-generated Studio UI.
 
 | Package | Path | Responsibility |
 |---|---|---|
-| `kon10` | `packages/core` | Kernel — types, `defineConfig`, registry, hooks, access, field registry, operations, logger |
+| `@kon10/core` | `packages/core` | Kernel — types, `defineConfig`, registry, hooks, access, field registry, operations, logger |
 | `@kon10/ui` | `packages/ui` | Design system — shadcn/ui primitives + tokens. No CMS knowledge. |
 | `@kon10/studio-sdk` | `packages/studio-sdk` | CMS-aware Studio layer — shell, field renderers, auto-generated views |
 | `@kon10/start` | `packages/start` | TanStack Start integration — runtime, RPC dispatcher, delivery API, typed client, mountable Studio/login UI |
@@ -130,7 +130,7 @@ Fields are Zod-first builders: the same definition drives server validation,
 Studio form validation, and TypeScript inference.
 
 ```ts
-import { defineConfig, z } from 'kon10'
+import { defineConfig, z } from '@kon10/core'
 import { tursoAdapter } from '@kon10/storage'
 import {
   Collection, ContentModule, Document, Taxonomy,

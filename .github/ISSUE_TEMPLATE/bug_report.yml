@@ -32,7 +32,7 @@ body:
     id: packages
     attributes:
       label: Affected package(s) and version(s)
-      placeholder: 'kon10 1.0.0, @kon10/start 1.0.0'
+      placeholder: '@kon10/core 1.0.0, @kon10/start 1.0.0'
     validations:
       required: true
   - type: input

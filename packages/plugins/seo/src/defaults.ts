@@ -10,7 +10,7 @@
  * value renders sensibly into a string.
  */
 
-import type { AnyEntity } from 'kon10'
+import type { AnyEntity } from '@kon10/core'
 
 /** Field types whose stored value is a plain string safe to interpolate. */
 const TEXT_LIKE = new Set(['text', 'richtext', 'slug', 'select'])

@@ -2,7 +2,7 @@
 
 The **plugin** that implements the kernel's vendor-neutral observability contracts over Sentry — tracing (via OpenTelemetry) and error reporting — plus browser-side error tracking and build-time source-map upload. This is the one place a concrete observability vendor is allowed to appear.
 
-See root [`CLAUDE.md`](../../CLAUDE.md) for global rules and the `Tracer`/`ErrorReporter` contracts in `kon10`, and [`docs/concepts/error-tracking.md`](../../../docs/concepts/error-tracking.md) for the product-facing guide.
+See root [`CLAUDE.md`](../../CLAUDE.md) for global rules and the `Tracer`/`ErrorReporter` contracts in `@kon10/core`, and [`docs/concepts/error-tracking.md`](../../../docs/concepts/error-tracking.md) for the product-facing guide.
 
 ## Owns
 

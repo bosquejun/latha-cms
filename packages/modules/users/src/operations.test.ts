@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import 'kon10'
-import type { Doc, Kon10Instance, Query } from 'kon10'
+import '@kon10/core'
+import type { Doc, Kon10Instance, Query } from '@kon10/core'
 import { createUser, countUsers, listUsers } from './operations.js'
 import { USERS_SLUG, UsersModule } from './module.js'
 

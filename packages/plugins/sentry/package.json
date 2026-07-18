@@ -42,7 +42,7 @@
     "zod": "^4.4.3"
   },
   "peerDependencies": {
-    "kon10": "workspace:^",
+    "@kon10/core": "workspace:^",
     "react": "^18 || ^19"
   },
   "peerDependenciesMeta": {
@@ -51,7 +51,7 @@
     }
   },
   "devDependencies": {
-    "kon10": "workspace:^",
+    "@kon10/core": "workspace:^",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "react": "^19.0.0",

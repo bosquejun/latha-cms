@@ -1,7 +1,7 @@
 # Frameworks — integrating Kon10 into a host framework
 
 Kon10 is config-driven and framework-agnostic at its core
-([`kon10`](../../packages/core)). A **framework-integration package**
+([`@kon10/core`](../../packages/core)). A **framework-integration package**
 adapts that core to a specific host framework — its routing, its server runtime,
 its bundler. Today there is one: [`@kon10/start`](../../packages/start), for
 **TanStack Start**. The pattern below is what any future adapter would follow.
@@ -28,7 +28,7 @@ the package. There is **no hand-written server function and no RPC file**.
 ### 1. `kon10.config.ts` — the source of truth
 
 ```ts
-import { defineConfig } from 'kon10'
+import { defineConfig } from '@kon10/core'
 export default defineConfig({ db, modules, seed })
 ```
 
@@ -150,6 +150,6 @@ A framework-integration package is responsible for:
 4. **The runtime** — bootstrap + seed one `Kon10Instance` per config, memoized.
 5. **The provider** — make the client + mount paths available to the Studio UI.
 
-Anything CMS-generic (schema, access, hooks, operations) stays in `kon10`;
+Anything CMS-generic (schema, access, hooks, operations) stays in `@kon10/core`;
 anything UI-generic stays in `@kon10/ui` / `@kon10/studio-sdk`. The adapter is the
 thin, framework-specific seam between them.

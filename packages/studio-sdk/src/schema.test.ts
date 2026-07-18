@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import type { Entity } from 'kon10'
+import type { Entity } from '@kon10/core'
 import { describeEntity, labelsOf, singularizeLabel } from './schema.js'
 
 const collection = (slug: string, studio?: Entity['studio']): Entity => ({

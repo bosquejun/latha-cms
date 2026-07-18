@@ -20,7 +20,7 @@
  * is left untouched. Top-level fields only.
  */
 
-import type { AnyEntity, Field, Kon10Instance, Plugin } from 'kon10'
+import type { AnyEntity, Field, Kon10Instance, Plugin } from '@kon10/core'
 import { seoFieldEntry, socialFieldEntry } from './field.js'
 import { inferFrom } from './defaults.js'
 import { createSeoHooks, type SeoHookTarget } from './hooks.js'
