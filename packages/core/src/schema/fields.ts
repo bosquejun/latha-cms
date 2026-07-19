@@ -152,7 +152,10 @@ type NumberOpts = CommonOpts & { defaultValue?: number } & (
 
 type BooleanOpts = CommonOpts & { defaultValue?: boolean }
 
-type DateOpts = CommonOpts & { defaultValue?: Date | string; schema?: z.ZodType<Date> }
+type DateOpts = CommonOpts & { defaultValue?: Date | string } & (
+    | { min?: Date | string; max?: Date | string; schema?: never }
+    | { schema: z.ZodType<Date>; min?: never; max?: never }
+  )
 
 // Zod-first: `options` is a `z.enum(...)` instance — the single source of
 // truth for the choice set. The builder normalizes it to the literal
@@ -247,9 +250,18 @@ export function boolean<const O extends BooleanOpts = {}>(
 export function date<const O extends DateOpts = {}>(
   opts?: O,
 ): Built<DateField, Date, IsPresent<O>> {
-  const { schema, ...rest } = opts ?? ({} as O)
+  const { schema, min, max, ...rest } = opts ?? ({} as O)
   return withDataSchema(
-    withMeta<DateField, Date, IsPresent<O>>({ type: 'date', ...rest }),
+    withMeta<DateField, Date, IsPresent<O>>({
+      type: 'date',
+      ...rest,
+      ...(min !== undefined
+        ? { min: min instanceof Date ? min.toISOString() : min }
+        : {}),
+      ...(max !== undefined
+        ? { max: max instanceof Date ? max.toISOString() : max }
+        : {}),
+    }),
     schema,
   )
 }
