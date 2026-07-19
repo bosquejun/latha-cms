@@ -68,7 +68,7 @@
     "@kon10/client": "workspace:^",
     "@tanstack/virtual-file-routes": "^1.162.0",
     "lucide-animated": "^1.0.5",
-    "lucide-react": "^1.24.0"
+    "lucide-react": "^1.25.0"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -83,8 +83,8 @@
     "@kon10/content": "workspace:^",
     "@kon10/core": "workspace:^",
     "@kon10/ui": "workspace:^",
-    "@tanstack/react-router": "^1.170.17",
-    "@tanstack/react-start": "^1.168.27",
+    "@tanstack/react-router": "^1.170.18",
+    "@tanstack/react-start": "^1.168.31",
     "react": "^18 || ^19"
   },
   "devDependencies": {
@@ -96,8 +96,8 @@
     "@kon10/storage": "workspace:^",
     "@kon10/ui": "workspace:^",
     "@kon10/users": "workspace:^",
-    "@tanstack/react-router": "^1.170.17",
-    "@tanstack/react-start": "^1.168.27",
+    "@tanstack/react-router": "^1.170.18",
+    "@tanstack/react-start": "^1.168.31",
     "@tanstack/virtual-file-routes": "^1.162.0",
     "@types/react": "^19.0.0",
     "react": "^19.0.0",
