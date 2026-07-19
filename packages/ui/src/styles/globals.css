@@ -368,6 +368,7 @@
   body {
     /* The design system provides its own pressed/focus states. */
     -webkit-tap-highlight-color: transparent;
+    min-height: 100dvh;
     background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);

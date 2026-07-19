@@ -11,9 +11,8 @@
  * hidden` (kept in the transition list so the slide-out finishes first) so
  * off-screen links can't be focused or read by assistive tech.
  */
-import { useEffect, type ComponentType, type ReactNode } from 'react'
-import { X } from 'lucide-react'
-import { Button, cn } from '@kon10/ui'
+import type { ComponentType, ReactNode } from 'react'
+import { Sheet, SheetContent, SheetTitle, cn } from '@kon10/ui'
 import { Slot } from '../extensions/Slot.js'
 import type { NavLinkProps, ShellNavItem, ShellNavSubItem } from './nav.js'
 
@@ -48,20 +47,6 @@ export function MobileMenu({
   brand = 'Kon10',
   logo,
 }: MobileMenuProps) {
-  useEffect(() => {
-    if (!open) return
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKeyDown)
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKeyDown)
-      document.body.style.overflow = previousOverflow
-    }
-  }, [open, onClose])
-
   const renderLink = (
     entry: ShellNavItem | ShellNavSubItem,
     active: boolean,
@@ -95,22 +80,20 @@ export function MobileMenu({
   }
 
   return (
-    <>
-      <div
-        onClick={onClose}
-        aria-hidden="true"
-        data-open={open}
-        className="fixed inset-0 z-50 bg-[oklch(0_0_0/0.4)] opacity-0 transition-opacity duration-200 data-[open=true]:pointer-events-auto data-[open=true]:opacity-100 pointer-events-none lg:hidden"
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Navigation"
-        data-open={open}
-        className="invisible fixed inset-y-0 left-0 z-[60] flex w-[280px] max-w-[85vw] -translate-x-full flex-col bg-nav pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] transition-[transform,visibility] duration-[220ms] [transition-timing-function:cubic-bezier(.4,0,.2,1)] data-[open=true]:visible data-[open=true]:translate-x-0 lg:hidden"
+    <Sheet open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose() }}>
+      <SheetContent
+        side="left"
+        closeLabel="Close menu"
+        closeClassName="right-nav top-[calc(var(--space-2)+env(safe-area-inset-top))] text-nav-item-foreground hover:bg-nav-accent hover:text-nav-foreground md:right-nav md:top-[calc(var(--space-2)+env(safe-area-inset-top))] md:size-tap"
+        overlayClassName="lg:hidden"
+        className="w-(--panel-left) max-w-[85vw] gap-0 overflow-hidden rounded-none border-nav-border bg-nav p-0 pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] text-nav-foreground lg:hidden"
+        onCloseAutoFocus={(event) => {
+          event.preventDefault()
+          document.querySelector<HTMLButtonElement>('[data-studio-menu-trigger]')?.focus()
+        }}
       >
         {/* Sheet header — mirrors the top bar brand, plus a close button. */}
-        <div className="flex h-(--header-height) shrink-0 items-center justify-between gap-inline border-b border-nav-border px-nav">
+        <div className="flex h-(--header-height) shrink-0 items-center gap-inline border-b border-nav-border px-nav pr-16">
           <div className="flex min-w-0 items-center gap-inline">
             {logo ? (
               <span className="grid size-7 shrink-0 place-items-center overflow-hidden rounded-[var(--radius-md)] [&_img]:size-full [&_svg]:size-full">
@@ -121,20 +104,15 @@ export function MobileMenu({
                 {brand.charAt(0).toUpperCase()}
               </span>
             )}
-            <span className="truncate text-base font-semibold tracking-tight">{brand}</span>
+            <SheetTitle className="truncate pr-0 text-base font-semibold tracking-tight">
+              {brand}
+            </SheetTitle>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            aria-label="Close menu"
-            className="-mr-2 [&_svg]:size-[18px]"
-          >
-            <X />
-          </Button>
         </div>
-        <nav className="flex min-h-0 flex-1 flex-col gap-card-gap overflow-y-auto p-nav">
+        <nav
+          aria-label="Navigation"
+          className="flex min-h-0 flex-1 touch-pan-y flex-col gap-card-gap overscroll-contain overflow-y-auto p-nav"
+        >
           <Slot zone="shell.sidebar.top" />
           <div className="flex flex-1 flex-col gap-stack">
             {items.map((item) => {
@@ -158,7 +136,7 @@ export function MobileMenu({
           </div>
           <Slot zone="shell.sidebar.bottom" />
         </nav>
-      </div>
-    </>
+      </SheetContent>
+    </Sheet>
   )
 }

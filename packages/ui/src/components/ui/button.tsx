@@ -36,7 +36,7 @@ const buttonVariants = cva(
         lg: 'h-control-lg rounded-md px-6 has-[>svg]:px-4',
         icon: 'size-control-md',
         // Compact icon button for dense contexts (table rows, card headers).
-        'icon-sm': 'size-control-sm rounded-md',
+        'icon-sm': 'size-control-sm min-h-tap min-w-tap rounded-md',
       },
     },
     defaultVariants: {

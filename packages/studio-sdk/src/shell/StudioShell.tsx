@@ -63,7 +63,7 @@ export function StudioShell({
   const activeContentWidth = activeSubItem?.contentWidth ?? activeItem?.contentWidth ?? contentWidth
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground [--shell-top:var(--header-height)] lg:[--shell-top:calc(var(--header-height)+var(--subnav-height))]">
+    <div className="flex min-h-dvh flex-col bg-background text-foreground [--shell-top:var(--header-height)] lg:[--shell-top:calc(var(--header-height)+var(--subnav-height))]">
       <MainTopNav brand={brand} logo={logo} onMenuClick={() => setMenuOpen(true)}>
         <div className="flex items-center gap-group">
           <Slot zone="shell.topbar.start" className="flex items-center gap-inline" />

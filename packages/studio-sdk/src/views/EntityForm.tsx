@@ -266,19 +266,22 @@ export function EntityForm({
 
   // The action cluster (Delete / dirty status / Cancel / Save) renders in the
   // sticky top toolbar at `sm+` and, on phones, in the fixed bottom bar instead.
-  const actions = (
+  const renderActions = (mobile = false) => (
     <>
       {onDelete && (
         <>
           <Button
             type="button"
             variant="destructive-subtle"
-            size="sm"
+            size={mobile ? 'icon-sm' : 'sm'}
             onClick={() => void onDelete()}
+            aria-label={mobile ? 'Delete' : undefined}
+            title={mobile ? 'Delete' : undefined}
           >
-            <Trash2 /> Delete
+            <Trash2 />
+            {!mobile && 'Delete'}
           </Button>
-          <div className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
+          {!mobile && <div className="mx-1 h-5 w-px bg-border" aria-hidden="true" />}
         </>
       )}
       {isDirty ? (
@@ -287,8 +290,7 @@ export function EntityForm({
           title="Unsaved changes"
         >
           <span className="inline-block h-2 w-2 rounded-full bg-warning" />
-          {/* On phones the amber dot alone signals dirty state. */}
-          <span className="max-sm:sr-only">Unsaved changes</span>
+          <span className={mobile ? 'sr-only' : undefined}>Unsaved changes</span>
         </span>
       ) : null}
       {onCancel && (
@@ -305,7 +307,11 @@ export function EntityForm({
         loading={isSubmitting}
         disabled={isSubmitting || (recordId != null && !isDirty)}
       >
-        {isSubmitting ? 'Saving…' : submitLabel}
+        {isSubmitting
+          ? 'Saving…'
+          : mobile && submitLabel === 'Save changes'
+            ? 'Save'
+            : submitLabel}
       </Button>
     </>
   )
@@ -395,7 +401,7 @@ export function EntityForm({
 
           {/* Hidden on phones — the actions live in the bottom bar there. */}
           <div className="ml-auto flex shrink-0 items-center gap-inline max-sm:hidden">
-            {actions}
+            {renderActions()}
           </div>
         </div>
 
@@ -440,16 +446,18 @@ export function EntityForm({
             a belt-and-braces guard for the pre-hydration frame.
         ──────────────────────────────────────────────────────────────────────── */}
         {isPhone && (
-          <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-inline border-t border-border bg-background/95 px-(--container-px) py-inline pb-[calc(var(--space-inline)+env(safe-area-inset-bottom))] backdrop-blur-sm sm:hidden">
+          <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-inline overflow-x-clip border-t border-border bg-background/95 px-(--container-px) py-inline pb-[calc(var(--space-inline)+env(safe-area-inset-bottom))] backdrop-blur-sm sm:hidden">
             {hasSidebar && (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="relative"
+                className="relative max-[22rem]:size-tap max-[22rem]:p-0"
                 onClick={() => setSidebarOpen(true)}
+                aria-label="Details"
               >
-                <SlidersHorizontal /> Details
+                <SlidersHorizontal />
+                <span className="max-[22rem]:sr-only">Details</span>
                 {sidebarErrorCount > 0 && (
                   <span className="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-stack text-[10px] font-semibold text-destructive-foreground">
                     {sidebarErrorCount}
@@ -457,7 +465,9 @@ export function EntityForm({
                 )}
               </Button>
             )}
-            <div className="ml-auto flex items-center gap-inline">{actions}</div>
+            <div className="ml-auto flex min-w-0 items-center gap-stack">
+              {renderActions(true)}
+            </div>
           </div>
         )}
 

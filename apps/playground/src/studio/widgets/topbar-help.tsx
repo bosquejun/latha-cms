@@ -18,7 +18,7 @@ export default function TopbarHelp(_props: WidgetContext) {
       target="_blank"
       rel="noreferrer"
       aria-label="Help"
-      className="flex items-center gap-tight rounded-md px-inline py-stack text-small text-muted-foreground transition-colors hover:bg-accent hover:text-foreground pointer-coarse:min-h-10"
+      className="flex min-h-tap min-w-tap touch-manipulation items-center justify-center gap-tight rounded-md px-inline py-stack text-small text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50"
     >
       <LifeBuoy className="size-4" />
       {/* Icon-only on phones to keep the topbar uncluttered. */}
