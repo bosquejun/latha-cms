@@ -15,13 +15,13 @@
     "sourcemaps:upload": "node scripts/upload-sourcemaps.mjs"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.31.0",
+    "@changesets/cli": "^2.31.1",
     "@sentry/cli": "^2.58.6",
     "@eslint/js": "^10.0.1",
     "eslint": "^10.7.0",
-    "turbo": "^2.10.4",
+    "turbo": "^2.10.5",
     "typescript": "^5.7.2",
-    "typescript-eslint": "^8.63.0"
+    "typescript-eslint": "^8.64.0"
   },
   "packageManager": "pnpm@10.33.0",
   "engines": {
