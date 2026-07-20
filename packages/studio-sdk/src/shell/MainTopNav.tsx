@@ -26,6 +26,7 @@ export function MainTopNav({ brand = 'Kon10', logo, onMenuClick, children }: Mai
           size="icon"
           onClick={onMenuClick}
           aria-label="Menu"
+          data-studio-menu-trigger=""
           className="lg:hidden pointer-coarse:min-h-10 pointer-coarse:min-w-10 [&_svg]:size-[18px]"
         >
           <Menu />

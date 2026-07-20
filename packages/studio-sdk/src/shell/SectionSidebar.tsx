@@ -26,11 +26,11 @@ export interface SectionSidebarProps {
 
 const subLinkClass = (active: boolean) =>
   cn(
-    'flex touch-manipulation items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors',
+    'flex touch-manipulation items-center gap-2.5 rounded-md border-l-2 px-2.5 py-1.5 text-sm transition-colors',
     '[&_svg]:size-4 [&_svg]:shrink-0',
     active
-      ? 'bg-accent font-medium text-foreground [&_svg]:text-foreground'
-      : 'text-muted-foreground hover:bg-accent hover:text-foreground [&_svg]:text-muted-foreground',
+      ? 'border-l-primary bg-accent font-medium text-foreground shadow-2xs [&_svg]:text-foreground'
+      : 'border-l-transparent text-muted-foreground hover:bg-accent hover:text-foreground [&_svg]:text-muted-foreground',
   )
 
 export function SectionSidebar({ item, activeSubKey, LinkComponent }: SectionSidebarProps) {
@@ -61,7 +61,12 @@ export function SectionSidebar({ item, activeSubKey, LinkComponent }: SectionSid
     )
     if (LinkComponent && !sub.external) {
       return (
-        <LinkComponent key={sub.key} href={sub.href} className={subLinkClass(active)}>
+        <LinkComponent
+          key={sub.key}
+          href={sub.href}
+          aria-current={active ? 'page' : undefined}
+          className={subLinkClass(active)}
+        >
           {body}
         </LinkComponent>
       )

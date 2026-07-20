@@ -99,12 +99,12 @@ export function LexicalEditor({ id, value, onChange, onBlur, lexicalConfig }: Le
             contentEditable={
               <ContentEditable
                 id={id}
-                className="min-h-24 outline-none"
+                className="min-h-24 text-base outline-none md:text-sm"
                 onBlur={onBlur}
               />
             }
             placeholder={
-              <div className="pointer-events-none absolute left-3 top-2 select-none text-muted-foreground">
+              <div className="pointer-events-none absolute left-3 top-2 select-none text-base text-muted-foreground md:text-sm">
                 Enter text…
               </div>
             }

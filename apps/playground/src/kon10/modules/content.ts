@@ -313,7 +313,11 @@ export function createContentModule() {
               category: taxonomy({ to: 'categories', meta: { sidebar: true } }),
               tags: taxonomy({ to: 'tags', many: true, meta: { sidebar: true } }),
               author: relationship({ to: 'users', meta: { sidebar: true } }),
-              publishedAt: date({ meta: { sidebar: true, label: 'Published At' } }),
+              publishedAt: date({
+                min: '2000-01-01T00:00:00.000Z',
+                max: '2100-12-31T23:59:59.999Z',
+                meta: { sidebar: true, label: 'Published At' },
+              }),
             },
           }),
 

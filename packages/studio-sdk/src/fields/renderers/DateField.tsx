@@ -1,11 +1,11 @@
-import { Field as FieldWrap, Input } from '@kon10/ui'
+import type { DateField as DateFieldConfig } from '@kon10/core'
+import { DateTimePicker, Field as FieldWrap } from '@kon10/ui'
 import { humanize } from '../../schema.js'
 import type { FieldControlProps } from '../types.js'
 
-function toDateInput(value: unknown): string {
-  if (typeof value !== 'string' || value === '') return ''
-  // Accept ISO strings; keep just the date portion for <input type=date>.
-  return value.slice(0, 10)
+function toDateTimeValue(value: unknown): string {
+  if (value instanceof Date) return value.toISOString()
+  return typeof value === 'string' ? value : ''
 }
 
 export function DateField({
@@ -16,6 +16,7 @@ export function DateField({
   onBlur,
   error,
 }: FieldControlProps) {
+  const dateField = field as DateFieldConfig
   return (
     <FieldWrap
       htmlFor={id}
@@ -24,11 +25,13 @@ export function DateField({
       description={field.meta?.description}
       error={error}
     >
-      <Input
+      <DateTimePicker
         id={id}
-        type="date"
-        value={toDateInput(value)}
-        onChange={(e) => onChange(e.target.value)}
+        value={toDateTimeValue(value)}
+        min={dateField.min}
+        max={dateField.max}
+        defaultDate={new Date()}
+        onChange={onChange}
         onBlur={onBlur}
       />
     </FieldWrap>

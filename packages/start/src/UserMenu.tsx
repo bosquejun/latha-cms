@@ -35,7 +35,7 @@ export function UserMenu({ email, role, theme, onThemeChange, onSignOut }: UserM
         <button
           type="button"
           aria-label={email ?? 'User menu'}
-          className="flex h-9 items-center gap-inline rounded-md px-inline text-foreground hover:bg-accent"
+          className="flex h-control-sm min-h-tap min-w-tap touch-manipulation items-center gap-inline rounded-md px-inline text-foreground outline-none transition-colors hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50"
         >
           <Avatar size="sm" fallback={initials(email)} alt={email ?? undefined} />
           <span className="hidden text-body font-medium sm:inline">{email}</span>

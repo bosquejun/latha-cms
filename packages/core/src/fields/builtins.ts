@@ -28,7 +28,16 @@ export const numberFieldConfigSchema = z.object({
 
 export const booleanFieldConfigSchema = z.object({ type: z.literal('boolean') })
 
-export const dateFieldConfigSchema = z.object({ type: z.literal('date') })
+const dateConstraintSchema = z.string().refine(
+  (value) => !Number.isNaN(Date.parse(value)),
+  'Expected a valid date string',
+)
+
+export const dateFieldConfigSchema = z.object({
+  type: z.literal('date'),
+  min: dateConstraintSchema.optional(),
+  max: dateConstraintSchema.optional(),
+})
 
 export const selectFieldConfigSchema = z.object({
   type: z.literal('select'),
@@ -92,7 +101,12 @@ registerFieldType({
 
 registerFieldType({
   configSchema: dateFieldConfigSchema,
-  buildDataSchema: () => z.coerce.date(),
+  buildDataSchema: (config) => {
+    let schema = z.coerce.date()
+    if (config.min != null) schema = schema.min(new Date(config.min as string))
+    if (config.max != null) schema = schema.max(new Date(config.max as string))
+    return schema
+  },
 })
 
 registerFieldType({

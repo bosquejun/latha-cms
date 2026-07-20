@@ -18,6 +18,7 @@ export interface NavLinkProps {
   className?: string
   children: ReactNode
   onClick?: () => void
+  'aria-current'?: 'page'
   /**
    * Pointer/focus handlers the shell uses to drive per-link effects (e.g.
    * replaying a nav icon's animation while the tab is hovered/focused). A

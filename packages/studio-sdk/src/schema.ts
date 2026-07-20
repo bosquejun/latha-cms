@@ -38,8 +38,12 @@ export interface StudioEntity {
 
 /** Turn a slug or field name into a human label: `site_name` → `Site name`. */
 export function humanize(input: string): string {
-  const spaced = input.replace(/[_-]+/g, ' ').trim()
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1)
+  const spaced = input
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .trim()
+  const sentence = spaced === spaced.toUpperCase() ? spaced : spaced.toLowerCase()
+  return sentence.charAt(0).toUpperCase() + sentence.slice(1)
 }
 
 function kindOf(entity: Entity): EntityKind {

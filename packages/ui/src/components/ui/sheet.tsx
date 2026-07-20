@@ -47,24 +47,38 @@ function SheetContent({
   className,
   children,
   side = 'right',
+  closeLabel = 'Close',
+  closeClassName,
+  overlayClassName,
   ...props
-}: React.ComponentProps<typeof SheetPrimitive.Content> & { side?: SheetSide }) {
+}: React.ComponentProps<typeof SheetPrimitive.Content> & {
+  side?: SheetSide
+  closeLabel?: string
+  closeClassName?: string
+  overlayClassName?: string
+}) {
   return (
     <SheetPortal>
-      <SheetOverlay />
+      <SheetOverlay className={overlayClassName} />
       <SheetPrimitive.Content
         data-slot="sheet-content"
         className={cn(
-          'fixed z-50 flex flex-col gap-card overflow-y-auto bg-card p-card shadow-overlay duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out',
+          'fixed z-50 flex flex-col gap-card overscroll-contain overflow-y-auto bg-card p-card shadow-overlay duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out',
           sideClasses[side],
           className,
         )}
         {...props}
       >
         {children}
-        <SheetClose className="absolute right-1.5 top-1.5 flex size-tap touch-manipulation items-center justify-center rounded-md opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none md:right-2.5 md:top-2.5 md:size-9">
+        <SheetClose
+          aria-label={closeLabel}
+          className={cn(
+            'absolute right-1.5 top-1.5 flex size-tap touch-manipulation items-center justify-center rounded-md opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none md:right-2.5 md:top-2.5 md:size-9',
+            closeClassName,
+          )}
+        >
           <X className="size-4" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">{closeLabel}</span>
         </SheetClose>
       </SheetPrimitive.Content>
     </SheetPortal>

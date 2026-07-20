@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import type { Entity } from '@kon10/core'
-import { describeEntity, labelsOf, singularizeLabel } from './schema.js'
+import { describeEntity, humanize, labelsOf, singularizeLabel } from './schema.js'
 
 const collection = (slug: string, studio?: Entity['studio']): Entity => ({
   slug,
@@ -14,6 +14,11 @@ test('singularizeLabel handles common Studio collection names', () => {
   assert.equal(singularizeLabel('Posts'), 'Post')
   assert.equal(singularizeLabel('Categories'), 'Category')
   assert.equal(singularizeLabel('Statuses'), 'Status')
+})
+
+test('humanize formats separators and camelCase field names', () => {
+  assert.equal(humanize('site_name'), 'Site name')
+  assert.equal(humanize('publishedAt'), 'Published at')
 })
 
 test('labelsOf prefers explicit singular and plural labels', () => {

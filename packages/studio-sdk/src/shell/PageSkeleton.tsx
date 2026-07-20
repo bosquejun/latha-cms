@@ -29,11 +29,11 @@ export function PageHeaderSkeleton({
   return (
     <div className="mb-page-gap flex flex-col gap-group">
       <div className="flex flex-wrap items-start justify-between gap-group">
-        <div className="flex flex-col gap-stack">
+        <div className="flex min-w-0 flex-1 flex-col gap-stack">
           <Skeleton className="h-7 w-40" />
           {description && <Skeleton className="mt-stack h-4 w-64" />}
         </div>
-        {action && <Skeleton className="h-8 w-28" />}
+        {action && <Skeleton className="h-control-sm w-28" />}
       </div>
     </div>
   )
@@ -56,27 +56,45 @@ export function ListSkeleton({
       <span className="sr-only">Loading</span>
       <PageHeaderSkeleton action />
       <Card className="overflow-hidden p-0">
-        {/* Header row */}
-        <div className="flex items-center gap-group border-b border-border px-card py-group">
-          {Array.from({ length: columns }).map((_, i) => (
-            <div key={i} className="flex-1">
-              <Skeleton className={`h-3.5 ${cellWidth(i)}`} />
-            </div>
-          ))}
-          <Skeleton className="h-3.5 w-8 shrink-0" />
-        </div>
-        {/* Body rows */}
-        <div className="divide-y divide-border">
+        <div className="divide-y divide-border md:hidden">
           {Array.from({ length: rows }).map((_, r) => (
-            <div key={r} className="flex items-center gap-group px-card py-form">
-              {Array.from({ length: columns }).map((_, c) => (
-                <div key={c} className="flex-1">
-                  <Skeleton className={`h-4 ${cellWidth(r + c)}`} />
-                </div>
-              ))}
-              <Skeleton className="size-7 shrink-0 rounded-md" />
+            <div key={r} className="flex flex-col gap-inline p-sidebar">
+              <div className="flex items-center justify-between gap-group">
+                <Skeleton className={`h-4 ${cellWidth(r)}`} />
+                <Skeleton className="size-tap shrink-0 rounded-md" />
+              </div>
+              <div className="flex items-center gap-inline">
+                <Skeleton className="h-3 w-14" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+              <div className="flex items-center gap-inline">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-4 w-24" />
+              </div>
             </div>
           ))}
+        </div>
+        <div className="max-md:hidden">
+          <div className="flex items-center gap-group border-b border-border px-card py-group">
+            {Array.from({ length: columns }).map((_, i) => (
+              <div key={i} className="flex-1">
+                <Skeleton className={`h-3.5 ${cellWidth(i)}`} />
+              </div>
+            ))}
+            <Skeleton className="h-3.5 w-8 shrink-0" />
+          </div>
+          <div className="divide-y divide-border">
+            {Array.from({ length: rows }).map((_, r) => (
+              <div key={r} className="flex items-center gap-group px-card py-form">
+                {Array.from({ length: columns }).map((_, c) => (
+                  <div key={c} className="flex-1">
+                    <Skeleton className={`h-4 ${cellWidth(r + c)}`} />
+                  </div>
+                ))}
+                <Skeleton className="size-7 shrink-0 rounded-md" />
+              </div>
+            ))}
+          </div>
         </div>
       </Card>
     </div>
@@ -88,7 +106,7 @@ function FieldSkeleton({ wide = true }: { wide?: boolean }) {
   return (
     <div className="flex flex-col gap-field">
       <Skeleton className="h-3.5 w-24" />
-      <Skeleton className={wide ? 'h-9 w-full' : 'h-9 w-1/2'} />
+      <Skeleton className={wide ? 'h-control-md w-full' : 'h-control-md w-1/2'} />
     </div>
   )
 }
@@ -106,14 +124,19 @@ export function FormSkeleton({
   sidebar?: boolean
 }) {
   return (
-    <div role="status" aria-busy="true">
+    <div
+      role="status"
+      aria-busy="true"
+      className="max-sm:pb-[calc(4rem+env(safe-area-inset-bottom))]"
+    >
       <span className="sr-only">Loading</span>
       <PageHeaderSkeleton />
       {/* Toolbar: Save sits on the right, mirroring EntityForm's sticky bar. */}
-      <div className="mb-page-gap flex items-center justify-end border-b border-border py-2.5">
-        <Skeleton className="h-8 w-24" />
+      <div className="mb-page-gap hidden items-center justify-end border-b border-border py-2.5 sm:flex">
+        <Skeleton className="h-control-sm w-24" />
       </div>
       <PageLayout
+        className={sidebar ? 'max-sm:[&>div:last-child]:hidden' : undefined}
         right={
           sidebar ? (
             <div className="flex flex-col gap-form">
@@ -129,6 +152,11 @@ export function FormSkeleton({
           ))}
         </div>
       </PageLayout>
+      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-stack border-t border-border bg-background/95 px-(--container-px) py-inline pb-[calc(var(--space-inline)+env(safe-area-inset-bottom))] backdrop-blur-sm sm:hidden">
+        {sidebar && <Skeleton className="mr-auto h-tap w-20" />}
+        <Skeleton className="ml-auto h-tap w-16" />
+        <Skeleton className="h-tap w-24" />
+      </div>
     </div>
   )
 }
