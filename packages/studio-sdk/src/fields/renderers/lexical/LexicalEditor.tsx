@@ -159,7 +159,10 @@ export function LexicalEditor({
               onBlur()
             }}
           >
-            <div ref={containerRef} className="relative flex-1 overflow-y-auto">
+            <div
+              ref={containerRef}
+              className="relative flex-1 overflow-y-auto overscroll-contain"
+            >
               {editingSurface}
               <FloatingLinkEditorPlugin anchorRef={containerRef} />
             </div>
