@@ -1,5 +1,16 @@
 # @kon10/start
 
+## 1.4.1
+
+### Patch Changes
+
+- bc3713a: Polish the Studio mobile experience with accessible touch targets, focus-trapped navigation, compact editor actions, smoother overflow behavior, and responsive loading skeletons.
+
+  Add a shadcn-composed date-time picker with bounded date validation for Studio date fields.
+
+- 7d96977: Fix the Studio boot loading/error screen so it stays fixed and centered on mobile instead of scrolling with the page as the browser's address bar collapses/expands.
+  - @kon10/client@1.4.1
+
 ## 1.4.0
 
 ### Minor Changes

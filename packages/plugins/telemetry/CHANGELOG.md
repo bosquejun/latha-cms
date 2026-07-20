@@ -1,5 +1,7 @@
 # @kon10/telemetry
 
+## 1.4.1
+
 ## 1.4.0
 
 ### Minor Changes
