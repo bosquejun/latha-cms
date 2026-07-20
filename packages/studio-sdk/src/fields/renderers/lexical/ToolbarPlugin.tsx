@@ -59,7 +59,17 @@ import { useKon10 } from '../../../client/index.js'
 import { $createImageNode } from './ImageNode.js'
 import { normalizeUrl } from './linkUtils.js'
 
-export function ToolbarPlugin() {
+interface ToolbarPluginProps {
+  /**
+   * Where the toolbar sits relative to the editing surface. `'top'` (default,
+   * desktop inline layout) draws a bottom divider; `'bottom'` (the phone
+   * full-screen modal, where the bar is pinned above the keyboard) draws a top
+   * divider and reserves the home-indicator safe area.
+   */
+  placement?: 'top' | 'bottom'
+}
+
+export function ToolbarPlugin({ placement = 'top' }: ToolbarPluginProps = {}) {
   const [editor] = useLexicalComposerContext()
   const { client } = useKon10()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -196,7 +206,13 @@ export function ToolbarPlugin() {
     ['h2', 'h3', 'h4', 'quote', 'bullet', 'number'].includes(blockType)
 
   return (
-    <div className="border-b border-input px-inline py-tight">
+    <div
+      className={
+        placement === 'bottom'
+          ? 'border-t border-input px-inline py-tight pb-[calc(var(--space-tight)+env(safe-area-inset-bottom))]'
+          : 'border-b border-input px-inline py-tight'
+      }
+    >
       <div
         className="flex items-center gap-0.5 md:hidden"
         role="toolbar"

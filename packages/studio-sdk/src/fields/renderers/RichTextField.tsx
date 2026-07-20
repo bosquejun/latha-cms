@@ -16,10 +16,12 @@ export function RichTextField({
     | LexicalExtension
     | undefined
 
+  const label = field.meta?.label ?? humanize(field.name)
+
   return (
     <FieldWrap
       htmlFor={id}
-      label={field.meta?.label ?? humanize(field.name)}
+      label={label}
       required={field.required}
       description={field.meta?.description}
       error={error}
@@ -30,6 +32,7 @@ export function RichTextField({
         onChange={onChange}
         onBlur={onBlur}
         lexicalConfig={lexicalConfig}
+        label={label}
       />
     </FieldWrap>
   )
