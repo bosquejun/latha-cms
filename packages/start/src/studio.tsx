@@ -361,7 +361,7 @@ function settingsExtras(ext: ExtensionRegistry, basePath: string): ExtraEntry[] 
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid min-h-screen place-items-center text-small text-muted-foreground">
+    <div className="fixed inset-0 grid place-items-center bg-background text-small text-muted-foreground">
       {children}
     </div>
   )
