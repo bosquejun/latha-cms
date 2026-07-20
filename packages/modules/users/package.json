@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@kon10/core": "workspace:^",
-    "typescript": "^5.7.2",
+    "typescript": "^6.0.3",
     "@types/node": "^22.10.0"
   },
   "repository": {

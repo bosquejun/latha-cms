@@ -60,7 +60,7 @@
     "@types/react": "^19.0.0",
     "react": "^19.0.0",
     "lucide-react": "^1.25.0",
-    "typescript": "^5.7.2",
+    "typescript": "^6.0.3",
     "vite": "^7.0.0"
   },
   "repository": {
