@@ -1,5 +1,11 @@
 # @kon10/client-react
 
+## 1.5.0
+
+### Patch Changes
+
+- @kon10/client@1.5.0
+
 ## 1.4.1
 
 ### Patch Changes
