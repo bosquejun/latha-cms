@@ -199,11 +199,28 @@ export function ToolbarPlugin({ placement = 'top' }: ToolbarPluginProps = {}) {
     [client, editor],
   )
 
+  // The mobile "More" menu now only carries inline character formats and lists;
+  // block/text style lives in its own toolbar dropdown (below).
   const hasOverflowFormat =
     isUnderline ||
     isStrikethrough ||
     isCode ||
-    ['h2', 'h3', 'h4', 'quote', 'bullet', 'number'].includes(blockType)
+    blockType === 'bullet' ||
+    blockType === 'number'
+
+  // The dedicated block-style dropdown reflects the current block in its trigger
+  // icon and highlights when the block is anything other than a plain paragraph.
+  const blockTypeActive = ['h2', 'h3', 'h4', 'quote'].includes(blockType)
+  const CurrentBlockIcon =
+    blockType === 'h2'
+      ? Heading2
+      : blockType === 'h3'
+        ? Heading3
+        : blockType === 'h4'
+          ? Heading4
+          : blockType === 'quote'
+            ? Quote
+            : Pilcrow
 
   return (
     <div
@@ -267,60 +284,19 @@ export function ToolbarPlugin({ placement = 'top' }: ToolbarPluginProps = {}) {
             <Button
               type="button"
               size="icon"
-              variant={hasOverflowFormat ? 'secondary' : 'ghost'}
-              aria-label="More formatting options"
-              title="More formatting options"
+              variant={blockTypeActive ? 'secondary' : 'ghost'}
+              aria-label="Text style"
+              title="Text style"
             >
-              <MoreHorizontal className="size-4" />
+              <CurrentBlockIcon className="size-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            align="end"
+            align="start"
             collisionPadding={16}
-            className="max-h-[var(--radix-dropdown-menu-content-available-height)] w-64 overscroll-contain overflow-y-auto"
+            className="max-h-[var(--radix-dropdown-menu-content-available-height)] w-56 overscroll-contain overflow-y-auto"
           >
-            <DropdownMenuLabel>History</DropdownMenuLabel>
-            <DropdownMenuItem
-              className="min-h-tap"
-              onSelect={() => editor.dispatchCommand(REDO_COMMAND, undefined)}
-            >
-              <Redo2 />
-              Redo
-            </DropdownMenuItem>
-
-            <DropdownMenuSeparator />
             <DropdownMenuLabel>Text style</DropdownMenuLabel>
-            <DropdownMenuCheckboxItem
-              className="min-h-tap"
-              checked={isUnderline}
-              onCheckedChange={() =>
-                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline')
-              }
-            >
-              <Underline className="size-4" />
-              Underline
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              className="min-h-tap"
-              checked={isStrikethrough}
-              onCheckedChange={() =>
-                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough')
-              }
-            >
-              <Strikethrough className="size-4" />
-              Strikethrough
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              className="min-h-tap"
-              checked={isCode}
-              onCheckedChange={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code')}
-            >
-              <Code className="size-4" />
-              Inline code
-            </DropdownMenuCheckboxItem>
-
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel>Block style</DropdownMenuLabel>
             <DropdownMenuCheckboxItem
               className="min-h-tap"
               checked={blockType === 'paragraph'}
@@ -360,6 +336,65 @@ export function ToolbarPlugin({ placement = 'top' }: ToolbarPluginProps = {}) {
             >
               <Quote className="size-4" />
               Blockquote
+            </DropdownMenuCheckboxItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              size="icon"
+              variant={hasOverflowFormat ? 'secondary' : 'ghost'}
+              aria-label="More formatting options"
+              title="More formatting options"
+            >
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            collisionPadding={16}
+            className="max-h-[var(--radix-dropdown-menu-content-available-height)] w-64 overscroll-contain overflow-y-auto"
+          >
+            <DropdownMenuLabel>History</DropdownMenuLabel>
+            <DropdownMenuItem
+              className="min-h-tap"
+              onSelect={() => editor.dispatchCommand(REDO_COMMAND, undefined)}
+            >
+              <Redo2 />
+              Redo
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Format</DropdownMenuLabel>
+            <DropdownMenuCheckboxItem
+              className="min-h-tap"
+              checked={isUnderline}
+              onCheckedChange={() =>
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline')
+              }
+            >
+              <Underline className="size-4" />
+              Underline
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              className="min-h-tap"
+              checked={isStrikethrough}
+              onCheckedChange={() =>
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough')
+              }
+            >
+              <Strikethrough className="size-4" />
+              Strikethrough
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              className="min-h-tap"
+              checked={isCode}
+              onCheckedChange={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code')}
+            >
+              <Code className="size-4" />
+              Inline code
             </DropdownMenuCheckboxItem>
 
             <DropdownMenuSeparator />
