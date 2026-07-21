@@ -328,7 +328,14 @@ export function createContentModule() {
 
           Collection({
             slug: 'pages',
-            studio: { order: 15, useAsTitle: 'title', defaultColumns: ['title', 'status'] },
+            // `content` is a block-based page builder (same `blocks()` field and
+            // block library as `landing-page` above), so the editor gets the
+            // same `contentWidth: 'full'` treatment: blocks like Hero, Image,
+            // and Features preview at real page width instead of being squeezed
+            // into the centered reading-width column. (Long-form rich text —
+            // e.g. `posts.content` — deliberately stays on the default centered
+            // width, which is the better measure for reading prose.)
+            studio: { order: 15, useAsTitle: 'title', defaultColumns: ['title', 'status'], contentWidth: 'full' },
             fields: {
               title: text({ required: true }),
               // Nested pages: pick a parent and this page's URL nests under
