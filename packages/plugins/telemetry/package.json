@@ -33,6 +33,6 @@
   "devDependencies": {
     "@kon10/core": "workspace:^",
     "@types/node": "^22.10.0",
-    "typescript": "^5.7.2"
+    "typescript": "^6.0.3"
   }
 }
